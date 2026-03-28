@@ -1,0 +1,8 @@
+Flask==2.3.3
+Flask-SQLAlchemy==3.0.5
+Flask-Caching==2.1.0
+pvlib>=0.10.0
+pandas>=2.0.0
+PyMySQL==1.1.0
+weasyprint>=60.0
+pdoc>=14.0.0

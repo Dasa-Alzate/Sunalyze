@@ -1,0 +1,323 @@
+{
+    "placas": [
+        {
+            "nombre": "AIKO-A500-MAH60Db",
+            "y": 22.6,
+            "tcp": -0.26,
+            "tcv": -0.22,
+            "voc": 45.02,
+            "vmp": 37.90,
+            "imp": 13.21,
+            "isc": 14.01,
+            "power": 500,
+            "t_noct": 45,
+            "height": 1954,
+            "width": 1134
+        },
+        {
+            "nombre": "AIKO-A505-MAH60Db",
+            "y": 22.8,
+            "tcp": -0.26,
+            "tcv": -0.22,
+            "voc": 45.12,
+            "vmp": 38,
+            "imp": 13.3,
+            "isc": 14.10,
+            "power": 505,
+            "t_noct": 45,
+            "height": 1954,
+            "width": 1134
+        },
+        {
+            "nombre": "AIKO-A510-MAH60Db",
+            "y": 23.0,
+            "tcp": -0.26,
+            "tcv": -0.22,
+            "voc": 45.22,
+            "vmp": 38.10,
+            "imp": 13.39,
+            "isc": 14.19,
+            "power": 510,
+            "t_noct": 45,
+            "height": 1954,
+            "width": 1134
+        },
+        {
+            "nombre": "AIKO-A515-MAH60Db",
+            "y": 23.2,
+            "tcp": -0.26,
+            "tcv": -0.22,
+            "voc": 45.32,
+            "vmp": 38.2,
+            "imp": 13.49,
+            "isc": 14.30,
+            "power": 515,
+            "t_noct": 45,
+            "height": 1954,
+            "width": 1134
+        },
+        {
+            "nombre": "AIKO-A520-MAH60Db",
+            "y": 23.5,
+            "tcp": -0.26,
+            "tcv": -0.22,
+            "voc": 45.42,
+            "vmp": 38.3,
+            "imp": 13.58,
+            "isc": 14.40,
+            "power": 520,
+            "t_noct": 45,
+            "height": 1954,
+            "width": 1134
+        },
+            
+        {
+            "nombre": "JASolar Bifacial 625W",
+            "y": 22.4,
+            "tcp": -0.29,
+            "tcv": -0.25,
+            "voc": 52.27,
+            "vmp": 43.71,
+            "imp": 15.44,
+            "isc": 16.37,
+            "power": 625,
+            "t_noct": 45,
+            "height": 2465,
+            "width": 1134
+        },
+        {
+            "nombre": "JASolar Bifacial 630W",
+            "y": 22.5,
+            "tcp": -0.29,
+            "tcv": -0.25,
+            "voc": 52.47,
+            "vmp": 43.90,
+            "imp": 15.50,
+            "isc": 16.43,
+            "power": 630,
+            "t_noct": 45,
+            "height": 2465,
+            "width": 1134
+        },
+        {
+            "nombre": "JASolar Bifacial 635W",
+            "y": 22.6,
+            "tcp": -0.29,
+            "tcv": -0.25,
+            "voc": 52.67,
+            "vmp": 44.10,
+            "imp": 15.55,
+            "isc": 16.48,
+            "power": 635,
+            "t_noct": 45,
+            "height": 2465,
+            "width": 1134
+        },
+        {
+            "nombre": "JASolar Bifacial 640W",
+            "y": 22.7,
+            "tcp": -0.29,
+            "tcv": -0.25,
+            "voc": 52.87,
+            "vmp": 44.29,
+            "imp": 15.61,
+            "isc": 16.55,
+            "power": 640,
+            "t_noct": 45,
+            "height": 2465,
+            "width": 1134
+        },
+        {
+            "nombre": "JASolar Bifacial 645W",
+            "y": 22.8,
+            "tcp": -0.29,
+            "tcv": -0.25,
+            "voc": 53.07,
+            "vmp": 44.49,
+            "imp": 15.66,
+            "isc": 16.60,
+            "power": 645,
+            "t_noct": 45,
+            "height": 2465,
+            "width": 1134
+        },
+        {
+            "nombre": "JASolar Bifacial 650W",
+            "y": 22.9,
+            "tcp": -0.29,
+            "tcv": -0.25,
+            "voc": 53.27,
+            "vmp": 44.67,
+            "imp": 15.71,
+            "isc": 16.65,
+            "power": 650,
+            "t_noct": 45,
+            "height": 2465,
+            "width": 1134
+        },
+        
+        {
+            "nombre": "Tensite TOPCon 500W",
+            "y": 22.25,
+            "tcp": -0.3,
+            "tcv": -0.24,
+            "voc": 44.4,
+            "vmp": 37.05,
+            "imp": 13.5,
+            "isc": 14.31,
+            "power": 500,
+            "t_noct": 45,
+            "height": 1909,
+            "width": 1134
+        }
+    ],
+    
+    "inversores": [
+    {
+        "nombre": "Deye SUN-3.6K-G",
+        "y": 97.1,
+        "power_max": 4.7,
+        "power": 3.6,
+        "vmax": 550,
+        "I_max_input": 13,
+        "I_max_output": 17.2
+    },
+    {
+        "nombre": "Deye SUN-4K-G",
+        "y": 97.3,
+        "power_max": 5.2,
+        "power": 4,
+        "vmax": 550,
+        "I_max_input": 13,
+        "I_max_output": 19.1
+    },
+    {
+        "nombre": "Deye SUN-4.6K-G",
+        "y": 97.3,
+        "power_max": 5.98,
+        "power": 4.6,
+        "vmax": 550,
+        "I_max_input": 13,
+        "I_max_output": 22
+    },
+    {
+        "nombre": "Deye SUN-5K-G",
+        "y": 97.3,
+        "power_max": 6.5,
+        "power": 5,
+        "vmax": 550,
+        "I_max_input": 13,
+        "I_max_output": 23.9
+    },
+    {
+        "nombre": "Deye SUN-6K-G",
+        "y": 97.3,
+        "power_max": 7.8,
+        "power": 6,
+        "vmax": 550,
+        "I_max_input": 13,
+        "I_max_output": 28.7
+    },
+
+    {
+        "nombre": "Fronius PRIMO 3.0-1",
+        "y": 96.1,
+        "power_max": 4.5,
+        "power": 3,
+        "vmax": 1000,
+        "I_max_input": 12,
+        "I_max_output": 13.0
+    },
+    {
+        "nombre": "Fronius PRIMO 3.5-1",
+        "y": 96.8,
+        "power_max": 5.3,
+        "power": 3.5,
+        "vmax": 1000,
+        "I_max_input": 12,
+        "I_max_output": 15.2
+    },
+    {
+        "nombre": "Fronius PRIMO 3.6-1",
+        "y": 96.8,
+        "power_max": 5.5,
+        "power": 3.68,
+        "vmax": 1000,
+        "I_max_input": 12,
+        "I_max_output": 16.0
+    },
+    {
+        "nombre": "Fronius PRIMO 4.0-1",
+        "y": 97.0,
+        "power_max": 6,
+        "power": 4,
+        "vmax": 1000,
+        "I_max_input": 12,
+        "I_max_output": 17.4
+    },
+    {
+        "nombre": "Fronius PRIMO 4.6-1",
+        "y": 97.0,
+        "power_max": 6.9,
+        "power": 4.6,
+        "vmax": 1000,
+        "I_max_input": 12,
+        "I_max_output": 20.0
+    },
+    {
+        "nombre": "Fronius PRIMO 5.0-1",
+        "y": 97.1,
+        "power_max": 7.5,
+        "power": 5,
+        "vmax": 1000,
+        "I_max_input": 12,
+        "I_max_output": 21.7
+    },
+    {
+        "nombre": "Fronius PRIMO 6.0-1",
+        "y": 97.3,
+        "power_max": 9,
+        "power": 6,
+        "vmax": 1000,
+        "I_max_input": 18,
+        "I_max_output": 26.1
+    },
+    {
+        "nombre": "Fronius PRIMO 8.2-1",
+        "y": 97.5,
+        "power_max": 12.3,
+        "power": 8.2,
+        "vmax": 1000,
+        "I_max_input": 18,
+        "I_max_output": 35.7
+    },
+
+    {
+        "nombre": "SMA SunnyBoy 1.5",
+        "y": 96.1,
+        "power_max": 3,
+        "power": 1.5,
+        "vmax": 600,
+        "I_max_input": 10,
+        "I_max_output": 7
+    },
+    {
+        "nombre": "SMA SunnyBoy 2.0",
+        "y": 96.4,
+        "power_max": 4,
+        "power": 2,
+        "vmax": 600,
+        "I_max_input": 10,
+        "I_max_output": 9
+    },
+    {
+        "nombre": "SMA SunnyBoy 2.5",
+        "y": 96.7,
+        "power_max": 5,
+        "power": 2.5,
+        "vmax": 600,
+        "I_max_input": 10,
+        "I_max_output": 11
+    }
+]
+}

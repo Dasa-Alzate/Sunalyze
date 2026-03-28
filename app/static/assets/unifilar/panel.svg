@@ -1,0 +1,87 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<!-- Created with Inkscape (http://www.inkscape.org/) -->
+
+<svg
+   width="120"
+   height="120"
+   viewBox="0 0 120 120"
+   version="1.1"
+   id="svg5"
+   inkscape:version="1.2.2 (b0a8486541, 2022-12-01)"
+   sodipodi:docname="fuse.svg"
+   xmlns:inkscape="http://www.inkscape.org/namespaces/inkscape"
+   xmlns:sodipodi="http://sodipodi.sourceforge.net/DTD/sodipodi-0.dtd"
+   xmlns="http://www.w3.org/2000/svg"
+   xmlns:svg="http://www.w3.org/2000/svg">
+  <sodipodi:namedview
+     id="namedview7"
+     pagecolor="#ffffff"
+     bordercolor="#000000"
+     borderopacity="0.25"
+     inkscape:showpageshadow="2"
+     inkscape:pageopacity="0.0"
+     inkscape:pagecheckerboard="0"
+     inkscape:deskcolor="#d1d1d1"
+     inkscape:document-units="px"
+     showgrid="true"
+     inkscape:zoom="3.335187"
+     inkscape:cx="64.014402"
+     inkscape:cy="59.366986"
+     inkscape:window-width="1366"
+     inkscape:window-height="736"
+     inkscape:window-x="0"
+     inkscape:window-y="0"
+     inkscape:window-maximized="1"
+     inkscape:current-layer="layer1">
+    <inkscape:grid
+       type="xygrid"
+       id="grid788" />
+    <sodipodi:guide
+       position="0,120"
+       orientation="0,120"
+       id="guide790"
+       inkscape:locked="false" />
+    <sodipodi:guide
+       position="120,120"
+       orientation="120,0"
+       id="guide792"
+       inkscape:locked="false" />
+    <sodipodi:guide
+       position="120,0"
+       orientation="0,-120"
+       id="guide794"
+       inkscape:locked="false" />
+    <sodipodi:guide
+       position="0,0"
+       orientation="-120,0"
+       id="guide796"
+       inkscape:locked="false" />
+  </sodipodi:namedview>
+  <defs
+     id="defs2" />
+  <g
+     inkscape:label="Capa 1"
+     inkscape:groupmode="layer"
+     id="layer1">
+    <path
+       style="fill:none;stroke:#131316;stroke-width:1.05551;stroke-dasharray:none"
+       d="M 9.9855214,60.600929 0.0133718,60.527586"
+       id="path4053" />
+    <path
+       style="fill:none;stroke:#131316;stroke-width:1.11508;stroke-dasharray:none"
+       d="m 110.02829,59.924466 9.94342,0.150638"
+       id="path4055" />
+    <rect
+       style="fill:none;stroke:#131316;stroke-width:1;stroke-dasharray:none"
+       id="rect4197"
+       width="100"
+       height="60"
+       x="9.9799995"
+       y="30.5"
+       rx="0" />
+    <path
+       style="fill:none;stroke:#131316;stroke-width:1;stroke-dasharray:none"
+       d="m 10.024183,30.471708 30.012443,29.98544 -29.882473,29.538207 v 0 l -0.1757847,0.0379"
+       id="path4199" />
+  </g>
+</svg>
