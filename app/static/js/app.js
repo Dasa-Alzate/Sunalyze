@@ -1,0 +1,914 @@
+import Fuse from 'https://cdn.jsdelivr.net/npm/fuse.js@6.6.2/dist/fuse.esm.js';
+import { SearchBox } from './searchbox.js';
+
+// Variables globales
+let panels = [];
+let inverters = [];
+let fusePanels;
+let fuseInverters;
+let noPanels;
+let results_data;
+
+// Instancias de SearchBox
+let panelSearchBox;
+let inverterSearchBox;
+
+// Elementos del DOM
+const necesidadValue = document.getElementById("necesidad-value");
+const selectAutoconsumo = document.getElementById("select-autoconsumo");
+const latitudValue = document.getElementById("latitud-value");
+const longitudValue = document.getElementById("longitud-value");
+const inclinacionValue = document.getElementById("inclinacion-value");
+const azimutValue = document.getElementById("azimut-value");
+const chk = document.getElementById("chk-coplanar");
+const group = document.getElementById("coplanar-group");
+const siguientePaso1 = document.getElementById("siguiente-paso-1");
+const siguientePaso2 = document.getElementById("siguiente-paso-2");
+const siguientePaso3 = document.getElementById("siguiente-paso-3");
+const printUpdateBtn = document.getElementById("print-update-btn");
+
+// Contenedores de pasos
+const step2Content = document.getElementById("step2-content");
+const step2Hr = document.getElementById("step2-hr");
+const step2Container = document.getElementById("step2-container");
+
+const step3Content = document.getElementById("step3-content");
+const step3Hr = document.getElementById("step3-hr");
+const step3Container = document.getElementById("step3-container");
+
+const step4Content = document.getElementById("step4-content");
+const step4Hr = document.getElementById("step4-hr");
+const step4Container = document.getElementById("step4-container");
+
+const step5Content = document.getElementById("step5-content");
+const step5Hr = document.getElementById("step5-hr");
+const step5Container = document.getElementById("step5-container");
+
+// Secciones de resultados
+const calculosSection = document.getElementById("calculos-section");
+const errorMessage = document.getElementById("error-message");
+
+const FUSE_CONFIG = {
+    panels: {
+        keys: [
+            { name: 'nombre', weight: 0.7 },
+            { name: 'power', weight: 0.2 },
+            { name: 'voc', weight: 0.05 },
+            { name: 'vmp', weight: 0.05 }
+        ],
+        threshold: 0.3,
+        includeScore: true,
+        minMatchCharLength: 2,
+        ignoreLocation: true,
+        shouldSort: true
+    },
+    inverters: {
+        keys: [
+            { name: 'nombre', weight: 0.7 },
+            { name: 'power', weight: 0.2 },
+            { name: 'vmax', weight: 0.1 }
+        ],
+        threshold: 0.4,
+        includeScore: true,
+        minMatchCharLength: 2,
+        ignoreLocation: true,
+        shouldSort: true
+    }
+};
+
+// Event Listeners
+chk.addEventListener("change", e => {
+    group.classList.toggle("hidden", !e.target.checked);
+});
+
+siguientePaso1.addEventListener("click", e => {
+    showStep2Content();
+});
+
+siguientePaso2.addEventListener("click", handlePanelAnalysis);
+
+siguientePaso3.addEventListener("click", handleCompleteAnalysis);
+
+// Funciones principales
+async function loadEquipmentData() {
+    try {
+        console.log('Cargando datos del equipo...');
+        
+        const panelsResponse = await fetch('/api/panels');
+        if (!panelsResponse.ok) throw new Error('Error cargando paneles');
+        panels = await panelsResponse.json();
+
+        const invertersResponse = await fetch('/api/inverters');
+        if (!invertersResponse.ok) throw new Error('Error cargando inversores');
+        inverters = await invertersResponse.json();
+
+        console.log(`Cargados ${panels.length} paneles y ${inverters.length} inversores`);
+
+        // Inicializar Fuse.js
+        initializeFuse();
+
+        // Inicializar SearchBoxes
+        initializeSearchBoxes();
+        
+        console.log('Aplicación inicializada correctamente');
+
+    } catch (error) {
+        console.error('Error cargando datos:', error);
+        showError('Error cargando los datos del equipo');
+    }
+}
+
+function initializeFuse() {
+    fusePanels = new Fuse(panels, FUSE_CONFIG.panels);
+    fuseInverters = new Fuse(inverters, FUSE_CONFIG.inverters);
+}
+
+function initializeSearchBoxes() {
+    // SearchBox para paneles (paso 2)
+    panelSearchBox = new SearchBox({
+        containerId: 'panel-search-container',
+        inputId: 'panel-search-input',
+        resultsId: 'panel-results',
+        dropdownId: 'panel-dropdown',
+        selectId: 'select-placas',
+        placeholder: 'Buscar panel (nombre, potencia...)',
+        fuseInstance: fusePanels,
+        data: panels,
+        onSelect: (item) => {
+            console.log('Panel seleccionado:', item.nombre);
+        }
+    });
+
+    // SearchBox para inversores (paso 3) - se inicializa vacío
+    inverterSearchBox = new SearchBox({
+        containerId: 'inverter-search-container',
+        inputId: 'inverter-search-input',
+        resultsId: 'inverter-results',
+        dropdownId: 'inverter-dropdown',
+        selectId: 'select-inversores',
+        placeholder: 'Buscar inversor compatible...',
+        fuseInstance: fuseInverters,
+        data: [], // Inicialmente vacío
+        onSelect: (item) => {
+            console.log('Inversor seleccionado:', item.nombre);
+        }
+    });
+
+    panelSearchBox.init();
+    inverterSearchBox.init();
+}
+
+// Funciones para mostrar pasos
+function showStep2Content() {
+    // Mostrar el HR con transición
+    step2Hr.classList.remove('hidden');
+    step2Hr.classList.add('opacity-0');
+    
+    // Agregar padding al contenedor
+    step2Container.classList.add('p-4');
+    
+    // Mostrar el contenido
+    step2Content.classList.remove('hidden');
+    
+    // Animaciones escalonadas con Tailwind
+    setTimeout(() => {
+        // Animación del HR
+        step2Hr.classList.remove('opacity-0');
+        step2Hr.classList.add('opacity-100', 'transition-opacity', 'duration-300');
+    }, 50);
+    
+    setTimeout(() => {
+        // Animación del contenido principal
+        step2Content.classList.remove('opacity-0', 'translate-y-4');
+        step2Content.classList.add('opacity-100', 'translate-y-0');
+    }, 150);
+}
+
+function showStep3Content() {
+    // Mostrar el HR con transición
+    step3Hr.classList.remove('hidden');
+    step3Hr.classList.add('opacity-0');
+    
+    // Agregar padding al contenedor
+    step3Container.classList.add('p-4');
+    
+    // Mostrar el contenido
+    step3Content.classList.remove('hidden');
+    
+    // Animaciones escalonadas con Tailwind
+    setTimeout(() => {
+        // Animación del HR
+        step3Hr.classList.remove('opacity-0');
+        step3Hr.classList.add('opacity-100', 'transition-opacity', 'duration-300');
+    }, 50);
+    
+    setTimeout(() => {
+        // Animación del contenido principal
+        step3Content.classList.remove('opacity-0', 'translate-y-4');
+        step3Content.classList.add('opacity-100', 'translate-y-0');
+    }, 150);
+}
+
+function showStep4Content() {
+    step4Hr.classList.remove('hidden');
+    step4Hr.classList.add('opacity-0');
+    step4Container.classList.add('p-4');
+    step4Content.classList.remove('hidden');
+    
+    setTimeout(() => {
+        step4Hr.classList.remove('opacity-0');
+        step4Hr.classList.add('opacity-100', 'transition-opacity', 'duration-300');
+    }, 50);
+    
+    setTimeout(() => {
+        step4Content.classList.remove('opacity-0', 'translate-y-4');
+        step4Content.classList.add('opacity-100', 'translate-y-0');
+    }, 150);
+}
+
+function toggleAdvancedOptions() {
+    const optionsContainer = document.getElementById('advanced-options');
+    const arrow = document.getElementById('advanced-arrow');
+    
+    if (optionsContainer.classList.contains('max-h-0')) {
+        // Mostrar opciones
+        optionsContainer.classList.remove('max-h-0', 'opacity-0');
+        optionsContainer.classList.add('max-h-96', 'opacity-100');
+        arrow.classList.add('rotate-180');
+    } else {
+        // Ocultar opciones
+        optionsContainer.classList.remove('max-h-96', 'opacity-100');
+        optionsContainer.classList.add('max-h-0', 'opacity-0');
+        arrow.classList.remove('rotate-180');
+    }
+}
+
+async function updateWire(e, a) {
+    try {
+        console.log(`🔄 Iniciando actualización para tramo ${a}...`);
+
+        // Validar que los elementos existen
+        const input_a = document.getElementById("input-length-" + a);
+        const b = a === 1 ? 2 : 1
+        if (!input_a) {
+            throw new Error(`Input para tramo ${a} no encontrado`);
+        }
+
+        // Paso 1: Calcular sección del tramo A
+        console.log(`📐 Paso 1: Calculando sección para tramo ${a}`);
+        await calculateWireSection(a);
+        
+        // Pequeña pausa para asegurar que el DOM se actualice
+        await new Promise(resolve => setTimeout(resolve, 50));
+        
+        // Paso 2: Calcular longitud del tramo B basado en A
+        console.log(`📏 Paso 2: Calculando longitud para tramo ${b}`);
+        await calculateLengthByLength(a);
+        
+        // Pequeña pausa para asegurar que el DOM se actualice
+        await new Promise(resolve => setTimeout(resolve, 50));
+        
+        // Paso 3: Calcular sección del tramo B
+        console.log(`📐 Paso 3: Calculando sección para tramo ${b}`);
+        await calculateWireSection(b);
+        
+        console.log(`✅ Actualización completada exitosamente para tramo ${a}`);
+        
+    } catch (error) {
+        console.error(`❌ Error en updateWire para tramo ${a}:`, error);
+        // Puedes mostrar un mensaje al usuario si lo deseas
+    }
+}
+
+async function recalculate() {
+    try {
+        const a = 1;
+        console.log(`🔄 Iniciando actualización para tramo ${a}...`);
+
+        // Validar que los elementos existen
+        const input_a = document.getElementById("input-length-" + a);
+        const b = a === 1 ? 2 : 1
+        if (!input_a) {
+            throw new Error(`Input para tramo ${a} no encontrado`);
+        }
+
+        // Paso 1: Calcular sección del tramo A
+        console.log(`📐 Paso 1: Calculando sección para tramo ${a}`);
+        await calculateWireSection(a);
+        
+        // Pequeña pausa para asegurar que el DOM se actualice
+        await new Promise(resolve => setTimeout(resolve, 50));
+        
+        // Paso 2: Calcular longitud del tramo B basado en A
+        console.log(`📏 Paso 2: Calculando longitud para tramo ${b}`);
+        await calculateLengthByLength(a);
+        
+        // Pequeña pausa para asegurar que el DOM se actualice
+        await new Promise(resolve => setTimeout(resolve, 50));
+        
+        // Paso 3: Calcular sección del tramo B
+        console.log(`📐 Paso 3: Calculando sección para tramo ${b}`);
+        await calculateWireSection(b);
+        
+        console.log(`✅ Actualización completada exitosamente para tramo ${a}`);
+        
+    } catch (error) {
+        console.error(`❌ Error en updateWire para tramo ${a}:`, error);
+        // Puedes mostrar un mensaje al usuario si lo deseas
+    }
+}
+
+async function handlePanelAnalysis() {
+    console.log("Iniciando análisis de paneles");
+    
+    clearErrors();
+    showStep3Content(); // Mostrar paso 3 inmediatamente
+    
+    const selectedPanel = getSelectedPanel();
+    
+    if (!selectedPanel) {
+        showError('Por favor selecciona un panel');
+        return;
+    }
+
+    const loading = showLoading('step3');
+    
+    try {
+        const res = await fetch('/api/panel-analysis', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+                latitud: latitudValue.value,
+                longitud: longitudValue.value,
+                coplanar: chk.checked,
+                inclinacion: chk.checked ? inclinacionValue.value : 0,
+                azimut: chk.checked ? 180 + parseFloat(azimutValue.value) : 180,
+                panel_id: selectedPanel.id,
+                autoconsumo: selectAutoconsumo.value,
+                necesidad: necesidadValue.value
+            })
+        });
+
+        if (!res.ok) {
+            const err = await res.json();
+            throw new Error(err.error || 'Error en el análisis de paneles');
+        }
+        
+        const data = await res.json();
+        // panelAnalysisData = data; // Guardar datos para uso posterior
+        
+        console.log("___1");
+
+        // Hidratar el searchbox de inversores con los compatibles
+        if (data.compatible_inverters && data.compatible_inverters.length > 0) {
+            inverterSearchBox.setData(data.compatible_inverters);
+            console.log(`Cargados ${data.compatible_inverters.length} inversores compatibles`);
+            step3Content.children[0].classList.remove("hidden");
+        } else {
+            step3Content.children[0].classList.add("hidden");
+            showError('No se encontraron inversores compatibles para esta configuración');
+        }
+        
+    } catch (error) {
+        showError(error.message);
+    } finally {
+        hideLoading(loading);
+    }
+}
+
+async function handleCompleteAnalysis() {
+    console.log("Iniciando análisis completo");
+    
+    clearErrors();
+    showStep4Content();
+    
+    const selectedPanel = getSelectedPanel();
+    const selectedInverter = getSelectedInverter();
+    
+    if (!selectedPanel || !selectedInverter) {
+        showError('Por favor selecciona un panel y un inversor');
+        return;
+    }
+
+    const loading = showLoading('step4');
+    
+    try {
+        const res = await fetch('/api/panel-analysis', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+                latitud: latitudValue.value,
+                longitud: longitudValue.value,
+                coplanar: chk.checked,
+                inclinacion: chk.checked ? inclinacionValue.value : 0,
+                azimut: chk.checked ? 180 + parseFloat(azimutValue.value) : 180,
+                panel_id: selectedPanel.id,
+                inverter_id: selectedInverter.id,
+                autoconsumo: selectAutoconsumo.value,
+                necesidad: necesidadValue.value
+            })
+        });
+
+        if (!res.ok) {
+            const err = await res.json();
+            throw new Error(err.error || 'Error en el análisis completo');
+        }
+        
+        const data = await res.json();
+        results_data = { ...results_data, ...data };
+        console.log("results_data", results_data);
+
+        displayCompleteResults(data);
+
+        noPanels = Math.ceil(data.cell_amount);
+
+        await loadAndRenderDiagram(data, selectedPanel, selectedInverter);
+        
+    } catch (error) {
+        showError(error.message);
+    } finally {
+        hideLoading(loading);
+    }
+}
+
+function displayCompleteResults(data) {
+    calculosSection.innerHTML = '';
+    calculosSection.classList.remove("hidden");
+
+    const irradiancia = data.annual_irradiance_kWh_m2;
+    const unidadIrradiancia = data.meta?.outputs?.hourly?.variables?.["Gb(i)"]?.units || '';
+
+    // Irradiancia
+    const nombre = document.createElement('p');
+    nombre.textContent = 'Irradiancia del lugar';
+    nombre.className = 'text-gray-700 font-medium';
+
+    const valor = document.createElement('p');
+    valor.textContent = `${irradiancia} ${unidadIrradiancia}`;
+    valor.className = 'text-gray-900 font-semibold';
+
+    calculosSection.appendChild(nombre);
+    calculosSection.appendChild(valor);
+
+    // Resultados completos
+    const items = [
+        { label: 'Beta óptimo', value: data.beta_optimal.toFixed(1) + "º" },
+        { label: 'Energía a convertir (primaria)', value: data.sec_net_energy.toFixed(2) + " MWh"},
+        { label: 'Energía a producir (secundaria)', value: data.sec_energy.toFixed(1) + " MWh"},
+        { label: 'Superficie necesaria', value: data.cell_area.toFixed(2) + " m²" },
+        { label: 'Cantidad de paneles', value: data.cell_amount.toFixed(2) + " ≈ " + Math.ceil(data.cell_amount) + " placas" },
+        { label: 'Potencia pico de campo', value: data.total_field_power.toFixed(2) + " kW" },
+        { label: 'Paneles máximos por cadena', value: Math.floor(data.max_cell_amount) + " placas" },
+        { label: 'Eficiencia total del sistema', value: (data.total_y * 100).toFixed(1) + "%" },
+    ];
+
+    items.forEach((item, i) => {
+        const lbl = document.createElement('p');
+        const colorClass = i % 2 === 0 ? "bg-emerald-600/25" : "";
+        lbl.textContent = item.label;
+        lbl.className = 'text-gray-700 font-medium ' + colorClass;
+
+        const val = document.createElement('p');
+        val.textContent = item.value;
+        val.className = 'text-emerald-900 font-semibold ' + colorClass;
+
+        calculosSection.appendChild(lbl);
+        calculosSection.appendChild(val);
+    });
+
+    if (data.selected_inverter) {
+        const inverterHeader = document.createElement('p');
+        inverterHeader.textContent = 'Inversor seleccionado';
+        inverterHeader.className = 'bg-emerald-600/25 font-medium text-gray-700 py-1 mt-3';
+
+        const inverterName = document.createElement('p');
+        inverterName.textContent = data.selected_inverter.nombre;
+        inverterName.className = 'text-emerald-900 font-semibold bg-emerald-600/25 py-1 mt-3';
+
+        calculosSection.appendChild(inverterHeader);
+        calculosSection.appendChild(inverterName);
+    }
+
+    const imprimirMemoriaBtn = document.createElement('button');
+
+    imprimirMemoriaBtn.id = 'imprimir-memoria-btn';
+    imprimirMemoriaBtn.className = 'bg-emerald-500 mt-2 px-4 py-2 text-sm font-normal text-white opacity-100 focus:outline-none col-span-2 cursor-pointer hover:bg-emerald-800/75';
+    imprimirMemoriaBtn.textContent = 'Abrir formulario de memoria de cálculo';
+
+    imprimirMemoriaBtn.addEventListener('click', function() {
+        step5Content.classList.remove("hidden", "opacity-0");
+        step5Hr.classList.remove("hidden");
+        window.scrollTo({ top: step5Content.offsetTop, behavior: 'smooth' });
+    });
+
+    calculosSection.appendChild(imprimirMemoriaBtn);
+}
+
+printUpdateBtn.addEventListener('click', function() {
+    const errorEl = document.getElementById('memoria-validation-error');
+    errorEl.classList.add('hidden');
+    errorEl.textContent = '';
+
+    const selectedPanel = getSelectedPanel();
+    const selectedInverter = getSelectedInverter();
+
+    if (!selectedPanel || !selectedInverter || !results_data) {
+        errorEl.textContent = 'Debes completar los pasos 1-4 antes de generar la memoria.';
+        errorEl.classList.remove('hidden');
+        return;
+    }
+
+    const inclinacionValue = document.getElementById("inclinacion-value").value;
+    const azimutValue = document.getElementById("azimut-value").value;
+    const FSystemObjective = document.getElementById("f-system-objective");
+    const FBatteries = document.getElementById("f-batteries");
+    const FPanelsDisposition = document.getElementById("f-panels-disposition");
+    const FPanelsStringX = document.getElementById("f-panels-string-x");
+    const FPanelsStringY = document.getElementById("f-panels-string-y");
+
+    const disposition = FPanelsDisposition.value === "2 agrupaciones con cantidades diferentes de paneles"
+        ? `Una primera agrupación con ${FPanelsStringX.value} paneles, y una segunda agrupación con ${FPanelsStringY.value}`
+        : FPanelsDisposition.value;
+
+    // Campos del formulario que requieren validación
+    const requiredFields = [
+        { id: 'f-location', label: 'Localidad' },
+        { id: 'f-client-name', label: 'Nombre del Cliente' },
+        { id: 'f-address', label: 'Dirección' },
+        { id: 'f-zipcode', label: 'Código Postal' },
+        { id: 'f-catastral-reference', label: 'Referencia Catastral' },
+        { id: 'f-energy-company-cups', label: 'CUPS' },
+        { id: 'f-hired-power-kw', label: 'Potencia Contratada' },
+        { id: 'f-input-v', label: 'Voltaje de Entrada' },
+        { id: 'f-wire-dc-material', label: 'Material Cable DC' },
+        { id: 'f-wire-ac-material', label: 'Material Cable AC' },
+        { id: 'f-wire-ground-material', label: 'Material Cable Tierra' },
+        { id: 'f-wire-ground-length', label: 'Longitud Cable Tierra' },
+        { id: 'f-protections-dc-thermal-v-max', label: 'Voltaje Máximo Protección DC' },
+        { id: 'f-protections-dc-thermal-model', label: 'Modelo Protección Térmica DC' },
+        { id: 'f-protections-dc-breaker-i', label: 'Corriente Interruptor DC' },
+        { id: 'f-protections-dc-breaker-model', label: 'Modelo Interruptor DC' },
+        { id: 'f-protections-dc-surge-model', label: 'Modelo Protección Sobretensión DC' },
+        { id: 'f-protections-ac-thermal-i', label: 'Corriente Protección Térmica AC' },
+        { id: 'f-protections-ac-thermal-model', label: 'Modelo Protección Térmica AC' },
+        { id: 'f-protections-ac-diff-i', label: 'Corriente Diferencial AC' },
+        { id: 'f-protections-ac-diff-model', label: 'Modelo Diferencial AC' },
+        { id: 'f-protections-ac-transitory-surge-model', label: 'Modelo Protección Sobretensión AC' },
+        { id: 'f-zero-inyection-model', label: 'Modelo Inyección Cero' },
+        { id: 'f-metering-device-model', label: 'Modelo Dispositivo Medición' },
+        { id: 'f-mppt-inputs', label: 'Entradas MPPT' },
+        { id: 'f-wire-dc-model', label: 'Modelo Cable DC' },
+        { id: 'f-wire-dc-type', label: 'Tipo Cable DC' },
+        { id: 'f-wire-ac-model', label: 'Modelo Cable AC' },
+        { id: 'f-wire-ac-type', label: 'Tipo Cable AC' },
+    ];
+
+    const missing = [];
+    for (const field of requiredFields) {
+        const el = document.getElementById(field.id);
+        if (!el || !el.value.trim()) {
+            missing.push(field.label);
+            el?.classList.add('border-red-500');
+        } else {
+            el.classList.remove('border-red-500');
+        }
+    }
+
+    if (missing.length > 0) {
+        errorEl.textContent = `Campos obligatorios vacíos: ${missing.join(', ')}`;
+        errorEl.classList.remove('hidden');
+        errorEl.scrollIntoView({ behavior: 'smooth', block: 'center' });
+        return;
+    }
+
+    const formData = {
+        panel_id: selectedPanel.id,
+        inverter_id: selectedInverter.id,
+        location: document.getElementById("f-location").value.trim(),
+        client_name: document.getElementById("f-client-name").value.trim(),
+        address: document.getElementById("f-address").value.trim(),
+        zipcode: document.getElementById("f-zipcode").value.trim(),
+        catastral_reference: document.getElementById("f-catastral-reference").value.trim(),
+        energy_company_name: document.getElementById("f-energy-company-name").value,
+        energy_company_cups: document.getElementById("f-energy-company-cups").value.trim(),
+        hired_power_kw: document.getElementById("f-hired-power-kw").value,
+        input_v: document.getElementById("f-input-v").value,
+        input_v_type: document.getElementById("f-input-v-type").value,
+        inyection_type: FSystemObjective.value === "1" ? "con" : "sin",
+        panels_inclination_verbosed: !inclinacionValue ? "Inclinación nula" : `una inclinación de ${inclinacionValue}º con respecto al horizonte`,
+        panels_azimut_verbosed: !azimutValue ? "la mejor orientación sur posible" : `una orientación de ${azimutValue}º con respecto al sur`,
+        panels_peak_power_kw: results_data.total_field_power,
+        panels_number: Math.ceil(results_data.cell_amount),
+        panels_place: document.getElementById("f-panels-place").value,
+        panels_disposition: disposition,
+        panels_surface: results_data.cell_area ? results_data.cell_area.toFixed(2) : '',
+        panels_inclination: inclinacionValue || '0',
+        panels_azimut: azimutValue || '0',
+        orientation_loss_verbosed: results_data.irradiance_factor_loss <= 0.5 ? "de 0%" : `de alrededor de ${((1 - results_data.irradiance_factor_loss)*100).toFixed(0)}%`,
+        shadows_loss_verbosed: "0%",
+        panel_temp_min_limit: results_data.coldest_temperature,
+        panel_temp_max_limit: 75,
+        inverter_place: document.getElementById("f-inverter-place").value,
+        inverter_phases: "monofásico",
+        anti_pouring_verbosed: FSystemObjective.value === "1"
+            ? "La instalación transmitirá automáticamente la potencia sobrante del sistema a la red pública"
+            : "La instalación contará con un sistema anti vertido, que ajustará la potencia activa de equipo de transformación de DC-AC y evitará que se viertan excedentes de energía a la red pública",
+        batteries_verbosed: FBatteries.value === "1"
+            ? "El proyecto contará con baterías que almacenarán energía que será suministrada al inversor cuando los paneles no puedan abastecer la totalidad de la demanda"
+            : "El proyecto no cuenta con baterías, así no se prevé ningún tipo de acumulación eléctrica. Si bien que en el futuro se plantearía la instalación de las mismas",
+        wire_dc_material: document.getElementById("f-wire-dc-material").value.trim(),
+        wire_dc_length: results_data.wire_length_1 || (document.getElementById('input-length-1')?.value) || '',
+        wire_dc_section: results_data.wire_section_1 || (document.getElementById('txt-section-1')?.textContent) || '',
+        wire_dc_model: document.getElementById("f-wire-dc-model").value.trim(),
+        wire_dc_type: document.getElementById("f-wire-dc-type").value.trim(),
+        wire_ac_material: document.getElementById("f-wire-ac-material").value.trim(),
+        wire_ac_length: results_data.wire_length_2 || (document.getElementById('input-length-2')?.value) || '',
+        wire_ac_section: results_data.wire_section_2 || (document.getElementById('txt-section-2')?.textContent) || '',
+        wire_ac_model: document.getElementById("f-wire-ac-model").value.trim(),
+        wire_ac_type: document.getElementById("f-wire-ac-type").value.trim(),
+        wire_ground_material: document.getElementById("f-wire-ground-material").value.trim(),
+        wire_ground_length: document.getElementById("f-wire-ground-length").value,
+        wire_ground_section: '6',
+        protections_dc_thermal_v_max: document.getElementById("f-protections-dc-thermal-v-max").value,
+        protections_dc_thermal_model: document.getElementById("f-protections-dc-thermal-model").value.trim(),
+        protections_dc_breaker_i: document.getElementById("f-protections-dc-breaker-i").value,
+        protections_dc_breaker_model: document.getElementById("f-protections-dc-breaker-model").value.trim(),
+        protections_dc_surge_model: document.getElementById("f-protections-dc-surge-model").value.trim(),
+        protections_ac_thermal_i: document.getElementById("f-protections-ac-thermal-i").value,
+        protections_ac_thermal_model: document.getElementById("f-protections-ac-thermal-model").value.trim(),
+        protections_ac_diff_i: document.getElementById("f-protections-ac-diff-i").value,
+        protections_ac_diff_model: document.getElementById("f-protections-ac-diff-model").value.trim(),
+        protections_ac_transitory_surge_model: document.getElementById("f-protections-ac-transitory-surge-model").value.trim(),
+        zero_inyection_model: document.getElementById("f-zero-inyection-model").value.trim(),
+        metering_device_model: document.getElementById("f-metering-device-model").value.trim(),
+        mppt_inputs: document.getElementById("f-mppt-inputs").value.trim(),
+        panels_output_i_max_expected: results_data.total_field_power,
+        panels_output_i_max_oversized: (results_data.total_field_power * 1.25).toFixed(2),
+        inverter_output_i_max_expected: selectedInverter.I_max_output,
+        latitude: document.getElementById("latitud-value").value,
+        longitude: document.getElementById("longitud-value").value,
+        altitude: results_data.altitude || '',
+        annual_irradiance: results_data.annual_irradiance_kWh_m2 || '',
+        annual_production: results_data.annual_production || '',
+        date: new Date().toLocaleDateString('es-ES'),
+    };
+
+    // Crear form oculto y enviarlo en nueva pestaña
+    const form = document.createElement('form');
+    form.method = 'POST';
+    form.action = '/imprimir/memoria-pdf';
+    form.target = '_blank';
+
+    for (const [key, value] of Object.entries(formData)) {
+        const input = document.createElement('input');
+        input.type = 'hidden';
+        input.name = key;
+        input.value = value ?? '';
+        form.appendChild(input);
+    }
+
+    document.body.appendChild(form);
+    form.submit();
+    document.body.removeChild(form);
+});
+
+
+async function loadAndRenderDiagram(analysisData, selectedPanel, selectedInverter) {
+    try {
+        console.log("Cargando diagrama del sistema...");
+        
+        // Preparar datos para el endpoint del diagrama
+        const diagramData = {
+            panel_id: selectedPanel.id,
+            inverter_id: selectedInverter.id,
+            field_power: analysisData.total_field_power || '0',
+            panel_amount: Math.ceil(analysisData.cell_amount) || '0',
+            needed_surface: analysisData.cell_area ? analysisData.cell_area.toFixed(2) : '0',
+            beta_optimal: analysisData.beta_optimal ? analysisData.beta_optimal.toFixed(2) : '0',
+            max_panels_per_string: analysisData.max_cell_amount ? Math.round(analysisData.max_cell_amount) : '0',
+            total_yield: analysisData.total_y ? Math.round(analysisData.total_y * 100) : '0',
+            first_section: '6',
+            second_section: '6',
+            first_length: '10',
+            second_length: '15',
+            panel_protection_v: analysisData.panel_protection_v.toFixed(2),
+            panel_protection_i: analysisData.panel_protection_i.toFixed(2),
+        };
+
+        const diagramResponse = await fetch('/api/diagrama-completo', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+            },
+            body: JSON.stringify(diagramData)
+        });
+
+        if (!diagramResponse.ok) {
+            throw new Error('Error al cargar el diagrama');
+        }
+
+        // Obtener el HTML del diagrama
+        const diagramHTML = await diagramResponse.text();
+        
+        const diagram = document.createElement("div");
+        diagram.innerHTML = diagramHTML;
+        step4Content.appendChild(diagram);
+
+        const advancedOptionsBtn = document.getElementById("advanced-options-btn");
+        if (advancedOptionsBtn) {
+            advancedOptionsBtn.addEventListener('click', toggleAdvancedOptions);
+        }
+
+        const firstLengthInput = document.getElementById('input-length-1');
+        const secondLengthInput = document.getElementById('input-length-2');
+        
+        if (firstLengthInput) {
+            firstLengthInput.addEventListener('change', function(e) {
+                updateWire(e, 1);
+            });
+        }
+        
+        if (secondLengthInput) {
+            secondLengthInput.addEventListener('change', function(e) {
+                updateWire(e, 2);
+            });
+        }
+        
+        console.log("✅ Diagrama renderizado correctamente");
+        
+    } catch (error) {
+        console.error('❌ Error cargando el diagrama:', error);
+        // No mostramos error al usuario para no confundir, solo log
+    }
+}
+
+// Loading
+function showLoading(step) {
+    const loading = document.createElement("div");
+    loading.className = "h-full w-full flex justify-center";
+    
+    const spinner = document.createElement("div");
+    spinner.className = "m-6 size-10 border-4 border-emerald-200 border-t-emerald-600 rounded-full animate-spin";
+    
+    loading.appendChild(spinner);
+    
+    // Agregar al contenedor correcto según el paso
+    if (step === 'step3') {
+        step3Content.appendChild(loading);
+    } else if (step === 'step4') {
+        step4Content.appendChild(loading);
+    }
+    
+    return loading;
+}
+
+function hideLoading(loadingElement) {
+    if (loadingElement && loadingElement.parentNode) {
+        loadingElement.parentNode.removeChild(loadingElement);
+    }
+}
+
+function showError(message) {
+    calculosSection.classList.add("hidden");
+    errorMessage.textContent = message;
+    errorMessage.classList.remove('hidden');
+}
+
+function clearErrors() {
+    errorMessage.textContent = '';
+    errorMessage.classList.add('hidden');
+    calculosSection.classList.add("hidden");
+}
+
+async function calculateWireSection(n) {
+    try {
+        // Obtener valores de los selects avanzados
+        const installationType = document.getElementById('select-installation').value;
+        const material = document.getElementById('select-material').value;
+        const conductors = document.getElementById('select-conductors').value;
+        const input = document.getElementById("input-length-" + n);
+        const length = input.value;
+        
+        // Calcular i_section según el valor de n
+        let i_section;
+        if (n === 1) {
+            i_section = getSelectedPanel().imp;
+        } else if (n === 2) {
+            i_section = getSelectedInverter().I_max_output;
+        } else {
+            throw new Error('Valor de n no válido. Debe ser 1 o 2.');
+        }
+        
+        console.log(`Calculando sección para tramo ${n}:`, {
+            installationType,
+            material,
+            conductors,
+            i_section,
+            length
+        });
+
+        // Hacer request al endpoint
+        const response = await fetch('/api/wires/calculate-section', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({
+                tipo: installationType,
+                material: material,
+                no_conductores: parseInt(conductors),
+                i_section: parseFloat(i_section)
+            })
+        });
+
+        if (!response.ok) {
+            const errorData = await response.json();
+            throw new Error(errorData.error || 'Error al calcular la sección');
+        }
+
+        const data = await response.json();
+        
+        // Renderizar el resultado
+        const sectionElement = document.getElementById(`txt-section-${n}`);
+        const noConductores1 = document.getElementById(`txt-no-conductors-1`);
+        const noConductores2 = document.getElementById(`txt-no-conductors-2`);
+        noConductores1.innerText = parseInt(conductors)
+        noConductores2.innerText = parseInt(conductors)
+
+        if (sectionElement) {
+            sectionElement.textContent = `${data.seccion}`;
+            results_data[`wire_section_${n}`] = data.seccion;
+            console.log(`Sección calculada para tramo ${n}: ${data.seccion}mm²`);
+        } else {
+            console.warn(`Elemento txt-section-${n} no encontrado`);
+        }
+        
+        return data.seccion;
+        
+    } catch (error) {
+        console.error(`❌ Error calculando sección para tramo ${n}:`, error);
+        
+        // Mostrar error en el elemento
+        const sectionElement = document.getElementById(`txt-section-${n}`);
+        if (sectionElement) {
+            sectionElement.textContent = 'Error';
+            sectionElement.classList.add('text-red-500');
+        }
+        
+        throw error;
+    }
+}
+
+async function calculateLengthByLength(a) {
+    try {
+        const input_a = document.getElementById("input-length-" + a);
+        
+        // Obtener los valores como números
+        const section_a_text = document.getElementById("txt-section-" + a).textContent;
+        const section_a = parseFloat(section_a_text.replace('mm²', ''));
+        
+        const b = a == 1 ? 2 : 1;
+        const input_b = document.getElementById("input-length-" + b);
+        
+        const section_b_text = document.getElementById("txt-section-" + b).textContent;
+        const section_b = parseFloat(section_b_text.replace('mm²', ''));
+        
+        const current_a = getSelectedPanel().imp;
+        const current_b = getSelectedInverter().I_max_output;
+        const vmp = getSelectedPanel().vmp;
+
+        const length_a = parseFloat(input_a.value);
+        
+        const delta_v = 0.015;
+        const resistivity = 0.01724;
+
+        const length_b = (((vmp * noPanels * delta_v) / (2 * resistivity)) - (length_a * current_a / section_a)) * section_b / current_b;
+
+        input_b.value = length_b.toFixed(2);
+        results_data[`wire_length_${n}`] = length_b.toFixed(2);
+        
+        console.log(`📏📏📏 Longitud calculada para tramo ${b}: ${length_b.toFixed(2)}m`);
+        
+    } catch (error) {
+        console.error(`❌ Error en calculateLengthByLength para tramo ${a}:`, error);
+        throw error; // Propagar el error para que updateWire lo capture
+    }
+}
+
+// Getters
+function getSelectedPanel() {
+    return panelSearchBox ? panelSearchBox.getSelectedItem() : null;
+}
+
+function getSelectedInverter() {
+    return inverterSearchBox ? inverterSearchBox.getSelectedItem() : null;
+}
+
+// Inicializar la aplicación
+document.addEventListener('DOMContentLoaded', function() {
+    console.log('Sunalyze iniciando...');
+    loadEquipmentData();
+});
+
+window.recalculate = recalculate;
+window.updateWire = updateWire;

@@ -1,0 +1,162 @@
+
+<div class="w-full scale-90">
+  <!-- Columna de Opciones Avanzadas -->
+  <div class="flex flex-col basis-1/5 items-center">
+    <!-- Botón Opciones Avanzadas -->
+    <div class="flex flex-col mb-4 w-max cursor-pointer">
+      <button id="advanced-options-btn" 
+              class="flex items-center justify-center gap-2 px-4 py-2 bg-stone-600 hover:bg-stone-700 text-white cursor-pointer transition-all duration-300 ease-in-out hover:shadow-md">
+        <span>Opciones Avanzadas</span>
+        <svg id="advanced-arrow" class="w-4 h-4 transform transition-transform duration-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path>
+        </svg>
+      </button>
+      
+      <!-- Contenedor de Opciones (oculto por defecto) -->
+      <div id="advanced-options" class="flex lg:flex-row flex-col gap-8 mt-3 space-y-3 max-h-0 overflow-hidden transition-all duration-300 ease-in-out opacity-0">
+        <!-- Select Tipo de Instalación -->
+        <div class="flex flex-col">
+          <label class="text-sm text-stone-600 mb-1 font-medium">Tipo de instalación</label>
+          <select id="select-installation" class="w-full p-2 border border-stone-300 bg-white focus:border-stone-500 focus:ring-1 focus:ring-stone-500 transition-colors duration-200">
+            <option value="A1">A1</option>
+            <option value="A2">A2</option>
+            <option value="B1" selected>B1</option>
+            <option value="B2">B2</option>
+          </select>
+        </div>
+        
+        <!-- Select Material -->
+        <div class="flex flex-col">
+          <label class="text-sm text-stone-600 mb-1 font-medium">Material</label>
+          <select id="select-material" class="w-full p-2 border border-stone-300 bg-white focus:border-stone-500 focus:ring-1 focus:ring-stone-500 transition-colors duration-200">
+            <option value="PVC">PVC</option>
+            <option value="XLPE" selected>XLPE</option>
+          </select>
+        </div>
+        
+        <!-- Select Nº de Conductores -->
+        <div class="flex flex-col">
+          <label class="text-sm text-stone-600 mb-1 font-medium">Nº de conductores</label>
+          <select id="select-conductors" class="w-full p-2 border border-stone-300 bg-white focus:border-stone-500 focus:ring-1 focus:ring-stone-500 transition-colors duration-200">
+            <option value="2" selected>2</option>
+            <option value="3">3</option>
+          </select>
+        </div>
+
+        <button id="redraw" class="items-center justify-center px-4 py-2 bg-emerald-600 hover:bg-emerald-700 text-white transition-all duration-300 ease-in-out hover:shadow-md" onclick="recalculate()">
+            Recalcular
+        </button>
+
+      </div>
+    </div>
+
+<div class="flex flex-row gap-4 lg:scale-65 md:scale-50 p-8 scale-30 sm:scale-40 xl:scale-80">
+  <div class="flex flex-col basis-1/5">
+    <div class="shrink h-24 text-2xl font-bold text-sky-800/75">{{ panel.nombre }}</div>
+    <div class="basis-64 flex items-center overflow-visible">
+      <img src="{{ url_for('static', filename='assets/solar-panel.svg') }}">
+    </div>
+    <div class="flex items-center mt-12">
+      <table class="ms-2 w-max">
+        <tr class="px-4 py-1 odd:bg-stone-500/40 even:bg-stone-800/10">
+          <td class="px-4 py-0.5">Potencia pico de campo</td>
+          <td id="txt-field-power" class="px-4 py-0.5">{{ field_power }} kW</td>
+        </tr>
+        <tr class="px-4 py-1 odd:bg-stone-500/40 even:bg-stone-800/10">
+          <td class="px-4 py-0.5">Cantidad de paneles</td>
+          <td id="txt-panel-amount" class="px-4 py-0.5">{{ panel_amount }}</td>
+        </tr>
+        <tr class="px-4 py-1 odd:bg-stone-500/40 even:bg-stone-800/10">
+          <td class="px-4 py-0.5">Superficie necesaria</td>
+          <td id="txt-needed-surface" class="px-4 py-0.5">{{ needed_surface }} m²</td>
+        </tr>
+        <tr class="px-4 py-1 odd:bg-stone-500/40 even:bg-stone-800/10">
+          <td class="px-4 py-0.5">Beta óptimo</td>
+          <td id="txt-beta-optimal" class="px-4 py-0.5">{{ beta_optimal }}°</td>
+        </tr>
+      </table>
+    </div>
+  </div>
+  
+  <div class="flex flex-col basis-1/5">
+    <div class="shrink h-24 text-2xl font-bold text-sky-800/75"></div>
+    <div class="basis-64 flex flex-col justify-center items-center overflow-visible">
+      <div class="flex items-center mt-2 mb-6">
+        <p class="w-36">Longitud de tramo</p>
+        <div class="flex border border-gray-800/25">
+          <div>
+            <input id="input-length-1" class="w-16 h-full ps-1" type="number" value="{{ first_length }}" onchange="updateWire(this, 1)">
+          </div>
+          <div class="bg-gray-700/25 text-gray-900/75 p-1 rounded-r-lg">m</div>
+        </div>
+      </div>
+      <hr class="border border-2 w-7/6">
+    </div>
+    <div class="flex justify-center -mt-14">
+      <span id="txt-no-conductors-1">2</span>
+      <span>x</span>
+      <p id="txt-section-1">{{ first_section }}</p>
+      <span>mm²</span>
+    </div>
+  </div>
+  
+  <div class="flex flex-col basis-1/5">
+    <div class="shrink h-24 text-2xl font-bold text-sky-800/75">{{ inverter.nombre }}</div>
+    <div class="basis-64 flex items-center overflow-visible">
+      <img src="{{ url_for('static', filename='assets/inverter.svg') }}">
+    </div>
+    <div class="flex items-center mt-12">
+      <table class="ms-2 w-max">
+        <tr class="px-4 py-1 odd:bg-stone-500/40 even:bg-stone-800/10">
+          <td class="px-4 py-0.5">Paneles máximos por cadena</td>
+          <td id="txt-max-panels-per-string" class="px-4 py-0.5">{{ max_panels_per_string }}</td>
+        </tr>
+        <tr class="px-4 py-1 odd:bg-stone-500/40 even:bg-stone-800/10">
+          <td class="px-4 py-0.5">Eficiencia total</td>
+          <td id="txt-total-yield" class="px-4 py-0.5">{{ total_yield }}%</td>
+        </tr>
+      </table>
+    </div>
+  </div>
+  
+  <div class="flex flex-col basis-1/5">
+    <div class="shrink h-24 text-2xl font-bold text-sky-800/75"></div>
+    <div class="basis-64 flex flex-col justify-center items-center overflow-visible">
+      <div class="flex items-center mt-2 mb-6">
+        <p class="w-36">Longitud de tramo</p>
+        <div class="flex border border-gray-800/25">
+          <div>
+            <input id="input-length-2" class="w-16 h-full ps-1" type="number" value="{{ second_length }}" onchange="updateWire(this, 2)">
+          </div>
+          <div class="bg-gray-700/25 text-gray-900/75 p-1 rounded-r-lg">m</div>
+        </div>
+      </div>
+      <hr class="border border-2 w-7/6">
+    </div>
+    <div class="flex justify-center -mt-14">
+      <span id="txt-no-conductors-2">2</span>
+      <span>x</span>
+      <p id="txt-section-2">{{ second_section }}</p>
+      <span>mm²</span>
+    </div>
+  </div>
+  
+  <div class="flex flex-col basis-1/5">
+    <div class="shrink h-24 text-2xl font-bold text-sky-800/75">Protecciones</div>
+    <div class="basis-64 flex items-center overflow-visible">
+      <img src="{{ url_for('static', filename='assets/protections.svg') }}">
+    </div>
+    <div class="flex items-center justify-center mt-12">
+      <table class="w-4/5">
+        <tr class="px-4 py-1 odd:bg-stone-500/40 even:bg-stone-800/10">
+          <td class="px-4 py-0.5">Fusibles</td>
+          <td class="px-4 py-0.5">{{ panel_protection_v }}V / {{ panel_protection_i }}A</td>
+        </tr>
+        <tr class="px-4 py-1 odd:bg-stone-500/40 even:bg-stone-800/10">
+          <td class="px-4 py-0.5">Protector de sobretensiones</td>
+          <td class="px-4 py-0.5">{{ panel_protection_v }}V / {{ panel_protection_i }}A</td>
+        </tr>
+      </table>
+    </div>
+  </div>
+</div>
