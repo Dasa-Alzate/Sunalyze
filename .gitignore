@@ -27,3 +27,10 @@ instance/
 
 # Logs
 *.log
+
+# Node
+node_modules/
+
+# Generated CSS (build artifact)
+app/static/css/output.css
+app/static/css/fonts/

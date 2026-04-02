@@ -1,0 +1,34 @@
+{
+  "name": "sunalyze",
+  "version": "1.0.0",
+  "description": "Sunalyze es una aplicación Flask para el análisis y dimensionamiento de sistemas fotovoltaicos. Utiliza datos de irradiancia de PVGIS para calcular requerimientos de paneles solares e inversores compatibles.",
+  "main": "index.js",
+  "directories": {
+    "doc": "docs"
+  },
+  "scripts": {
+    "copy-fonts": "cp -r ./node_modules/bootstrap-icons/font/fonts ./app/static/css/fonts",
+    "dev": "npm run copy-fonts && tailwindcss -i ./app/static/css/input.css -o ./app/static/css/output.css --watch",
+    "build": "npm run copy-fonts && tailwindcss -i ./app/static/css/input.css -o ./app/static/css/output.css --minify"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/Dasa-Alzate/Sunalyze.git"
+  },
+  "keywords": [],
+  "author": "Dasa-Alzate",
+  "license": "ISC",
+  "type": "commonjs",
+  "bugs": {
+    "url": "https://github.com/Dasa-Alzate/Sunalyze/issues"
+  },
+  "homepage": "https://github.com/Dasa-Alzate/Sunalyze#readme",
+  "devDependencies": {
+    "@tailwindcss/cli": "^4.2.2",
+    "daisyui": "^5.5.19",
+    "tailwindcss": "^4.2.2"
+  },
+  "dependencies": {
+    "bootstrap-icons": "^1.13.1"
+  }
+}

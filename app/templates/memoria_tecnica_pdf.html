@@ -32,10 +32,6 @@
             page-break-before: always;
         }
 
-        section:first-child {
-            page-break-before: auto;
-        }
-
         h1, h2, h3, h4, h5 {
             color: #2c3e50;
             page-break-after: avoid;
@@ -658,21 +654,33 @@
     <section>
         <h3 class="underline" id="esquema-ca">ESQUEMA UNIFILAR CA</h3>
         <div class="image-container">
-            <p>[Esquema unifilar CA]</p>
+            {%- if svg_ca -%}
+                {{ svg_ca | safe }}
+            {%- else -%}
+                <p>Diagrama no disponible.</p>
+            {%- endif -%}
         </div>
     </section>
 
     <section>
         <h3 class="underline" id="esquema-cc">ESQUEMA UNIFILAR CC</h3>
         <div class="image-container">
-            <p>[Esquema unifilar CC]</p>
+            {%- if svg_cc -%}
+                {{ svg_cc | safe }}
+            {%- else -%}
+                <p>Diagrama no disponible.</p>
+            {%- endif -%}
         </div>
     </section>
 
     <section>
         <h3 class="underline" id="esquema-general">ESQUEMA GENERAL CA/CC</h3>
         <div class="image-container">
-            <p>[Esquema general CA/CC]</p>
+            {%- if svg_sistema -%}
+                {{ svg_sistema | safe }}
+            {%- else -%}
+                <p>Diagrama no disponible.</p>
+            {%- endif -%}
         </div>
     </section>
 

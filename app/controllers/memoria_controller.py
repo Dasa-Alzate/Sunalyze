@@ -1,9 +1,13 @@
 """Controlador para la generación de la memoria técnica en PDF."""
 
+import logging
 from flask import render_template, jsonify, Response
 from weasyprint import HTML
 from app.models.panel import Panel
 from app.models.inverter import Inverter
+from app.services.circuit import CircuitService, DCConfig, ACConfig, SystemConfig
+
+logger = logging.getLogger(__name__)
 
 
 class MemoriaController:
@@ -51,6 +55,7 @@ class MemoriaController:
                 return jsonify({'error': 'Panel o inversor no encontrado'}), 400
 
             template_vars = MemoriaController._build_template_vars(form_data, panel, inverter)
+            template_vars.update(MemoriaController._build_circuit_svgs(form_data, panel, inverter))
 
         html_string = render_template('memoria_tecnica_pdf.html', **template_vars)
         pdf = HTML(string=html_string).write_pdf()
@@ -146,3 +151,67 @@ class MemoriaController:
             'annual_irradiance': data.get('annual_irradiance'),
             'date': data.get('date'),
         }
+
+    @staticmethod
+    def _build_circuit_svgs(data, panel, inverter) -> dict:
+        """
+        Genera los tres diagramas SVG para incrustar en la memoria técnica.
+        Mapea los campos del formulario al SystemConfig del CircuitService.
+        Si la generación falla (datos incompletos), devuelve SVGs vacíos.
+        """
+        def _f(key, default=0.0):
+            try:
+                return float(data.get(key) or default)
+            except (ValueError, TypeError):
+                return default
+
+        def _i(key, default=1):
+            try:
+                return int(data.get(key) or default)
+            except (ValueError, TypeError):
+                return default
+
+        try:
+            num_strings = _i('mppt_inputs', 1)
+            panels_number = _i('panels_number', num_strings)
+            panels_per_string = max(1, round(panels_number / num_strings))
+
+            dc = DCConfig(
+                panel_model=panel.nombre,
+                panel_voc=float(panel.voc),
+                panel_isc=float(panel.isc),
+                panels_per_string=panels_per_string,
+                num_strings=num_strings,
+                fuse_i=_f('protections_dc_breaker_i', round(float(panel.isc) * 1.25, 1)),
+                switch_v=_f('protections_dc_thermal_v_max', float(panel.voc) * panels_per_string * 1.25),
+                cable_section=data.get('wire_dc_section') or data.get('wire_dc_model') or '6 mm²',
+            )
+
+            phases_raw = data.get('inverter_phases', '1')
+            phases = 3 if str(phases_raw).strip() in ('3', 'trifásico', 'trifasico') else 1
+
+            ac = ACConfig(
+                inverter_model=inverter.nombre,
+                inverter_power=float(inverter.power),
+                inverter_output_i=float(inverter.I_max_output),
+                phases=phases,
+                mcb_i=_f('protections_ac_thermal_i', round(float(inverter.I_max_output) * 1.25, 1)),
+                rcd_i=_f('protections_ac_diff_i', 25.0),
+                rcd_sensitivity=data.get('protections_ac_diff_sensitivity') or '30 mA',
+                cable_section=data.get('wire_ac_section') or data.get('wire_ac_model') or '6 mm²',
+                has_zero_injection=bool(data.get('zero_inyection_model')),
+                zero_injection_model=data.get('zero_inyection_model') or '',
+            )
+
+            config = SystemConfig(dc=dc, ac=ac)
+
+            return {
+                'svg_ca':      CircuitService.generate_grid_connection(config),
+                'svg_cc':      CircuitService.generate_cc_vertical(config),
+                'svg_sistema': CircuitService.generate_full_system(config),
+            }
+
+        except Exception:
+            logger.exception("Error generando diagramas SVG para la memoria")
+            empty = '<svg xmlns="http://www.w3.org/2000/svg" width="400" height="80"><text x="10" y="40" font-family="monospace" font-size="12" fill="#888">Diagrama no disponible</text></svg>'
+            return {'svg_ca': empty, 'svg_cc': empty, 'svg_sistema': empty}
