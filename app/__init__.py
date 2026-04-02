@@ -31,8 +31,10 @@ def create_app():
     # Registrar blueprints
     from app.routes.main import bp as main_bp
     from app.routes.crud import crud_bp
+    from app.routes.circuit import circuit_bp
 
     app.register_blueprint(main_bp)
     app.register_blueprint(crud_bp)
+    app.register_blueprint(circuit_bp)
 
     return app

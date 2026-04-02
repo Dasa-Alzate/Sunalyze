@@ -2,7 +2,6 @@
 
 from flask import jsonify
 import pvlib
-import pandas as pd
 import math
 from app.models.panel import Panel
 from app.models.inverter import Inverter
@@ -112,7 +111,6 @@ class AnalysisController:
             # Parámetros del panel desde la base de datos
             panel_temp_loss = panel.tcp
             cell_noct = panel.t_noct
-            i_mp_panel = panel.imp
             power_placa = panel.power
             y_placa = panel.y / 100
             cell_area = (panel.width * panel.height) / 1000000
