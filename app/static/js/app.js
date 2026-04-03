@@ -602,9 +602,9 @@ printUpdateBtn.addEventListener('click', function() {
         wire_dc_length: results_data.wire_length_1 || (document.getElementById('input-length-1')?.value) || '',
         wire_dc_section: results_data.wire_section_1 || (document.getElementById('txt-section-1')?.textContent) || '',
         wire_ac_length: results_data.wire_length_2 || (document.getElementById('input-length-2')?.value) || '',
-        wire_ac_section: results_data.wire_section_2 || (document.getElementById('txt-section-2')?.textContent) || '',
+        wire_ac_section: Math.max(6, parseFloat(results_data.wire_section_2 || document.getElementById('txt-section-2')?.textContent || '6')).toString(),
         wire_ground_length: document.getElementById("f-wire-ground-length").value,
-        wire_ground_section: '6',
+        wire_ground_section: Math.max(6, parseFloat(results_data.wire_section_2 || document.getElementById('txt-section-2')?.textContent || '6')).toString(),
         protections_dc_thermal_v_max: document.getElementById("f-protections-dc-thermal-v-max").value,
         protections_dc_breaker_i: document.getElementById("f-protections-dc-breaker-i").value,
         protections_ac_thermal_i: document.getElementById("f-protections-ac-thermal-i").value,
@@ -619,6 +619,7 @@ printUpdateBtn.addEventListener('click', function() {
         altitude: results_data.altitude || '',
         annual_irradiance: results_data.annual_irradiance_kWh_m2 || '',
         annual_production: results_data.annual_production || '',
+        is_coplanar: chk.checked ? '1' : '0',
         date: new Date().toLocaleDateString('es-ES'),
     };
 
