@@ -103,14 +103,14 @@ export class SearchBox {
 
     createResultItem(item) {
         const resultItem = document.createElement('div');
-        resultItem.className = 'flex p-2 rounded-md cursor-pointer transition-colors duration-200 bg-white hover:bg-emerald-50 hover:border-emerald-200 focus:bg-emerald-100 focus:border-emerald-400 active:bg-emerald-200 active:border-emerald-500 border border-transparent';
+        resultItem.className = 'flex p-2 rounded-md cursor-pointer transition-colors duration-200 bg-base-100 hover:bg-primary/10 hover:border-primary/30 focus:bg-primary/15 focus:border-primary/50 active:bg-primary/20 active:border-primary/60 border border-transparent';
         resultItem.tabIndex = 0;
-        
+
         const displayText = this.formatDisplayText(item);
-        
+
         // Crear elemento p con createElement
         const textElement = document.createElement('p');
-        textElement.className = 'text-gray-800 font-medium';
+        textElement.className = 'text-base-content font-medium';
         textElement.textContent = displayText;
         
         // Agregar el p al resultItem
@@ -128,21 +128,21 @@ export class SearchBox {
         });
         
         resultItem.addEventListener('mouseenter', () => {
-            resultItem.classList.add('bg-emerald-50', 'border-emerald-200');
+            resultItem.classList.add('bg-primary/10', 'border-primary/30');
         });
-        
+
         resultItem.addEventListener('mouseleave', () => {
-            if (!resultItem.classList.contains('bg-emerald-100')) {
-                resultItem.classList.remove('bg-emerald-50', 'border-emerald-200');
+            if (!resultItem.classList.contains('bg-primary/15')) {
+                resultItem.classList.remove('bg-primary/10', 'border-primary/30');
             }
         });
-        
+
         resultItem.addEventListener('focus', () => {
-            resultItem.classList.add('bg-emerald-100', 'border-emerald-400');
+            resultItem.classList.add('bg-primary/15', 'border-primary/50');
         });
-        
+
         resultItem.addEventListener('blur', () => {
-            resultItem.classList.remove('bg-emerald-100', 'border-emerald-400');
+            resultItem.classList.remove('bg-primary/15', 'border-primary/50');
         });
         
         resultItem.addEventListener('keydown', (e) => {
@@ -192,7 +192,7 @@ export class SearchBox {
         this.results.innerHTML = '';
         
         const noResultsDiv = document.createElement('div');
-        noResultsDiv.className = 'flex p-2 text-gray-500 text-sm';
+        noResultsDiv.className = 'flex p-2 text-base-content/50 text-sm';
         noResultsDiv.textContent = 'No se encontraron resultados';
         
         this.results.appendChild(noResultsDiv);

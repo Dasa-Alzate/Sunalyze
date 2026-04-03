@@ -1,5 +1,6 @@
 from flask import Blueprint, render_template, request
 from app.controllers.analysis_controller import AnalysisController
+from app.controllers.diagrama_controller import DiagramaController
 from app.controllers.memoria_controller import MemoriaController
 from app.models.panel import Panel
 from app.models.inverter import Inverter
@@ -17,6 +18,10 @@ def home():
 @bp.route('/api/panel-analysis', methods=['POST'])
 def panel_analysis():
     return AnalysisController.calculate_panel_requirements(request.get_json())
+
+@bp.route('/api/diagrama-completo', methods=['POST'])
+def diagrama_completo():
+    return DiagramaController.get_diagrama_completo(request.get_json())
 
 @bp.route('/imprimir/memoria-pdf', methods=['GET', 'POST'])
 def generar_memoria_pdf():

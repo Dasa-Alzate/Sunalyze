@@ -1,6 +1,24 @@
 import Fuse from 'https://cdn.jsdelivr.net/npm/fuse.js@6.6.2/dist/fuse.esm.js';
 import { SearchBox } from './searchbox.js';
 
+// Dark mode toggle
+const darkSwitch = document.getElementById('dark-switch');
+if (darkSwitch) {
+  darkSwitch.checked = document.documentElement.getAttribute('data-theme') === 'forest';
+  darkSwitch.addEventListener('change', () => {
+    const theme = darkSwitch.checked ? 'forest' : 'emerald';
+    document.documentElement.setAttribute('data-theme', theme);
+    
+    if (darkSwitch.checked) {
+        document.body.classList.add("dark");
+    } else {
+        document.body.classList.remove("dark");
+    }
+
+    localStorage.setItem('sunalyze-theme', theme);
+  });
+}
+
 // Variables globales
 let panels = [];
 let inverters = [];
@@ -23,7 +41,6 @@ const azimutValue = document.getElementById("azimut-value");
 const chk = document.getElementById("chk-coplanar");
 const group = document.getElementById("coplanar-group");
 const siguientePaso1 = document.getElementById("siguiente-paso-1");
-const siguientePaso2 = document.getElementById("siguiente-paso-2");
 const siguientePaso3 = document.getElementById("siguiente-paso-3");
 const printUpdateBtn = document.getElementById("print-update-btn");
 
@@ -32,9 +49,8 @@ const step2Content = document.getElementById("step2-content");
 const step2Hr = document.getElementById("step2-hr");
 const step2Container = document.getElementById("step2-container");
 
-const step3Content = document.getElementById("step3-content");
-const step3Hr = document.getElementById("step3-hr");
-const step3Container = document.getElementById("step3-container");
+const deviceInverterSection = document.getElementById("device-inverter-section");
+const deviceSubmitSection = document.getElementById("device-submit-section");
 
 const step4Content = document.getElementById("step4-content");
 const step4Hr = document.getElementById("step4-hr");
@@ -85,8 +101,6 @@ siguientePaso1.addEventListener("click", e => {
     showStep2Content();
 });
 
-siguientePaso2.addEventListener("click", handlePanelAnalysis);
-
 siguientePaso3.addEventListener("click", handleCompleteAnalysis);
 
 // Funciones principales
@@ -136,6 +150,7 @@ function initializeSearchBoxes() {
         data: panels,
         onSelect: (item) => {
             console.log('Panel seleccionado:', item.nombre);
+            handlePanelAnalysis();
         }
     });
 
@@ -181,33 +196,10 @@ function showStep2Content() {
         // Animación del contenido principal
         step2Content.classList.remove('opacity-0', 'translate-y-4');
         step2Content.classList.add('opacity-100', 'translate-y-0');
+        step2Content.closest('.card').scrollIntoView({ behavior: 'smooth', block: 'start' });
     }, 150);
 }
 
-function showStep3Content() {
-    // Mostrar el HR con transición
-    step3Hr.classList.remove('hidden');
-    step3Hr.classList.add('opacity-0');
-    
-    // Agregar padding al contenedor
-    step3Container.classList.add('p-4');
-    
-    // Mostrar el contenido
-    step3Content.classList.remove('hidden');
-    
-    // Animaciones escalonadas con Tailwind
-    setTimeout(() => {
-        // Animación del HR
-        step3Hr.classList.remove('opacity-0');
-        step3Hr.classList.add('opacity-100', 'transition-opacity', 'duration-300');
-    }, 50);
-    
-    setTimeout(() => {
-        // Animación del contenido principal
-        step3Content.classList.remove('opacity-0', 'translate-y-4');
-        step3Content.classList.add('opacity-100', 'translate-y-0');
-    }, 150);
-}
 
 function showStep4Content() {
     step4Hr.classList.remove('hidden');
@@ -223,6 +215,7 @@ function showStep4Content() {
     setTimeout(() => {
         step4Content.classList.remove('opacity-0', 'translate-y-4');
         step4Content.classList.add('opacity-100', 'translate-y-0');
+        step4Content.closest('.card').scrollIntoView({ behavior: 'smooth', block: 'start' });
     }, 150);
 }
 
@@ -322,16 +315,14 @@ async function handlePanelAnalysis() {
     console.log("Iniciando análisis de paneles");
     
     clearErrors();
-    showStep3Content(); // Mostrar paso 3 inmediatamente
-    
     const selectedPanel = getSelectedPanel();
-    
+
     if (!selectedPanel) {
         showError('Por favor selecciona un panel');
         return;
     }
 
-    const loading = showLoading('step3');
+    const loading = showLoading('step2');
     
     try {
         const res = await fetch('/api/panel-analysis', {
@@ -363,9 +354,15 @@ async function handlePanelAnalysis() {
         if (data.compatible_inverters && data.compatible_inverters.length > 0) {
             inverterSearchBox.setData(data.compatible_inverters);
             console.log(`Cargados ${data.compatible_inverters.length} inversores compatibles`);
-            step3Content.children[0].classList.remove("hidden");
+            deviceInverterSection.classList.remove("hidden");
+            deviceSubmitSection.classList.remove("hidden");
+            setTimeout(() => {
+                deviceInverterSection.classList.remove("opacity-0", "translate-y-4");
+                deviceInverterSection.classList.add("opacity-100", "translate-y-0");
+            }, 50);
         } else {
-            step3Content.children[0].classList.add("hidden");
+            deviceInverterSection.classList.add("hidden");
+            deviceSubmitSection.classList.add("hidden");
             showError('No se encontraron inversores compatibles para esta configuración');
         }
         
@@ -441,11 +438,11 @@ function displayCompleteResults(data) {
     // Irradiancia
     const nombre = document.createElement('p');
     nombre.textContent = 'Irradiancia del lugar';
-    nombre.className = 'text-gray-700 font-medium';
+    nombre.className = 'text-base-content font-medium pt-2 pb-1 ps-2';
 
     const valor = document.createElement('p');
     valor.textContent = `${irradiancia} ${unidadIrradiancia}`;
-    valor.className = 'text-gray-900 font-semibold';
+    valor.className = 'text-accent font-semibold pt-2 pb-1';
 
     calculosSection.appendChild(nombre);
     calculosSection.appendChild(valor);
@@ -464,13 +461,13 @@ function displayCompleteResults(data) {
 
     items.forEach((item, i) => {
         const lbl = document.createElement('p');
-        const colorClass = i % 2 === 0 ? "bg-emerald-600/25" : "";
+        const colorClass = i % 2 === 0 ? "bg-base-300" : "";
         lbl.textContent = item.label;
-        lbl.className = 'text-gray-700 font-medium ' + colorClass;
+        lbl.className = 'text-base-content font-medium pt-2 pb-1 ps-2 ' + colorClass;
 
         const val = document.createElement('p');
         val.textContent = item.value;
-        val.className = 'text-emerald-900 font-semibold ' + colorClass;
+        val.className = 'text-accent font-semibold pt-2 pb-1 ' + colorClass;
 
         calculosSection.appendChild(lbl);
         calculosSection.appendChild(val);
@@ -479,11 +476,11 @@ function displayCompleteResults(data) {
     if (data.selected_inverter) {
         const inverterHeader = document.createElement('p');
         inverterHeader.textContent = 'Inversor seleccionado';
-        inverterHeader.className = 'bg-emerald-600/25 font-medium text-gray-700 py-1 mt-3';
+        inverterHeader.className = 'bg-base-300 font-medium text-base-content pt-2 pb-1 ps-2 mt-3';
 
         const inverterName = document.createElement('p');
         inverterName.textContent = data.selected_inverter.nombre;
-        inverterName.className = 'text-emerald-900 font-semibold bg-emerald-600/25 py-1 mt-3';
+        inverterName.className = 'text-accent font-semibold bg-base-300 pt-2 pb-1 mt-3';
 
         calculosSection.appendChild(inverterHeader);
         calculosSection.appendChild(inverterName);
@@ -492,13 +489,13 @@ function displayCompleteResults(data) {
     const imprimirMemoriaBtn = document.createElement('button');
 
     imprimirMemoriaBtn.id = 'imprimir-memoria-btn';
-    imprimirMemoriaBtn.className = 'bg-emerald-500 mt-2 px-4 py-2 text-sm font-normal text-white opacity-100 focus:outline-none col-span-2 cursor-pointer hover:bg-emerald-800/75';
+    imprimirMemoriaBtn.className = 'btn btn-primary mt-2 col-span-2';
     imprimirMemoriaBtn.textContent = 'Abrir formulario de memoria de cálculo';
 
     imprimirMemoriaBtn.addEventListener('click', function() {
         step5Content.classList.remove("hidden", "opacity-0");
         step5Hr.classList.remove("hidden");
-        window.scrollTo({ top: step5Content.offsetTop, behavior: 'smooth' });
+        step5Content.closest('.card').scrollIntoView({ behavior: 'smooth', block: 'start' });
     });
 
     calculosSection.appendChild(imprimirMemoriaBtn);
@@ -513,7 +510,7 @@ printUpdateBtn.addEventListener('click', function() {
     const selectedInverter = getSelectedInverter();
 
     if (!selectedPanel || !selectedInverter || !results_data) {
-        errorEl.textContent = 'Debes completar los pasos 1-4 antes de generar la memoria.';
+        errorEl.textContent = 'Debes completar los pasos 1-3 antes de generar la memoria.';
         errorEl.classList.remove('hidden');
         return;
     }
@@ -540,27 +537,13 @@ printUpdateBtn.addEventListener('click', function() {
         { id: 'f-energy-company-cups', label: 'CUPS' },
         { id: 'f-hired-power-kw', label: 'Potencia Contratada' },
         { id: 'f-input-v', label: 'Voltaje de Entrada' },
-        { id: 'f-wire-dc-material', label: 'Material Cable DC' },
-        { id: 'f-wire-ac-material', label: 'Material Cable AC' },
-        { id: 'f-wire-ground-material', label: 'Material Cable Tierra' },
         { id: 'f-wire-ground-length', label: 'Longitud Cable Tierra' },
         { id: 'f-protections-dc-thermal-v-max', label: 'Voltaje Máximo Protección DC' },
-        { id: 'f-protections-dc-thermal-model', label: 'Modelo Protección Térmica DC' },
-        { id: 'f-protections-dc-breaker-i', label: 'Corriente Interruptor DC' },
-        { id: 'f-protections-dc-breaker-model', label: 'Modelo Interruptor DC' },
-        { id: 'f-protections-dc-surge-model', label: 'Modelo Protección Sobretensión DC' },
-        { id: 'f-protections-ac-thermal-i', label: 'Corriente Protección Térmica AC' },
-        { id: 'f-protections-ac-thermal-model', label: 'Modelo Protección Térmica AC' },
+        { id: 'f-protections-dc-breaker-i', label: 'Corriente Fusibles DC' },
+        { id: 'f-protections-ac-thermal-i', label: 'Corriente Magnetotérmico AC' },
         { id: 'f-protections-ac-diff-i', label: 'Corriente Diferencial AC' },
-        { id: 'f-protections-ac-diff-model', label: 'Modelo Diferencial AC' },
         { id: 'f-protections-ac-transitory-surge-model', label: 'Modelo Protección Sobretensión AC' },
-        { id: 'f-zero-inyection-model', label: 'Modelo Inyección Cero' },
-        { id: 'f-metering-device-model', label: 'Modelo Dispositivo Medición' },
         { id: 'f-mppt-inputs', label: 'Entradas MPPT' },
-        { id: 'f-wire-dc-model', label: 'Modelo Cable DC' },
-        { id: 'f-wire-dc-type', label: 'Tipo Cable DC' },
-        { id: 'f-wire-ac-model', label: 'Modelo Cable AC' },
-        { id: 'f-wire-ac-type', label: 'Tipo Cable AC' },
     ];
 
     const missing = [];
@@ -616,31 +599,17 @@ printUpdateBtn.addEventListener('click', function() {
         batteries_verbosed: FBatteries.value === "1"
             ? "El proyecto contará con baterías que almacenarán energía que será suministrada al inversor cuando los paneles no puedan abastecer la totalidad de la demanda"
             : "El proyecto no cuenta con baterías, así no se prevé ningún tipo de acumulación eléctrica. Si bien que en el futuro se plantearía la instalación de las mismas",
-        wire_dc_material: document.getElementById("f-wire-dc-material").value.trim(),
         wire_dc_length: results_data.wire_length_1 || (document.getElementById('input-length-1')?.value) || '',
         wire_dc_section: results_data.wire_section_1 || (document.getElementById('txt-section-1')?.textContent) || '',
-        wire_dc_model: document.getElementById("f-wire-dc-model").value.trim(),
-        wire_dc_type: document.getElementById("f-wire-dc-type").value.trim(),
-        wire_ac_material: document.getElementById("f-wire-ac-material").value.trim(),
         wire_ac_length: results_data.wire_length_2 || (document.getElementById('input-length-2')?.value) || '',
         wire_ac_section: results_data.wire_section_2 || (document.getElementById('txt-section-2')?.textContent) || '',
-        wire_ac_model: document.getElementById("f-wire-ac-model").value.trim(),
-        wire_ac_type: document.getElementById("f-wire-ac-type").value.trim(),
-        wire_ground_material: document.getElementById("f-wire-ground-material").value.trim(),
         wire_ground_length: document.getElementById("f-wire-ground-length").value,
         wire_ground_section: '6',
         protections_dc_thermal_v_max: document.getElementById("f-protections-dc-thermal-v-max").value,
-        protections_dc_thermal_model: document.getElementById("f-protections-dc-thermal-model").value.trim(),
         protections_dc_breaker_i: document.getElementById("f-protections-dc-breaker-i").value,
-        protections_dc_breaker_model: document.getElementById("f-protections-dc-breaker-model").value.trim(),
-        protections_dc_surge_model: document.getElementById("f-protections-dc-surge-model").value.trim(),
         protections_ac_thermal_i: document.getElementById("f-protections-ac-thermal-i").value,
-        protections_ac_thermal_model: document.getElementById("f-protections-ac-thermal-model").value.trim(),
         protections_ac_diff_i: document.getElementById("f-protections-ac-diff-i").value,
-        protections_ac_diff_model: document.getElementById("f-protections-ac-diff-model").value.trim(),
         protections_ac_transitory_surge_model: document.getElementById("f-protections-ac-transitory-surge-model").value.trim(),
-        zero_inyection_model: document.getElementById("f-zero-inyection-model").value.trim(),
-        metering_device_model: document.getElementById("f-metering-device-model").value.trim(),
         mppt_inputs: document.getElementById("f-mppt-inputs").value.trim(),
         panels_output_i_max_expected: results_data.total_field_power,
         panels_output_i_max_oversized: (results_data.total_field_power * 1.25).toFixed(2),
@@ -747,14 +716,14 @@ function showLoading(step) {
     const loading = document.createElement("div");
     loading.className = "h-full w-full flex justify-center";
     
-    const spinner = document.createElement("div");
-    spinner.className = "m-6 size-10 border-4 border-emerald-200 border-t-emerald-600 rounded-full animate-spin";
+    const spinner = document.createElement("span");
+    spinner.className = "loading loading-spinner loading-lg text-primary m-6";
     
     loading.appendChild(spinner);
     
     // Agregar al contenedor correcto según el paso
-    if (step === 'step3') {
-        step3Content.appendChild(loading);
+    if (step === 'step2') {
+        step2Content.appendChild(loading);
     } else if (step === 'step4') {
         step4Content.appendChild(loading);
     }
@@ -912,3 +881,48 @@ document.addEventListener('DOMContentLoaded', function() {
 
 window.recalculate = recalculate;
 window.updateWire = updateWire;
+
+// Sticky header shrink effect
+(function() {
+    const headers = document.querySelectorAll('.sticky.top-16');
+    const stickyOffset = 64; // top-16 = 4rem
+    const zone = 30; // px de transición antes del punto sticky
+
+    const items = Array.from(headers).map(el => ({
+        el,
+        number: el.querySelector('p'),
+        subtitle: el.querySelector('span'),
+    }));
+
+    let ticking = false;
+
+    function lerp(from, to, t) {
+        return from + (to - from) * t;
+    }
+
+    function update() {
+        items.forEach(({ el, number, subtitle }) => {
+            const dist = el.getBoundingClientRect().top - stickyOffset;
+            const t = Math.max(0, Math.min(1, 1 - dist / zone));
+
+            if (t === 0) {
+                number.style.fontSize = '';
+                subtitle.style.fontSize = '';
+                el.style.paddingBlock = '';
+                return;
+            }
+
+            number.style.fontSize = `${lerp(3, 1.875, t)}rem`;
+            subtitle.style.fontSize = `${lerp(1.875, 1.25, t)}rem`;
+            el.style.paddingBlock = `${lerp(1, 0.5, t)}rem`;
+        });
+        ticking = false;
+    }
+
+    window.addEventListener('scroll', () => {
+        if (!ticking) {
+            requestAnimationFrame(update);
+            ticking = true;
+        }
+    }, { passive: true });
+})();

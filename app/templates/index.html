@@ -1,34 +1,59 @@
 <!DOCTYPE html>
-<html lang="es">
+<html lang="es" data-theme="emerald">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <link rel="stylesheet" href="{{ url_for('static', filename='css/output.css') }}">
     <title>Sunalyze</title>
+    <script>
+      const t = localStorage.getItem('sunalyze-theme');
+      if (t) document.documentElement.setAttribute('data-theme', t);
+    </script>
 </head>
 
-<body class="bg-gray-100 min-h-screen flex flex-col items-center justify-start p-6">
+<body class="bg-base-200 min-h-screen flex flex-col items-center justify-start">
 
-  <div class="w-full space-y-6">
+  <nav class="navbar bg-base-100 shadow-sm sticky top-0 z-50 px-4">
+    <div class="flex-1">
+      <span class="text-xl font-bold text-primary">Sunalyze</span>
+    </div>
+    <div class="flex-none">
+      <label class="color-switch text-primary" for="dark-switch" title="Cambiar tema">
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="icon-sun">
+          <circle cx="12" cy="12" r="4"/>
+          <path d="M12 2v2"/><path d="M12 20v2"/>
+          <path d="m4.93 4.93 1.41 1.41"/><path d="m17.66 17.66 1.41 1.41"/>
+          <path d="M2 12h2"/><path d="M20 12h2"/>
+          <path d="m6.34 17.66-1.41 1.41"/><path d="m19.07 4.93-1.41 1.41"/>
+        </svg>
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="icon-moon">
+          <path d="M20.985 12.486a9 9 0 1 1-9.473-9.472c.405-.022.617.46.402.803a6 6 0 0 0 8.268 8.268c.344-.215.825-.004.803.401"/>
+        </svg>
+        <input type="checkbox" id="dark-switch" class="sr-only">
+      </label>
+    </div>
+  </nav>
+
+  <div class="w-full space-y-6 p-6">
 
     <!-- Paso 1 -->
-    <div class="flex flex-col bg-white rounded-2xl shadow relative">
-      <div class="bg-white/90 backdrop-blur-sm z-10 flex items-end p-4 rounded-2xl sticky top-0">
-        <p class="text-5xl font-bold text-sky-600 mr-2">1.</p>
-        <span class="text-3xl text-sky-600/50 font-semibold">Datos del lugar</span>
+    <div class="card bg-base-100 shadow-sm rounded-2xl relative">
+      <div class="bg-base-100/90 backdrop-blur-sm z-10 flex items-end p-4 rounded-2xl sticky top-16">
+        <p class="text-5xl font-bold text-primary mr-2">1.</p>
+        <span class="text-3xl text-primary/50 font-semibold">Datos del lugar</span>
       </div>
-      <hr class="text-gray-900/25">
+      <hr class="border-base-content/25">
       <div class="flex flex-col gap-4 p-4">
 
         <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 p-6">
-          <div class="flex flex-col items-center gap-2 text-gray-700 font-medium grow">
-            <label class="flex flex-col items-center gap-2 text-gray-700 font-medium grow">Necesidad:</label>
-            <input id="necesidad-value" type="number" value="8448" class="h-full border border-gray-300 p-2 w-full focus:ring-2 focus:ring-emerald-400 focus:outline-none" />
-          </div>
+          <label class="flex flex-col items-center gap-2 text-base-content font-medium grow">
+            Necesidad:
+            <input id="necesidad-value" type="number" value="8448" class="input input-bordered w-full" />
+          </label>
 
-          <div class="flex flex-col items-center gap-2 text-gray-700 font-medium grow">
-            <div class=""><label for="select-autoconsumo" class="truncate text-gray-700 font-medium mb-1 px-2">Porcentaje de autoconsumo:</label></div> 
-            <select id="select-autoconsumo" class="h-full w-full border border-gray-300 p-2 focus:ring-2 focus:ring-emerald-400 focus:outline-none">
+          <div class="flex flex-col items-center gap-2 text-base-content font-medium grow">
+            <label for="select-autoconsumo" class="truncate font-medium px-2">Porcentaje de autoconsumo:</label>
+            <select id="select-autoconsumo" class="select select-bordered w-full h-full">
               <option value="50">50</option>
               <option value="60">60</option>
               <option value="70">70</option>
@@ -37,7 +62,7 @@
             </select>
           </div>
 
-          <label class="flex flex-col items-center gap-2 text-gray-700 font-medium grow">
+          <label class="flex flex-col items-center gap-2 text-base-content font-medium grow">
             Latitud:
             <input
               value="38"
@@ -47,11 +72,11 @@
               max="90"
               step="0.00001"
               placeholder="Ej: 38.352"
-              class="border border-gray-300 p-2 w-full focus:ring-2 focus:ring-emerald-400 focus:outline-none"
+              class="input input-bordered w-full"
             />
           </label>
 
-          <label class="flex flex-col items-center gap-2 text-gray-700 font-medium grow">
+          <label class="flex flex-col items-center gap-2 text-base-content font-medium grow">
             Longitud:
             <input
               value="-0.7"
@@ -61,21 +86,20 @@
               max="180"
               step="0.00001"
               placeholder="Ej: -0.493"
-              class="border border-gray-300 p-2 w-full focus:ring-2 focus:ring-emerald-400 focus:outline-none"
+              class="input input-bordered w-full"
             />
           </label>
-
         </div>
 
         <div class="flex flex-col items-center md:gap-4">
-          <label class="flex items-center gap-2 mt-2 md:mt-0 text-gray-700 font-medium">
-            <input id="chk-coplanar" type="checkbox" class="w-5 h-5 text-emerald-600 border-gray-300 focus:ring-emerald-400" />
+          <label class="flex items-center gap-2 mt-2 md:mt-0 text-base-content font-medium cursor-pointer">
+            <input id="chk-coplanar" type="checkbox" class="checkbox checkbox-primary" />
             Coplanar
           </label>
         </div>
 
         <div id="coplanar-group" class="grid grid-cols-1 md:grid-cols-2 gap-6 p-6 hidden">
-          <label class="flex flex-col items-center gap-2 text-gray-700 font-medium">
+          <label class="flex flex-col items-center gap-2 text-base-content font-medium">
             Inclinación:
             <input
               id="inclinacion-value"
@@ -84,10 +108,10 @@
               max="90"
               step="0.1"
               placeholder="Ej: 30"
-              class="border border-gray-300 p-2 w-full focus:ring-2 focus:ring-emerald-400 focus:outline-none"
+              class="input input-bordered w-full"
             />
           </label>
-          <label class="flex flex-col items-center gap-2 text-gray-700 font-medium">
+          <label class="flex flex-col items-center gap-2 text-base-content font-medium">
             Azimut:
             <input
               id="azimut-value"
@@ -96,173 +120,159 @@
               max="360"
               step="0.1"
               placeholder="Ej: 180"
-              class="border border-gray-300 p-2 w-full focus:ring-2 focus:ring-emerald-400 focus:outline-none"
+              class="input input-bordered w-full"
             />
           </label>
         </div>
 
-        <button id="siguiente-paso-1" class="bg-emerald-500 mx-6 mb-2 px-4 py-2 text-sm font-normal text-white opacity-100 focus:outline-none cursor-pointer hover:bg-emerald-800/75">Siguiente paso</button>
+        <button id="siguiente-paso-1" class="btn btn-primary mx-6 mb-2">Siguiente paso</button>
 
       </div>
-
     </div>
 
-    <!-- Paso 2 -->
-    <div class="flex flex-col bg-white rounded-2xl shadow relative">
-      <div class="bg-white/90 backdrop-blur-sm z-10 flex items-end p-4 rounded-2xl sticky top-0">
-        <p class="text-5xl font-bold text-sky-600 mr-2">2.</p>
-        <span class="text-3xl text-sky-600/50 font-semibold">Selección de placa</span>
+    <!-- Paso 2 - Selección de dispositivos -->
+    <div class="card bg-base-100 shadow-sm rounded-2xl relative z-20">
+      <div class="bg-base-100/90 backdrop-blur-sm z-10 flex items-end p-4 rounded-2xl sticky top-16">
+        <p class="text-5xl font-bold text-primary mr-2">2.</p>
+        <span class="text-3xl text-primary/50 font-semibold">Selección de dispositivos</span>
       </div>
-      
-      <!-- HR oculto inicialmente -->
-      <hr id="step2-hr" class="border-t border-gray-900/25 hidden">
-      
-      <!-- Contenedor sin padding inicialmente -->
+
+      <hr id="step2-hr" class="border-base-content/25 hidden">
+
       <div id="step2-container" class="flex flex-col gap-4">
         <div id="step2-content" class="hidden opacity-0 translate-y-4 transition-all duration-300 ease-out">
-          <div class="grid gap-4 p-4">
-            <!-- Tus searchboxes aquí -->
-            <div class="flex flex-col">
-              <label class="text-gray-700 font-medium mb-1">Seleccione su placa:</label>
-              <div id="panel-search-container" class="relative">
-                <!-- Search input con icono -->
-                <div class="flex items-center border border-gray-300 focus-within:ring-2 focus-within:ring-emerald-400 focus-within:border-emerald-400">
-                  <div class="pl-3 pr-2 text-gray-400">
+          <div class="grid grid-cols-1 lg:grid-cols-2 gap-4 p-4">
+
+            <!-- Placa solar -->
+            <div id="device-panel-section" class="flex flex-col">
+              <label class="text-base-content font-medium mb-1">Seleccione su placa:</label>
+              <div id="panel-search-container" class="relative z-20">
+                <div class="flex items-center input input-bordered focus-within:outline focus-within:outline-2 focus-within:outline-primary px-0">
+                  <div class="pl-3 pr-2 text-base-content/40">
                     <i class="bi bi-search"></i>
                   </div>
-                  <input 
-                    type="text" 
+                  <input
+                    type="text"
                     id="panel-search-input"
-                    placeholder="Buscar panel (nombre, potencia...)" 
-                    class="w-full p-2 focus:outline-none"
+                    placeholder="Buscar panel (nombre, potencia...)"
+                    class="w-full p-2 focus:outline-none bg-transparent"
                     autocomplete="off"
                   >
                 </div>
-                
-                <!-- Dropdown personalizado -->
-                <div id="panel-dropdown" class="hidden absolute top-full left-0 right-0 z-10 mt-1 bg-white border border-gray-300 shadow-lg max-h-48 overflow-y-auto">
-                  <div id="panel-results" class="flex flex-col gap-y-1 p-1"></div>
+
+                <div id="panel-dropdown" class="hidden absolute top-full left-0 right-0 z-20 mt-1 bg-base-100 border border-base-300 shadow-lg max-h-48 overflow-y-auto rounded-box">
+                  <div id="panel-results" class="flex flex-col gap-y-1 p-1 z-50"></div>
                 </div>
-                
-                <!-- Select oculto para mantener la funcionalidad -->
+
                 <select id="select-placas" class="hidden"></select>
               </div>
             </div>
 
-            <button id="siguiente-paso-2" class="bg-emerald-500 mt-2 px-4 py-2 text-sm font-normal text-white opacity-100 focus:outline-none cursor-pointer hover:bg-emerald-800/75">Siguiente paso</button>
-          </div>
-        </div>
-      </div>
-    </div>
-
-    <!-- Paso 3 - Selección de inversor -->
-    <div class="flex flex-col bg-white rounded-2xl shadow relative">
-      <div class="bg-white/90 backdrop-blur-sm z-10 flex items-end p-4 rounded-2xl sticky top-0">
-        <p class="text-5xl font-bold text-sky-600 mr-2">3.</p>
-        <span class="text-3xl text-sky-600/50 font-semibold">Selección de inversor</span>
-      </div>
-      
-      <hr id="step3-hr" class="border-t border-gray-900/25 hidden">
-      
-      <div id="step3-container" class="flex flex-col gap-4">
-        <div id="step3-content" class="hidden opacity-0 translate-y-4 transition-all duration-300 ease-out">
-          <div class="grid gap-4 p-4 hidden">
-            <div class="flex flex-col">
-              <label class="text-gray-700 font-medium mb-1">Seleccione su inversor:</label>
-              <div id="inverter-search-container" class="relative">
-                <!-- Search input con icono -->
-                <div class="flex items-center border border-gray-300 focus-within:ring-2 focus-within:ring-emerald-400 focus-within:border-emerald-400">
-                  <div class="pl-3 pr-2 text-gray-400">
+            <!-- Inversor -->
+            <div id="device-inverter-section" class="flex flex-col hidden opacity-0 translate-y-4 transition-all duration-300 ease-out">
+              <label class="text-base-content font-medium mb-1">Seleccione su inversor:</label>
+              <div id="inverter-search-container" class="relative z-20">
+                <div class="flex items-center input input-bordered focus-within:outline focus-within:outline-2 focus-within:outline-primary px-0">
+                  <div class="pl-3 pr-2 text-base-content/40">
                     <i class="bi bi-search"></i>
                   </div>
-                  <input 
-                    type="text" 
+                  <input
+                    type="text"
                     id="inverter-search-input"
-                    placeholder="Buscar inversor (nombre, potencia...)" 
-                    class="w-full p-2 focus:outline-none"
+                    placeholder="Buscar inversor (nombre, potencia...)"
+                    class="w-full p-2 focus:outline-none bg-transparent"
                     autocomplete="off"
                   >
                 </div>
-                
-                <!-- Dropdown personalizado -->
-                <div id="inverter-dropdown" class="hidden absolute top-full left-0 right-0 z-10 mt-1 bg-white border border-gray-300 shadow-lg max-h-48 overflow-y-auto">
+
+                <div id="inverter-dropdown" class="hidden absolute top-full left-0 right-0 z-20 mt-1 bg-base-100 border border-base-300 shadow-lg max-h-48 overflow-y-auto rounded-box">
                   <div id="inverter-results" class="flex flex-col gap-y-1 p-1"></div>
                 </div>
-                
-                <!-- Select oculto para mantener la funcionalidad -->
+
                 <select id="select-inversores" class="hidden"></select>
               </div>
             </div>
-            <button id="siguiente-paso-3" class="bg-emerald-500 mt-2 px-4 py-2 text-sm font-normal text-white opacity-100 focus:outline-none cursor-pointer hover:bg-emerald-800/75">Calcular análisis completo</button>
+
+            <!-- Botón análisis completo (aparece con el inversor) -->
+            <div id="device-submit-section" class="lg:col-span-2 hidden">
+              <button id="siguiente-paso-3" class="btn btn-primary w-full">Calcular análisis completo</button>
+            </div>
+
           </div>
         </div>
       </div>
     </div>
 
-    <!-- Paso 4 - Resultados completos -->
-    <div class="flex flex-col bg-white rounded-2xl shadow relative">
-      <div class="bg-white/90 backdrop-blur-sm z-10 flex items-end p-4 rounded-2xl sticky top-0">
-        <p class="text-5xl font-bold text-sky-600 mr-2">4.</p>
-        <span class="text-3xl text-sky-600/50 font-semibold">Resultados completos</span>
+    <!-- Paso 3 - Resultados completos -->
+    <div class="card bg-base-100 shadow-sm rounded-2xl relative">
+      <div class="bg-base-100/90 backdrop-blur-sm z-10 flex items-end p-4 rounded-2xl sticky top-16">
+        <p class="text-5xl font-bold text-primary mr-2">3.</p>
+        <span class="text-3xl text-primary/50 font-semibold">Resultados completos</span>
       </div>
-      
-      <hr id="step4-hr" class="border-t border-gray-900/25 hidden">
-      
+
+      <hr id="step4-hr" class="border-base-content/25 hidden">
+
       <div id="step4-container" class="flex flex-col gap-4">
         <div id="step4-content" class="hidden opacity-0 translate-y-4 transition-all duration-300 ease-out">
           <div class="p-4">
-            <!-- Mensaje de error fijo -->
-            <p id="error-message" class="error-message text-red-600 font-medium hidden"></p>
-            
-            <div id="calculos-section" class="grid grid-cols-2 gap-y-2 border border-gray-300 p-3 bg-gray-50"></div>
+            <p id="error-message" class="error-message text-error font-medium hidden"></p>
+            <div id="calculos-section" class="grid grid-cols-2 border border-base-300 bg-base-300/50"></div>
           </div>
         </div>
       </div>
     </div>
 
-    <!-- Paso 5 - Info para memoria -->
-    <div class="flex flex-col bg-white rounded-2xl shadow relative">
-      <div class="bg-white/90 backdrop-blur-sm z-10 flex items-end p-4 rounded-2xl sticky top-0">
-        <p class="text-5xl font-bold text-sky-600 mr-2">5.</p>
-        <span class="text-3xl text-sky-600/50 font-semibold">Información para memoria</span>
+    <!-- Paso 4 - Info para memoria -->
+    <div class="card bg-base-100 shadow-sm rounded-2xl relative">
+      <div class="bg-base-100/90 backdrop-blur-sm z-10 flex items-end p-4 rounded-2xl sticky top-16">
+        <p class="text-5xl font-bold text-primary mr-2">4.</p>
+        <span class="text-3xl text-primary/50 font-semibold">Información para memoria</span>
       </div>
-      
-      <hr id="step5-hr" class="border-t border-gray-900/25 hidden">
-      
+
+      <hr id="step5-hr" class="border-base-content/25 hidden">
+
       <div id="step5-container" class="flex flex-col gap-4">
         <div id="step5-content" class="hidden opacity-0 translate-y-4 transition-all duration-300 ease-out">
-          <div class="max-w-4xl mx-auto p-6 bg-white rounded-lg shadow-lg">
-            <div class="space-y-6">
-              <p id="memoria-validation-error" class="text-red-600 font-medium text-sm hidden"></p>
+          <div class="max-w-4xl mx-auto p-6 space-y-2">
 
-              <div class="flex flex-col">
-                <label class="text-sm font-medium text-gray-700 mb-1">Localidad</label>
-                <input type="text" class="px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500" id="f-location" placeholder="Ej: Alicante">
-              </div>
+            <p id="memoria-validation-error" class="text-error font-medium text-sm hidden"></p>
 
-              <div class="flex flex-col">
-                <label class="text-sm font-medium text-gray-700 mb-1">Nombre del Cliente</label>
-                <input type="text" class="px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500" id="f-client-name">
-              </div>
-              
-              <div class="flex flex-col">
-                <label class="text-sm font-medium text-gray-700 mb-1">Dirección</label>
-                <input type="text" class="px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500" id="f-address">
-              </div>
-              
-              <div class="flex flex-col">
-                <label class="text-sm font-medium text-gray-700 mb-1">Código Postal</label>
-                <input type="text" class="px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500" id="f-zipcode">
-              </div>
-              
-              <div class="flex flex-col">
-                <label class="text-sm font-medium text-gray-700 mb-1">Referencia Catastral</label>
-                <input type="text" class="px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500" id="f-catastral-reference">
-              </div>
-              
-              <div class="flex flex-col">
-                <label class="text-sm font-medium text-gray-700 mb-1">Compañía Eléctrica</label>
-                <select class="px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500" id="f-energy-company-name">
+            <!-- 1. Identificación -->
+            <div class="divider divider-start text-xs font-bold uppercase tracking-widest text-base-content/50 mt-4">Identificación del Proyecto</div>
+            <div class="grid grid-cols-1 lg:grid-cols-2 gap-4">
+              <fieldset class="fieldset">
+                <legend class="fieldset-legend">Localidad</legend>
+                <input type="text" class="input w-full" id="f-location" placeholder="Ej: Alicante">
+              </fieldset>
+              <fieldset class="fieldset">
+                <legend class="fieldset-legend">Nombre del Cliente</legend>
+                <input type="text" class="input w-full" id="f-client-name" placeholder="Ej: Juan García López">
+              </fieldset>
+            </div>
+
+            <!-- 2. Inmueble -->
+            <div class="divider divider-start text-xs font-bold uppercase tracking-widest text-base-content/50 mt-4">Datos del Inmueble</div>
+            <div class="grid grid-cols-1 lg:grid-cols-2 gap-4">
+              <fieldset class="fieldset lg:col-span-2">
+                <legend class="fieldset-legend">Dirección</legend>
+                <input type="text" class="input w-full" id="f-address" placeholder="Ej: Calle Mayor 15, 2ºA">
+              </fieldset>
+              <fieldset class="fieldset">
+                <legend class="fieldset-legend">Código Postal</legend>
+                <input type="text" class="input w-full" id="f-zipcode" placeholder="Ej: 03001">
+              </fieldset>
+              <fieldset class="fieldset">
+                <legend class="fieldset-legend">Referencia Catastral</legend>
+                <input type="text" class="input w-full" id="f-catastral-reference" placeholder="Ej: 0123456XK1234A0001XK">
+              </fieldset>
+            </div>
+
+            <!-- 3. Contrato eléctrico -->
+            <div class="divider divider-start text-xs font-bold uppercase tracking-widest text-base-content/50 mt-4">Contrato de Suministro</div>
+            <div class="grid grid-cols-1 lg:grid-cols-2 gap-4">
+              <fieldset class="fieldset">
+                <legend class="fieldset-legend">Compañía Eléctrica</legend>
+                <select class="select w-full" id="f-energy-company-name">
                   <option value="Endesa">Endesa</option>
                   <option value="EDP España">EDP España</option>
                   <option value="Factor Energía">Factor Energía</option>
@@ -277,195 +287,125 @@
                   <option value="Viesgo">Viesgo</option>
                   <option value="Otra">Otra compañía</option>
                 </select>
-              </div>
-              
-              <div class="flex flex-col">
-                <label class="text-sm font-medium text-gray-700 mb-1">CUPS</label>
-                <input type="text" class="px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500" id="f-energy-company-cups">
-              </div>
-              
-              <div class="flex flex-col">
-                <label class="text-sm font-medium text-gray-700 mb-1">Potencia Contratada (kW)</label>
-                <input type="number" class="px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500" id="f-hired-power-kw">
-              </div>
-              
-              <div class="flex flex-col">
-                <label class="text-sm font-medium text-gray-700 mb-1">Voltaje de Entrada (V)</label>
-                <input type="number" class="px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500" id="f-input-v">
-              </div>
-              
-              <div class="flex flex-col">
-                <label class="text-sm font-medium text-gray-700 mb-1">Tipo de Voltaje</label>
-                <select class="px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500" id="f-input-v-type">
+              </fieldset>
+              <fieldset class="fieldset">
+                <legend class="fieldset-legend">CUPS</legend>
+                <input type="text" class="input w-full" id="f-energy-company-cups" placeholder="Ej: ES0031406XXXXXXXX0F">
+              </fieldset>
+              <fieldset class="fieldset">
+                <legend class="fieldset-legend">Potencia Contratada (kW)</legend>
+                <input type="number" class="input w-full" id="f-hired-power-kw" placeholder="Ej: 5.75">
+              </fieldset>
+              <fieldset class="fieldset">
+                <legend class="fieldset-legend">Voltaje de Entrada (V)</legend>
+                <input type="number" class="input w-full" id="f-input-v" placeholder="Ej: 230">
+              </fieldset>
+              <fieldset class="fieldset">
+                <legend class="fieldset-legend">Tipo de Voltaje</legend>
+                <select class="select w-full" id="f-input-v-type">
                   <option value="monofasica" selected>Monofásica</option>
                   <option value="bifasica">Bifásica</option>
                   <option value="trifasica">Trifásica</option>
                 </select>
-              </div>
-              
-              <div class="flex flex-col">
-                <label class="text-sm font-medium text-gray-700 mb-1">Objetivo del Sistema</label>
-                <select class="px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500" id="f-system-objective">
-                  <option value="1" selected>autoconsumo con inyección de excedentes</option>
-                  <option value="0">autoconsumo sin inyección de excedentes</option>
+              </fieldset>
+            </div>
+
+            <!-- 4. Configuración de la instalación -->
+            <div class="divider divider-start text-xs font-bold uppercase tracking-widest text-base-content/50 mt-4">Configuración de la Instalación</div>
+            <div class="grid grid-cols-1 lg:grid-cols-2 gap-4">
+              <fieldset class="fieldset">
+                <legend class="fieldset-legend">Objetivo del Sistema</legend>
+                <select class="select w-full" id="f-system-objective">
+                  <option value="1" selected>Con inyección de excedentes</option>
+                  <option value="0">Sin inyección de excedentes</option>
                 </select>
-              </div>
-              
-              <div class="flex flex-col">
-                <label class="text-sm font-medium text-gray-700 mb-1">Ubicación de Paneles</label>
-                <select class="px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500" id="f-panels-place">
-                  <option value="la cubierta de vertiente sur, con superficie de teja a una sola agua y 1 m de voladizo" selected>la cubierta de vertiente sur, con superficie de teja a una sola agua y 1 m de voladizo</option>
-                  <option value="la cubierta de vertiente norte, con superficie de teja a una sola agua y 1 m de voladizo">la cubierta de vertiente norte, con superficie de teja a una sola agua y 1 m de voladizo</option>
-                  <option value="la cubierta de vertiente este, con superficie de teja a una sola agua y 1 m de voladizo">la cubierta de vertiente este, con superficie de teja a una sola agua y 1 m de voladizo</option>
-                  <option value="la cubierta de vertiente oeste, con superficie de teja a una sola agua y 1 m de voladizo">la cubierta de vertiente oeste, con superficie de teja a una sola agua y 1 m de voladizo</option>
+              </fieldset>
+              <fieldset class="fieldset">
+                <legend class="fieldset-legend">Entradas MPPT del Inversor</legend>
+                <input type="number" class="input w-full" id="f-mppt-inputs" placeholder="Ej: 2" min="1">
+              </fieldset>
+              <fieldset class="fieldset lg:col-span-2">
+                <legend class="fieldset-legend">Ubicación de Paneles</legend>
+                <select class="select w-full" id="f-panels-place">
+                  <option value="la cubierta de vertiente sur, con superficie de teja a una sola agua y 1 m de voladizo" selected>Cubierta sur — teja, una agua, 1 m voladizo</option>
+                  <option value="la cubierta de vertiente norte, con superficie de teja a una sola agua y 1 m de voladizo">Cubierta norte — teja, una agua, 1 m voladizo</option>
+                  <option value="la cubierta de vertiente este, con superficie de teja a una sola agua y 1 m de voladizo">Cubierta este — teja, una agua, 1 m voladizo</option>
+                  <option value="la cubierta de vertiente oeste, con superficie de teja a una sola agua y 1 m de voladizo">Cubierta oeste — teja, una agua, 1 m voladizo</option>
                 </select>
-              </div>
-              
-              <div class="flex flex-col">
-                <label class="text-sm font-medium text-gray-700 mb-1">Disposición de Paneles</label>
-                <select class="px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500" id="f-panels-disposition">
+              </fieldset>
+              <fieldset class="fieldset">
+                <legend class="fieldset-legend">Disposición de Paneles</legend>
+                <select class="select w-full" id="f-panels-disposition">
                   <option value="1 agrupación lineal" selected>1 agrupación lineal</option>
                   <option value="2 agrupaciones lineales contiguas">2 agrupaciones lineales contiguas</option>
                   <option value="3 agrupaciones lineales contiguas">3 agrupaciones lineales contiguas</option>
-                  <option value="2 agrupaciones con cantidades diferentes de paneles">2 agrupaciones con cantidades diferentes de paneles</option>
+                  <option value="2 agrupaciones con cantidades diferentes de paneles">2 agrupaciones con cantidades distintas</option>
                 </select>
-              </div>
-              
-              <div class="flex flex-col hidden">
-                <label class="text-sm font-medium text-gray-700 mb-1">Cantidad de paneles en la primera agrupación</label>
-                <input type="number" class="px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500" id="f-panels-string-x" step="1" min="1">
-              </div>
-              
-              <div class="flex flex-col hidden">
-                <label class="text-sm font-medium text-gray-700 mb-1">Cantidad de paneles en la segunda agrupación</label>
-                <input type="number" class="px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500" id="f-panels-string-y" step="1" min="1">
-              </div>
-              
-              <div class="flex flex-col">
-                <label class="text-sm font-medium text-gray-700 mb-1">Ubicación del Inversor</label>
-                <select class="px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500" id="f-inverter-place">
-                  <option value="en el interior de la vivienda" selected>en el interior de la vivienda</option>
-                  <option value="en la cubierta">en la cubierta</option>
+              </fieldset>
+              <fieldset class="fieldset">
+                <legend class="fieldset-legend">Ubicación del Inversor</legend>
+                <select class="select w-full" id="f-inverter-place">
+                  <option value="en el interior de la vivienda" selected>Interior de la vivienda</option>
+                  <option value="en la cubierta">En la cubierta</option>
                 </select>
-              </div>
-              
-              <div class="flex flex-col">
-                <label class="text-sm font-medium text-gray-700 mb-1">Sistema de Baterías</label>
-                <select class="px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500" id="f-batteries">
-                  <option value="1" selected>Si</option>
+              </fieldset>
+              <fieldset class="fieldset hidden" id="fs-panels-string-x">
+                <legend class="fieldset-legend">Paneles en la primera agrupación</legend>
+                <input type="number" class="input w-full" id="f-panels-string-x" step="1" min="1" placeholder="Ej: 6">
+              </fieldset>
+              <fieldset class="fieldset hidden" id="fs-panels-string-y">
+                <legend class="fieldset-legend">Paneles en la segunda agrupación</legend>
+                <input type="number" class="input w-full" id="f-panels-string-y" step="1" min="1" placeholder="Ej: 4">
+              </fieldset>
+              <fieldset class="fieldset">
+                <legend class="fieldset-legend">Sistema de Baterías</legend>
+                <select class="select w-full" id="f-batteries">
+                  <option value="1" selected>Sí</option>
                   <option value="0">No</option>
                 </select>
-              </div>
-              
-              <div class="flex flex-col">
-                <label class="text-sm font-medium text-gray-700 mb-1">Material Cable DC</label>
-                <input type="text" class="px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500" id="f-wire-dc-material">
-              </div>
-              
-              <div class="flex flex-col">
-                <label class="text-sm font-medium text-gray-700 mb-1">Material Cable AC</label>
-                <input type="text" class="px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500" id="f-wire-ac-material">
-              </div>
-              
-              <div class="flex flex-col">
-                <label class="text-sm font-medium text-gray-700 mb-1">Longitud Cable Tierra</label>
-                <input type="number" class="px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500" id="f-wire-ground-length">
-              </div>
-              
-              <div class="flex flex-col">
-                <label class="text-sm font-medium text-gray-700 mb-1">Material Cable Tierra</label>
-                <input type="text" class="px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500" id="f-wire-ground-material">
-              </div>
-              
-              <div class="flex flex-col">
-                <label class="text-sm font-medium text-gray-700 mb-1">Voltaje Máximo Protección DC</label>
-                <input type="number" class="px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500" id="f-protections-dc-thermal-v-max">
-              </div>
-              
-              <div class="flex flex-col">
-                <label class="text-sm font-medium text-gray-700 mb-1">Modelo Protección Térmica DC</label>
-                <input type="text" class="px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500" id="f-protections-dc-thermal-model">
-              </div>
-              
-              <div class="flex flex-col">
-                <label class="text-sm font-medium text-gray-700 mb-1">Corriente Interruptor DC (A)</label>
-                <input type="number" class="px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500" id="f-protections-dc-breaker-i">
-              </div>
-              
-              <div class="flex flex-col">
-                <label class="text-sm font-medium text-gray-700 mb-1">Modelo Interruptor DC</label>
-                <input type="text" class="px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500" id="f-protections-dc-breaker-model">
-              </div>
-              
-              <div class="flex flex-col">
-                <label class="text-sm font-medium text-gray-700 mb-1">Modelo Protección Sobretensión DC</label>
-                <input type="text" class="px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500" id="f-protections-dc-surge-model">
-              </div>
-              
-              <div class="flex flex-col">
-                <label class="text-sm font-medium text-gray-700 mb-1">Corriente Protección Térmica AC (A)</label>
-                <input type="number" class="px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500" id="f-protections-ac-thermal-i">
-              </div>
-              
-              <div class="flex flex-col">
-                <label class="text-sm font-medium text-gray-700 mb-1">Modelo Protección Térmica AC</label>
-                <input type="text" class="px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500" id="f-protections-ac-thermal-model">
-              </div>
-              
-              <div class="flex flex-col">
-                <label class="text-sm font-medium text-gray-700 mb-1">Corriente Diferencial AC (A)</label>
-                <input type="number" class="px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500" id="f-protections-ac-diff-i">
-              </div>
-              
-              <div class="flex flex-col">
-                <label class="text-sm font-medium text-gray-700 mb-1">Modelo Diferencial AC</label>
-                <input type="text" class="px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500" id="f-protections-ac-diff-model">
-              </div>
-              
-              <div class="flex flex-col">
-                <label class="text-sm font-medium text-gray-700 mb-1">Modelo Protección Sobretensión AC</label>
-                <input type="text" class="px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500" id="f-protections-ac-transitory-surge-model">
-              </div>
-              
-              <div class="flex flex-col">
-                <label class="text-sm font-medium text-gray-700 mb-1">Modelo Inyección Cero</label>
-                <input type="text" class="px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500" id="f-zero-inyection-model">
-              </div>
-              
-              <div class="flex flex-col">
-                <label class="text-sm font-medium text-gray-700 mb-1">Modelo Dispositivo Medición</label>
-                <input type="text" class="px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500" id="f-metering-device-model">
-              </div>
-              
-              <div class="flex flex-col">
-                <label class="text-sm font-medium text-gray-700 mb-1">Entradas MPPT</label>
-                <input type="text" class="px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500" id="f-mppt-inputs">
-              </div>
-              
-              <div class="flex flex-col">
-                <label class="text-sm font-medium text-gray-700 mb-1">Modelo Cable DC</label>
-                <input type="text" class="px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500" id="f-wire-dc-model">
-              </div>
-              
-              <div class="flex flex-col">
-                <label class="text-sm font-medium text-gray-700 mb-1">Tipo Cable DC</label>
-                <input type="text" class="px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500" id="f-wire-dc-type">
-              </div>
-              
-              <div class="flex flex-col">
-                <label class="text-sm font-medium text-gray-700 mb-1">Modelo Cable AC</label>
-                <input type="text" class="px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500" id="f-wire-ac-model">
-              </div>
-              
-              <div class="flex flex-col">
-                <label class="text-sm font-medium text-gray-700 mb-1">Tipo Cable AC</label>
-                <input type="text" class="px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500" id="f-wire-ac-type">
-              </div>
-              
-              <button id="print-update-btn" class="w-full bg-blue-600 text-white py-3 px-4 rounded-md hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 font-medium transition duration-200">
+              </fieldset>
+            </div>
+
+            <!-- 5. Cableado de tierra -->
+            <div class="divider divider-start text-xs font-bold uppercase tracking-widest text-base-content/50 mt-4">Cableado de Tierra</div>
+            <div class="grid grid-cols-1 lg:grid-cols-2 gap-4">
+              <fieldset class="fieldset">
+                <legend class="fieldset-legend">Longitud (m)</legend>
+                <input type="number" class="input w-full" id="f-wire-ground-length" placeholder="Ej: 5">
+              </fieldset>
+            </div>
+
+            <!-- 6. Protecciones -->
+            <div class="divider divider-start text-xs font-bold uppercase tracking-widest text-base-content/50 mt-4">Protecciones</div>
+            <div class="grid grid-cols-1 lg:grid-cols-2 gap-4">
+              <fieldset class="fieldset">
+                <legend class="fieldset-legend">Tensión máxima interruptor DC (V)</legend>
+                <input type="number" class="input w-full" id="f-protections-dc-thermal-v-max" placeholder="Ej: 1000">
+              </fieldset>
+              <fieldset class="fieldset">
+                <legend class="fieldset-legend">Corriente fusibles DC (A)</legend>
+                <input type="number" class="input w-full" id="f-protections-dc-breaker-i" placeholder="Ej: 15">
+              </fieldset>
+              <fieldset class="fieldset">
+                <legend class="fieldset-legend">Corriente magnetotérmico AC (A)</legend>
+                <input type="number" class="input w-full" id="f-protections-ac-thermal-i" placeholder="Ej: 16">
+              </fieldset>
+              <fieldset class="fieldset">
+                <legend class="fieldset-legend">Corriente diferencial AC (A)</legend>
+                <input type="number" class="input w-full" id="f-protections-ac-diff-i" placeholder="Ej: 25">
+              </fieldset>
+              <fieldset class="fieldset lg:col-span-2">
+                <legend class="fieldset-legend">Modelo protector sobretensiones AC</legend>
+                <input type="text" class="input w-full" id="f-protections-ac-transitory-surge-model" placeholder="Ej: Citel DS50VGP-AC">
+              </fieldset>
+            </div>
+
+            <div class="pt-4">
+              <button id="print-update-btn" class="btn btn-primary w-full">
                 Generar Memoria PDF
               </button>
             </div>
+
           </div>
         </div>
       </div>
@@ -473,7 +413,6 @@
 
   </div>
 
-  <!-- Incluir el archivo JavaScript separado -->
   <script type="module" src="{{ url_for('static', filename='js/app.js') }}"></script>
 </body>
 </html>

@@ -5,6 +5,7 @@ from flask import render_template, jsonify, Response
 from weasyprint import HTML
 from app.models.panel import Panel
 from app.models.inverter import Inverter
+from app.models.installation_defaults import InstallationDefaults
 from app.services.circuit import CircuitService, DCConfig, ACConfig, SystemConfig
 
 logger = logging.getLogger(__name__)
@@ -18,15 +19,10 @@ class MemoriaController:
         'energy_company_name', 'energy_company_cups', 'hired_power_kw', 'input_v',
         'input_v_type', 'inyection_type', 'panels_peak_power_kw', 'panels_number',
         'panels_place', 'panels_disposition', 'inverter_place',
-        'wire_dc_material', 'wire_dc_model', 'wire_dc_type',
-        'wire_ac_material', 'wire_ac_model', 'wire_ac_type',
-        'wire_ground_material', 'wire_ground_length',
-        'protections_dc_thermal_v_max', 'protections_dc_thermal_model',
-        'protections_dc_breaker_i', 'protections_dc_breaker_model',
-        'protections_dc_surge_model', 'protections_ac_thermal_i',
-        'protections_ac_thermal_model', 'protections_ac_diff_i',
-        'protections_ac_diff_model', 'protections_ac_transitory_surge_model',
-        'zero_inyection_model', 'metering_device_model', 'mppt_inputs',
+        'wire_ground_length',
+        'protections_dc_thermal_v_max', 'protections_dc_breaker_i',
+        'protections_ac_thermal_i', 'protections_ac_diff_i',
+        'protections_ac_transitory_surge_model', 'mppt_inputs',
     ]
 
     @staticmethod
@@ -50,11 +46,14 @@ class MemoriaController:
 
             panel = Panel.query.get(form_data.get('panel_id'))
             inverter = Inverter.query.get(form_data.get('inverter_id'))
+            defaults = InstallationDefaults.get()
 
             if not panel or not inverter:
                 return jsonify({'error': 'Panel o inversor no encontrado'}), 400
+            if not defaults:
+                return jsonify({'error': 'Configuración de instalación no encontrada'}), 500
 
-            template_vars = MemoriaController._build_template_vars(form_data, panel, inverter)
+            template_vars = MemoriaController._build_template_vars(form_data, panel, inverter, defaults)
             template_vars.update(MemoriaController._build_circuit_svgs(form_data, panel, inverter))
 
         html_string = render_template('memoria_tecnica_pdf.html', **template_vars)
@@ -67,7 +66,7 @@ class MemoriaController:
         )
 
     @staticmethod
-    def _build_template_vars(data, panel, inverter):
+    def _build_template_vars(data, panel, inverter, defaults):
         """Construye el dict de variables para la plantilla PDF."""
         return {
             'client_name': data.get('client_name'),
@@ -114,31 +113,33 @@ class MemoriaController:
             'inverter_efficiency': inverter.y,
             'inverter_phases': data.get('inverter_phases'),
             'inverter_place': data.get('inverter_place'),
-            'wire_dc_material': data.get('wire_dc_material'),
+            # Cableado (modelos y materiales desde defaults, dinámicos desde form)
+            'wire_dc_material': defaults.dc_material,
             'wire_dc_length': data.get('wire_dc_length'),
             'wire_dc_section': data.get('wire_dc_section'),
-            'wire_dc_model': data.get('wire_dc_model'),
-            'wire_dc_type': data.get('wire_dc_type'),
-            'wire_ac_material': data.get('wire_ac_material'),
+            'wire_dc_model': defaults.dc_modelo,
+            'wire_ac_material': defaults.ac_material,
             'wire_ac_length': data.get('wire_ac_length'),
             'wire_ac_section': data.get('wire_ac_section'),
-            'wire_ac_model': data.get('wire_ac_model'),
-            'wire_ac_type': data.get('wire_ac_type'),
-            'wire_ground_material': data.get('wire_ground_material'),
+            'wire_ac_model': defaults.ac_modelo,
+            'wire_ground_material': defaults.tierra_material,
+            'wire_ground_model': defaults.tierra_modelo,
             'wire_ground_length': data.get('wire_ground_length'),
             'wire_ground_section': data.get('wire_ground_section'),
+            # Protecciones (modelos desde defaults, corrientes desde form)
             'protections_dc_thermal_v_max': data.get('protections_dc_thermal_v_max'),
-            'protections_dc_thermal_model': data.get('protections_dc_thermal_model'),
+            'protections_dc_thermal_model': defaults.dc_magnetotermico_modelo,
             'protections_dc_breaker_i': data.get('protections_dc_breaker_i'),
-            'protections_dc_breaker_model': data.get('protections_dc_breaker_model'),
-            'protections_dc_surge_model': data.get('protections_dc_surge_model'),
+            'protections_dc_breaker_model': defaults.dc_fusibles_modelo,
+            'protections_dc_portafusibles': defaults.dc_portafusibles,
+            'protections_dc_surge_model': defaults.dc_sobretensiones_modelo,
             'protections_ac_thermal_i': data.get('protections_ac_thermal_i'),
-            'protections_ac_thermal_model': data.get('protections_ac_thermal_model'),
+            'protections_ac_thermal_model': defaults.ac_magnetotermico_modelo,
             'protections_ac_diff_i': data.get('protections_ac_diff_i'),
-            'protections_ac_diff_model': data.get('protections_ac_diff_model'),
+            'protections_ac_diff_model': defaults.ac_diferencial_modelo,
             'protections_ac_transitory_surge_model': data.get('protections_ac_transitory_surge_model'),
-            'zero_inyection_model': data.get('zero_inyection_model'),
-            'metering_device_model': data.get('metering_device_model'),
+            'zero_inyection_model': defaults.inyeccion_cero_modelo,
+            'metering_device_model': defaults.dispositivo_medida_modelo,
             'mppt_inputs': data.get('mppt_inputs'),
             'panels_output_i_max_expected': data.get('panels_output_i_max_expected'),
             'panels_output_i_max_oversized': data.get('panels_output_i_max_oversized'),
