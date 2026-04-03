@@ -152,6 +152,7 @@ class MemoriaController:
             'panels_output_i_max_expected': data.get('panels_output_i_max_expected'),
             'panels_output_i_max_oversized': data.get('panels_output_i_max_oversized'),
             'inverter_output_i_max_expected': data.get('inverter_output_i_max_expected'),
+            'is_coplanar': data.get('is_coplanar') == '1',
             'location': data.get('location'),
             'latitude': data.get('latitude'),
             'longitude': data.get('longitude'),

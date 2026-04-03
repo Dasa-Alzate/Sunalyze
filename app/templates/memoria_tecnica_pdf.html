@@ -48,7 +48,7 @@
             text-transform: capitalize;
         }
 
-        p, ul, ol, table, .image-container {
+        p, ul, table, .image-container {
             page-break-inside: avoid;
         }
 
@@ -83,9 +83,6 @@
         }
 
         /* ===== Indice ===== */
-        .toc {
-            page-break-inside: avoid;
-        }
 
         .toc h2 {
             text-align: left;
@@ -348,7 +345,7 @@
         <p>{{ v(client_name) }}, residente en Calle {{ v(address) }} {{ v(zipcode) }} con Referencia catastral {{ v(catastral_reference) }}. El suministro eléctrico es suministrado por {{ v(energy_company_name) }} con CUPS {{ v(energy_company_cups) }} y una potencia contratada de {{ v(hired_power_kw) }}kW a {{ v(input_v) }}V {{ v(input_v_type) }}. La finalidad de la instalación FV es la de autoconsumo {{ v(inyection_type, 'con/sin') }} inyección de excedentes.</p>
 
         <h4 class="underline" id="clasificacion">Clasificación de la instalación</h4>
-        <p>La instalación contemplada en la presente memoria se encuentra clasificada de acuerdo a la ICT-BT-40 como instalaciones generadoras de baja tensión y sub-clasificada como una instalación generadora interconectada.</p>
+        <p>La instalación contemplada en la presente memoria se encuentra clasificada de acuerdo a la ITC-BT-40 como instalaciones generadoras de baja tensión y sub-clasificada como una instalación generadora interconectada.</p>
         <p>La misma, será sometida al proceso de legalización, contemplando el Real Decreto 244/2019, por el que se establece el procedimiento a seguir para instalaciones inferiores a 10KW de potencia pico.</p>
 
         <h3 class="underline" id="reglamentos">REGLAMENTOS Y DISPOSICIONES CONSIDERADAS</h3>
@@ -374,7 +371,7 @@
         <h3 class="underline" id="instalacion-fv">INSTALACIÓN FOTOVOLTAICA</h3>
 
         <h4 class="underline" id="caracteristicas">Características de la instalación</h4>
-        <p>La instalación fotovoltaica será fijada mediante puntos anclados con taco químico. Varillas de 12mm de inoxidable y ubicada en cubierta, {{ v(panels_inclination_verbosed) }} y {{ v(panels_azimut_verbosed) }}</p>
+        <p>La instalación fotovoltaica será fijada mediante puntos anclados con {% if is_coplanar %}tornillo autoperforante{% else %}taco químico, varillas de 12mm de inoxidable{% endif %} y ubicada en cubierta, {{ v(panels_inclination_verbosed) }} y {{ v(panels_azimut_verbosed) }}</p>
         <p>La potencia Pico será de {{ v(panels_peak_power_kw) }}kW compuesta por {{ v(panels_number) }} paneles, inversor de {{ v(inverter_nominal_power) }}kW y demás componentes como protecciones y cableado.</p>
 
         <h4 class="underline" id="emplazamiento">Emplazamiento de la FV y descripción genérica.</h4>
@@ -382,8 +379,8 @@
         <p>Se dispondrá de una única vertiente, la sur, con superficie de teja y una sola agua.</p>
         <p>Los paneles se dispondrán de {{ v(panels_disposition) }}</p>
         <p>El sistema de transformación DC-AC, estará ubicado {{ v(inverter_place) }}, interconectado a la instalación fotovoltaica mediante hilo de cobre en tubo corrugado o PVC rígido.</p>
-        <p>Entre el inversor y la superficie generadora existirá un cuadro de protecciones adecuado a la normativa y cumpliendo los requisitos que se establecen en la orden ICT-BT-40.</p>
-        <p>De igual modo, la producción de energía en AC será suministrada a la vivienda, cumpliendo con todos los elementos de protección necesarios bajo la misma norma ICT-BT-40.</p>
+        <p>Entre el inversor y la superficie generadora existirá un cuadro de protecciones adecuado a la normativa y cumpliendo los requisitos que se establecen en la orden ITC-BT-40.</p>
+        <p>De igual modo, la producción de energía en AC será suministrada a la vivienda, cumpliendo con todos los elementos de protección necesarios bajo la misma norma ITC-BT-40.</p>
         <p>{{ v(anti_pouring_verbosed, 'La instalación no contempla sistema antivertido / La instalación contempla sistema antivertido') }}.</p>
         <p>{{ v(batteries_verbosed, 'La instalación no contempla sistema de baterías / La instalación contempla sistema de baterías') }}.</p>
         <p>La superficie ocupada por los paneles será de {{ v(panels_surface) }}m²</p>
@@ -394,7 +391,6 @@
         <h5 class="underline" id="disposicion">Disposición</h5>
         <p>En ambas agrupaciones lineales, los módulos se dispondrán con una inclinación aproximada de {{ v(panels_inclination) }}º sobre la horizontal y un azimut de {{ v(panels_azimut) }}º, Resultando:</p>
         <p>Perdidas por orientación estimadas {{ v(orientation_loss_verbosed) }}</p>
-        <p>Perdidas por sombras circundantes de elementos fijos {{ v(shadows_loss_verbosed) }}</p>
 
         <h5 class="underline" id="distancia-filas">Distancia entre filas</h5>
         <p>No se considera, al estar ubicados bajo la misma vertiente y misma inclinación.</p>
@@ -403,9 +399,14 @@
         <p>Los paneles del campo fotovoltaico se agruparán haciendo series, manteniendo los valores de tensión y corriente de las entradas del inversor y dentro de los márgenes de este, para temperaturas de panel entre {{ v(panel_temp_min_limit) }} y {{ v(panel_temp_max_limit) }}ºC.</p>
 
         <h4 class="underline" id="estructura-soporte">Estructura soporte</h4>
-        <p>La estructura de soporte estará diseñada para el tipo de cubierta, será una estructura que dotará de una inclinación {{ v(panels_inclination_verbosed) }}</p>
+        <p>La estructura de soporte estará diseñada para el tipo de cubierta.
+        {%- if not is_coplanar %} Será una estructura que dotará a los módulos de {{ v(panels_inclination_verbosed) }}.{% endif -%}
+        </p>
         <p>Esta cumplirá con los datos adjuntos en Pliego de Condiciones Técnicas.</p>
-        <p>Para el anclaje de la misma cubierta, se ha optado por una fijación del tipo química, tratándose de tamices introducidos en la capa de hormigón de la cubierta y rellenados con resina epóxica, los cuales albergarán espigas roscadas de 12 mm de acero Inoxidable, e impermeabilizados individualmente. Se harán coincidir los puntos de apoyo, con las conejeras existentes bajo techo para repartir mejor los pesos.</p>
+        {% if is_coplanar %}
+        <p>Al tratarse de una instalación coplanar, los módulos se fijarán directamente sobre la cubierta respetando su inclinación natural. El anclaje se realizará mediante tornillo autoperforante sobre la superficie metálica de la cubierta, asegurando la estanqueidad mediante juntas EPDM.</p>
+        {% else %}
+        <p>Para el anclaje de la misma cubierta, se ha optado por una fijación del tipo química, tratándose de tamices introducidos en la capa de hormigón de la cubierta y rellenados con resina epóxica, los cuales albergarán espigas roscadas de 12 mm de acero inoxidable, e impermeabilizados individualmente.</p>
         <p>El proceso para la colocación de las varillas es el siguiente:</p>
         <ol>
             <li>Se agujerea la teja y la estructura de hormigón que se encuentra debajo de la teja.</li>
@@ -417,7 +418,8 @@
             <li>Cuando el Sikaflex ha secado se pinta con pintura antihumedad.</li>
             <li>Una vez está todo el conjunto acabado se coloca una tuerca con arandela y una escuadra que se anclará junto a otra arandela y tuerca formando un conjunto sólido.</li>
         </ol>
-        <p>La estructura descansará sobre los puntos fijados sobre el tejado y estará asegurada mediante estos anclajes.</p>
+        {% endif %}
+        <p>La estructura descansará sobre los puntos fijados sobre la cubierta y estará asegurada mediante estos anclajes.</p>
 
         <h4 class="underline" id="inversor">Inversor</h4>
         <p>El inversor será {{ v(inverter_phases, 'monofásico/trifásico') }} de {{ v(inverter_nominal_power) }}kW AC de potencia nominal ({{ v(inverter_model) }}). El inversor cumplirá la normativa vigente de la UNE-EN 62109 sobre seguridad de los convertidores de potencia utilizados en sistemas de potencia fotovoltaica y la UNE 26007 sobre requisitos de conexión a la red eléctrica. Cumplirá con las condiciones técnicas que establecen el Real Decreto 1699/2011, de 18 de Noviembre, por la cual se regula la conexión a la red de instalaciones de producción de energía eléctrica de pequeña potencia.</p>
@@ -429,14 +431,12 @@
             <li>Series DC:
                 <ul>
                     <li>Material: {{ v(wire_dc_material, 'Cable de Cobre') }}</li>
-                    <li>Metros: {{ v(wire_dc_length) }}m</li>
                     <li>Sección: {{ v(wire_dc_section) }}mm²</li>
                 </ul>
             </li>
             <li>Conexión AC:
                 <ul>
                     <li>Material: {{ v(wire_ac_material, 'Cable de Cobre') }}</li>
-                    <li>Metros: {{ v(wire_ac_length) }}m</li>
                     <li>Sección: {{ v(wire_ac_section) }}mm²</li>
                 </ul>
             </li>
@@ -445,35 +445,31 @@
         <h4 class="underline" id="puesta-tierra-inst">Puesta a tierra</h4>
         <p>La puesta a tierra de la instalación comprenderá los módulos, la estructura de los módulos, los inversores y cualquier superficie metálica, creando una única red equipotencial distribuida según necesidad, asegurándose una correcta puesta a tierra.</p>
         <p>Material: {{ v(wire_ground_material, 'Cable de Cobre') }}</p>
-        <p>Metros: {{ v(wire_ground_length) }}m</p>
         <p>Sección: {{ v(wire_ground_section) }}mm²</p>
 
         <h4 class="underline" id="protecciones-electricas">Protecciones eléctricas</h4>
         <p>El cuadro de protecciones estará ubicado junto al inversor y contendrá:</p>
         <ul>
             <li>Elementos de protección térmica DC de fusión rápida a {{ v(protections_dc_thermal_v_max) }}V tolerancia ({{ v(protections_dc_thermal_model) }})</li>
-            <li>Interruptor automático rearmable DC a {{ v(protections_dc_breaker_i) }}A uno por cada MPPT ({{ v(protections_dc_breaker_model) }}).</li>
+            <li>Interruptor automático DC a {{ v(protections_dc_breaker_i) }}A ({{ v(protections_dc_breaker_model) }}).</li>
             <li>Protección DC contra sobrecargas atmosféricas para positivo, negativo y tierra ({{ v(protections_dc_surge_model) }})</li>
             <li>Bornas de tierra DC.</li>
-        </ul>
-        <p>En el cuadro general de la vivienda contendrá:</p>
-        <ul>
-            <li>Magneto térmico AC {{ v(protections_ac_thermal_i) }}A ({{ v(protections_ac_thermal_model) }}).</li>
+            <li>Magnetotérmico AC {{ v(protections_ac_thermal_i) }}A ({{ v(protections_ac_thermal_model) }}).</li>
             <li>Diferencial AC {{ v(protections_ac_diff_i) }}A, sensibilidad {{ v(protections_ac_thermal_i) }}mA ({{ v(protections_ac_diff_model) }}).</li>
             <li>Protector de sobretensión transitoria en fase y neutro ({{ v(protections_ac_transitory_surge_model) }}).</li>
             <li>Borna de tierra AC.</li>
-            <li>Gestor de inyección cero ({{ v(zero_inyection_model) }}).</li>
         </ul>
 
         <h4 class="underline" id="sistema-medida">Sistema de medida</h4>
         <p>Se utilizará un dispositivo electrónico {{ v(metering_device_model) }} que se utiliza como medidor inteligente.</p>
         <p>Registra el consumo eléctrico que hay en cualquier momento.</p>
-        <p>En caso de tratarse de una instalación tipo 1 (sin excedentes), este dispositivo es capaz de evitar inyecciones a la red eléctrica comunicándose con el inversor para que solo se produzca la energía necesaria en función del consumo en cada momento.</p>
+        {% if inyection_type == 'sin' %}
+        <p>Al tratarse de una instalación sin excedentes, este dispositivo actuará como gestor de inyección cero, comunicándose con el inversor para que solo se produzca la energía necesaria en función del consumo en cada momento, evitando así cualquier inyección a la red eléctrica.</p>
         <p>El {{ v(metering_device_model) }} cumple con la normativa vigente UNE 21700 IN referente a los requisitos y ensayos para que el sistema evite la inyección de energía eléctrica a la red de distribución y el Real Decreto 1110/2007, de 24 de agosto, por lo que se aprueba el reglamento de puntos de medida del sistema eléctrico.</p>
+        {% endif %}
 
         <h4 class="underline" id="sistema-monitorizacion">Sistema de monitorización</h4>
-        <p>La Instalación fotovoltaica contará con un sistema de monitorización energética para visualizar la producción real de energía solar desde Internet.</p>
-        <p>El equipo encargado de hacer la medida del consumo eléctrico es el {{ v(metering_device_model) }}. Este se conecta al inversor mediante un cable de comunicación.</p>
+        <p>La instalación fotovoltaica contará con un sistema de monitorización energética proporcionado por el fabricante del inversor, que permite visualizar la producción real de energía solar desde Internet.</p>
         <p>La instalación fotovoltaica puede ser monitorizada, analizada y comparada de manera rápida y sencilla a través del portal online del fabricante.</p>
         <p>El usuario puede acceder a la información actualizada de la instalación en cualquier momento y presentarla de forma muy clara. El portal es muy fácil de utilizar y tiene una amplia gama de opciones para el análisis de datos.</p>
     </section>
@@ -503,9 +499,9 @@
         <p>La instalación solar fotovoltaica se divide en varios tramos de conexión, entre los diferentes equipos y cajas de conexión que la componen.</p>
         <p>Tendrá tramos donde circulará CC y CA por lo que se han de calcular la sección del cable.</p>
         <p>Para los tramos de CC se utilizarán conductores de cobre, modelo {{ v(wire_dc_model) }} tipo {{ v(wire_dc_type) }}.</p>
-        <p>El tipo de instalación será de conductores aislados en tubo de montaje superficial o empotrados en obra según la definición del REBT norma ICT-BT-19.</p>
+        <p>El tipo de instalación será de conductores aislados en tubo de montaje superficial o empotrados en obra según la definición del REBT norma ITC-BT-19.</p>
         <p>En el caso de la instalación interior (una vez se ha producido la conversión de corriente continua a corriente alterna) se utilizarán conductores de cobre modelo {{ v(wire_ac_model) }} tipo {{ v(wire_ac_type) }}.</p>
-        <p>El tipo de instalación será de conductores aislados en tubo de montaje superficial o empotrados en obra según la definición del REBT norma ICT-BT-19.</p>
+        <p>El tipo de instalación será de conductores aislados en tubo de montaje superficial o empotrados en obra según la definición del REBT norma ITC-BT-19.</p>
         <p>A continuación podemos ver según el tipo de instalación y la sección del cable, la intensidad admisible.</p>
         <div class="image-container">
             <p>[Tabla de corrientes admisibles C.52-1 bis]</p>
@@ -553,7 +549,7 @@
         <p>La tirada de cable será de sección {{ v(wire_dc_section) }}mm², con una intensidad máxima admisible según tabla.</p>
         <p>La intensidad de corte del magnetotérmico ha de ser superior a la intensidad máxima proveniente de las placas, más el factor de seguridad, pero ha de ser menor a la máxima admisible por los conductores.</p>
         <p class="formula">I<sub>N,P</sub> &lt; I<sub>T,F</sub> &lt; I<sub>M,C</sub></p>
-        <p>Estos tramos también estarán protegidos mediante un equipo eléctrico de carga de rayos y sobretensión instantánea, el cual se conectará a los cables de bajada de los paneles fotovoltaicos y al tierra de la instalación con el fin de proteger el tramo de CC. Se colocará un equipo para cada MPPT.</p>
+        <p>Estos tramos también estarán protegidos mediante un equipo eléctrico de carga de rayos y sobretensión instantánea, el cual se conectará a los cables de bajada de los paneles fotovoltaicos y al tierra de la instalación con el fin de proteger el tramo de CC.</p>
 
         <h4 id="tramo-ca">Tramo de CA</h4>
 
@@ -572,8 +568,7 @@
     <section>
         <h3 class="underline" id="puesta-tierra">PUESTA A TIERRA</h3>
         <p>La puesta a tierra se realizará de forma que no altere la configuración de la instalación eléctrica de la vivienda. Se instalará una línea de tierra desde el cuadro eléctrico de la vivienda, hasta el cuadro de protecciones de la instalación fotovoltaica y desde este cuadro hasta la estructura de los paneles.</p>
-        <p>La sección del cable de tierra será de {{ v(wire_ground_section, '10') }}mm², cumpliendo con la ITC-BT-18, donde se indica que la sección del conductor de protección será como mínimo de 10mm².</p>
-        <p>La resistencia de la puesta a tierra será inferior a 37 Ohmios, según la ITC-BT-18.</p>
+        <p>La sección del cable de tierra será de {{ v(wire_ground_section) }}mm², igual a la sección del conductor de fase.</p>
     </section>
 
     {# ===== PRODUCCION DE ENERGIA ===== #}
@@ -638,16 +633,10 @@
         <p>Las protecciones eléctricas serán las descritas en la sección de protecciones de esta memoria.</p>
 
         <h4 class="underline" id="pct-tierra">PUESTA A TIERRA</h4>
-        <p>La puesta a tierra será de cobre, con una sección de {{ v(wire_ground_section, '10') }}mm². La puesta a tierra cumplirá con la normativa UNE-EN 50522.</p>
+        <p>La puesta a tierra será de cobre, con una sección de {{ v(wire_ground_section) }}mm², igual a la sección del conductor de fase. La puesta a tierra cumplirá con la normativa UNE-EN 50522.</p>
 
         <h4 class="underline" id="pct-monitorizacion">SISTEMA DE MONITORIZACIÓN</h4>
-        <p>El sistema de monitorización será el proporcionado por el fabricante del inversor, y permitirá visualizar la producción de energía en tiempo real.</p>
-        <h5 class="underline">Características técnicas:</h5>
-        <ul>
-            <li>Comunicación: WiFi</li>
-            <li>Visualización: Web y app</li>
-            <li>Datos: Producción, consumo, etc.</li>
-        </ul>
+        <p>El sistema de medida y monitorización será el proporcionado por el fabricante del inversor, permitiendo visualizar la producción de energía en tiempo real a través de su portal online y aplicación móvil.</p>
     </section>
 
     {# ===== ESQUEMAS ===== #}
