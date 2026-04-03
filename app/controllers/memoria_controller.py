@@ -1,6 +1,7 @@
 """Controlador para la generación de la memoria técnica en PDF."""
 
 import io
+import json
 import logging
 import os
 from flask import render_template, jsonify, Response
@@ -10,6 +11,7 @@ from app.models.panel import Panel
 from app.models.inverter import Inverter
 from app.models.installation_defaults import InstallationDefaults
 from app.services.circuit import CircuitService, DCConfig, ACConfig, SystemConfig
+from app.services.graph_service import GraphService
 
 logger = logging.getLogger(__name__)
 
@@ -60,6 +62,7 @@ class MemoriaController:
 
             template_vars = MemoriaController._build_template_vars(form_data, panel, inverter, defaults)
             template_vars.update(MemoriaController._build_circuit_svgs(form_data, panel, inverter))
+            template_vars.update(MemoriaController._build_graph_svgs(form_data))
 
         html_string = render_template('memoria_tecnica_pdf.html', **template_vars)
         memoria_pdf = HTML(string=html_string).write_pdf()
@@ -225,6 +228,29 @@ class MemoriaController:
             logger.exception("Error generando diagramas SVG para la memoria")
             empty = '<svg xmlns="http://www.w3.org/2000/svg" width="400" height="80"><text x="10" y="40" font-family="monospace" font-size="12" fill="#888">Diagrama no disponible</text></svg>'
             return {'svg_ca': empty, 'svg_cc': empty, 'svg_sistema': empty}
+
+    @staticmethod
+    def _build_graph_svgs(data) -> dict:
+        """Genera los gráficos SVG de producción e irradiancia mensual."""
+        try:
+            monthly_production = json.loads(data.get('monthly_production', '[]'))
+            monthly_irradiance = json.loads(data.get('monthly_irradiance', '[]'))
+        except (json.JSONDecodeError, TypeError):
+            monthly_production = []
+            monthly_irradiance = []
+
+        result = {}
+        if monthly_production:
+            result['svg_production'] = GraphService.generate_monthly_production(monthly_production)
+        if monthly_irradiance:
+            result['svg_irradiance'] = GraphService.generate_monthly_irradiance(monthly_irradiance)
+        try:
+            annual_consumption = float(data.get('annual_consumption', 0))
+        except (ValueError, TypeError):
+            annual_consumption = 0
+        if monthly_production and annual_consumption > 0:
+            result['svg_balance'] = GraphService.generate_energy_balance(monthly_production, annual_consumption)
+        return result
 
     @staticmethod
     def _collect_datasheets(panel, inverter):
