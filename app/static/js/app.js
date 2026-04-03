@@ -620,6 +620,9 @@ printUpdateBtn.addEventListener('click', function() {
         annual_irradiance: results_data.annual_irradiance_kWh_m2 || '',
         annual_production: results_data.annual_production || '',
         is_coplanar: chk.checked ? '1' : '0',
+        monthly_production: JSON.stringify(results_data.monthly_production || []),
+        monthly_irradiance: JSON.stringify(results_data.monthly_irradiance || []),
+        annual_consumption: necesidadValue.value,
         date: new Date().toLocaleDateString('es-ES'),
     };
 

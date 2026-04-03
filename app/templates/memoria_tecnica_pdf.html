@@ -583,12 +583,25 @@
         <p>La instalación fotovoltaica tiene una potencia pico de {{ v(panels_peak_power_kw) }}kWp, con una inclinación de {{ v(panels_inclination) }}º y una orientación de {{ v(panels_azimut) }}º.</p>
         <p>La producción de energía prevista para la instalación fotovoltaica es de {{ v(annual_production) }}kWh/año.</p>
         <div class="image-container">
-            <p>[Gráfico de producción mensual]</p>
+            {%- if svg_production -%}
+                {{ svg_production | safe }}
+            {%- else -%}
+                <p>Gráfico de producción no disponible.</p>
+            {%- endif -%}
         </div>
         <p>La irradiación solar media anual en la localidad de {{ v(location) }} es de {{ v(annual_irradiance) }}kWh/m².</p>
         <div class="image-container">
-            <p>[Gráfico de irradiación mensual]</p>
+            {%- if svg_irradiance -%}
+                {{ svg_irradiance | safe }}
+            {%- else -%}
+                <p>Gráfico de irradiación no disponible.</p>
+            {%- endif -%}
         </div>
+        {%- if svg_balance -%}
+        <div class="image-container">
+            {{ svg_balance | safe }}
+        </div>
+        {%- endif -%}
     </section>
 
     {# ===== PLIEGO DE CONDICIONES TECNICAS ===== #}

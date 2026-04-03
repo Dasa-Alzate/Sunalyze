@@ -214,6 +214,11 @@ class AnalysisController:
             performance_ratio = total_y / y_placa if y_placa > 0 else 0
             annual_production = round(total_field_power * optimal_irradiance * performance_ratio, 2)
 
+            # Calcular desglose mensual de irradiancia y producción
+            df_total_irr = (df['poa_direct'] + df['poa_sky_diffuse'] + df['poa_ground_diffuse'])
+            monthly_irradiance = (df_total_irr.groupby(df_total_irr.index.month).sum() / (1000 * sample_years)).round(2).tolist()
+            monthly_production = [round(val * total_field_power * performance_ratio / annual_irradiance, 2) if annual_irradiance > 0 else 0 for val in monthly_irradiance]
+
             # Preparar respuesta base
             response_data = {
                 "total_field_power": total_field_power,
@@ -221,6 +226,8 @@ class AnalysisController:
                 "coldest_day_v_max": coldest_day_v_max,
                 "altitude": altitude,
                 "annual_production": annual_production,
+                "monthly_irradiance": monthly_irradiance,
+                "monthly_production": monthly_production,
             }
 
             # Agregar datos completos si hay inversor específico
