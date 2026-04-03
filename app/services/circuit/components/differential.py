@@ -7,7 +7,6 @@ class Differential(Component):
     """
     Residual Current Device (RCD) / interruptor diferencial.
     Two-pole switch body with differential coil indicator.
-    Faithful to assets/unifilar/diff.svg.
     """
 
     def render(self, style, label: str = "", sensitivity: str = "", **kwargs) -> str:

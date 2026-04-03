@@ -7,7 +7,6 @@ class Inverter(Component):
     """
     DC/AC inverter symbol.
     Rectangle with a diagonal divider; DC bars on the left half,
-    AC sine wave on the right half. Faithful to assets/unifilar/inverter.svg.
     """
 
     def render(self, style, label: str = "", **kwargs) -> str:

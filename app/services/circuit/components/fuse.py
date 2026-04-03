@@ -6,7 +6,6 @@ from ..component import Component
 class Fuse(Component):
     """
     IEC 60617 fuse symbol: conductor through a rectangular cartridge.
-    Faithful to assets/unifilar/fuse.svg.
     """
 
     def render(self, style, label: str = "", **kwargs) -> str:
