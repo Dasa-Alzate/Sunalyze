@@ -12,7 +12,8 @@
             "power": 500,
             "t_noct": 45,
             "height": 1954,
-            "width": 1134
+            "width": 1134,
+            "datasheet": "panels/AIKO-MAH60Db (500-520W).pdf"
         },
         {
             "nombre": "AIKO-A505-MAH60Db",
@@ -26,7 +27,8 @@
             "power": 505,
             "t_noct": 45,
             "height": 1954,
-            "width": 1134
+            "width": 1134,
+            "datasheet": "panels/AIKO-MAH60Db (500-520W).pdf"
         },
         {
             "nombre": "AIKO-A510-MAH60Db",
@@ -40,7 +42,8 @@
             "power": 510,
             "t_noct": 45,
             "height": 1954,
-            "width": 1134
+            "width": 1134,
+            "datasheet": "panels/AIKO-MAH60Db (500-520W).pdf"
         },
         {
             "nombre": "AIKO-A515-MAH60Db",
@@ -54,7 +57,8 @@
             "power": 515,
             "t_noct": 45,
             "height": 1954,
-            "width": 1134
+            "width": 1134,
+            "datasheet": "panels/AIKO-MAH60Db (500-520W).pdf"
         },
         {
             "nombre": "AIKO-A520-MAH60Db",
@@ -68,7 +72,8 @@
             "power": 520,
             "t_noct": 45,
             "height": 1954,
-            "width": 1134
+            "width": 1134,
+            "datasheet": "panels/AIKO-MAH60Db (500-520W).pdf"
         },
             
         {
@@ -83,7 +88,8 @@
             "power": 625,
             "t_noct": 45,
             "height": 2465,
-            "width": 1134
+            "width": 1134,
+            "datasheet": "panels/JASolar-Bifacial (625-650W).pdf"
         },
         {
             "nombre": "JASolar Bifacial 630W",
@@ -97,7 +103,8 @@
             "power": 630,
             "t_noct": 45,
             "height": 2465,
-            "width": 1134
+            "width": 1134,
+            "datasheet": "panels/JASolar-Bifacial (625-650W).pdf"
         },
         {
             "nombre": "JASolar Bifacial 635W",
@@ -111,7 +118,8 @@
             "power": 635,
             "t_noct": 45,
             "height": 2465,
-            "width": 1134
+            "width": 1134,
+            "datasheet": "panels/JASolar-Bifacial (625-650W).pdf"
         },
         {
             "nombre": "JASolar Bifacial 640W",
@@ -125,7 +133,8 @@
             "power": 640,
             "t_noct": 45,
             "height": 2465,
-            "width": 1134
+            "width": 1134,
+            "datasheet": "panels/JASolar-Bifacial (625-650W).pdf"
         },
         {
             "nombre": "JASolar Bifacial 645W",
@@ -139,7 +148,8 @@
             "power": 645,
             "t_noct": 45,
             "height": 2465,
-            "width": 1134
+            "width": 1134,
+            "datasheet": "panels/JASolar-Bifacial (625-650W).pdf"
         },
         {
             "nombre": "JASolar Bifacial 650W",
@@ -153,7 +163,8 @@
             "power": 650,
             "t_noct": 45,
             "height": 2465,
-            "width": 1134
+            "width": 1134,
+            "datasheet": "panels/JASolar-Bifacial (625-650W).pdf"
         },
         
         {
@@ -168,7 +179,8 @@
             "power": 500,
             "t_noct": 45,
             "height": 1909,
-            "width": 1134
+            "width": 1134,
+            "datasheet": "panels/Tensite-TOPCon (500W).pdf"
         }
     ],
     
@@ -180,7 +192,8 @@
         "power": 3.6,
         "vmax": 550,
         "I_max_input": 13,
-        "I_max_output": 17.2
+        "I_max_output": 17.2,
+        "datasheet": "inverters/Deye-SUN-G (3.6-6kW).pdf"
     },
     {
         "nombre": "Deye SUN-4K-G",
@@ -189,7 +202,8 @@
         "power": 4,
         "vmax": 550,
         "I_max_input": 13,
-        "I_max_output": 19.1
+        "I_max_output": 19.1,
+        "datasheet": "inverters/Deye-SUN-G (3.6-6kW).pdf"
     },
     {
         "nombre": "Deye SUN-4.6K-G",
@@ -198,7 +212,8 @@
         "power": 4.6,
         "vmax": 550,
         "I_max_input": 13,
-        "I_max_output": 22
+        "I_max_output": 22,
+        "datasheet": "inverters/Deye-SUN-G (3.6-6kW).pdf"
     },
     {
         "nombre": "Deye SUN-5K-G",
@@ -207,7 +222,8 @@
         "power": 5,
         "vmax": 550,
         "I_max_input": 13,
-        "I_max_output": 23.9
+        "I_max_output": 23.9,
+        "datasheet": "inverters/Deye-SUN-G (3.6-6kW).pdf"
     },
     {
         "nombre": "Deye SUN-6K-G",
@@ -216,7 +232,8 @@
         "power": 6,
         "vmax": 550,
         "I_max_input": 13,
-        "I_max_output": 28.7
+        "I_max_output": 28.7,
+        "datasheet": "inverters/Deye-SUN-G (3.6-6kW).pdf"
     },
 
     {
@@ -226,7 +243,8 @@
         "power": 3,
         "vmax": 1000,
         "I_max_input": 12,
-        "I_max_output": 13.0
+        "I_max_output": 13.0,
+        "datasheet": "inverters/Fronius-PRIMO (3-8.2kW).pdf"
     },
     {
         "nombre": "Fronius PRIMO 3.5-1",
@@ -235,7 +253,8 @@
         "power": 3.5,
         "vmax": 1000,
         "I_max_input": 12,
-        "I_max_output": 15.2
+        "I_max_output": 15.2,
+        "datasheet": "inverters/Fronius-PRIMO (3-8.2kW).pdf"
     },
     {
         "nombre": "Fronius PRIMO 3.6-1",
@@ -244,7 +263,8 @@
         "power": 3.68,
         "vmax": 1000,
         "I_max_input": 12,
-        "I_max_output": 16.0
+        "I_max_output": 16.0,
+        "datasheet": "inverters/Fronius-PRIMO (3-8.2kW).pdf"
     },
     {
         "nombre": "Fronius PRIMO 4.0-1",
@@ -253,7 +273,8 @@
         "power": 4,
         "vmax": 1000,
         "I_max_input": 12,
-        "I_max_output": 17.4
+        "I_max_output": 17.4,
+        "datasheet": "inverters/Fronius-PRIMO (3-8.2kW).pdf"
     },
     {
         "nombre": "Fronius PRIMO 4.6-1",
@@ -262,7 +283,8 @@
         "power": 4.6,
         "vmax": 1000,
         "I_max_input": 12,
-        "I_max_output": 20.0
+        "I_max_output": 20.0,
+        "datasheet": "inverters/Fronius-PRIMO (3-8.2kW).pdf"
     },
     {
         "nombre": "Fronius PRIMO 5.0-1",
@@ -271,7 +293,8 @@
         "power": 5,
         "vmax": 1000,
         "I_max_input": 12,
-        "I_max_output": 21.7
+        "I_max_output": 21.7,
+        "datasheet": "inverters/Fronius-PRIMO (3-8.2kW).pdf"
     },
     {
         "nombre": "Fronius PRIMO 6.0-1",
@@ -280,7 +303,8 @@
         "power": 6,
         "vmax": 1000,
         "I_max_input": 18,
-        "I_max_output": 26.1
+        "I_max_output": 26.1,
+        "datasheet": "inverters/Fronius-PRIMO (3-8.2kW).pdf"
     },
     {
         "nombre": "Fronius PRIMO 8.2-1",
@@ -289,7 +313,8 @@
         "power": 8.2,
         "vmax": 1000,
         "I_max_input": 18,
-        "I_max_output": 35.7
+        "I_max_output": 35.7,
+        "datasheet": "inverters/Fronius-PRIMO (3-8.2kW).pdf"
     },
 
     {
@@ -299,7 +324,8 @@
         "power": 1.5,
         "vmax": 600,
         "I_max_input": 10,
-        "I_max_output": 7
+        "I_max_output": 7,
+        "datasheet": "inverters/SMA-SunnyBoy (1.5-2.5kW).pdf"
     },
     {
         "nombre": "SMA SunnyBoy 2.0",
@@ -308,7 +334,8 @@
         "power": 2,
         "vmax": 600,
         "I_max_input": 10,
-        "I_max_output": 9
+        "I_max_output": 9,
+        "datasheet": "inverters/SMA-SunnyBoy (1.5-2.5kW).pdf"
     },
     {
         "nombre": "SMA SunnyBoy 2.5",
@@ -317,7 +344,8 @@
         "power": 2.5,
         "vmax": 600,
         "I_max_input": 10,
-        "I_max_output": 11
+        "I_max_output": 11,
+        "datasheet": "inverters/SMA-SunnyBoy (1.5-2.5kW).pdf"
     }
 ]
 }

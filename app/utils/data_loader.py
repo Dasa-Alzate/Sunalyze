@@ -34,7 +34,8 @@ def load_initial_data():
                 power=panel_data['power'],
                 t_noct=panel_data['t_noct'],
                 height=panel_data['height'],
-                width=panel_data['width']
+                width=panel_data['width'],
+                datasheet=panel_data.get('datasheet')
             )
             db.session.add(panel)
         
@@ -47,7 +48,8 @@ def load_initial_data():
                 power=inverter_data['power'],
                 vmax=inverter_data['vmax'],
                 I_max_input=inverter_data['I_max_input'],
-                I_max_output=inverter_data['I_max_output']
+                I_max_output=inverter_data['I_max_output'],
+                datasheet=inverter_data.get('datasheet')
             )
             db.session.add(inverter)
         

@@ -35,6 +35,7 @@ class Panel(BaseModel):
     t_noct = db.Column(db.Float, nullable=False)  # Temperatura NOCT
     height = db.Column(db.Integer, nullable=False)  # Altura en mm
     width = db.Column(db.Integer, nullable=False)  # Ancho en mm
+    datasheet = db.Column(db.String(200))  # Ruta al datasheet PDF
     
     def to_dict(self):
         return {
@@ -50,7 +51,8 @@ class Panel(BaseModel):
             'power': self.power,
             't_noct': self.t_noct,
             'height': self.height,
-            'width': self.width
+            'width': self.width,
+            'datasheet': self.datasheet
         }
     
     def __repr__(self):
