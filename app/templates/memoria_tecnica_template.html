@@ -1,0 +1,1092 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Memoria Técnica Instalación Fotovoltaica</title>
+
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/output.css') }}">
+
+    <!-- CDN de KaTeX -->
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/katex.min.css">
+    <script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/katex.min.js"></script>
+    <script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/contrib/auto-render.min.js"
+        onload="renderMathInElement(document.body);"></script>
+
+    <style>
+        body {
+            display: flex;
+            justify-content: center;
+            font-family: Arial, sans-serif;
+            line-height: 1.6;
+            margin: 0;
+            color: #333;
+        }
+
+        .doc {
+            position: relative;
+            width: 210mm;
+            padding: 20mm;
+            box-sizing: border-box;
+        }
+
+        @page {
+            size: A4;
+            /* margin-top: 20mm;
+            margin: 30mm 25mm 25mm 35mm; */
+            @bottom-center {
+                position: absolute;
+                bottom: 10mm;
+                content: counter(page);
+            }
+        }
+
+        section {
+            page-break-after: always;
+            padding-top: 5mm;
+            /* height: calc(297mm - 4cm); */
+        }
+
+        .page {
+            font-weight: bold;
+        }
+
+        h1, h2, h3, h4, h5 {
+            color: #2c3e50;
+            font-size: revert;
+            font-weight: revert;
+        }
+
+        h2, h3, h4 {
+            margin-top: 8mm;
+            break-after: avoid;
+            text-transform: capitalize;
+        }
+
+        h1 {
+            text-align: center;
+            margin-bottom: 30px;
+            border-bottom: 2px solid #3498db;
+            padding-bottom: 10px;
+        }
+
+        h2 {
+            margin-top: 25px;
+            padding-bottom: 5px;
+            border-bottom: 1px solid #ddd;
+        }
+
+        h3 {
+            margin-top: 20px;
+        }
+
+        .underline {
+            text-decoration: underline;
+        }
+
+        p {
+            margin-bottom: 15px;
+        }
+
+        ul, ol {
+            margin-bottom: 15px;
+            padding-left: 30px;
+        }
+
+        p, ul, ol, table, img {
+            margin-top: 3mm;
+            break-inside: avoid;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-bottom: 20px;
+        }
+
+        th, td {
+            border: 1px solid #ddd;
+            padding: 8px;
+            text-align: left;
+        }
+
+        th {
+            background-color: #f2f2f2;
+        }
+
+        .page-break {
+            page-break-before: always;
+        }
+
+        .image-container {
+            text-align: center;
+            margin: 20px 0;
+        }
+
+        .image-container img {
+            max-width: 100%;
+            height: auto;
+        }
+
+        .budget-table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+
+        .budget-table th, .budget-table td {
+            border: 1px solid #ddd;
+            padding: 8px;
+        }
+
+        .budget-table th {
+            background-color: #f2f2f2;
+        }
+
+        .signature {
+            margin-top: 40px;
+        }
+
+        .hierarchical-ol {
+            counter-reset: item;
+            list-style-type: none;
+            padding-left: 0;
+        }
+
+        .hierarchical-ol li {
+            display: block;
+            position: relative;
+            margin-bottom: 5px;
+        }
+
+        .hierarchical-ol li:before {
+            content: counters(item, ".") ". ";
+            counter-increment: item;
+            position: absolute;
+            left: 0;
+            font-weight: bold;
+        }
+
+        .hierarchical-ol ol {
+            counter-reset: item;
+            padding-left: 20px;
+            margin-top: 5px;
+        }
+
+        .hierarchical-ol li ol li{
+            display: flex;
+            position: relative;
+            margin-bottom: 5px;
+            padding-left: 25px;
+        }
+
+        li span {
+            display: flex;
+        }
+
+        .title {
+            text-transform: lowercase;
+        }
+
+        .title::first-letter {
+            text-transform: uppercase;
+        }
+
+        .item .title {
+            text-transform: uppercase;
+            margin-left: 2rem;
+            font-weight: 800;
+        }
+
+        .title {
+            display: block;
+            white-space: nowrap;
+            overflow: hidden;
+            margin-left: 1.2rem;
+        }
+        
+        .filler {
+            flex-grow: 1;
+            border-bottom: 3px dotted #999;
+            margin: 0 5px;
+            height: 1.2em;
+        }
+
+        .front-page-title {
+            text-transform: uppercase;
+            font-weight: 800;
+            font-size: 2em;
+            margin-bottom: 80mm;
+        }
+
+        .front-page-subtitle {
+            text-transform: capitalize;
+            font-size: 1.5em;
+            margin-bottom: 40mm;
+            border-bottom: none;
+        }
+
+        .duda {
+            color: #9c2626c9;
+            font-weight: 700;
+        }
+
+        .variable {
+            color: #bf8c00;
+            font-weight: 700;
+            text-decoration: underline;
+        }
+        
+    </style>
+</head>
+<body>
+    <div class="doc">
+        <section class="text-center">
+            <h1 class="front-page-title">Memoria Técnica para Instalación de Autoconsumo Fotovoltaico</h1>
+            <h2 class="front-page-subtitle uppercase">INSTALACIÓN FOTOVOLTAICA DE AUTOCONSUMO <span class="variable t-inyection uppercase"></span> INYECCION DE EXCEDENTES</h2>
+            
+            <h3>Cliente:</h3>
+            <h3 class="variable t-client-name"></h3>
+        </section>
+
+        <section>
+            <h2>ÍNDICE</h2>
+            <ol class="hierarchical-ol">
+                <li>
+                    <span class="item">
+                        <span class="title">MEMORIA JUSTIFICATIVA</span>
+                        <span class="filler"></span>
+                        <span class="page">3</span>
+                    </span>
+                    <ol>
+                        <li>
+                            <span class="title">Objetivo de la memoria</span>
+                            <span class="filler"></span>
+                            <span class="page">3</span>
+                        </li>
+                        <li>
+                            <span class="title">Datos generales</span>
+                            <span class="filler"></span>
+                            <span class="page">3</span>
+                        </li>
+                        <ol>
+                            <li>
+                                <span class="title">General</span>
+                                <span class="filler"></span>
+                                <span class="page">3</span>
+                            </li>
+                            <li>
+                                <span class="title">Clasificación de la instalación</span>
+                                <span class="filler"></span>
+                                <span class="page">3</span>
+                            </li>
+                        </ol>
+                        <li>
+                            <span class="title">REGLAMENTOS Y DISPOSICIONES CONSIDERADAS</span>
+                            <span class="filler"></span>
+                            <span class="page">3</span>
+                        </li>
+                    </ol>
+                </li>
+                <li>
+                    <span class="item">
+                        <span class="title">INSTALACIÓN FOTOVOLTAICA</span>
+                        <span class="filler"></span>
+                        <span class="page">5</span>
+                    </span>
+                    <ol>
+                        <li>
+                            <span class="title">Características de la instalación</span>
+                            <span class="filler"></span>
+                            <span class="page">5</span>
+                        </li>
+                        <li>
+                            <span class="title">Emplazamiento de la FV y descripción genérica</span>
+                            <span class="filler"></span>
+                            <span class="page">5</span>
+                        </li>
+                        <li>
+                            <span class="title">Módulos FV</span>
+                            <span class="filler"></span>
+                            <span class="page">5</span>
+                        </li>
+                        <ol>
+                            <li>
+                                <span class="title">Disposición</span>
+                                <span class="filler"></span>
+                                <span class="page">5</span>
+                            </li>
+                            <li>
+                                <span class="title">Distancia entre filas</span>
+                                <span class="filler"></span>
+                                <span class="page">6</span>
+                            </li>
+                            <li>
+                                <span class="title">Configuración de series</span>
+                                <span class="filler"></span>
+                                <span class="page">6</span>
+                            </li>
+                        </ol>
+                        <li>
+                            <span class="title">Estructura soporte</span>
+                            <span class="filler"></span>
+                            <span class="page">6</span>
+                        </li>
+                        <li>
+                            <span class="title">Inversor</span>
+                            <span class="filler"></span>
+                            <span class="page">7</span>
+                        </li>
+                        <li>
+                            <span class="title">Cableado</span>
+                            <span class="filler"></span>
+                            <span class="page">7</span>
+                        </li>
+                        <li>
+                            <span class="title">Puesta a tierra</span>
+                            <span class="filler"></span>
+                            <span class="page">8</span>
+                        </li>
+                        <li>
+                            <span class="title">Protecciones eléctricas</span>
+                            <span class="filler"></span>
+                            <span class="page">8</span>
+                        </li>
+                        <li>
+                            <span class="title">Sistema de medida</span>
+                            <span class="filler"></span>
+                            <span class="page">8</span>
+                        </li>
+                        <li>
+                            <span class="title">Sistema de monitorización</span>
+                            <span class="filler"></span>
+                            <span class="page">9</span>
+                        </li>
+                    </ol>
+                </li>
+                <li>
+                    <span class="item">
+                        <span class="title">CALCULOS JUSTIFICATIVOS</span>
+                        <span class="filler"></span>
+                        <span class="page">9</span>
+                    </span>
+                    <ol>
+                        <li>
+                            <span class="title">Calculo de las líneas eléctricas de baja tensión (REBT)</span>
+                            <span class="filler"></span>
+                            <span class="page">9</span>
+                        </li>
+                        <ol>
+                            <li>
+                                <span class="title">Características de los paneles</span>
+                                <span class="filler"></span>
+                                <span class="page">9</span>
+                            </li>
+                            <li>
+                                <span class="title">Conexión de los paneles</span>
+                                <span class="filler"></span>
+                                <span class="page">9</span>
+                            </li>
+                        </ol>
+                        <li>
+                            <span class="title">Dimensionamiento de las líneas</span>
+                            <span class="filler"></span>
+                            <span class="page">9</span>
+                        </li>
+                    </ol>
+                </li>
+                <li>
+                    <span class="item">
+                        <span class="title">DIMENSIONES DE LOS TUBOS</span>
+                        <span class="filler"></span>
+                        <span class="page">12</span>
+                    </span>
+                </li>
+                <li>
+                    <span class="item">
+                        <span class="title">Protecciones</span>
+                        <span class="filler"></span>
+                        <span class="page">12</span>
+                    </span>
+                    <ol>
+                        <li>
+                            <span class="title">Tramo de CC</span>
+                            <span class="filler"></span>
+                            <span class="page">12</span>
+                        </li>
+                        <li>
+                            <span class="title">Tramo de CA</span>
+                            <span class="filler"></span>
+                            <span class="page">12</span>
+                        </li>
+                    </ol>
+                </li>
+                <li>
+                    <span class="item">
+                        <span class="title">PUESTA A TIERRA</span>
+                        <span class="filler"></span>
+                        <span class="page">13</span>
+                    </span>
+                </li>
+                <li>
+                    <span class="item">
+                        <span class="title">PRODUCCIÓN DE ENERGÍA PREVISTA E IRRADIACIÓN SOLAR</span>
+                        <span class="filler"></span>
+                        <span class="page">14</span>
+                    </span>
+                </li>
+                <li>
+                    <span class="item">
+                        <span class="title">PLIEGO DE CONDICIONES TÉCNICAS</span>
+                        <span class="filler"></span>
+                        <span class="page">16</span>
+                    </span>
+                    <ol>
+                        <li>
+                            <span class="title">PANELES FOTOVOLTAICOS</span>
+                            <span class="filler"></span>
+                            <span class="page">16</span>
+                        </li>
+                        <li>
+                            <span class="title">INVERSOR</span>
+                            <span class="filler"></span>
+                            <span class="page">16</span>
+                        </li>
+                        <li>
+                            <span class="title">ESTRUCTURA SOPORTE</span>
+                            <span class="filler"></span>
+                            <span class="page">16</span>
+                        </li>
+                        <li>
+                            <span class="title">CABLEADO</span>
+                            <span class="filler"></span>
+                            <span class="page">16</span>
+                        </li>
+                        <li>
+                            <span class="title">PROTECCIONES ELÉCTRICAS</span>
+                            <span class="filler"></span>
+                            <span class="page">16</span>
+                        </li>
+                        <li>
+                            <span class="title">PUESTA A TIERRA</span>
+                            <span class="filler"></span>
+                            <span class="page">16</span>
+                        </li>
+                        <li>
+                            <span class="title">SISTEMA DE MONITORIZACIÓN</span>
+                            <span class="filler"></span>
+                            <span class="page">16</span>
+                        </li>
+                    </ol>
+                </li>
+                <li>
+                    <span class="item">
+                        <span class="title">ESQUEMA UNIFILAR CA</span>
+                        <span class="filler"></span>
+                        <span class="page">44</span>
+                    </span>
+                </li>
+                <li>
+                    <span class="item">
+                        <span class="title">ESQUEMA UNIFILAR CC</span>
+                        <span class="filler"></span>
+                        <span class="page">45</span>
+                    </span>
+                </li>
+                <li>
+                    <span class="item">
+                        <span class="title">ESQUEMA GENERAL CA/CC</span>
+                        <span class="filler"></span>
+                        <span class="page">46</span>
+                    </span>
+                </li>
+                <li>
+                    <span class="item">
+                        <span class="title">PLANO DE UBICACIÓN</span>
+                        <span class="filler"></span>
+                        <span class="page">47</span>
+                    </span>
+                </li>
+                <li>
+                    <span class="item">
+                        <span class="title">DISPOSICIÓN PANELES</span>
+                        <span class="filler"></span>
+                        <span class="page">48</span>
+                    </span>
+                </li>
+                <li>
+                    <span class="item">
+                        <span class="title">PRESUPUESTO</span>
+                        <span class="filler"></span>
+                        <span class="page">49</span>
+                    </span>
+                </li>
+            </ol>
+        </section>
+
+        <section>
+            <h2 class="underline">MEMORIA JUSTIFICATIVA</h2>
+            
+            <h3 class="underline">Objetivo de la memoria</h3>
+            <p>La presente memoria tiene por objeto justificar y describir las características de la instalación fotovoltaica en cubierta a régimen privado y acogida a la normativa vigente según real decreto 244/2019.</p>
+            <p>Dada la necesidad de disponer de una serie de datos básicos de la instalación, en la presente memoria se desarrolla una solución de diseño, con el fin de poder obtener datos necesarios para estimaciones y legalizaciones.</p>
+            <p>Esta solución puede variar según criterios de diseño o circunstancias de mercado, siempre en cumplimiento del pliego de condiciones Técnicas.</p>
+            
+            <h3 class="underline">DATOS GENERALES</h3>
+            
+            <h4 class="underline">General</h4>
+            <p><span class="variable t-client-name"></span>, residente en Calle <span class="variable t-address"></span> <span class="variable t-zipcode"></span> con Referencia catastral <span class="variable t-catastral-reference"></span>. El suministro eléctrico es suministrado por <span class="variable t-energy-company-name"></span> con CUPS <span class="variable t-energy-company-cups"></span> y una potencia contratada de <span class="variable t-hired-power-kw"></span>kW a <span class="variable t-input-v"></span>V <span class="variable t-input-v-type"></span>. La finalidad de la instalación FV es la de autoconsumo <span class="variable t-inyection"></span> inyección de excedentes.</p>
+            
+            <h4 class="underline">Clasificación de la instalación</h4>
+            <p>La instalación contemplada en la presente memoria se encuentra clasificada de acuerdo a la ICT-BT-40 como instalaciones generadoras de baja tensión y sub-clasificada como una instalación generadora interconectada.</p>
+            <p>La misma, será sometida al proceso de legalización, contemplando el Real Decreto 244/2019, por el que se establece el procedimiento a seguir para instalaciones inferiores a 10KW de potencia pico.</p>
+            
+            <h3 class="underline">REGLAMENTOS Y DISPOSICIONES CONSIDERADAS</h3>
+            <ul>
+                <li>Real Decreto 842/2002 de a2 de agosto de 2002 por lo que se aprueba el nuevo Reglamento Electrotécnico para Baja Tensión, e instrucciones Técnicas complementarías (ITC) BT01 a BT51.</li>
+                <li>Real Decreto 413/2014, de 6 de junio, por el que se regula la actividad de producción de energía eléctrica a partir de fuentes de energía renovables, cogeneración y residuos.</li>
+                <li>Real Decreto 900/2015, de 9 de octubre, por el que se regulan las condiciones administrativas, técnicas y económicas de las modalidades de suministro de energía eléctrica con autoconsumo y de producción con autoconsumo.</li>
+                <li>Real Decreto Ley 15/2018, de 5 de octubre, de medidas urgentes para la transición energética y la protección de los consumidores.</li>
+                <li>Ley 24/2013, de 26 de diciembre, del sector eléctrico.</li>
+                <li>Real Decreto 1699/2011, de 18 de noviembre, por el que se regula la conexión a red de instalaciones de producción de energía eléctrica de pequeña potencia.</li>
+                <li>Real Decreto 1110/2007, 24 de agosto, por el que se aprueba el reglamento unificado de puntos de medida del sistema Eléctrico.</li>
+                <li>Real Decreto 1995/2000 de 1 de diciembre, por el que se reglan las actividades de transporte, distribución, comercialización y procedimientos de autorización de instalaciones de energía eléctrica.</li>
+                <li>Orden FOM/1635/2013, de 10 de septiembre, por la que se actualiza el Documento Básico DB-HE (Ahorro de Energía), del código Técnico de la edificación, aprobado por el Real Decreto 314/2006, de 17 de marzo.</li>
+                <li>Ley 31/1995, de 8 noviembre de prevención de riesgos laborales.</li>
+                <li>Real Decreto 614/2001, de 8 de junio, sobre disposiciones mínimas para la protección de la salud y seguridad de los trabajadores frente al riesgo eléctrico y resto de normativa aplicable en materia de prevención de riesgos.</li>
+                <li>Reglamento UE 2016/356 de la comisión de 1 de Julio de 2015, relativo a la clasificación de las propiedades de reacción al fuego de los productos de construcción de conformidad con el reglamento (UE) número 305/2011 del Parlamento Europeo y del Consejo.</li>
+                <li>Real Decreto 1955/2000, de 1 de diciembre, por el que se regulan las actividades de transporte, distribución, comercialización, suministro y procedimientos de autorización de instalaciones de energía eléctrica.</li>
+            </ul>
+        </section>
+        
+        <section>
+            <h3 class="underline">INSTALACIÓN FOTOVOLTAICA</h3>
+            
+            <h4 class="underline">Características de la instalación</h4>
+            <p>La instalación fotovoltaica será fijada mediante XXXXXXX puntos anclados con taco químico. Varillas de 12mm de inoxidable y ubicada en cubierta, <span class="variable t-panels-inclination-verbosed"></span> y <span class="variable t-panels-azimut-verbosed"></span></p>
+            <p>La potencia Pico será de <span class="variable t-panels-peak-power-kw"></span>kW compuesta por <span class="variable t-panels-number"></span> paneles, inversor de <span class="variable t-inverter-nominal-power"></span>kW y demás componentes como protecciones y cableado.</p>
+            
+            <h4 class="underline">Emplazamiento de la FV y descripción genérica.</h4>
+            <p>El espacio ocupado por los módulos se limitara a <span class="variable t-panels-place"></span></p>
+            <p>Se dispondrá de una única vertiente, la sur, con superficie de teja y una sola agua.</p>
+            <p>Los paneles se dispondrán de <span class="variable t-panels-disposition"><option>2 agrupaciones lineales contiguas.</option><option>1 agupación de x paneles y 1 agrupación contigua de y paneles</option></span></p>
+            <p>El sistema de transformación DC-AC, estará ubicado <span class="variable t-inverter-place"></span>, interconectado a la instalación fotovoltaica mediante hilo de cobre en tubo corrugado o PVC rígido.</p>
+            <p>Entre el inversor y la superficie generadora existirá un cuadro de protecciones adecuado a la normativa y cumpliendo los requisitos que se establecen en la orden ICT-BT-40.</p>
+            <p>De igual modo, la producción de energía en AC será suministrada a la vivienda, cumpliendo con todos los elementos de protección necesarios bajo la misma norma ICT-BT-40.</p>
+            <p><span class="variable t-anti-pouring-verbosed"></span>.</p>
+            <p><span class="variable t-batteries-verbosed"></span>.</p>
+            <p>La superficie ocupada por los paneles será de <span class="variable t-panels-surface"></span>m2</p>
+            
+            <h4 class="underline">Módulos FV</h4>
+            <p>La instalación se realizará con todos los módulos del mismo modelo y potencia (<span class="variable t-panels-model"></span>), siendo esta de <span class="variable t-panels-power"></span>W y unas medidas de <span class="variable t-panels-width"></span>x<span class="variable t-panels-height"></span>mm. Cumplirán con las condiciones descritas en el Pliego de Condiciones Técnicas.</p>
+            
+            <h5 class="underline">Disposición</h5>
+            <p>En ambas agrupaciones lineales, los módulos se dispondrán con una inclinación aproximada de <span class="variable t-panels-inclination"></span>º sobre la horizontal y un azimut de <span class="variable t-panels-azimut"></span>º, Resultando:</p>
+            <p>Perdidas por orientación estimadas <span class="variable t-orientation-loss-verbosed"></span></p>
+            <p>Perdidas por sombras circundantes de elementos fijos <span class="variable t-shadows-loss-verbosed"></span></p>
+            
+            <h5 class="underline">Distancia entre filas</h5>
+            <p>No se considera, al estar ubicados bajo la misma vertiente y misma inclinación.</p>
+            
+            <h5 class="underline">Configuración de series</h5>
+            <p>Los paneles del campo fotovoltaico se agruparán haciendo series, manteniendo los valores de tensión y corriente de las entradas del inversor y dentro de los márgenes de este, para temperaturas de panel entre <span class="variable t-panel-temp-min-limit"></span> y <span class="variable t-panel-temp-max-limit"></span>ºC.</p>
+            
+            <h4 class="underline">Estructura soporte</h4>
+            <p>La estructura de soporte estará diseñado para el tipo de cubierta, será una estructura que dotará de una inclinación <span class="variable t-panels-inclination-verbosed"></span></p>
+            <p>Esta cumplirá con los datos adjuntos en Pliego de Condiciones Técnicas.</p>
+            <p>Para el anclaje de la misma cubierta, se ha optado por una fijación del tipo química, tratándose de tamices introducidos en la capa de hormigón de la cubierta y rellenados con resina epóxica, los cuales albergaran espigas roscadas de 12 mm de acero Inoxidable, e impermeabilizados individualmente. Se harán coincidir los puntos de apoyo, con las conejeras existentes bajo techo para repartir mejor los pesos.</p>
+            <p>El proceso para la colocación de las varillas es el siguiente:</p>
+            <ol class="duda">
+                <li>Se agujerea la teja y la estructura de hormigón que se encuentra debajo de la teja.</li>
+                <li>Se procede a la limpieza del polvo que pueda quedar dentro del agujero creado, por medio de aspiradora.</li>
+                <li>Se introduce la resina epóxica, rellenando todo el agujero.</li>
+                <li>Se introduce la varilla de inoxidable de 12mm, la manera de introducirla es girando la varilla en sentido de las agujas del reloj, hasta la posición deseada.</li>
+                <li>Una vez endurecido la resina epóxica, se inyectara espuma de poliuretano para rellenar el hueco que queda entre la teja y el hormigón.</li>
+                <li>Cuando la espuma de poliuretano ha fraguado, se rellena el resto con Sikaflex.</li>
+                <li>Cuando el Sikaflex ha secado se pinta con pintura antihumedad.</li>
+                <li>Una vez esta todo el conjunto acabado se coloca una tuerca con arandela y una escuadra que se anclará junto a otra arandela y tuerca formando un conjunto sólido.</li>
+            </ol>
+            
+            <p>La estructura descansará sobre los 34 puntos fijados sobre el tejado y estará asegurada mediante estos anclajes.</p>
+            
+            <h4 class="underline">Inversor</h4>
+            <p>El inversor será <span class="variable t-inverter-phases"></span> de <span class="variable t-inverter-nominal-power"></span>kW AC de potencia nominal (<span class="variable t-inverter-model"></span>). El inversor cumplirá la normativa vigente de la UNE-EN 62109 sobre seguridad de los convertidores de potencia utilizados en sistemas de potencia fotovoltaica y la UNE 26007 sobre requisitos de conexión a la red eléctrica. Cumplirá con las condiciones técnicas que establecen el Real Decreto 1699/2011, de 18 de Noviembre, por la cual se regula la conexión a la red de instalaciones de producción de energía eléctrica de pequeña potencia.</p>
+            <p>Cumplirá con las condiciones descritas en el Pliego de Condiciones Técnicas.</p>
+            
+            <h4 class="underline">Cableado</h4>
+            <p>El cableado se dimensionará en función del recorrido final, post de replanteo en obra, pero como base de cálculo será:</p>
+            <ul>
+                <li>Series DC:
+                    <ul>
+                        <li>Material: <span class="variable t-wire-dc-material">Cable de Cobre (Marca RCT)</span></li>
+                        <li>Metros: <span class="variable t-wire-dc-length"></span>m</li>
+                        <li>Sección: <span class="variable t-wire-dc-section">mm2</li>
+                    </ul>
+                </li>
+                <li>Conexión AC:
+                    <ul>
+                        <li>Material: <span class="variable t-wire-ac-material">Cable de Cobre (Marca Prysmian)</span></li>
+                        <li>Metros: <span class="variable t-wire-ac-length"></span>m</li>
+                        <li>Sección: <span class="variable t-wire-ac-section"></span>mm2</li>
+                    </ul>
+                </li>
+            </ul>
+            
+            <h4 class="underline">Puesta a tierra</h4>
+            <p>La puesta a tierra de la instalación comprenderá los módulos, la estructura de los módulos, los inversores y cualquier superficie metálica, creando una única red equipotencial distribuida según necesidad, asegurándose una correcta puesta a tierra.</p>
+            <p>Material: <span class="variable t-wire-ground-material">Cable de Cobre (Marca Prysmian)</span></p>
+            <p>Metros: <span class="variable t-wire-ground-length"></span>m</p>
+            <p>Sección: <span class="variable t-wire-ground-section"></span>mm2</p>
+            
+            <h4 class="underline">Protecciones eléctricas</h4>
+            <p>El cuadro de protecciones estará ubicado junto al inversor y contendrá:</p>
+            <ul>
+                <li>Elementos de protección térmica DC de fusión rápida a <span class="variable t-protections-dc-thermal-v-max"></span>V tolerancia (<span class="variable t-protections-dc-thermal-model"></span>)</li>
+                <li>Interruptor automático rearmable DC a <span class="variable t-protections-dc-breaker-i"></span>A uno por cada MPPT (<span class="variable t-protections-dc-breaker-model"></span>).</li>
+                <li>Protección DC contra sobrecargas atmosféricas para positivo, negativo y tierra (<span class="variable t-protections-dc-surge-model"></span>)</li>
+                <li>Bornas de tierra DC.</li>
+            </ul>
+            <p>En el cuadro general de la vivienda contendrá:</p>
+            <ul>
+                <li>Magneto térmico AC <span class="variable t-protections-ac-thermal-i"></span>A (<span class="variable t-protections-ac-thermal-model"></span>).</li>
+                <li class="duda">Magneto térmico AC 20A (Schneider K60N).</li>
+                <li>Diferencial AC <span class="variable t-protections-ac-diff-i"></span>A, sensibilidad <span class="variable t-protections-ac-thermal-i"></span>ma (<span class="variable t-protections-ac-diff-model"></span>).</li>
+                <li>Protector de sobretensión transitoria en fase y neutro (<span class="variable t-protections-ac-transitory-surge-model"></span>).</li>
+                <li>Borna de tierra AC.</li>
+                <li>Gestor de inyección cero (<span class="variable t-zero-inyection-model"></span>).</li>
+            </ul>
+            
+            <h4 class="underline">Sistema de medida</h4>
+            <p>Se utilizará un dispositivo electrónico <span class="variable t-metering-device-model"></span> que se utiliza como medidor inteligente.</p>
+            <p>Registra el consumo eléctrico que hay en cualquier momento.</p>
+            <p>En caso de tratarse de una instalación tipo 1 (sin excedentes), este dispositivo es capaz de evitar inyecciones a la red eléctrica comunicándose con el inversor para que solo se produzca la energía necesaria en función del consumo en cada momento.</p>
+            <p>El <span class="variable t-metering-device-model"></span> cumple con la normativa vigente UNE 21700 IN referente a los requisitos y ensayos para que el sistema evite la inyección de energía eléctrica a la red de distribución y el Real Decreto 1110/2007, de 24 de agosto , por lo que se aprueba el reglamento de puntos de medida del sistema eléctrico.</p>
+            
+            <h4 class="underline">Sistema de monitorización</h4>
+            <p class="duda">La Instalación fotovoltaica contará con un sistema de monitorización energética para visualizar la producción real de energía solar desde Internet</p>
+            <p>El equipo encargado de hacer la medida del consumo eléctrico es el <span class="variable t-metering-device-model"></span>. Este se conecta al inversor mediante un cable de comunicación.</p>
+            <p class="duda">SOLAX CLOUD MONITORING.WEB</p>
+            <p>La instalación fotovoltaica puede se monitorizada, analizada y comparada de manera rápida y sencilla a través del portal online solaxcloud.com.</p>
+            <p>El usuario puede acceder a la información actualizada de la instalación en cualquier momento y presentarla de forma muy clara. El portal es muy fácil de utilizar y tiene una amplia gama de opciones para el análisis de datos.</p>
+        
+        </section>
+
+        <section>
+            <h3 class="underline">CALCULOS JUSTIFICATIVOS</h3>
+            
+            <h4 class="underline">Calculo de las líneas eléctricas de baja tensión (REBT)</h4>
+            
+            <h5 class="underline">Características de los paneles</h5>
+            <p class="duda">La intensidad y el voltaje de cortocircuito (ISC y VOC) están sacados de ensayos realizados en unas condiciones de irradiación (potencia solar por m2) de 1000W/m2 y una temperatura de 25ºC.</p>
+            <p>La intensidad se ve afectada con el incremento de la irradiación ,temperatura y el voltaje para incrementos de temperatura.</p>
+            <p>Por estos motivos, la intensidad de cortocircuito ha de ser sobredimensionada respecto a la proporcionada por el fabricante, se aconseja un factor del 25%.</p>
+            <p>La tensión en circuito abierto aumenta con la disminución de la temperatura, de manera que en días fríos pero soleados, esta puede superar de manera considerable el valor proporcionado por el fabricante. En este caso también se tendrá en cuenta un factor del 25%.</p>
+            <p>\( I_{sc,mod} = 1.25 \cdot I_{sc} \)</p>
+            <p>\( I_{oc,mod} = 1.25 \cdot I_{oc} \)</p>
+            <p>El REBT no obliga aplicar este factor de 1.25 a los dispositivos de protección contra sobreintensidad, pero su aplicación supone un margen de seguridad adicional.</p>
+            <p>Las características de los paneles se adjunta en el pliego de condiciones técnicas.</p>
+            
+            <h5 class="underline">Conexión de los paneles</h5>
+            <p>Para realizar la conexión de los módulos se tiene que tener en cuenta las características del inversor. Esta instalación esta equipada con un inversor de <span class="variable t-inverter-nominal-power"></span>Kw.</p>
+            <p>Se realizan las conexiones serie/paralelo para cumplir con las especificaciones mínimas del inversor.</p>
+            <p><span class="variable t-mppt-inputs">Se establecerán dos MPPT, cada uno con 6 módulos lo que hacen un voltaje de entrada de 224,4V y una intensidad de entrada de 8,96 A al inversor.</span></p>
+            
+            <h5 class="underline">Dimensionamiento de las líneas</h5>
+            <p>La instalación solar fotovoltaica se divide en varios tramos de conexión, entre los diferentes equipos y cajas de conexión que la componen.</p>
+            <p>Tendrá tramos donde circulará CC y CA por lo que se han de calcular la sección del cable.</p>
+            <p>Para los tramos de CC se utilizarán conductores de cobre, modelo <span class="variable t-wire-dc-model"></span> tipo <span class="variable t-wire-dc-type"></span>.</p>
+            <p>El tipo de instalación será de conductores aislados en tubo de montaje superficial o empotrados en obra según la definición del REBT norma ICT-BT-19.</p>
+            <p>En el caso de la instalación interior ( una vez se ha producido la conversión de corriente continua a corriente alterna) se utilizarán conductores de cobre modelo <span class="variable t-wire-ac-model"></span> tipo <span class="variable t-wire-ac-type"></span>.</p>
+            <p>El tipo de instalación será de conductores aislados en tubo de montaje superficial o empotrados en obra según la definición del REBT norma ICT-BT-19.</p>
+            <p>A continuación podemos ver según el tipo de instalación y la sección del cable, la intensidad admisible.</p>
+            
+            <div class="image-container">
+                <p>[[[[ tabla de corrientes ]]]]</p>
+            </div>
+            
+            <p class="duda">La sección del cable utilizada para CC será de <span class="variable t-wire-dc-section"></span>mm2, utilizando la tabla C.52-1 bis y considerando el modelo de instalación B1 (conductores aislados en un conducto sobre pared o encastrada) obtenemos las intensidades máximas que el cable podrá soportar, dejando una intensidad máxima de 34 A.</p>
+            <p class="duda">La sección del cable utilizada para CA será de 10mm2, utilizando la misma tabla C.52-1 bis, para obtener las intensidades máximas que el cable puede soportar, dejando una intensidad máxima de 46 A.</p>
+            <p>Para los tramos de CC la intensidad máxima que se pueden generar por los paneles fotovoltaicos es de <span class="variable t-panels-output-i-max-expected"></span>A, aplicando un factor de seguridad de 1.25 y multiplicado por el número de paralelos obtenemos una intensidad de <span class="variable t-panels-output-i-max-oversized"></span>A. Por tanto se obtendrá que la intensidad máxima que circulará por el cable no supera el 34 A de intensidad admisible. Se ha sobredimensionado la sección del cable en previsión según las especificaciones técnicas es de e una posible ampliación en el futuro de paneles.</p>
+            <p>Para los tramos de CA la intensidad máxima que se dará en el inversor es de <span class="variable t-inverter-output-i-max-expected"></span>A. Por tanto observamos que no se superarán los 46 A de intensidad admisible.</p>
+            <p>A parte de la intensidad del sistema no supere la admisible del cable, se ha de comprobar que la caída de tensión no supere el 1,5%. Para poder comprobarlo se analizará la distancia máxima que se podrá llegar antes que supere la caída máxima de tensión.</p>
+            <p>Para los cálculos de los tamos de CC y CA se utilizará la siguiente formula:</p>
+            <p>\( S = 2 \cdot L \cdot I \cdot (\mu \cdot C) \)</p>
+            <p>S = Sección del cable conductor (mm )</p>
+            <p>L = Longitud del conductor (m)</p>
+            <p>I = Intensidad (A)</p>
+            <p>U = es la caída de tensión (V) que como máximo podrán tener los conductores. Según el Manual de condiciones Técnicas del IDEA, como máximo será del 1,5%.</p>
+            <p>C = conductividad del elemento. Para el cobre es de 48 m/Ohm mm2.</p>
+            <p>En el caso de la instalación interior (ya se ha producido la conversión de corriente continua a corriente alterna) se utilizan conductores de 450V/750V. Los conductores estarán conducidos por tubo y serán de cobre con recubrimiento de PVC.</p>
+            
+            <h5>Calculo sección mínima para el tramo de CC :</h5>
+            <p>La intensidad del sistema es la del panel multiplicada por el número de paralelos utilizados.</p>
+            <p>I = <span class="variable t-panels-output-i-max-expected"></span> * 1 = <span class="variable t-panels-output-i-max-expected"></span>A</p>
+            <p>El voltaje del sistema es la suma del que se produce en cada panel por el nombre de paneles conectados en serie. Para hacer el cálculo se ha escogido uno de los dos grupos de placas conectadas en serie (cabe remarcar que la instalación tendrá dos grupos de paneles de 6 unidades conectadas en serie)</p>
+            <p>\( V = 37.4 \times 6 = 224.4 \, \text{V} \)</p>
+            <p>\( L = \frac{6 \times 224.4 \times 48 \times 0.015}{2 \times 8.96} = 54.09 \, \text{m} \)</p>
+            <p>Obteniendo que la distancia máxima para conservar la caída de tensión es de 54,09 m por lo que la instalación se mantendrá dentro de los límites al tener un longitud máxima de 20 metros.</p>
+            
+            <h5>Calculo longitud máxima para el tramo de AC:</h5>
+            <p>La intensidad máxima en la salida del inversor según la ficha técnica del inversor es de 21,7 A.</p>
+            <p>El voltaje de salida del inversor es de 230 V.</p>
+            <p>\( L = \frac{10 \times 230 \times 48 \times 0.015}{2 \times 21.7} = 38.15 \, \text{m} \)</p>
+            <p>Obteniendo que la distancia máxima es de 38,15m. la distancia entre el inversor y el cuadro de protecciones de la casa esta situado a 25 metros Por lo que entra en el límite de caída de tensión permitido.</p>
+        </section>
+
+        <section>
+            <h3 class="underline">DIMENSIONES DE LOS TUBOS</h3>
+            <p>Todos los tubos que se utilizarán en la instalación estarán fabricados en PVC.</p>
+            <p>Según la ITC-BT-21 para instalaciones con canalizaciones aéreas o con tubos al aire, el dimensionado de estos se realiza mediante la siguiente tabla:</p>
+            
+            <div class="image-container">
+                <p>[Imagen: media/image4.png]</p>
+            </div>
+            
+            <p>Viendo los valores de la tabla se concluye que el tubo tendrá que ser como mínimo de 25 mm.</p>
+        </section>
+
+        <section>
+            <h3 class="underline">Protecciones</h3>
+            
+            <h4>Tramo de CC</h4>
+            <p>Para proteger el inversor y la instalación de posibles sobreintensidades se instalarán fusibles y un magnetotérmico especial de CC para cada entrada MPPT al inversor.</p>
+            <p>La tirada de cable será de sección 6mm2, con una intensidad máxima admisible de 34 A.</p>
+            <p>La intensidad de corte del magnetotérmico ha de ser superior a la intensidad máxima proveniente de las placas, mas el factor de seguridad, pero ha de ser menor a la máxima admisible por los conductores.</p>
+            <p>IN,P < IT,F < IM,C</p>
+            <p>11,97 < IT,F < 34 A</p>
+            <p>Por tanto, será necesario un magnetotérmico de 16 A para cada MPPT.</p>
+            <p>Estos tramos también estarán protegidos mediante un equipo eléctrico de carga de rayos y sobretensión instantánea, el cual se conectará a los cables de bajada de los paneles fotovoltaicos y al tierra de la instalación con el fin de proteger el tramo de CC . Se colocará un equipo para cada MPPT.</p>
+            
+            <h4>Tramo de CA</h4>
+            
+            <h5 class="underline">Diferencial:</h5>
+            <p>Proporciona protección a las personas contra descargas eléctricas, tanto por contactos directos como indirectos, y también protección a la instalación ya que detecta fugas a tierra midiendo la corriente que circula por los conductores. El diferencial será de 40 A i sensibilidad 30mA.</p>
+            
+            <h5 class="underline">Interruptor automático- Magnetotérmico</h5>
+            <p>El interruptor automático se coloca en la línea que sale del inversor, permitiendo desconectar la instalación fotovoltaica. Para el cálculo de la intensidad de corte de este interruptor será necesario calcular la corriente máxima admisible por el conductor y la intensidad nominal de funcionamiento que tiene el inversor.</p>
+            <p>En este tramo se instalará una sección de 10 mm2 con una intensidad máxima admisible de 46 A.</p>
+            <p>La intensidad nominal de funcionamiento del inversor es de 21,7 A.</p>
+            <p>Por lo que la intensidad de corte del magnetotérmico será:</p>
+            <p>IN,I < IT,M < IM,C 21,7 < IT,M < 46</p>
+            <p>Por tanto, será necesario para este tramo un magnetotérmico de 25 A.</p>
+            <p>En este tramo también se instalar un magnetotérmico de 20 A, para proteger al equipo eléctrico de sobretensiones que se instalará en el tramo de CA.</p>
+        </section>
+
+        <section>
+            <h3 class="underline">PUESTA A TIERRA</h3>
+            <p>La puesta a tierra se realizará de forma que no altere la configuración de la instalación eléctrica de la vivienda. Se instalará una línea de tierra desde el cuadro eléctrico de la vivienda, hasta el cuadro de protecciones de la instalación fotovoltaica y desde este cuadro hasta la estructura de los paneles.</p>
+            <p>La sección del cable de tierra será de 10mm2, cumpliendo con la ITC-BT-18, donde se indica que la sección del conductor de protección será como mínimo de 10mm2.</p>
+            <p>La resistencia de la puesta a tierra será inferior a 37 Ohmios, según la ITC-BT-18.</p>
+        </section>
+
+        <section>
+            <h3 class="underline">PRODUCCIÓN DE ENERGÍA PREVISTA E IRRADIACIÓN SOLAR</h3>
+            <p>La producción de energía prevista se ha calculado con la herramienta PVGIS (Photovoltaic Geographical Information System) de la comisión europea.</p>
+            <p>Esta herramienta permite calcular la producción de energía solar fotovoltaica en cualquier lugar de Europa y África, teniendo en cuenta la radiación solar, la temperatura y el viento, entre otros factores.</p>
+            <p>La instalación fotovoltaica se encuentra en la localidad de XXXXXXXXXXXXXX, con las siguientes coordenadas:</p>
+            <p>Latitud: XXXXXXXXXXXXXX</p>
+            <p>Longitud: XXXXXXXXXXXXXX</p>
+            <p>Altitud: XXXXXXXXXXXXXX</p>
+            <p>La instalación fotovoltaica tiene una potencia pico de 4,02 kWp, con una inclinación de 11º y una orientación de 0º (sur).</p>
+            <p>La producción de energía prevista para la instalación fotovoltaica es de 5.800 kWh/año, con una producción media mensual de 483 kWh.</p>
+            
+            <div class="image-container">
+                <p>[Imagen: media/image5.png]</p>
+            </div>
+            
+            <p>La irradiación solar media anual en la localidad de XXXXXXXXXXXXXX es de 1.800 kWh/m2, con una irradiación media mensual de 150 kWh/m2.</p>
+            
+            <div class="image-container">
+                <p>[Imagen: media/image6.png]</p>
+            </div>
+        </section>
+
+        <section>
+            <h3 class="underline">PLIEGO DE CONDICIONES TÉCNICAS</h3>
+            
+            <h4 class="underline">PANELES FOTOVOLTAICOS</h4>
+            <p>Los paneles fotovoltaicos serán de silicio monocristalino, con una potencia pico de 335 Wp, y una tensión de circuito abierto de 45,5 V. Los paneles fotovoltaicos cumplirán con la normativa IEC 61215 e IEC 61730.</p>
+            
+            <h5 class="underline">Características técnicas:</h5>
+            <ul>
+                <li>Potencia pico: 335 Wp</li>
+                <li>Tensión de circuito abierto: 45,5 V</li>
+                <li>Corriente de cortocircuito: 9,54 A</li>
+                <li>Tensión de máxima potencia: 37,4 V</li>
+                <li>Corriente de máxima potencia: 8,96 A</li>
+                <li>Eficiencia: 18,5%</li>
+                <li>Coeficiente de temperatura de potencia: -0,39 %/ºC</li>
+                <li>Coeficiente de temperatura de tensión: -0,29 %/ºC</li>
+                <li>Coeficiente de temperatura de corriente: 0,05 %/ºC</li>
+                <li>Peso: 19,5 kg</li>
+                <li>Dimensiones: 1960 x 1000 x 35 mm</li>
+            </ul>
+            
+            <div class="image-container">
+                <p>[Imagen: media/image7.png]</p>
+            </div>
+            
+            <h4 class="underline">INVERSOR</h4>
+            <p>El inversor será monofásico, con una potencia nominal de 5 kW, y una tensión de entrada máxima de 600 V. El inversor cumplirá con la normativa IEC 62109 e IEC 61683.</p>
+            
+            <h5 class="underline">Características técnicas:</h5>
+            <ul>
+                <li>Potencia nominal: 5 kW</li>
+                <li>Tensión de entrada máxima: 600 V</li>
+                <li>Corriente de entrada máxima: 11 A</li>
+                <li>Tensión de salida: 230 V</li>
+                <li>Corriente de salida máxima: 21,7 A</li>
+                <li>Frecuencia de salida: 50 Hz</li>
+                <li>Eficiencia máxima: 98,1%</li>
+                <li>Peso: 12 kg</li>
+                <li>Dimensiones: 400 x 300 x 150 mm</li>
+            </ul>
+            
+            <div class="image-container">
+                <p>[Imagen: media/image8.png]</p>
+            </div>
+            
+            <h4 class="underline">ESTRUCTURA SOPORTE</h4>
+            <p>La estructura soporte será de acero galvanizado, con una inclinación de 11º. La estructura soporte cumplirá con la normativa UNE-EN 1090.</p>
+            
+            <h5 class="underline">Características técnicas:</h5>
+            <ul>
+                <li>Material: Acero galvanizado</li>
+                <li>Inclinación: 11º</li>
+                <li>Peso: 150 kg</li>
+                <li>Dimensiones: 6000 x 3000 mm</li>
+            </ul>
+            
+            <div class="image-container">
+                <p>[Imagen: media/image9.png]</p>
+            </div>
+            
+            <h4 class="underline">CABLEADO</h4>
+            <p>El cableado será de cobre, con una sección de 6 mm2 para el tramo de CC y 10 mm2 para el tramo de CA. El cableado cumplirá con la normativa UNE-EN 50565.</p>
+            
+            <h5 class="underline">Características técnicas:</h5>
+            <ul>
+                <li>Material: Cobre</li>
+                <li>Sección: 6 mm2 (CC) y 10 mm2 (CA)</li>
+                <li>Aislamiento: PVC</li>
+                <li>Tensión máxima: 1000 V (CC) y 450/750 V (CA)</li>
+                <li>Temperatura máxima: 90ºC</li>
+            </ul>
+            
+            <h4 class="underline">PROTECCIONES ELÉCTRICAS</h4>
+            <p>Las protecciones eléctricas serán las siguientes:</p>
+            <ul>
+                <li>Fusibles: 16 A (CC)</li>
+                <li>Magnetotérmico: 16 A (CC) y 25 A (CA)</li>
+                <li>Diferencial: 40 A, 30 mA (CA)</li>
+                <li>Protector de sobretensión: 40 kA (CA)</li>
+            </ul>
+            
+            <h4 class="underline">PUESTA A TIERRA</h4>
+            <p>La puesta a tierra será de cobre, con una sección de 10 mm2. La puesta a tierra cumplirá con la normativa UNE-EN 50522.</p>
+            
+            <h5 class="underline">Características técnicas:</h5>
+            <ul>
+                <li>Material: Cobre</li>
+                <li>Sección: 10 mm2</li>
+                <li>Resistencia: < 37 Ohmios</li>
+            </ul>
+            
+            <h4 class="underline">SISTEMA DE MONITORIZACIÓN</h4>
+            <p>El sistema de monitorización será el proporcionado por el fabricante del inversor, y permitirá visualizar la producción de energía en tiempo real.</p>
+            
+            <h5 class="underline">Características técnicas:</h5>
+            <ul>
+                <li>Comunicación: WiFi</li>
+                <li>Visualización: Web y app</li>
+                <li>Datos: Producción, consumo, etc.</li>
+            </ul>
+        </section>
+
+        <section>
+            <h3 class="underline">ESQUEMA UNIFILAR CA</h3>
+            <div class="image-container">
+                <p>[Imagen: media/image10.png]</p>
+            </div>
+        </section>
+
+        <section>
+            <h3 class="underline">ESQUEMA UNIFILAR CC</h3>
+            <div class="image-container">
+                <p>[Imagen: media/image11.png]</p>
+            </div>
+        </section>
+
+        <section>
+            <h3 class="underline">ESQUEMA GENERAL CA/CC</h3>
+            <div class="image-container">
+                <p>[Imagen: media/image12.png]</p>
+            </div>
+        </section>
+
+        <section>
+            <h3 class="underline">PLANO DE UBICACIÓN</h3>
+            <div class="image-container">
+                <p>[Imagen: media/image13.png]</p>
+            </div>
+        </section>
+
+        <section>
+            <h3 class="underline">DISPOSICIÓN PANELES</h3>
+            <div class="image-container">
+                <p>[Imagen: media/image14.png]</p>
+            </div>
+        </section>
+
+        <section>
+            <h3 class="underline">PRESUPUESTO</h3>
+            <table class="budget-table">
+                <thead>
+                    <tr>
+                        <th>Concepto</th>
+                        <th>Cantidad</th>
+                        <th>Precio unitario</th>
+                        <th>Precio total</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td>Panel fotovoltaico 335 Wp</td>
+                        <td>12</td>
+                        <td>150,00 €</td>
+                        <td>1.800,00 €</td>
+                    </tr>
+                    <tr>
+                        <td>Inversor 5 kW</td>
+                        <td>1</td>
+                        <td>1.200,00 €</td>
+                        <td>1.200,00 €</td>
+                    </tr>
+                    <tr>
+                        <td>Estructura soporte</td>
+                        <td>1</td>
+                        <td>800,00 €</td>
+                        <td>800,00 €</td>
+                    </tr>
+                    <tr>
+                        <td>Cableado</td>
+                        <td>1</td>
+                        <td>200,00 €</td>
+                        <td>200,00 €</td>
+                    </tr>
+                    <tr>
+                        <td>Protecciones eléctricas</td>
+                        <td>1</td>
+                        <td>150,00 €</td>
+                        <td>150,00 €</td>
+                    </tr>
+                    <tr>
+                        <td>Puesta a tierra</td>
+                        <td>1</td>
+                        <td>100,00 €</td>
+                        <td>100,00 €</td>
+                    </tr>
+                    <tr>
+                        <td>Sistema de monitorización</td>
+                        <td>1</td>
+                        <td>50,00 €</td>
+                        <td>50,00 €</td>
+                    </tr>
+                    <tr>
+                        <td>Mano de obra</td>
+                        <td>1</td>
+                        <td>1.000,00 €</td>
+                        <td>1.000,00 €</td>
+                    </tr>
+                    <tr>
+                        <td>IVA (21%)</td>
+                        <td>1</td>
+                        <td>1.025,00 €</td>
+                        <td>1.025,00 €</td>
+                    </tr>
+                    <tr>
+                        <td><strong>TOTAL</strong></td>
+                        <td></td>
+                        <td></td>
+                        <td><strong>6.325,00 €</strong></td>
+                    </tr>
+                </tbody>
+            </table>
+            
+            <div class="signature">
+                <p>Fdo: XXXXXXXXXXXXXX</p>
+                <p>Fecha: XXXXXXXXXXXXXX</p>
+            </div>
+        </section>
+        
+    </div>
+
+<script>
+// Variables extraídas de los elementos span
+const TClientName = document.getElementsByClassName("t-client-name");
+const TAddress = document.getElementsByClassName("t-address");
+const TZipcode = document.getElementsByClassName("t-zipcode");
+const TCatastralReference = document.getElementsByClassName("t-catastral-reference");
+const TEnergyCompanyName = document.getElementsByClassName("t-energy-company-name");
+const TEnergyCompanyCups = document.getElementsByClassName("t-energy-company-cups");
+const THiredPowerKw = document.getElementsByClassName("t-hired-power-kw");
+const TInputV = document.getElementsByClassName("t-input-v");
+const TInputVType = document.getElementsByClassName("t-input-v-type");
+const TInyection = document.getElementsByClassName("t-inyection");
+const TPanelsInclinationVerbosed = document.getElementsByClassName("t-panels-inclination-verbosed");
+const TPanelsAzimutVerbosed = document.getElementsByClassName("t-panels-azimut-verbosed");
+const TPanelsPeakPowerKw = document.getElementsByClassName("t-panels-peak-power-kw");
+const TPanelsNumber = document.getElementsByClassName("t-panels-number");
+const TInverterNominalPower = document.getElementsByClassName("t-inverter-nominal-power");
+const TPanelsPlace = document.getElementsByClassName("t-panels-place");
+const TPanelsDisposition = document.getElementsByClassName("t-panels-disposition");
+const TInverterPlace = document.getElementsByClassName("t-inverter-place");
+const TAntiPouringVerbosed = document.getElementsByClassName("t-anti-pouring-verbosed");
+const TBatteriesVerbosed = document.getElementsByClassName("t-batteries-verbosed");
+const TPanelsSurface = document.getElementsByClassName("t-panels-surface");
+const TPanelsModel = document.getElementsByClassName("t-panels-model");
+const TPanelsPower = document.getElementsByClassName("t-panels-power");
+const TPanelsWidth = document.getElementsByClassName("t-panels-width");
+const TPanelsHeight = document.getElementsByClassName("t-panels-height");
+const TPanelsInclination = document.getElementsByClassName("t-panels-inclination");
+const TPanelsAzimut = document.getElementsByClassName("t-panels-azimut");
+const TOrientationLossVerbosed = document.getElementsByClassName("t-orientation-loss-verbosed");
+const TShadowsLossVerbosed = document.getElementsByClassName("t-shadows-loss-verbosed");
+const TPanelTempMinLimit = document.getElementsByClassName("t-panel-temp-min-limit");
+const TPanelTempMaxLimit = document.getElementsByClassName("t-panel-temp-max-limit");
+const TStructureInclinationVerbosed = document.getElementsByClassName("t-structure-inclination-verbosed");
+const TInverterPhases = document.getElementsByClassName("t-inverter-phases");
+const TInverterModel = document.getElementsByClassName("t-inverter-model");
+const TWireDcMaterial = document.getElementsByClassName("t-wire-dc-material");
+const TWireDcLength = document.getElementsByClassName("t-wire-dc-length");
+const TWireDcSection = document.getElementsByClassName("t-wire-dc-section");
+const TWireAcMaterial = document.getElementsByClassName("t-wire-ac-material");
+const TWireAcLength = document.getElementsByClassName("t-wire-ac-length");
+const TWireAcSection = document.getElementsByClassName("t-wire-ac-section");
+const TWireGroundMaterial = document.getElementsByClassName("t-wire-ground-material");
+const TWireGroundLength = document.getElementsByClassName("t-wire-ground-length");
+const TWireGroundSection = document.getElementsByClassName("t-wire-ground-section");
+const TProtectionsDcThermalVMax = document.getElementsByClassName("t-protections-dc-thermal-v-max");
+const TProtectionsDcThermalModel = document.getElementsByClassName("t-protections-dc-thermal-model");
+const TProtectionsDcBreakerI = document.getElementsByClassName("t-protections-dc-breaker-i");
+const TProtectionsDcBreakerModel = document.getElementsByClassName("t-protections-dc-breaker-model");
+const TProtectionsDcSurgeModel = document.getElementsByClassName("t-protections-dc-surge-model");
+const TProtectionsAcThermalI = document.getElementsByClassName("t-protections-ac-thermal-i");
+const TProtectionsAcThermalModel = document.getElementsByClassName("t-protections-ac-thermal-model");
+const TProtectionsAcDiffI = document.getElementsByClassName("t-protections-ac-diff-i");
+const TProtectionsAcDiffModel = document.getElementsByClassName("t-protections-ac-diff-model");
+const TProtectionsAcTransitorySurgeModel = document.getElementsByClassName("t-protections-ac-transitory-surge-model");
+const TZeroInyectionModel = document.getElementsByClassName("t-zero-inyection-model");
+const TMeteringDeviceModel = document.getElementsByClassName("t-metering-device-model");
+const TMpptInputs = document.getElementsByClassName("t-mppt-inputs");
+const TWireDcModel = document.getElementsByClassName("t-wire-dc-model");
+const TWireDcType = document.getElementsByClassName("t-wire-dc-type");
+const TWireAcModel = document.getElementsByClassName("t-wire-ac-model");
+const TWireAcType = document.getElementsByClassName("t-wire-ac-type");
+const TPanelsOutputIMaxExpected = document.getElementsByClassName("t-panels-output-i-max-expected");
+const TPanelsOutputIMaxOversized = document.getElementsByClassName("t-panels-output-i-max-oversized");
+const TInverterOutputIMaxExpected = document.getElementsByClassName("t-inverter-output-i-max-expected");
+
+
+</script>
+</body>
+</html>

@@ -5,6 +5,7 @@ import os
 from app import db
 from app.models.panel import Panel
 from app.models.inverter import Inverter
+from app.models.installation_defaults import InstallationDefaults
 
 def load_initial_data():
     """Carga los datos iniciales desde el JSON a la base de datos"""
@@ -50,6 +51,26 @@ def load_initial_data():
             )
             db.session.add(inverter)
         
+        # Cargar configuración por defecto de instalación
+        InstallationDefaults.query.delete()
+        defaults = InstallationDefaults(
+            dc_material='cobre/unipolar',
+            dc_modelo='H1Z2Z2-K',
+            ac_material='cobre/unipolar',
+            ac_modelo='H07Z1-K',
+            tierra_material='cobre/unipolar',
+            tierra_modelo='RZ1-K',
+            dc_sobretensiones_modelo='Beny 600v BUD 40/2',
+            dc_fusibles_modelo='10X38 DC 16A',
+            dc_portafusibles='10X38 1000v DC',
+            dc_magnetotermico_modelo='Beny DC 600v 16A',
+            ac_diferencial_modelo='Schneider Tipo A 40A 30mA',
+            ac_magnetotermico_modelo='Schneider 2P 40A',
+            inyeccion_cero_modelo='Incorporado en inversor',
+            dispositivo_medida_modelo='Incorporado en inversor',
+        )
+        db.session.add(defaults)
+
         db.session.commit()
         print("Datos iniciales cargados exitosamente!")
         
