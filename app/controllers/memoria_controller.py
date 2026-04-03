@@ -1,14 +1,19 @@
 """Controlador para la generación de la memoria técnica en PDF."""
 
+import io
 import logging
+import os
 from flask import render_template, jsonify, Response
 from weasyprint import HTML
+import pikepdf
 from app.models.panel import Panel
 from app.models.inverter import Inverter
 from app.models.installation_defaults import InstallationDefaults
 from app.services.circuit import CircuitService, DCConfig, ACConfig, SystemConfig
 
 logger = logging.getLogger(__name__)
+
+DATASHEETS_DIR = os.path.join(os.path.dirname(__file__), '../../data/datasheets')
 
 
 class MemoriaController:
@@ -57,7 +62,10 @@ class MemoriaController:
             template_vars.update(MemoriaController._build_circuit_svgs(form_data, panel, inverter))
 
         html_string = render_template('memoria_tecnica_pdf.html', **template_vars)
-        pdf = HTML(string=html_string).write_pdf()
+        memoria_pdf = HTML(string=html_string).write_pdf()
+
+        datasheets = MemoriaController._collect_datasheets(panel, inverter) if form_data else []
+        pdf = MemoriaController._merge_pdfs(memoria_pdf, datasheets)
 
         return Response(
             pdf,
@@ -216,3 +224,37 @@ class MemoriaController:
             logger.exception("Error generando diagramas SVG para la memoria")
             empty = '<svg xmlns="http://www.w3.org/2000/svg" width="400" height="80"><text x="10" y="40" font-family="monospace" font-size="12" fill="#888">Diagrama no disponible</text></svg>'
             return {'svg_ca': empty, 'svg_cc': empty, 'svg_sistema': empty}
+
+    @staticmethod
+    def _collect_datasheets(panel, inverter):
+        """Devuelve las rutas absolutas de los datasheets del panel e inversor."""
+        paths = []
+        for device in (panel, inverter):
+            if device.datasheet:
+                path = os.path.join(DATASHEETS_DIR, device.datasheet)
+                if os.path.isfile(path):
+                    paths.append(path)
+                else:
+                    logger.warning("Datasheet no encontrado: %s", path)
+        return paths
+
+    @staticmethod
+    def _merge_pdfs(memoria_bytes, datasheet_paths):
+        """Concatena el PDF de memoria con los datasheets. Devuelve bytes."""
+        if not datasheet_paths:
+            return memoria_bytes
+
+        output = pikepdf.Pdf.new()
+        memoria = pikepdf.Pdf.open(io.BytesIO(memoria_bytes))
+        output.pages.extend(memoria.pages)
+
+        for path in datasheet_paths:
+            try:
+                ds = pikepdf.Pdf.open(path)
+                output.pages.extend(ds.pages)
+            except Exception:
+                logger.exception("Error adjuntando datasheet: %s", path)
+
+        buf = io.BytesIO()
+        output.save(buf)
+        return buf.getvalue()
