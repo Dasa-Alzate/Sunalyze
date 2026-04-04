@@ -51,11 +51,10 @@ class GraphService:
 
     @staticmethod
     def generate_monthly_production(monthly_data: list[float]) -> str:
-        """Gráfico de barras con producción mensual en Wh."""
-        monthly_wh = [round(v * 1000) for v in monthly_data]
+        """Gráfico de barras con producción mensual en kWh."""
         chart = pygal.Bar(**BASE_CONFIG)
-        chart.title = 'Producción mensual estimada (Wh)'
-        chart.add('Producción', monthly_wh)
+        chart.title = 'Producción mensual estimada (kWh)'
+        chart.add('Producción', [round(v) for v in monthly_data])
         return chart.render(is_unicode=True)
 
     @staticmethod
