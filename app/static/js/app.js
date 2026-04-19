@@ -196,7 +196,7 @@ function showStep2Content() {
         // Animación del contenido principal
         step2Content.classList.remove('opacity-0', 'translate-y-4');
         step2Content.classList.add('opacity-100', 'translate-y-0');
-        step2Content.closest('.card').scrollIntoView({ behavior: 'smooth', block: 'start' });
+        (step2Content.closest('.card') || step2Content).scrollIntoView({ behavior: 'smooth', block: 'start' });
     }, 150);
 }
 
@@ -215,7 +215,7 @@ function showStep4Content() {
     setTimeout(() => {
         step4Content.classList.remove('opacity-0', 'translate-y-4');
         step4Content.classList.add('opacity-100', 'translate-y-0');
-        step4Content.closest('.card').scrollIntoView({ behavior: 'smooth', block: 'start' });
+        (step4Content.closest('.card') || step4Content).scrollIntoView({ behavior: 'smooth', block: 'start' });
     }, 150);
 }
 
@@ -495,7 +495,7 @@ function displayCompleteResults(data) {
     imprimirMemoriaBtn.addEventListener('click', function() {
         step5Content.classList.remove("hidden", "opacity-0");
         step5Hr.classList.remove("hidden");
-        step5Content.closest('.card').scrollIntoView({ behavior: 'smooth', block: 'start' });
+        (step5Content.closest('.card') || step5Content).scrollIntoView({ behavior: 'smooth', block: 'start' });
     });
 
     calculosSection.appendChild(imprimirMemoriaBtn);
