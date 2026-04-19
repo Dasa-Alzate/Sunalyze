@@ -86,20 +86,36 @@ class AnalysisController:
             if not panel:
                 return jsonify({"error": "Panel no encontrado"}), 400
             
-            # Verificar si se envió inversor_id
             inverter_id = data.get('inverter_id')
             inverter = None
             if inverter_id:
                 inverter = Inverter.query.get(inverter_id)
                 if not inverter:
                     return jsonify({"error": "Inversor no encontrado"}), 400
-            
-            # Parámetros fijos
+                required_inverter_fields = {
+                    'y': inverter.y, 'power': inverter.power, 'vmax': inverter.vmax,
+                }
+                missing_inv = [k for k, v in required_inverter_fields.items() if v is None]
+                if missing_inv:
+                    return jsonify({
+                        "error": f"El inversor '{inverter.nombre}' tiene campos incompletos en la base de datos: {', '.join(missing_inv)}. Contacta al administrador."
+                    }), 400
+
+            required_panel_fields = {
+                'tcp': panel.tcp, 't_noct': panel.t_noct, 'power': panel.power,
+                'y': panel.y, 'width': panel.width, 'height': panel.height,
+                'tcv': panel.tcv, 'voc': panel.voc, 'isc': panel.isc,
+            }
+            missing = [k for k, v in required_panel_fields.items() if v is None]
+            if missing:
+                return jsonify({
+                    "error": f"El panel '{panel.nombre}' tiene campos incompletos en la base de datos: {', '.join(missing)}. Contacta al administrador."
+                }), 400
+
             dirty_loss = 0.97
             wires_loss = 0.985
             Operation_temp_cell = 50
-            
-            # Obtener datos del request
+
             lat = float(data.get('latitud'))
             lon = float(data.get('longitud'))
             coplanar = bool(data.get('coplanar'))
@@ -107,8 +123,7 @@ class AnalysisController:
             end_year = int(data.get('end', 2023))
             autoconsumo = float(data.get('autoconsumo')) / 100
             necesidad = float(data.get('necesidad'))
-            
-            # Parámetros del panel desde la base de datos
+
             panel_temp_loss = panel.tcp
             cell_noct = panel.t_noct
             power_placa = panel.power
@@ -195,9 +210,10 @@ class AnalysisController:
             vmax_coldest_day = panel.voc * (1 + (-1 * panel.tcv * (25 - coldest_temp) / 100))
 
             compatible_inverters = []
-            if not inverter:  # Solo buscar alternativas si no se especificó un inversor
+            if not inverter:
+                show_all_inverters = bool(data.get('show_all_inverters'))
                 compatible_inverters = AnalysisController._find_compatible_inverters(
-                    panel, total_field_power, coldest_temp, cell_amount
+                    panel, total_field_power, coldest_temp, cell_amount, show_all_inverters
                 )
 
             coldest_day_v_max = vmax_coldest_day * 1.05 * math.ceil(cell_amount)
@@ -267,28 +283,31 @@ class AnalysisController:
             return jsonify({"error": str(e)}), 500
     
     @staticmethod
-    def _find_compatible_inverters(panel, total_field_power, coldest_temp, cell_amount):
+    def _find_compatible_inverters(panel, total_field_power, coldest_temp, cell_amount, show_all=False):
         """Encuentra inversores compatibles basado en el panel y potencia del campo"""
         try:
-            # Calcular vmax_coldest_day
             vmax_coldest_day = panel.voc * (1 + (-1 * panel.tcv * (25 - coldest_temp) / 100))
 
-            # Consultar inversores que cumplan las condiciones
-            compatible_inverters = Inverter.query.filter(
-                ((vmax_coldest_day * 1.05 * math.ceil(cell_amount) ) < Inverter.vmax) &
-                (total_field_power > Inverter.power) &
-                ((total_field_power * 0.8 ) < Inverter.power)
-            ).all()
+            if show_all:
+                compatible_inverters = Inverter.query.filter(
+                    (vmax_coldest_day * 1.05 * math.ceil(cell_amount)) < Inverter.vmax
+                ).order_by(Inverter.power).all()
+            else:
+                compatible_inverters = Inverter.query.filter(
+                    ((vmax_coldest_day * 1.05 * math.ceil(cell_amount) ) < Inverter.vmax) &
+                    (total_field_power > Inverter.power) &
+                    ((total_field_power * 0.8 ) < Inverter.power)
+                ).all()
 
-            if len(compatible_inverters) <= 1:
-                alternative_inverter = Inverter.query.filter(
-                    Inverter.power >= total_field_power
-                ).order_by(
-                    Inverter.power,
-                ).first()
-                
-                if alternative_inverter:
-                    compatible_inverters = [alternative_inverter]
+                if len(compatible_inverters) <= 1:
+                    alternative_inverter = Inverter.query.filter(
+                        Inverter.power >= total_field_power
+                    ).order_by(
+                        Inverter.power,
+                    ).first()
+
+                    if alternative_inverter:
+                        compatible_inverters = [alternative_inverter]
             
             # Formatear respuesta
             inverters_data = []

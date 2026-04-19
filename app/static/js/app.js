@@ -103,6 +103,10 @@ siguientePaso1.addEventListener("click", e => {
 
 siguientePaso3.addEventListener("click", handleCompleteAnalysis);
 
+document.getElementById('chk-show-all-inverters')?.addEventListener('change', () => {
+    if (getSelectedPanel()) handlePanelAnalysis();
+});
+
 // Funciones principales
 async function loadEquipmentData() {
     try {
@@ -336,7 +340,8 @@ async function handlePanelAnalysis() {
                 azimut: chk.checked ? 180 + parseFloat(azimutValue.value) : 180,
                 panel_id: selectedPanel.id,
                 autoconsumo: selectAutoconsumo.value,
-                necesidad: necesidadValue.value
+                necesidad: necesidadValue.value,
+                show_all_inverters: document.getElementById('chk-show-all-inverters')?.checked || false
             })
         });
 
