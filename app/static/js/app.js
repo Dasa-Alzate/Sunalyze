@@ -26,6 +26,7 @@ let fusePanels;
 let fuseInverters;
 let noPanels;
 let results_data;
+let currentDiagram;
 
 // Instancias de SearchBox
 let panelSearchBox;
@@ -93,15 +94,15 @@ const FUSE_CONFIG = {
 };
 
 // Event Listeners
-chk.addEventListener("change", e => {
-    group.classList.toggle("hidden", !e.target.checked);
+chk?.addEventListener("change", e => {
+    group?.classList.toggle("hidden", !e.target.checked);
 });
 
-siguientePaso1.addEventListener("click", e => {
+siguientePaso1?.addEventListener("click", e => {
     showStep2Content();
 });
 
-siguientePaso3.addEventListener("click", handleCompleteAnalysis);
+siguientePaso3?.addEventListener("click", handleCompleteAnalysis);
 
 document.getElementById('chk-show-all-inverters')?.addEventListener('change', () => {
     if (getSelectedPanel()) handlePanelAnalysis();
@@ -240,7 +241,16 @@ function toggleAdvancedOptions() {
     }
 }
 
-async function updateWire(e, a) {
+let updateWireQueue = Promise.resolve();
+
+function updateWire(e, a) {
+    updateWireQueue = updateWireQueue
+        .catch(() => {})
+        .then(() => runWireUpdate(e, a));
+    return updateWireQueue;
+}
+
+async function runWireUpdate(e, a) {
     try {
         console.log(`🔄 Iniciando actualización para tramo ${a}...`);
 
@@ -346,8 +356,7 @@ async function handlePanelAnalysis() {
         });
 
         if (!res.ok) {
-            const err = await res.json();
-            throw new Error(err.error || 'Error en el análisis de paneles');
+            throw new Error(await readErrorMessage(res, 'Error en el análisis de paneles'));
         }
         
         const data = await res.json();
@@ -412,8 +421,7 @@ async function handleCompleteAnalysis() {
         });
 
         if (!res.ok) {
-            const err = await res.json();
-            throw new Error(err.error || 'Error en el análisis completo');
+            throw new Error(await readErrorMessage(res, 'Error en el análisis completo'));
         }
         
         const data = await res.json();
@@ -431,6 +439,24 @@ async function handleCompleteAnalysis() {
     } finally {
         hideLoading(loading);
     }
+}
+
+function safeFixed(value, digits) {
+    const num = Number(value);
+    return Number.isFinite(num) ? num.toFixed(digits) : null;
+}
+
+async function readErrorMessage(res, fallback) {
+    try {
+        const contentType = res.headers.get('content-type') || '';
+        if (contentType.includes('application/json')) {
+            const err = await res.json();
+            return err.error || fallback;
+        }
+    } catch (parseError) {
+        console.warn('No se pudo interpretar el cuerpo de error', parseError);
+    }
+    return res.statusText || fallback;
 }
 
 function displayCompleteResults(data) {
@@ -453,16 +479,20 @@ function displayCompleteResults(data) {
     calculosSection.appendChild(valor);
 
     // Resultados completos
-    const items = [
-        { label: 'Beta óptimo', value: data.beta_optimal.toFixed(1) + "º" },
-        { label: 'Energía a convertir (primaria)', value: data.sec_net_energy.toFixed(2) + " MWh"},
-        { label: 'Energía a producir (secundaria)', value: data.sec_energy.toFixed(1) + " MWh"},
-        { label: 'Superficie necesaria', value: data.cell_area.toFixed(2) + " m²" },
-        { label: 'Cantidad de paneles', value: data.cell_amount.toFixed(2) + " ≈ " + Math.ceil(data.cell_amount) + " placas" },
-        { label: 'Potencia pico de campo', value: data.total_field_power.toFixed(2) + " kW" },
-        { label: 'Paneles máximos por cadena', value: Math.floor(data.max_cell_amount) + " placas" },
-        { label: 'Eficiencia total del sistema', value: (data.total_y * 100).toFixed(1) + "%" },
+    const candidateItems = [
+        { label: 'Beta óptimo', value: safeFixed(data.beta_optimal, 1), suffix: "º" },
+        { label: 'Energía a convertir (primaria)', value: safeFixed(data.sec_net_energy, 2), suffix: " MWh" },
+        { label: 'Energía a producir (secundaria)', value: safeFixed(data.sec_energy, 1), suffix: " MWh" },
+        { label: 'Superficie necesaria', value: safeFixed(data.cell_area, 2), suffix: " m²" },
+        { label: 'Cantidad de paneles', value: Number.isFinite(Number(data.cell_amount)) ? safeFixed(data.cell_amount, 2) + " ≈ " + Math.ceil(Number(data.cell_amount)) + " placas" : null, suffix: "" },
+        { label: 'Potencia pico de campo', value: safeFixed(data.total_field_power, 2), suffix: " kW" },
+        { label: 'Paneles máximos por cadena', value: Number.isFinite(Number(data.max_cell_amount)) ? Math.floor(Number(data.max_cell_amount)) + " placas" : null, suffix: "" },
+        { label: 'Eficiencia total del sistema', value: safeFixed(Number(data.total_y) * 100, 1), suffix: "%" },
     ];
+
+    const items = candidateItems
+        .filter(item => item.value !== null)
+        .map(item => ({ label: item.label, value: item.value + item.suffix }));
 
     items.forEach((item, i) => {
         const lbl = document.createElement('p');
@@ -506,7 +536,7 @@ function displayCompleteResults(data) {
     calculosSection.appendChild(imprimirMemoriaBtn);
 }
 
-printUpdateBtn.addEventListener('click', function() {
+printUpdateBtn?.addEventListener('click', function() {
     const errorEl = document.getElementById('memoria-validation-error');
     errorEl.classList.add('hidden');
     errorEl.textContent = '';
@@ -669,8 +699,8 @@ async function loadAndRenderDiagram(analysisData, selectedPanel, selectedInverte
             second_section: '6',
             first_length: '10',
             second_length: '15',
-            panel_protection_v: analysisData.panel_protection_v.toFixed(2),
-            panel_protection_i: analysisData.panel_protection_i.toFixed(2),
+            panel_protection_v: safeFixed(analysisData.panel_protection_v, 2) ?? '0',
+            panel_protection_i: safeFixed(analysisData.panel_protection_i, 2) ?? '0',
         };
 
         const diagramResponse = await fetch('/api/diagrama-completo', {
@@ -690,7 +720,12 @@ async function loadAndRenderDiagram(analysisData, selectedPanel, selectedInverte
         
         const diagram = document.createElement("div");
         diagram.innerHTML = diagramHTML;
+
+        if (currentDiagram && currentDiagram.parentNode) {
+            currentDiagram.parentNode.removeChild(currentDiagram);
+        }
         step4Content.appendChild(diagram);
+        currentDiagram = diagram;
 
         const advancedOptionsBtn = document.getElementById("advanced-options-btn");
         if (advancedOptionsBtn) {
@@ -800,8 +835,7 @@ async function calculateWireSection(n) {
         });
 
         if (!response.ok) {
-            const errorData = await response.json();
-            throw new Error(errorData.error || 'Error al calcular la sección');
+            throw new Error(await readErrorMessage(response, 'Error al calcular la sección'));
         }
 
         const data = await response.json();
