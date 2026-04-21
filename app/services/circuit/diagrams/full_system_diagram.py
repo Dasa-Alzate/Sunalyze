@@ -25,7 +25,7 @@ class FullSystemDiagram:
     def render(self) -> str:
         dc = self.dc
         ac = self.ac
-        N = dc.num_strings
+        N = max(1, dc.num_strings)
 
         # Row height per string inside the DC box (min 0.5, max 1.0 cells)
         str_step = max(0.5, min(1.0, 5.0 / N))
@@ -90,8 +90,9 @@ class FullSystemDiagram:
 
         d.wire(8.2, 3.2, 8.2, 3.5)
 
+        house_symbols = {"MCB": CircuitBreaker, "ID": Differential, "kWh": Meter}
         for k, lbl in enumerate(["MCB", "MCB", "ID", "kWh"]):
-            d.place(CircuitBreaker() if lbl in ("MCB", "ID") else Meter(),
+            d.place(house_symbols[lbl](),
                     6.5 + k * 1.0, 3.7, label=lbl, label_pos="below")
             d.wire(6.5 + k * 1.0 + 0.5, 4.7, 6.5 + k * 1.0 + 0.5, 5.2)
             d.label(6.5 + k * 1.0 + 0.5, 5.5, "Cargas")

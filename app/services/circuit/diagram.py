@@ -178,22 +178,23 @@ class Diagram:
             pw = pc.w_cells * s
             ph = pc.h_cells * s
 
+            transform = f"translate({cpx},{cpy})"
             if pc.w_cells != 1.0 or pc.h_cells != 1.0:
-                sx = pc.w_cells
-                sy = pc.h_cells
-                transform = f"translate({cpx},{cpy}) scale({sx},{sy})"
-            elif pc.orientation != 0:
+                transform += f" scale({pc.w_cells},{pc.h_cells})"
+            if pc.orientation != 0:
                 half = s / 2
-                transform = (
-                    f"translate({cpx},{cpy}) rotate({pc.orientation},{half},{half})"
-                )
-            else:
-                transform = f"translate({cpx},{cpy})"
+                transform += f" rotate({pc.orientation},{half},{half})"
 
             elements.append(f'<g transform="{transform}">{body}</g>')
 
             if pc.label:
-                lx, ly, anch = self._label_anchor(cpx, cpy, pw, ph, pc.label_pos)
+                if pc.orientation in (90, 270):
+                    box_w, box_h = ph, pw
+                else:
+                    box_w, box_h = pw, ph
+                lx, ly, anch = self._label_anchor(
+                    cpx, cpy, box_w, box_h, pc.label_pos
+                )
                 elements.append(self._svg_text(lx, ly, pc.label, st, anch))
 
         # 4. Junction dots (top layer)
