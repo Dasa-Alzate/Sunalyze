@@ -1,6 +1,7 @@
 """Grid-based SVG diagram compositor."""
 
 from dataclasses import dataclass, field
+from xml.sax.saxutils import escape
 
 from .box_area import BoxArea
 from .config import DiagramStyle
@@ -239,9 +240,10 @@ class Diagram:
     def _svg_text(
         x: float, y: float, text: str, style, anchor: str = "middle"
     ) -> str:
+        safe_text = escape(str(text))
         return (
             f'<text x="{x}" y="{y}" text-anchor="{anchor}"'
             f' font-family="{style.font_family}"'
             f' font-size="{style.font_size}"'
-            f' fill="{style.label_color}">{text}</text>'
+            f' fill="{style.label_color}">{safe_text}</text>'
         )
