@@ -59,7 +59,7 @@ class Diagram:
         self,
         cols: float,
         rows: float,
-        style: DiagramStyle = None,
+        style: DiagramStyle | None = None,
         padding: int = 20,
     ):
         self.style = style or DiagramStyle()

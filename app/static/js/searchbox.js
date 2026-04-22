@@ -32,6 +32,9 @@ export class SearchBox {
                 this.input.placeholder = this.config.placeholder;
             }
 
+            this.results.setAttribute('role', 'listbox');
+            this.input.setAttribute('aria-expanded', 'false');
+
             // Inicializar eventos
             this.initializeEvents();
             
@@ -39,8 +42,7 @@ export class SearchBox {
             this.populateSelect();
             
             this.isInitialized = true;
-            console.log(`SearchBox ${this.config.containerId} inicializado correctamente`);
-            
+
         } catch (error) {
             console.error(`Error inicializando SearchBox ${this.config.containerId}:`, error);
         }
@@ -105,6 +107,7 @@ export class SearchBox {
         const resultItem = document.createElement('div');
         resultItem.className = 'flex p-2 rounded-md cursor-pointer transition-colors duration-200 bg-base-100 hover:bg-primary/10 hover:border-primary/30 focus:bg-primary/15 focus:border-primary/50 active:bg-primary/20 active:border-primary/60 border border-transparent';
         resultItem.tabIndex = 0;
+        resultItem.setAttribute('role', 'option');
 
         const displayText = this.formatDisplayText(item);
 
@@ -170,8 +173,6 @@ export class SearchBox {
         
         // Ocultar dropdown
         this.hideDropdown();
-        
-        console.log('Item seleccionado:', item.nombre);
     }
 
     formatDisplayText(item) {
@@ -202,11 +203,13 @@ export class SearchBox {
     showDropdown() {
         if (this.results.children.length > 0) {
             this.dropdown.classList.remove('hidden');
+            this.input.setAttribute('aria-expanded', 'true');
         }
     }
 
     hideDropdown() {
         this.dropdown.classList.add('hidden');
+        this.input.setAttribute('aria-expanded', 'false');
     }
 
     handleKeyboardNavigation(e) {

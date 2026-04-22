@@ -9,9 +9,10 @@ class CircuitService:
     Generates SVG unifilar diagrams for photovoltaic installations.
 
     Usage:
-        config = CircuitService.config_from_dict(form_data, analysis_data)
-        svg_cc = CircuitService.generate_cc(config)
-        svg_ca = CircuitService.generate_ca(config)
+        config = CircuitService.config_from_dict(data, style=None)
+        svg_cc = CircuitService.generate_cc_vertical(config)
+        svg_grid = CircuitService.generate_grid_connection(config)
+        svg_full = CircuitService.generate_full_system(config)
     """
 
     @staticmethod

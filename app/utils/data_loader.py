@@ -1,11 +1,14 @@
 """Utilidad para cargar datos iniciales desde JSON a la base de datos."""
 
 import json
+import logging
 import os
 from app import db
 from app.models.panel import Panel
 from app.models.inverter import Inverter
 from app.models.installation_defaults import InstallationDefaults
+
+logger = logging.getLogger(__name__)
 
 def load_initial_data():
     """Carga los datos iniciales desde el JSON a la base de datos"""
@@ -14,7 +17,7 @@ def load_initial_data():
 
     try:
         if Panel.query.first() or Inverter.query.first():
-            print("Datos iniciales ya presentes, se omite la carga.")
+            logger.info("Datos iniciales ya presentes, se omite la carga.")
             return
 
         with open(json_path, 'r', encoding='utf-8') as f:
@@ -74,8 +77,9 @@ def load_initial_data():
         db.session.add(defaults)
 
         db.session.commit()
-        print("Datos iniciales cargados exitosamente!")
-        
-    except Exception as e:
-        print(f"Error cargando datos iniciales: {e}")
+        logger.info("Datos iniciales cargados exitosamente!")
+
+    except Exception:
+        logger.exception("Error cargando datos iniciales")
         db.session.rollback()
+        raise

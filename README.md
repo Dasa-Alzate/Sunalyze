@@ -37,13 +37,21 @@ venv\Scripts\activate  # Windows
 pip install -r requirements.txt
 ```
 
-4. Configurar variables de entorno (opcional):
+4. Compilar los assets (CSS):
+```bash
+npm install
+npm run build
+```
+Esto ejecuta Tailwind/DaisyUI y genera `app/static/css/output.css`. Vuelve a ejecutarlo cada vez que cambies las clases o `app/static/css/input.css`.
+
+5. Configurar variables de entorno:
 ```bash
 export SECRET_KEY='tu-clave-secreta'
 export DATABASE_URL='mysql+pymysql://usuario:password@localhost/sunalyze'
 ```
+En desarrollo ambas son opcionales (la app usa valores por defecto). En producción (`FLASK_ENV=production`) **`SECRET_KEY` y `DATABASE_URL` son obligatorias**: la aplicación lanza un error al iniciar si no están definidas.
 
-5. Configurar la base de datos:
+6. Configurar la base de datos:
 ```bash
 python init_db.py
 ```
