@@ -34,3 +34,4 @@ node_modules/
 
 # Documentación de trabajo interna (no versionada)
 documentation/
+docs/api/

@@ -287,44 +287,6 @@ async function runWireUpdate(e, a) {
     }
 }
 
-async function recalculate() {
-    try {
-        const a = 1;
-        console.log(`🔄 Iniciando actualización para tramo ${a}...`);
-
-        // Validar que los elementos existen
-        const input_a = document.getElementById("input-length-" + a);
-        const b = a === 1 ? 2 : 1
-        if (!input_a) {
-            throw new Error(`Input para tramo ${a} no encontrado`);
-        }
-
-        // Paso 1: Calcular sección del tramo A
-        console.log(`📐 Paso 1: Calculando sección para tramo ${a}`);
-        await calculateWireSection(a);
-        
-        // Pequeña pausa para asegurar que el DOM se actualice
-        await new Promise(resolve => setTimeout(resolve, 50));
-        
-        // Paso 2: Calcular longitud del tramo B basado en A
-        console.log(`📏 Paso 2: Calculando longitud para tramo ${b}`);
-        await calculateLengthByLength(a);
-        
-        // Pequeña pausa para asegurar que el DOM se actualice
-        await new Promise(resolve => setTimeout(resolve, 50));
-        
-        // Paso 3: Calcular sección del tramo B
-        console.log(`📐 Paso 3: Calculando sección para tramo ${b}`);
-        await calculateWireSection(b);
-        
-        console.log(`✅ Actualización completada exitosamente para tramo ${a}`);
-        
-    } catch (error) {
-        console.error(`❌ Error en updateWire para tramo ${a}:`, error);
-        // Puedes mostrar un mensaje al usuario si lo deseas
-    }
-}
-
 async function handlePanelAnalysis() {
     console.log("Iniciando análisis de paneles");
     
@@ -360,9 +322,6 @@ async function handlePanelAnalysis() {
         }
         
         const data = await res.json();
-        // panelAnalysisData = data; // Guardar datos para uso posterior
-        
-        console.log("___1");
 
         // Hidratar el searchbox de inversores con los compatibles
         if (data.compatible_inverters && data.compatible_inverters.length > 0) {
@@ -555,12 +514,8 @@ printUpdateBtn?.addEventListener('click', function() {
     const FSystemObjective = document.getElementById("f-system-objective");
     const FBatteries = document.getElementById("f-batteries");
     const FPanelsDisposition = document.getElementById("f-panels-disposition");
-    const FPanelsStringX = document.getElementById("f-panels-string-x");
-    const FPanelsStringY = document.getElementById("f-panels-string-y");
 
-    const disposition = FPanelsDisposition.value === "2 agrupaciones con cantidades diferentes de paneles"
-        ? `Una primera agrupación con ${FPanelsStringX.value} paneles, y una segunda agrupación con ${FPanelsStringY.value}`
-        : FPanelsDisposition.value;
+    const disposition = FPanelsDisposition.value;
 
     // Campos del formulario que requieren validación
     const requiredFields = [
@@ -922,7 +877,6 @@ document.addEventListener('DOMContentLoaded', function() {
     loadEquipmentData();
 });
 
-window.recalculate = recalculate;
 window.updateWire = updateWire;
 
 // Sticky header shrink effect

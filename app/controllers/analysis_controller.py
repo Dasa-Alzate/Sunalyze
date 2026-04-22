@@ -65,21 +65,7 @@ class AnalysisController:
         print(f"💾 Datos guardados en cache. Tamaño actual: {len(AnalysisController._PVGIS_CACHE)}")
         
         return df, meta
-    
-    @staticmethod
-    def clear_pvgis_cache():
-        """Limpia el cache de PVGIS (útil para testing o cuando hay problemas)"""
-        AnalysisController._PVGIS_CACHE.clear()
-        print("🗑️ Cache de PVGIS limpiado")
-    
-    @staticmethod
-    def get_cache_stats():
-        """Obtiene estadísticas del cache"""
-        return {
-            "cache_size": len(AnalysisController._PVGIS_CACHE),
-            "cache_keys": list(AnalysisController._PVGIS_CACHE.keys())
-        }
-    
+
     @staticmethod
     def calculate_panel_requirements(data):
         """Calcula los requisitos de paneles y encuentra inversores compatibles"""
@@ -353,7 +339,7 @@ class AnalysisController:
         except Exception as e:
             print(f"Error buscando inversores compatibles: {e}")
             return []
-       
+
     # Holiiii... este es mi intento por hacer algo util
     # Delta_V = 0.015
     # I_wire_input = i_mp_panel

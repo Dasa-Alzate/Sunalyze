@@ -261,12 +261,4 @@ export class SearchBox {
         this.config.data = newData;
         this.populateSelect();
     }
-
-    // Método para limpiar la selección
-    clear() {
-        this.input.value = '';
-        this.selectedItem = null;
-        this.select.value = '';
-        this.hideDropdown();
-    }
 }
