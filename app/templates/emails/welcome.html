@@ -1,0 +1,50 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta http-equiv="X-UA-Compatible" content="IE=edge">
+<title>Bienvenido a Sunalyze</title>
+</head>
+<body style="margin:0; padding:0; background:#faf9f8; font-family:'Segoe UI Variable Text','Segoe UI',-apple-system,Helvetica,Arial,sans-serif; -webkit-font-smoothing:antialiased;">
+<div style="display:none; max-height:0; overflow:hidden; opacity:0;">Tu cuenta de Sunalyze está lista. De las coordenadas a la memoria firmable.</div>
+<table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="background:#faf9f8;">
+  <tr><td align="center" style="padding:32px 16px;">
+    <table role="presentation" width="600" cellpadding="0" cellspacing="0" style="width:600px; max-width:100%; background:#ffffff; border:1px solid #e1dfdd; border-radius:12px; overflow:hidden;">
+      <tr><td style="background:#107c41; padding:22px 32px;">
+        <table role="presentation" cellpadding="0" cellspacing="0"><tr>
+          <td style="vertical-align:middle; padding-right:10px;">
+            <span style="display:inline-block; width:30px; height:30px; background:rgba(255,255,255,0.16); border-radius:6px; text-align:center; line-height:30px; color:#ffffff; font-size:17px;">&#9728;</span>
+          </td>
+          <td style="vertical-align:middle; color:#ffffff; font-size:19px; font-weight:700; letter-spacing:-0.01em;">Sunalyze</td>
+        </tr></table>
+      </td></tr>
+      <tr><td style="padding:36px 40px 8px;">
+        <h1 style="margin:0 0 14px; font-size:26px; line-height:1.15; font-weight:700; color:#242424; letter-spacing:-0.02em;">Bienvenida, {{ first_name|default('María') }} 👋</h1>
+        <p style="margin:0 0 16px; font-size:15px; line-height:1.6; color:#616161;">Tu cuenta de Sunalyze ya está activa. A partir de ahora vas de las coordenadas a la memoria técnica firmable sin saltar entre PVsyst y Word.</p>
+        <p style="margin:0 0 24px; font-size:15px; line-height:1.6; color:#616161;">Empieza con tu primer diseño en menos de 10 minutos:</p>
+      </td></tr>
+      <tr><td style="padding:0 40px 8px;">
+        <table role="presentation" width="100%" cellpadding="0" cellspacing="0">
+          <tr><td style="padding:10px 0; border-bottom:1px solid #f3f2f1; font-size:14px; color:#424242;"><span style="display:inline-block; width:22px; height:22px; background:#e9f4ee; color:#107c41; border-radius:50%; text-align:center; line-height:22px; font-weight:700; font-size:12px; margin-right:10px;">1</span>Introduce la ubicación y el consumo anual</td></tr>
+          <tr><td style="padding:10px 0; border-bottom:1px solid #f3f2f1; font-size:14px; color:#424242;"><span style="display:inline-block; width:22px; height:22px; background:#e9f4ee; color:#107c41; border-radius:50%; text-align:center; line-height:22px; font-weight:700; font-size:12px; margin-right:10px;">2</span>Elige panel e inversor de la biblioteca</td></tr>
+          <tr><td style="padding:10px 0; font-size:14px; color:#424242;"><span style="display:inline-block; width:22px; height:22px; background:#e9f4ee; color:#107c41; border-radius:50%; text-align:center; line-height:22px; font-weight:700; font-size:12px; margin-right:10px;">3</span>Genera la memoria y el esquema unifilar</td></tr>
+        </table>
+      </td></tr>
+      <tr><td align="center" style="padding:28px 40px 8px;">
+        <table role="presentation" cellpadding="0" cellspacing="0"><tr><td style="border-radius:6px; background:#107c41;">
+          <a href="{{ cta_url|default('#') }}" style="display:inline-block; padding:13px 30px; font-size:15px; font-weight:600; color:#ffffff; text-decoration:none; border-radius:6px;">Crear mi primer diseño &rarr;</a>
+        </td></tr></table>
+      </td></tr>
+      <tr><td align="center" style="padding:14px 40px 36px;">
+        <p style="margin:0; font-size:13px; color:#8a8886;">¿Necesitas ayuda? Responde a este correo o visita el <a href="{{ help_url|default('#') }}" style="color:#0f6cbd; text-decoration:none;">centro de ayuda</a>.</p>
+      </td></tr>
+      <tr><td style="background:#faf9f8; border-top:1px solid #e1dfdd; padding:22px 40px;">
+        <p style="margin:0 0 6px; font-size:12px; color:#8a8886; line-height:1.5;">Sunalyze · Diseño y legalización fotovoltaica · España</p>
+        <p style="margin:0; font-size:12px; color:#bdbdbd; line-height:1.5;">Recibes este correo porque creaste una cuenta en Sunalyze. <a href="#" style="color:#8a8886;">Preferencias</a> · <a href="#" style="color:#8a8886;">Privacidad</a></p>
+      </td></tr>
+    </table>
+  </td></tr>
+</table>
+</body>
+</html>

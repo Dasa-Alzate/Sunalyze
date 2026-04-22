@@ -1,25 +1,29 @@
-"""Controlador para la generación de la memoria técnica en PDF."""
+"""Generacion de la memoria tecnica en PDF: dominio, sin HTTP.
+
+Devuelve los bytes del PDF; el route decide cabeceras y Response. Usa el
+renderizado Jinja de Flask como motor de plantillas (no toca request).
+WeasyPrint/pikepdf se importan de forma diferida: solo se exigen al generar.
+"""
 
 import io
 import json
 import logging
 import os
-from flask import render_template, jsonify, Response
-from weasyprint import HTML
-import pikepdf
+from flask import render_template
+
 from app.models.panel import Panel
 from app.models.inverter import Inverter
 from app.models.installation_defaults import InstallationDefaults
 from app.services.circuit import CircuitService, DCConfig, ACConfig, SystemConfig
 from app.services.graph_service import GraphService
+from app.errors import ValidationError, NotFound, DomainError
 
 logger = logging.getLogger(__name__)
 
 DATASHEETS_DIR = os.path.join(os.path.dirname(__file__), '../../data/datasheets')
 
 
-class MemoriaController:
-    """Controlador para la generación de la memoria técnica fotovoltaica en PDF."""
+class MemoriaService:
 
     REQUIRED_FIELDS = [
         'location', 'client_name', 'address', 'zipcode', 'catastral_reference',
@@ -34,51 +38,37 @@ class MemoriaController:
 
     @staticmethod
     def generar_pdf(form_data):
-        """
-        Valida el formulario, construye las variables de plantilla y devuelve
-        la memoria técnica como PDF.
+        from weasyprint import HTML
 
-        Args:
-            form_data: ImmutableMultiDict del request.form (POST) o dict vacío (GET).
-
-        Returns:
-            Flask Response con el PDF o respuesta de error JSON.
-        """
         template_vars = {}
+        panel = inverter = None
 
         if form_data:
-            missing = [f for f in MemoriaController.REQUIRED_FIELDS if not form_data.get(f, '').strip()]
+            missing = [f for f in MemoriaService.REQUIRED_FIELDS if not form_data.get(f, '').strip()]
             if missing:
-                return jsonify({'error': 'Campos obligatorios vacíos', 'fields': missing}), 400
+                raise ValidationError('Campos obligatorios vacíos', details={'fields': missing})
 
             panel = Panel.query.get(form_data.get('panel_id'))
             inverter = Inverter.query.get(form_data.get('inverter_id'))
             defaults = InstallationDefaults.get()
 
             if not panel or not inverter:
-                return jsonify({'error': 'Panel o inversor no encontrado'}), 400
+                raise NotFound('Panel o inversor no encontrado')
             if not defaults:
-                return jsonify({'error': 'Configuración de instalación no encontrada'}), 500
+                raise DomainError('Configuración de instalación no encontrada', status_code=500)
 
-            template_vars = MemoriaController._build_template_vars(form_data, panel, inverter, defaults)
-            template_vars.update(MemoriaController._build_circuit_svgs(form_data, panel, inverter))
-            template_vars.update(MemoriaController._build_graph_svgs(form_data))
+            template_vars = MemoriaService._build_template_vars(form_data, panel, inverter, defaults)
+            template_vars.update(MemoriaService._build_circuit_svgs(form_data, panel, inverter))
+            template_vars.update(MemoriaService._build_graph_svgs(form_data))
 
         html_string = render_template('memoria_tecnica_pdf.html', **template_vars)
         memoria_pdf = HTML(string=html_string).write_pdf()
 
-        datasheets = MemoriaController._collect_datasheets(panel, inverter) if form_data else []
-        pdf = MemoriaController._merge_pdfs(memoria_pdf, datasheets)
-
-        return Response(
-            pdf,
-            mimetype='application/pdf',
-            headers={'Content-Disposition': 'inline; filename=memoria_tecnica.pdf'}
-        )
+        datasheets = MemoriaService._collect_datasheets(panel, inverter) if form_data else []
+        return MemoriaService._merge_pdfs(memoria_pdf, datasheets)
 
     @staticmethod
     def _build_template_vars(data, panel, inverter, defaults):
-        """Construye el dict de variables para la plantilla PDF."""
         return {
             'client_name': data.get('client_name'),
             'address': data.get('address'),
@@ -124,7 +114,6 @@ class MemoriaController:
             'inverter_efficiency': inverter.y,
             'inverter_phases': data.get('inverter_phases'),
             'inverter_place': data.get('inverter_place'),
-            # Cableado (modelos y materiales desde defaults, dinámicos desde form)
             'wire_dc_material': defaults.dc_material,
             'wire_dc_length': data.get('wire_dc_length'),
             'wire_dc_section': data.get('wire_dc_section'),
@@ -137,7 +126,6 @@ class MemoriaController:
             'wire_ground_model': defaults.tierra_modelo,
             'wire_ground_length': data.get('wire_ground_length'),
             'wire_ground_section': data.get('wire_ground_section'),
-            # Protecciones (modelos desde defaults, corrientes desde form)
             'protections_dc_thermal_v_max': data.get('protections_dc_thermal_v_max'),
             'protections_dc_thermal_model': defaults.dc_magnetotermico_modelo,
             'protections_dc_breaker_i': data.get('protections_dc_breaker_i'),
@@ -166,12 +154,7 @@ class MemoriaController:
         }
 
     @staticmethod
-    def _build_circuit_svgs(data, panel, inverter) -> dict:
-        """
-        Genera los tres diagramas SVG para incrustar en la memoria técnica.
-        Mapea los campos del formulario al SystemConfig del CircuitService.
-        Si la generación falla (datos incompletos), devuelve SVGs vacíos.
-        """
+    def _build_circuit_svgs(data, panel, inverter):
         def _f(key, default=0.0):
             try:
                 return float(data.get(key) or default)
@@ -219,19 +202,18 @@ class MemoriaController:
             config = SystemConfig(dc=dc, ac=ac)
 
             return {
-                'svg_ca':      CircuitService.generate_grid_connection(config),
-                'svg_cc':      CircuitService.generate_cc_vertical(config),
+                'svg_ca': CircuitService.generate_grid_connection(config),
+                'svg_cc': CircuitService.generate_cc_vertical(config),
                 'svg_sistema': CircuitService.generate_full_system(config),
             }
 
         except Exception:
-            logger.exception("Error generando diagramas SVG para la memoria")
+            logger.exception('Error generando diagramas SVG para la memoria')
             empty = '<svg xmlns="http://www.w3.org/2000/svg" width="400" height="80"><text x="10" y="40" font-family="monospace" font-size="12" fill="#888">Diagrama no disponible</text></svg>'
             return {'svg_ca': empty, 'svg_cc': empty, 'svg_sistema': empty}
 
     @staticmethod
-    def _build_graph_svgs(data) -> dict:
-        """Genera los gráficos SVG de producción e irradiancia mensual."""
+    def _build_graph_svgs(data):
         try:
             monthly_production = json.loads(data.get('monthly_production', '[]'))
             monthly_irradiance = json.loads(data.get('monthly_irradiance', '[]'))
@@ -254,7 +236,6 @@ class MemoriaController:
 
     @staticmethod
     def _collect_datasheets(panel, inverter):
-        """Devuelve las rutas absolutas de los datasheets del panel e inversor."""
         paths = []
         for device in (panel, inverter):
             if device.datasheet:
@@ -262,14 +243,15 @@ class MemoriaController:
                 if os.path.isfile(path):
                     paths.append(path)
                 else:
-                    logger.warning("Datasheet no encontrado: %s", path)
+                    logger.warning('Datasheet no encontrado: %s', path)
         return paths
 
     @staticmethod
     def _merge_pdfs(memoria_bytes, datasheet_paths):
-        """Concatena el PDF de memoria con los datasheets. Devuelve bytes."""
         if not datasheet_paths:
             return memoria_bytes
+
+        import pikepdf
 
         output = pikepdf.Pdf.new()
         memoria = pikepdf.Pdf.open(io.BytesIO(memoria_bytes))
@@ -280,7 +262,7 @@ class MemoriaController:
                 ds = pikepdf.Pdf.open(path)
                 output.pages.extend(ds.pages)
             except Exception:
-                logger.exception("Error adjuntando datasheet: %s", path)
+                logger.exception('Error adjuntando datasheet: %s', path)
 
         buf = io.BytesIO()
         output.save(buf)

@@ -22,7 +22,10 @@ class Panel(BaseModel):
         width: Ancho del panel (mm).
     """
     __tablename__ = 'panels'
-    
+
+    catalog_id = db.Column(db.Integer, db.ForeignKey('catalogs.id'), index=True)
+    catalog = db.relationship('Catalog')
+
     nombre = db.Column(db.String(100), nullable=False, unique=True)
     y = db.Column(db.Float, nullable=False)  # Eficiencia
     tcp = db.Column(db.Float, nullable=False)  # Coeficiente temperatura potencia
@@ -40,6 +43,8 @@ class Panel(BaseModel):
     def to_dict(self):
         return {
             'id': self.id,
+            'catalog_id': self.catalog_id,
+            'catalog_nombre': self.catalog.nombre if self.catalog else None,
             'nombre': self.nombre,
             'y': self.y,
             'tcp': self.tcp,

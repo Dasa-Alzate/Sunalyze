@@ -1,0 +1,5 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 150 36" width="150" height="36" role="img" aria-label="LONGi">
+  <rect x="0.5" y="0.5" width="149" height="35" rx="8" fill="#f3f2f1" stroke="#e1dfdd"/>
+  <circle cx="22" cy="18" r="8" fill="none" stroke="#8a8886" stroke-width="2"/>
+  <text x="40" y="23" font-family="'Segoe UI',Arial,sans-serif" font-size="15" font-weight="700" fill="#616161">LONGi</text>
+</svg>

@@ -1,0 +1,12 @@
+.sun-trans { position: fixed; inset: 0; z-index: 9500; background: var(--trans-color, #111);
+  transform: scaleX(0); transform-origin: right center; pointer-events: none; }
+.sun-trans--cover { transform: scaleX(1); transform-origin: right center; pointer-events: all;
+  transition: transform var(--trans-dur, 560ms) cubic-bezier(0.76, 0, 0.24, 1); }
+.sun-trans--reveal { transform: scaleX(0); transform-origin: left center; pointer-events: all;
+  transition: transform var(--trans-dur, 560ms) cubic-bezier(0.76, 0, 0.24, 1); }
+.sun-trans--idle { transform: scaleX(0); transform-origin: left center; }
+.sun-trans__mark { position: absolute; inset: 0; display: flex; align-items: center; justify-content: center; color: #fff; opacity: 0; transition: opacity .3s var(--ease-out); }
+.sun-trans--cover .sun-trans__mark, .sun-trans--reveal .sun-trans__mark { opacity: .92; }
+.sun-trans__mark svg { animation: sunRaySpin 3.4s linear infinite; }
+
+@keyframes sunRaySpin { from { transform: rotate(0) } to { transform: rotate(360deg) } }

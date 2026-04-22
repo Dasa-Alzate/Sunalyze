@@ -17,7 +17,10 @@ class Inverter(BaseModel):
         I_max_output: Corriente maxima de salida AC (A).
     """
     __tablename__ = 'inverters'
-    
+
+    catalog_id = db.Column(db.Integer, db.ForeignKey('catalogs.id'), index=True)
+    catalog = db.relationship('Catalog')
+
     nombre = db.Column(db.String(100), nullable=False, unique=True)
     y = db.Column(db.Float, nullable=False)  # Eficiencia
     power_max = db.Column(db.Float, nullable=False)  # Potencia máxima DC
@@ -30,6 +33,8 @@ class Inverter(BaseModel):
     def to_dict(self):
         return {
             'id': self.id,
+            'catalog_id': self.catalog_id,
+            'catalog_nombre': self.catalog.nombre if self.catalog else None,
             'nombre': self.nombre,
             'y': self.y,
             'power_max': self.power_max,
