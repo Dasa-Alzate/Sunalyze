@@ -8,6 +8,8 @@ from app.services.email_service import EmailService
 from app.security import login_user, logout_user, current_user
 from app.authz import current_role, current_permissions
 from app.extensions import limiter
+from app.services.flag_service import FlagService
+from app.security import current_org_id
 
 auth_bp = Blueprint('auth', __name__)
 
@@ -17,6 +19,7 @@ def _session_payload(user):
         'user': user.to_dict() if user else None,
         'role': current_role() if user else None,
         'permissions': sorted(current_permissions()) if user else [],
+        'flags': FlagService.resolve_all(current_org_id(), user.id) if user else {},
     }
 
 

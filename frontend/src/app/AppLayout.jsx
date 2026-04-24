@@ -11,6 +11,7 @@ const NAV = [
   { to: '/app/equipos', label: 'Equipos', icon: 'package' },
   { to: '/app/equipo', label: 'Equipo', icon: 'users', business: true },
   { to: '/app/memoria', label: 'Memoria', icon: 'file-text' },
+  { to: '/app/admin/flags', label: 'Flags', icon: 'flag', platform: true },
 ]
 
 function initials(name) {
@@ -19,9 +20,9 @@ function initials(name) {
 }
 
 function Sidebar() {
-  const { user, org, logout } = useAuth()
+  const { user, org, logout, isPlatformAdmin } = useAuth()
   const { navigate } = useTransition()
-  const items = NAV.filter((n) => !n.business || org?.type !== 'PERSONAL')
+  const items = NAV.filter((n) => (!n.business || org?.type !== 'PERSONAL') && (!n.platform || isPlatformAdmin))
 
   async function onLogout() {
     await logout()
