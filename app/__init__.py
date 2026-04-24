@@ -56,6 +56,9 @@ def create_app():
     from app.security_headers import register_security
     register_security(app)
 
+    from app.cli import register_cli
+    register_cli(app)
+
     _register_spa(app)
 
     return app

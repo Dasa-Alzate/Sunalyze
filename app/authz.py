@@ -72,6 +72,27 @@ def has_permission(permission):
     return permission in current_permissions()
 
 
+def is_platform_admin():
+    user = current_user()
+    return bool(user and user.is_platform_admin)
+
+
+def require_platform_admin(fn):
+    """Exige un operador de plataforma (super-admin), ortogonal al RBAC de org.
+
+    Para endpoints de operación transversal (gestión de flags, soporte), no
+    para acciones dentro de un workspace.
+    """
+    @wraps(fn)
+    def wrapper(*args, **kwargs):
+        if current_user() is None:
+            raise Unauthorized('Inicia sesión para continuar.')
+        if not is_platform_admin():
+            raise Forbidden('Requiere permisos de plataforma.')
+        return fn(*args, **kwargs)
+    return wrapper
+
+
 def require_permission(*permissions):
     """Exige sesion + que el rol en el workspace activo conceda los permisos.
 

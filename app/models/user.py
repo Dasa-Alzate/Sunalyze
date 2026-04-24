@@ -14,6 +14,7 @@ class User(BaseModel):
     first_name = db.Column(db.String(80), nullable=False)
     last_name = db.Column(db.String(80), default='')
     email_verified = db.Column(db.Boolean, nullable=False, default=False)
+    is_platform_admin = db.Column(db.Boolean, nullable=False, default=False)
 
     memberships = db.relationship('Membership', back_populates='user', cascade='all, delete-orphan')
 
@@ -46,6 +47,7 @@ class User(BaseModel):
             'last_name': self.last_name,
             'full_name': self.full_name,
             'email_verified': self.email_verified,
+            'is_platform_admin': self.is_platform_admin,
             'organizations': [
                 {**m.organization.to_dict(), 'role': m.role}
                 for m in self.memberships if m.organization

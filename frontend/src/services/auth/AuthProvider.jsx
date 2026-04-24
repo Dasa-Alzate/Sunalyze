@@ -59,6 +59,7 @@ export function AuthProvider({ children }) {
     permissions,
     loading: session === undefined,
     isAuthenticated: !!user,
+    isPlatformAdmin: !!user?.is_platform_admin,
     org: user?.organizations?.[0] || null,
     can,
     login,
