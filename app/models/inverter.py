@@ -29,7 +29,9 @@ class Inverter(BaseModel):
     I_max_input = db.Column(db.Float, nullable=False)  # Corriente máxima entrada
     I_max_output = db.Column(db.Float, nullable=False)  # Corriente máxima salida
     datasheet = db.Column(db.String(200))  # Ruta al datasheet PDF
-    
+    needs_review = db.Column(db.Boolean, nullable=False, default=False)
+    review_notes = db.Column(db.String(500))
+
     def to_dict(self):
         return {
             'id': self.id,
@@ -42,7 +44,9 @@ class Inverter(BaseModel):
             'vmax': self.vmax,
             'I_max_input': self.I_max_input,
             'I_max_output': self.I_max_output,
-            'datasheet': self.datasheet
+            'datasheet': self.datasheet,
+            'needs_review': self.needs_review,
+            'review_notes': self.review_notes,
         }
     
     def __repr__(self):

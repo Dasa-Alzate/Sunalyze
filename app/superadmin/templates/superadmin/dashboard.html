@@ -1,0 +1,22 @@
+{% extends 'superadmin/base.html' %}
+{% set active_nav = 'dash' %}
+{% block body %}
+<h1>Dashboard</h1>
+<div class="cards">
+  <div class="card"><div class="n">{{ m.users }}</div><div class="l">Usuarios ({{ m.superadmins }} superadmin)</div></div>
+  <div class="card"><div class="n">{{ m.orgs }}</div><div class="l">Organizaciones</div></div>
+  <div class="card"><div class="n">{{ m.projects }}</div><div class="l">Proyectos</div></div>
+  <div class="card"><div class="n">{{ m.panels }}</div><div class="l">Paneles</div></div>
+  <div class="card"><div class="n">{{ m.inverters }}</div><div class="l">Inversores</div></div>
+  <div class="card"><div class="n">{{ m.review_pending }}</div><div class="l">Equipos por revisar</div></div>
+  <div class="card"><div class="n">{{ m.tickets_open }}</div><div class="l">Tickets abiertos</div></div>
+  <div class="card"><div class="n">{{ m.tickets_pending }}</div><div class="l">Tickets pendientes</div></div>
+</div>
+
+<h2>Organizaciones por plan</h2>
+<div class="cards">
+  {% for plan, count in m.orgs_by_plan.items() %}
+  <div class="card"><div class="n">{{ count }}</div><div class="l">{{ plan }}</div></div>
+  {% else %}<p class="muted">Sin datos.</p>{% endfor %}
+</div>
+{% endblock %}

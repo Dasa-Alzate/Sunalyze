@@ -1,0 +1,29 @@
+{% extends 'superadmin/base.html' %}
+{% set active_nav = 'tickets' %}
+{% block body %}
+<h1>Tickets de soporte</h1>
+<p>
+  <a class="btn" href="{{ url_for('superadmin.tickets_view') }}">Todos</a>
+  {% for s in statuses %}
+  <a class="btn {{ 'primary' if active==s }}" href="{{ url_for('superadmin.tickets_view', status=s) }}">{{ s }}</a>
+  {% endfor %}
+</p>
+<table>
+  <tr><th>#</th><th>Asunto</th><th>Solicitante</th><th>Org</th><th>Prioridad</th><th>Estado</th><th>Actualizado</th></tr>
+  {% for t in tickets %}
+  <tr>
+    <td>{{ t.id }}</td>
+    <td><a href="{{ url_for('superadmin.ticket_detail', ticket_id=t.id) }}">{{ t.subject }}</a></td>
+    <td class="muted">{{ t.requester_email }}</td>
+    <td class="muted">{{ t.organization.nombre if t.organization else '—' }}</td>
+    <td>{{ t.priority }}</td>
+    <td>
+      {% if t.status=='open' %}<span class="tag warn">open</span>
+      {% elif t.status=='pending' %}<span class="tag acc">pending</span>
+      {% else %}<span class="tag ok">closed</span>{% endif %}
+    </td>
+    <td class="muted">{{ t.updated_at.strftime('%Y-%m-%d %H:%M') if t.updated_at else '—' }}</td>
+  </tr>
+  {% else %}<tr><td colspan="7" class="muted">Sin tickets.</td></tr>{% endfor %}
+</table>
+{% endblock %}
