@@ -26,6 +26,7 @@ class Permission:
     CATALOG_MANAGE = 'catalog:manage'
     MEMBER_INVITE = 'member:invite'
     MEMBER_MANAGE = 'member:manage'
+    MODULE_MANAGE = 'module:manage'
     ORG_MANAGE = 'org:manage'
 
 
@@ -44,6 +45,7 @@ _ADMIN = _MEMBER | {
     Permission.PROJECT_DELETE,
     Permission.CATALOG_MANAGE,
     Permission.MEMBER_INVITE, Permission.MEMBER_MANAGE,
+    Permission.MODULE_MANAGE,
 }
 
 ROLE_PERMISSIONS = {

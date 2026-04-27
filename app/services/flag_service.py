@@ -13,10 +13,14 @@ from app.errors import NotFound, ValidationError
 logger = logging.getLogger(__name__)
 
 DEFAULT_FLAGS = [
-    {'key': 'geo_map', 'nombre': 'Mapa geoespacial',
-     'descripcion': 'Selector de coordenadas con mapa OSM en el wizard.', 'default_enabled': True},
-    {'key': 'advanced_analysis', 'nombre': 'Análisis avanzado',
-     'descripcion': 'Métricas y desglose ampliado del dimensionamiento.', 'default_enabled': False},
+    {'key': 'geo_map', 'nombre': 'Mapa geoespacial', 'titulo': 'Mapa geoespacial',
+     'descripcion': 'Selector de coordenadas con mapa OSM y geocodificación en el wizard.',
+     'default_enabled': True, 'is_visible': True, 'help_url': '#', 'price': 0,
+     'thumbnail_path': '/brand-logos/aiko.svg', 'image_path': '/brand-logos/aiko.svg'},
+    {'key': 'advanced_analysis', 'nombre': 'Análisis avanzado', 'titulo': 'Análisis avanzado',
+     'descripcion': 'Métricas y desglose ampliado del dimensionamiento, pérdidas y protecciones.',
+     'default_enabled': False, 'is_visible': True, 'help_url': '#', 'price': 9.90,
+     'thumbnail_path': '/brand-logos/longi.svg', 'image_path': '/brand-logos/longi.svg'},
 ]
 
 
@@ -70,18 +74,45 @@ class FlagService:
             by_flag.setdefault(o.flag_key, []).append(o.to_dict())
         return [{**f.to_dict(), 'overrides': by_flag.get(f.key, [])} for f in flags]
 
-    @staticmethod
-    def upsert_flag(key, nombre, descripcion='', default_enabled=False):
+    _META_FIELDS = ('nombre', 'titulo', 'descripcion', 'default_enabled',
+                    'is_visible', 'image_path', 'thumbnail_path', 'help_url', 'price')
+
+    @classmethod
+    def upsert_flag(cls, key, **fields):
         flag = Flag.query.filter_by(key=key).first()
-        if flag:
-            flag.nombre = nombre
-            flag.descripcion = descripcion
-            flag.default_enabled = default_enabled
-        else:
-            flag = Flag(key=key, nombre=nombre, descripcion=descripcion, default_enabled=default_enabled)
+        if not flag:
+            flag = Flag(key=key, nombre=fields.get('nombre') or key)
             db.session.add(flag)
+        for f in cls._META_FIELDS:
+            if f in fields and fields[f] is not None:
+                setattr(flag, f, fields[f])
         db.session.commit()
         return flag
+
+    @staticmethod
+    def marketplace(org_id=None, user_id=None):
+        flags = Flag.query.filter_by(status='active', is_visible=True).order_by(Flag.titulo).all()
+        return [
+            {**f.to_dict(), 'enabled': FlagService.is_enabled(f.key, org_id, user_id)}
+            for f in flags
+        ]
+
+    @staticmethod
+    def _visible_flag(key):
+        flag = Flag.query.filter_by(key=key, status='active', is_visible=True).first()
+        if not flag:
+            raise NotFound('Módulo no encontrado en el marketplace.')
+        return flag
+
+    @classmethod
+    def enable_for_org(cls, key, org_id, created_by=None):
+        cls._visible_flag(key)
+        return cls.set_override(key, 'org', org_id, True, created_by=created_by, source='grant')
+
+    @classmethod
+    def disable_for_org(cls, key, org_id, created_by=None):
+        cls._visible_flag(key)
+        return cls.set_override(key, 'org', org_id, False, created_by=created_by, source='grant')
 
     @staticmethod
     def set_override(key, scope, scope_id, enabled, created_by=None, source='grant'):

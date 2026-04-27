@@ -41,6 +41,7 @@ def create_app():
     from app.routes.catalogs import catalogs_bp
     from app.routes.members import members_bp
     from app.routes.admin import admin_bp
+    from app.routes.modules import modules_bp
 
     app.register_blueprint(main_bp)
     app.register_blueprint(crud_bp)
@@ -51,6 +52,7 @@ def create_app():
     app.register_blueprint(catalogs_bp)
     app.register_blueprint(members_bp)
     app.register_blueprint(admin_bp)
+    app.register_blueprint(modules_bp)
 
     from app.errors import register_error_handlers
     register_error_handlers(app)

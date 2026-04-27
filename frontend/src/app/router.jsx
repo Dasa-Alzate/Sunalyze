@@ -12,6 +12,7 @@ import MemoriaPreview from '@/features/memoria/MemoriaPreview'
 import Team from '@/features/team/Team'
 import AcceptInvitation from '@/features/team/AcceptInvitation'
 import Flags from '@/features/admin/Flags'
+import Marketplace from '@/features/marketplace/Marketplace'
 
 export const router = createBrowserRouter([
   {
@@ -36,6 +37,7 @@ export const router = createBrowserRouter([
           { path: 'equipo', element: <Team /> },
           { path: 'memoria', element: <MemoriaPreview /> },
           { path: 'memoria/:id', element: <MemoriaPreview /> },
+          { path: 'modulos', element: <Marketplace /> },
           { path: 'admin/flags', element: <RequirePlatformAdmin><Flags /></RequirePlatformAdmin> },
         ],
       },

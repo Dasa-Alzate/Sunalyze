@@ -22,7 +22,7 @@ def list_flags():
 @require_platform_admin
 def upsert_flag():
     data = FlagSchema(**(request.get_json(silent=True) or {}))
-    flag = FlagService.upsert_flag(data.key, data.nombre, data.descripcion, data.default_enabled)
+    flag = FlagService.upsert_flag(data.key, **data.model_dump(exclude={'key'}))
     return jsonify(flag.to_dict()), 201
 
 

@@ -47,7 +47,13 @@ export default function Flags() {
     try {
       await api.admin.upsertFlag({
         key: values.key.trim(), nombre: values.nombre.trim(),
-        descripcion: values.descripcion, default_enabled: values.default_enabled === 'on',
+        titulo: values.titulo, descripcion: values.descripcion,
+        default_enabled: values.default_enabled === 'on',
+        is_visible: values.is_visible === 'on',
+        image_path: values.image_path || null,
+        thumbnail_path: values.thumbnail_path || null,
+        help_url: values.help_url || null,
+        price: values.price === '' ? null : Number(values.price),
       })
       toast('success', 'Flag guardado', values.key)
       setCreating(false)
@@ -134,18 +140,32 @@ function Dot({ on }) {
 }
 
 function CreateFlagDrawer({ onClose, onSave }) {
-  const [v, setV] = useState({ key: '', nombre: '', descripcion: '', default_enabled: 'off' })
+  const [v, setV] = useState({
+    key: '', nombre: '', titulo: '', descripcion: '', default_enabled: 'off',
+    is_visible: 'off', image_path: '', thumbnail_path: '', help_url: '', price: '',
+  })
   const set = (k) => (e) => setV((s) => ({ ...s, [k]: e.target.value }))
   return (
     <div className="sun-scrim" onClick={(e) => { if (e.target.classList.contains('sun-scrim')) onClose() }}>
       <div className="sun-drawer">
-        <div className="sun-drawer__head"><h3>Nuevo flag</h3><IconBtn icon="x" label="Cerrar" onClick={onClose} /></div>
+        <div className="sun-drawer__head"><h3>Nuevo flag / módulo</h3><IconBtn icon="x" label="Cerrar" onClick={onClose} /></div>
         <div className="sun-drawer__body">
           <Field label="Key (estable, minúsculas)" required placeholder="advanced_export" value={v.key} onChange={set('key')} />
-          <Field label="Nombre" required placeholder="Exportación avanzada" value={v.nombre} onChange={set('nombre')} />
-          <Field label="Descripción" value={v.descripcion} onChange={set('descripcion')} />
+          <Field label="Nombre interno" required placeholder="Exportación avanzada" value={v.nombre} onChange={set('nombre')} />
           <SelectField label="Default" value={v.default_enabled} onChange={set('default_enabled')}
             options={[{ value: 'off', label: 'OFF (apagado por defecto)' }, { value: 'on', label: 'ON (encendido por defecto)' }]} />
+
+          <div className="sun-divider">Marketplace (visible al usuario)</div>
+          <SelectField label="¿Visible en el marketplace?" value={v.is_visible} onChange={set('is_visible')}
+            options={[{ value: 'off', label: 'No (flag interno)' }, { value: 'on', label: 'Sí (módulo público)' }]} />
+          <Field label="Título" placeholder="Exportación avanzada" value={v.titulo} onChange={set('titulo')} />
+          <Field label="Descripción" value={v.descripcion} onChange={set('descripcion')} />
+          <div className="sun-speclist">
+            <Field label="Precio (€/mes, 0 = incluido)" numeric type="number" step="any" value={v.price} onChange={set('price')} />
+            <Field label="Enlace de ayuda" placeholder="https://…" value={v.help_url} onChange={set('help_url')} />
+            <Field label="Imagen (path/URL)" placeholder="/static/…" value={v.image_path} onChange={set('image_path')} />
+            <Field label="Miniatura (path/URL)" placeholder="/static/…" value={v.thumbnail_path} onChange={set('thumbnail_path')} />
+          </div>
         </div>
         <div className="sun-drawer__foot">
           <Btn variant="secondary" onClick={onClose}>Cancelar</Btn>
