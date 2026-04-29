@@ -13,6 +13,8 @@ class ProvenanceMixin:
     external_id = db.Column(db.String(120), index=True)
     scraped_at = db.Column(db.DateTime)
     is_locked = db.Column(db.Boolean, nullable=False, default=False)
+    needs_review = db.Column(db.Boolean, nullable=False, default=False)
+    review_notes = db.Column(db.String(500))
 
     def provenance_dict(self):
         return {
@@ -21,4 +23,6 @@ class ProvenanceMixin:
             'external_id': self.external_id,
             'scraped_at': self.scraped_at.isoformat() if self.scraped_at else None,
             'is_locked': self.is_locked,
+            'needs_review': self.needs_review,
+            'review_notes': self.review_notes,
         }

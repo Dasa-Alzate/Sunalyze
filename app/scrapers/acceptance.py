@@ -3,38 +3,64 @@
 Resolución por especificidad creciente (la última gana):
     global[tipo]  →  marca[marca][tipo]  →  equipo[external_id]
 
-Cada capa aporta criterios parciales:
-- `required`: campos que DEBEN venir (si una capa los define, reemplaza a la anterior).
-- `ranges`: cotas de cordura por campo {campo: [min, max]} (merge por campo).
+Cada capa aporta criterios parciales en DOS severidades:
+- `block`:  detectan falsos positivos / equipos indeseados → el hallazgo NO sube.
+- `review`: sospechosos pero plausibles → el hallazgo sube marcado `needs_review`.
 
-El servicio pregunta `evaluate(product, brand)` → lista de motivos de rechazo
-(vacía = aceptado). Cambiar criterios = editar este fichero, no el scraper.
+Dentro de cada severidad:
+- `required`: campos que DEBEN venir (si una capa los define, reemplaza a la anterior).
+- `ranges`: cotas por campo {campo: [min, max]} (merge por campo, la específica gana).
+
+`evaluate(product, brand)` devuelve {'verdict', 'block', 'review'} donde verdict es
+'blocked' | 'review' | 'accepted'. Cambiar criterios = editar este fichero.
 """
 
 from .base import VITAL
 
 GLOBAL = {
     'panel': {
-        'required': list(VITAL['panel']),
-        'ranges': {
-            'power': [50, 1000],
-            'voc': [10, 120],
-            'vmp': [5, 110],
-            'imp': [1, 30],
-            'isc': [1, 30],
-            'y': [5, 30],
-            'height': [500, 3000],
-            'width': [300, 1500],
+        'block': {
+            'required': list(VITAL['panel']),
+            'ranges': {
+                'power': [10, 1200],
+                'voc': [5, 150],
+                'vmp': [3, 130],
+                'imp': [0.5, 40],
+                'y': [1, 40],
+            },
+        },
+        'review': {
+            'required': [],
+            'ranges': {
+                'power': [150, 800],
+                'voc': [20, 100],
+                'vmp': [20, 90],
+                'imp': [3, 25],
+                'isc': [3, 25],
+                'y': [15, 30],
+                'height': [800, 2600],
+                'width': [600, 1400],
+            },
         },
     },
     'inverter': {
-        'required': list(VITAL['inverter']),
-        'ranges': {
-            'power': [0.3, 300],
-            'vmax': [100, 1500],
-            'y': [80, 100],
-            'I_max_input': [1, 200],
-            'I_max_output': [1, 500],
+        'block': {
+            'required': list(VITAL['inverter']),
+            'ranges': {
+                'power': [0.1, 1000],
+                'vmax': [50, 2000],
+                'y': [50, 100],
+            },
+        },
+        'review': {
+            'required': [],
+            'ranges': {
+                'power': [0.5, 300],
+                'vmax': [100, 1500],
+                'y': [90, 100],
+                'I_max_input': [1, 200],
+                'I_max_output': [1, 500],
+            },
         },
     },
 }
@@ -42,7 +68,9 @@ GLOBAL = {
 BY_BRAND = {
     'fronius': {
         'inverter': {
-            'required': ['nombre', 'power', 'vmax', 'y'],
+            'review': {
+                'required': ['y'],
+            },
         },
     },
 }
@@ -51,9 +79,20 @@ BY_EQUIPMENT = {
 }
 
 
+def _merge(into, layer):
+    if 'required' in layer:
+        into['required'] = list(layer['required'])
+    if 'ranges' in layer:
+        into['ranges'] = {**into['ranges'], **layer['ranges']}
+
+
 def resolve(kind, brand, external_id=None):
     base = GLOBAL.get(kind, {})
-    resolved = {'required': list(base.get('required', [])), 'ranges': dict(base.get('ranges', {}))}
+    resolved = {}
+    for severity in ('block', 'review'):
+        bucket = base.get(severity, {})
+        resolved[severity] = {'required': list(bucket.get('required', [])),
+                              'ranges': dict(bucket.get('ranges', {}))}
 
     layers = []
     brand_layer = BY_BRAND.get((brand or '').lower(), {}).get(kind)
@@ -63,23 +102,34 @@ def resolve(kind, brand, external_id=None):
         layers.append(BY_EQUIPMENT[external_id])
 
     for layer in layers:
-        if 'required' in layer:
-            resolved['required'] = list(layer['required'])
-        if 'ranges' in layer:
-            resolved['ranges'] = {**resolved['ranges'], **layer['ranges']}
+        for severity in ('block', 'review'):
+            if severity in layer:
+                _merge(resolved[severity], layer[severity])
     return resolved
 
 
-def evaluate(product, brand):
-    criteria = resolve(product.kind, brand, product.external_id)
+def _violations(product, rules):
     reasons = []
-    for field in criteria['required']:
+    for field in rules['required']:
         if product.fields.get(field) in (None, ''):
             reasons.append(f'falta campo requerido: {field}')
-    for field, bounds in criteria['ranges'].items():
+    for field, bounds in rules['ranges'].items():
         value = product.fields.get(field)
         if value is not None:
             lo, hi = bounds
             if not (lo <= value <= hi):
                 reasons.append(f'{field}={value} fuera de rango [{lo}, {hi}]')
     return reasons
+
+
+def evaluate(product, brand):
+    criteria = resolve(product.kind, brand, product.external_id)
+    block = _violations(product, criteria['block'])
+    review = _violations(product, criteria['review'])
+    if block:
+        verdict = 'blocked'
+    elif review:
+        verdict = 'review'
+    else:
+        verdict = 'accepted'
+    return {'verdict': verdict, 'block': block, 'review': review}
