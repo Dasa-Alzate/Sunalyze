@@ -121,3 +121,21 @@ Esto protege la calidad de un dato que alimenta cálculos de ingeniería.
 **Veredicto:** **viable y con buen ROI vía HTML oficial** (empezando por Fronius),
 con PDF como segunda ola y revisión humana como red de seguridad. El agregador
 uniforme (ENF) queda descartado por anti-bot/ToS.
+
+---
+
+## 6. Estado actual (rama `products-scrapper`)
+
+**Hecho y verificado:**
+- POC end-to-end: adapter HTML de Fronius → normalización flexible → upsert con provenance.
+- Ingesta no rígida: campos no-vitales nullable; los parciales se persisten.
+- Criterios de aceptación **centralizados y por capas** (`acceptance.py`): global → marca → equipo.
+- Criterios **elásticos** con dos severidades: `block` (no sube, falso positivo/indeseado) y
+  `review` (sube marcado `needs_review` + `review_notes`).
+
+**Pendiente (no implementado, queda como backlog):**
+- Exponer los criterios en DB/admin editables en runtime (hoy viven en código).
+- Consola de revisión para `needs_review` (aprobar/lockear) — encaja en el portal de superadmin.
+- Adapter PDF (`pdfplumber`) para Deye/AIKO/JA Solar.
+- Crawler de discovery real de Fronius (hoy seed de URLs).
+- Scheduler (cron v1 / Celery beat v2).
