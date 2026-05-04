@@ -40,6 +40,7 @@ def create_app():
     from app.routes.auth import auth_bp
     from app.routes.catalogs import catalogs_bp
     from app.routes.members import members_bp
+    from app.routes.gdpr import gdpr_bp
 
     app.register_blueprint(main_bp)
     app.register_blueprint(crud_bp)
@@ -49,6 +50,7 @@ def create_app():
     app.register_blueprint(auth_bp)
     app.register_blueprint(catalogs_bp)
     app.register_blueprint(members_bp)
+    app.register_blueprint(gdpr_bp)
 
     from app.errors import register_error_handlers
     register_error_handlers(app)

@@ -27,6 +27,8 @@ class Permission:
     MEMBER_INVITE = 'member:invite'
     MEMBER_MANAGE = 'member:manage'
     ORG_MANAGE = 'org:manage'
+    ACCOUNT_EXPORT = 'account:export'
+    ACCOUNT_DELETE = 'account:delete'
 
 
 ALL_PERMISSIONS = frozenset(
@@ -38,6 +40,7 @@ _MEMBER = {
     Permission.MEMORIA_SIGN,
     Permission.EQUIPMENT_VIEW, Permission.EQUIPMENT_EDIT,
     Permission.CATALOG_SUBSCRIBE,
+    Permission.ACCOUNT_EXPORT, Permission.ACCOUNT_DELETE,
 }
 
 _ADMIN = _MEMBER | {

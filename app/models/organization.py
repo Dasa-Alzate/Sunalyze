@@ -1,13 +1,13 @@
 """Workspace/tenant. Una persona o autonomo es un workspace de un solo miembro."""
 
 from app.extensions import db
-from .database import BaseModel
+from .database import BaseModel, SoftDeleteMixin
 
 ORG_TYPES = ('PERSONAL', 'BUSINESS')
 PLANS = ('free', 'pro', 'business')
 
 
-class Organization(BaseModel):
+class Organization(BaseModel, SoftDeleteMixin):
     """Unico eje de propiedad de los datos.
 
     La diferencia entre persona/autonomo y empresa es configuracion (type +

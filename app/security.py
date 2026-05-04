@@ -27,7 +27,8 @@ def current_user():
     if 'user_id' not in session:
         return None
     if '_current_user' not in g:
-        g._current_user = User.query.get(session['user_id'])
+        user = User.query.get(session['user_id'])
+        g._current_user = user if user and not user.is_deleted else None
     return g._current_user
 
 
