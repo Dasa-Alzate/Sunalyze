@@ -9,11 +9,14 @@ Capas (de fuera hacia dentro):
 import ipaddress
 from functools import wraps
 
-from flask import current_app, request, redirect, url_for, abort, render_template
+from flask import current_app, request, redirect, url_for, abort, render_template, session
 
 from app.extensions import db
 from app.security import current_user
+from app.models.user import User
 from app.models.superadmin_audit import SuperadminAudit
+
+_PENDING_MFA_KEY = 'pending_mfa_user_id'
 
 
 def client_ip():
@@ -70,8 +73,27 @@ def require_superadmin(fn):
     return wrapper
 
 
-def log_action(action, target=None, detail=None):
-    user = current_user()
+def set_pending_mfa(user):
+    """Marca un usuario como autenticado por password, pendiente de MFA."""
+    session[_PENDING_MFA_KEY] = user.id
+
+
+def clear_pending_mfa():
+    session.pop(_PENDING_MFA_KEY, None)
+
+
+def pending_mfa_user():
+    """Usuario en estado intermedio (password ok, MFA aún no resuelto)."""
+    user_id = session.get(_PENDING_MFA_KEY)
+    if not user_id:
+        return None
+    return User.query.get(user_id)
+
+
+def log_action(action, target=None, detail=None, actor=None):
+    """Deja rastro auditado; `actor` permite fijar el usuario explícitamente
+    cuando aún no hay sesión completa (p. ej. login con MFA pendiente)."""
+    user = actor or current_user()
     entry = SuperadminAudit(
         actor_user_id=user.id if user else None,
         actor_email=user.email if user else None,

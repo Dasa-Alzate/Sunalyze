@@ -38,6 +38,20 @@ def revoke(email):
     click.echo(f'{user.email} ya no es superadmin.')
 
 
+@superadmin_cli.command('mfa-reset')
+@click.argument('email')
+def mfa_reset(email):
+    """Desactiva el MFA de un superadmin (recuperación ante pérdida del factor).
+
+    El usuario será forzado a reenrolar en su próximo login."""
+    user = _find(email)
+    user.mfa_enabled = False
+    user.mfa_secret = None
+    user.mfa_recovery_codes = None
+    db.session.commit()
+    click.echo(f'MFA reiniciado para {user.email}; deberá reenrolar al entrar.')
+
+
 @superadmin_cli.command('list')
 def list_superadmins():
     users = User.query.filter_by(is_superadmin=True).all()

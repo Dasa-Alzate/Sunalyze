@@ -1,0 +1,14 @@
+{% extends 'superadmin/base.html' %}
+{% block title %} · Códigos de recuperación{% endblock %}
+{% block body %}
+<h1>Guarda tus códigos de recuperación</h1>
+<p class="muted">MFA activado. Estos códigos de un solo uso te permiten entrar si pierdes el authenticator. Se muestran <strong>una sola vez</strong>; guárdalos en un lugar seguro.</p>
+<table>
+  <tbody>
+    {% for code in codes %}
+    <tr><td style="font-family:ui-monospace,SFMono-Regular,Menlo,monospace">{{ code }}</td></tr>
+    {% endfor %}
+  </tbody>
+</table>
+<p style="margin-top:16px"><a class="btn" href="{{ url_for('superadmin.index') }}">Continuar al portal</a></p>
+{% endblock %}

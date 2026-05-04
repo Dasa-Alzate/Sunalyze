@@ -1,9 +1,10 @@
 """Vistas server-rendered del portal de superadmin."""
 
 from flask import (Blueprint, render_template, request, redirect, url_for,
-                   flash, abort)
+                   flash, abort, session)
 
 from app.extensions import db, limiter
+from app import mfa
 from app.security import current_user, login_user, logout_user
 from app.models.user import User
 from app.models.organization import Organization
@@ -11,8 +12,12 @@ from app.models.panel import Panel
 from app.models.inverter import Inverter
 from app.models.support_ticket import SupportTicket, SupportTicketMessage, TICKET_STATUSES
 from app.models.superadmin_audit import SuperadminAudit
-from app.superadmin.guards import require_superadmin, is_superadmin, log_action, client_ip
+from app.superadmin.guards import (require_superadmin, is_superadmin, log_action,
+                                   client_ip, set_pending_mfa, clear_pending_mfa,
+                                   pending_mfa_user)
 from app.superadmin import metrics, migrations_ctl
+
+_MFA_ISSUER = 'Sunalyze Superadmin'
 
 superadmin_bp = Blueprint('superadmin', __name__, template_folder='templates')
 
@@ -29,16 +34,75 @@ def login():
         password = request.form.get('password') or ''
         user = User.query.filter_by(email=email).first()
         if user and user.check_password(password) and user.is_superadmin:
-            login_user(user)
-            log_action('login')
-            target = request.args.get('next') or url_for('superadmin.index')
-            return redirect(target)
+            set_pending_mfa(user)
+            if user.mfa_enabled:
+                return redirect(url_for('superadmin.mfa_challenge'))
+            return redirect(url_for('superadmin.mfa_setup'))
         flash('Credenciales inválidas o sin acceso de superadmin.', 'error')
     return render_template('superadmin/login.html')
 
 
+def _finish_login(user):
+    clear_pending_mfa()
+    login_user(user)
+    target = request.args.get('next') or url_for('superadmin.index')
+    return redirect(target)
+
+
+@superadmin_bp.route('/mfa/setup', methods=['GET', 'POST'])
+@limiter.limit('10 per minute', methods=['POST'])
+def mfa_setup():
+    """Enrolamiento forzado: genera secreto, lo muestra y exige confirmar un código."""
+    user = pending_mfa_user()
+    if user is None:
+        return redirect(url_for('superadmin.login'))
+    if user.mfa_enabled:
+        return redirect(url_for('superadmin.mfa_challenge'))
+    secret = session.get('mfa_setup_secret')
+    if not secret:
+        secret = mfa.generate_secret()
+        session['mfa_setup_secret'] = secret
+    if request.method == 'POST':
+        code = request.form.get('code') or ''
+        if mfa.verify_totp(secret, code):
+            codes = user.enable_mfa(secret)
+            db.session.commit()
+            session.pop('mfa_setup_secret', None)
+            log_action('mfa.enable', target=f'user:{user.id}', detail=user.email, actor=user)
+            _finish_login(user)
+            return render_template('superadmin/mfa_codes.html', codes=codes)
+        flash('Código inválido. Reescanea o reintenta.', 'error')
+    uri = mfa.provisioning_uri(secret, user.email, _MFA_ISSUER)
+    return render_template('superadmin/mfa_setup.html', secret=secret, uri=uri)
+
+
+@superadmin_bp.route('/mfa/challenge', methods=['GET', 'POST'])
+@limiter.limit('10 per minute', methods=['POST'])
+def mfa_challenge():
+    """Segundo factor en el login: TOTP de 6 dígitos o un código de recuperación."""
+    user = pending_mfa_user()
+    if user is None:
+        return redirect(url_for('superadmin.login'))
+    if not user.mfa_enabled:
+        return redirect(url_for('superadmin.mfa_setup'))
+    if request.method == 'POST':
+        code = (request.form.get('code') or '').strip()
+        if user.verify_totp(code):
+            log_action('mfa.login', target=f'user:{user.id}', detail=user.email, actor=user)
+            return _finish_login(user)
+        if user.consume_recovery_code(code):
+            db.session.commit()
+            log_action('mfa.recovery_used', target=f'user:{user.id}',
+                       detail=f'{user.recovery_codes_remaining} restantes', actor=user)
+            return _finish_login(user)
+        flash('Código inválido.', 'error')
+    return render_template('superadmin/mfa_challenge.html')
+
+
 @superadmin_bp.route('/logout', methods=['POST'])
 def logout():
+    clear_pending_mfa()
+    session.pop('mfa_setup_secret', None)
     logout_user()
     return redirect(url_for('superadmin.login'))
 
