@@ -127,7 +127,7 @@ def ensure_marketplace():
 
     officials = Catalog.query.filter(Catalog.org_id.is_(None), Catalog.is_official.is_(True)).all()
     subscribed = 0
-    for org in Organization.query.all():
+    for org in Organization.active().all():
         for catalog in officials:
             exists = CatalogSubscription.query.filter_by(org_id=org.id, catalog_id=catalog.id).first()
             if not exists:
