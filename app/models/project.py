@@ -14,8 +14,9 @@ class Project(BaseModel):
 
     Agrupa los datos del cliente, el emplazamiento, los equipos elegidos,
     los parametros de la memoria tecnica y los resultados del ultimo
-    dimensionamiento. El estado refleja el avance en el flujo
-    borrador -> diseno -> memoria (el "semaforo" del diseno).
+    dimensionamiento. El estado refleja el avance en el flujo de
+    legalizacion borrador -> en_revision -> presentado -> aprobado,
+    con rechazado como salida alternativa.
     """
     __tablename__ = 'projects'
 
