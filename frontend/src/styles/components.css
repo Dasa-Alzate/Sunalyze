@@ -137,7 +137,7 @@
 
 .sun-tag { display: inline-flex; align-items: center; gap: 6px; font-size: var(--text-sm); font-weight: var(--fw-medium);
   background: var(--ink-100); color: var(--text-body); padding: 4px 8px 4px 10px; border-radius: var(--radius-sm); border: 1px solid var(--border-subtle); }
-.sun-tag button { display: inline-flex; border: 0; background: transparent; color: var(--text-subtle); cursor: pointer; padding: 0; border-radius: var(--radius-xs); }
+.sun-tag button { display: inline-flex; align-items: center; justify-content: center; min-width: 24px; min-height: 24px; border: 0; background: transparent; color: var(--text-subtle); cursor: pointer; padding: 0; border-radius: var(--radius-xs); }
 .sun-tag button:hover { color: var(--text-strong); }
 .sun-tag button svg, .sun-tag button [data-lucide] { width: 13px; height: 13px; }
 
@@ -186,7 +186,7 @@
 .sun-search__input { border: 0; outline: 0; background: transparent; flex: 1; font-family: var(--font-sans); font-size: var(--text-base); color: var(--text-strong); min-width:0; }
 .sun-search__menu { position: absolute; top: calc(100% + 4px); left: 0; right: 0; z-index: 30; background: var(--surface-card); border: 1px solid var(--border); border-radius: var(--radius-md); box-shadow: var(--shadow-md); max-height: 264px; overflow-y: auto; padding: var(--space-1); }
 .sun-search__opt { display: flex; align-items: center; justify-content: space-between; gap: var(--space-3); padding: var(--space-2) var(--space-3); border-radius: var(--radius-sm); cursor: pointer; width: 100%; border: 0; background: transparent; text-align: left; font: inherit; }
-.sun-search__clear { display: inline-flex; align-items: center; justify-content: center; border: 0; background: transparent; padding: 0; cursor: pointer; color: var(--text-subtle); }
+.sun-search__clear { display: inline-flex; align-items: center; justify-content: center; min-width: 24px; min-height: 24px; border: 0; background: transparent; padding: 0; cursor: pointer; color: var(--text-subtle); }
 .sun-search__opt:hover, .sun-search__opt--active { background: var(--surface-brand-soft); }
 .sun-search__opt-name { font-size: var(--text-base); font-weight: var(--fw-medium); color: var(--text-strong); }
 .sun-search__opt-meta { font-variant-numeric: tabular-nums; font-size: var(--text-xs); color: var(--text-muted); white-space: nowrap; }
