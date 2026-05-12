@@ -3,6 +3,7 @@ import { NavLink, Outlet, useLocation } from 'react-router-dom'
 import { Icon, IconBtn } from '@/shared/ui'
 import { TransitionLink, useTransition } from '@/services/transition'
 import { useAuth } from '@/services/auth'
+import { useCommands, isMac, formatShortcut } from '@/services/actions'
 import { toast } from '@/services/toast'
 
 const NAV = [
@@ -22,6 +23,7 @@ function initials(name) {
 function Sidebar() {
   const { user, org, logout } = useAuth()
   const { navigate } = useTransition()
+  const { openPalette } = useCommands()
   const items = NAV.filter((n) => !n.business || org?.type !== 'PERSONAL')
 
   async function onLogout() {
@@ -50,6 +52,10 @@ function Sidebar() {
         ))}
       </nav>
       <div className="sun-sidebar__foot">
+        <button type="button" className="sun-nav-item" onClick={openPalette}>
+          <Icon name="command" size={18} /><span>Comandos</span>
+          <span className="kbd" style={{ marginLeft: 'auto' }}>{formatShortcut({ mod: true, code: 'KeyK' }, isMac())}</span>
+        </button>
         <button className="sun-nav-item"><Icon name="settings" size={18} /><span>Ajustes</span></button>
         <div className="sun-userchip">
           <span className="sun-avatar">{initials(user?.full_name)}</span>
