@@ -1,4 +1,5 @@
-import { NavLink, Outlet } from 'react-router-dom'
+import { useEffect, useRef, useState } from 'react'
+import { NavLink, Outlet, useLocation } from 'react-router-dom'
 import { Icon, IconBtn } from '@/shared/ui'
 import { TransitionLink, useTransition } from '@/services/transition'
 import { useAuth } from '@/services/auth'
@@ -63,13 +64,38 @@ function Sidebar() {
   )
 }
 
+function routeLabel(pathname) {
+  const match = [...NAV].reverse().find((n) => (n.end ? pathname === n.to : pathname.startsWith(n.to)))
+  return match?.label || 'Sunalyze'
+}
+
+function useRouteFocus(mainRef) {
+  const location = useLocation()
+  const [announcement, setAnnouncement] = useState('')
+  const first = useRef(true)
+  useEffect(() => {
+    if (first.current) {
+      first.current = false
+      return
+    }
+    const label = routeLabel(location.pathname)
+    setAnnouncement(`${label}, página cargada`)
+    if (mainRef.current) mainRef.current.focus({ preventScroll: true })
+  }, [location.pathname, mainRef])
+  return announcement
+}
+
 export function AppLayout() {
+  const mainRef = useRef(null)
+  const announcement = useRouteFocus(mainRef)
   return (
     <div className="sun-app">
+      <a className="sun-skip-link" href="#main">Saltar al contenido</a>
       <Sidebar />
-      <main className="sun-main">
+      <main id="main" ref={mainRef} tabIndex={-1} className="sun-main">
         <Outlet />
       </main>
+      <div className="sr-only" role="status" aria-live="polite" aria-atomic="true">{announcement}</div>
     </div>
   )
 }

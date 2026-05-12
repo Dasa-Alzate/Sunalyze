@@ -185,7 +185,8 @@
 .sun-search__control svg, .sun-search__control [data-lucide] { width: 16px; height: 16px; color: var(--text-subtle); flex:none; }
 .sun-search__input { border: 0; outline: 0; background: transparent; flex: 1; font-family: var(--font-sans); font-size: var(--text-base); color: var(--text-strong); min-width:0; }
 .sun-search__menu { position: absolute; top: calc(100% + 4px); left: 0; right: 0; z-index: 30; background: var(--surface-card); border: 1px solid var(--border); border-radius: var(--radius-md); box-shadow: var(--shadow-md); max-height: 264px; overflow-y: auto; padding: var(--space-1); }
-.sun-search__opt { display: flex; align-items: center; justify-content: space-between; gap: var(--space-3); padding: var(--space-2) var(--space-3); border-radius: var(--radius-sm); cursor: pointer; }
+.sun-search__opt { display: flex; align-items: center; justify-content: space-between; gap: var(--space-3); padding: var(--space-2) var(--space-3); border-radius: var(--radius-sm); cursor: pointer; width: 100%; border: 0; background: transparent; text-align: left; font: inherit; }
+.sun-search__clear { display: inline-flex; align-items: center; justify-content: center; border: 0; background: transparent; padding: 0; cursor: pointer; color: var(--text-subtle); }
 .sun-search__opt:hover, .sun-search__opt--active { background: var(--surface-brand-soft); }
 .sun-search__opt-name { font-size: var(--text-base); font-weight: var(--fw-medium); color: var(--text-strong); }
 .sun-search__opt-meta { font-variant-numeric: tabular-nums; font-size: var(--text-xs); color: var(--text-muted); white-space: nowrap; }

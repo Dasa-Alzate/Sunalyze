@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react'
 import { Topbar } from '@/shared/ui'
-import { Btn, IconBtn, Icon, Badge, Field, SelectField, ExportMenu, Spinner, ErrorState } from '@/shared/ui'
+import { Btn, IconBtn, Icon, Badge, Field, SelectField, ExportMenu, Spinner, ErrorState, Scrim } from '@/shared/ui'
 import { api } from '@/api/client'
 import { dec } from '@/shared/format'
 import { exportRows } from '@/services/export'
@@ -410,7 +410,7 @@ function EditDrawer({ schema, initial, ownCatalogs, onClose, onSave }) {
   const set = (k) => (e) => setValues((s) => ({ ...s, [k]: e.target.value }))
 
   return (
-    <div className="sun-scrim" onClick={(e) => { if (e.target.classList.contains('sun-scrim')) onClose() }}>
+    <Scrim onClose={onClose} label={`${initial.id ? 'Editar' : 'Nuevo'} ${schema.singular}`}>
       <div className="sun-drawer">
         <div className="sun-drawer__head">
           <h3>{initial.id ? 'Editar' : 'Nuevo'} {schema.singular}</h3>
@@ -450,7 +450,7 @@ function EditDrawer({ schema, initial, ownCatalogs, onClose, onSave }) {
           <Btn variant="primary" icon="check" onClick={() => onSave(values)}>Guardar</Btn>
         </div>
       </div>
-    </div>
+    </Scrim>
   )
 }
 
@@ -458,7 +458,7 @@ function CatalogDrawer({ onClose, onSave }) {
   const [values, setValues] = useState({ nombre: '', descripcion: '' })
   const set = (k) => (e) => setValues((s) => ({ ...s, [k]: e.target.value }))
   return (
-    <div className="sun-scrim" onClick={(e) => { if (e.target.classList.contains('sun-scrim')) onClose() }}>
+    <Scrim onClose={onClose} label="Nuevo catálogo">
       <div className="sun-drawer">
         <div className="sun-drawer__head">
           <h3>Nuevo catálogo</h3>
@@ -473,6 +473,6 @@ function CatalogDrawer({ onClose, onSave }) {
           <Btn variant="primary" icon="check" onClick={() => onSave(values)}>Crear catálogo</Btn>
         </div>
       </div>
-    </div>
+    </Scrim>
   )
 }

@@ -42,7 +42,7 @@ function Nav({ go }) {
   }, [])
   return (
     <nav className={`web-nav${scrolled ? ' scrolled' : ''}`}>
-      <a className="web-brand" href="#" onClick={(e) => { e.preventDefault(); go('landing') }}>
+      <a className="web-brand" href="/" onClick={(e) => { e.preventDefault(); go('landing') }}>
         <span className="mark"><Icon name="sun" size={18} strokeWidth={2.4} /></span>Sunalyze
       </a>
       <div className="web-nav__links">
@@ -321,14 +321,17 @@ export default function Landing() {
   useReveal([])
   return (
     <div className="web">
+      <a className="sun-skip-link" href="#main">Saltar al contenido</a>
       <Nav go={go} />
-      <Hero go={go} />
-      <Stats />
-      <Marquee />
-      <Features />
-      <Showcase />
-      <How />
-      <CTA go={go} />
+      <main id="main" tabIndex={-1}>
+        <Hero go={go} />
+        <Stats />
+        <Marquee />
+        <Features />
+        <Showcase />
+        <How />
+        <CTA go={go} />
+      </main>
       <Footer />
     </div>
   )
