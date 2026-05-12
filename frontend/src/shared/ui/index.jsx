@@ -1,6 +1,7 @@
 import { useState, useRef, useEffect, useId } from 'react'
 import * as Lucide from 'lucide-react'
 import { useAsyncAction } from '@/shared/useAsyncAction'
+import { useFocusTrap } from '@/shared/useFocusTrap'
 
 function pascal(name) {
   return name.split('-').map((s) => s.charAt(0).toUpperCase() + s.slice(1)).join('')
@@ -33,6 +34,7 @@ export function Btn({ variant = 'primary', size = 'md', icon, iconRight, block, 
       className={cls}
       onClick={onClick ? guardedClick : undefined}
       disabled={disabled || isBusy}
+      aria-busy={isBusy ? 'true' : undefined}
       data-busy={isBusy ? 'true' : undefined}
       {...rest}
     >
@@ -57,6 +59,7 @@ export function IconBtn({ icon, label, bordered, size = 'md', onClick, disabled,
       title={label}
       onClick={onClick ? guardedClick : undefined}
       disabled={disabled || busy}
+      aria-busy={busy ? 'true' : undefined}
       data-busy={busy ? 'true' : undefined}
       {...rest}
     >
@@ -156,13 +159,14 @@ export function Card({ className = '', children, ...rest }) {
 }
 
 export function Scrim({ onClose, label = 'Diálogo', children }) {
+  const trapRef = useFocusTrap(true)
   useEffect(() => {
     function onKey(e) { if (e.key === 'Escape') onClose && onClose() }
     document.addEventListener('keydown', onKey)
     return () => document.removeEventListener('keydown', onKey)
   }, [onClose])
   return (
-    <div className="sun-scrim" role="dialog" aria-modal="true" aria-label={label}>
+    <div ref={trapRef} className="sun-scrim" role="dialog" aria-modal="true" aria-label={label}>
       <button type="button" className="sun-scrim__backdrop" aria-label="Cerrar" onClick={onClose} />
       {children}
     </div>
@@ -187,6 +191,11 @@ export function ExportMenu({
 }) {
   const [open, setOpen] = useState(false)
   const ref = useRef(null)
+  const triggerRef = useRef(null)
+  const itemsRef = useRef([])
+  const menuId = useId()
+  const valid = formats.filter((f) => FORMATS[f])
+
   useEffect(() => {
     function onDoc(e) {
       if (ref.current && !ref.current.contains(e.target)) setOpen(false)
@@ -194,27 +203,84 @@ export function ExportMenu({
     document.addEventListener('mousedown', onDoc)
     return () => document.removeEventListener('mousedown', onDoc)
   }, [])
-  function pick(f) {
+
+  useEffect(() => {
+    if (open) itemsRef.current[0]?.focus()
+  }, [open])
+
+  function close(returnFocus = true) {
     setOpen(false)
+    if (returnFocus) triggerRef.current?.focus()
+  }
+
+  function pick(f) {
+    close()
     onExport && onExport(f)
   }
+
+  function onMenuKey(e) {
+    const items = itemsRef.current.filter(Boolean)
+    const idx = items.indexOf(document.activeElement)
+    if (e.key === 'Escape') {
+      e.preventDefault()
+      close()
+    } else if (e.key === 'ArrowDown') {
+      e.preventDefault()
+      items[(idx + 1) % items.length]?.focus()
+    } else if (e.key === 'ArrowUp') {
+      e.preventDefault()
+      items[(idx - 1 + items.length) % items.length]?.focus()
+    } else if (e.key === 'Home') {
+      e.preventDefault()
+      items[0]?.focus()
+    } else if (e.key === 'End') {
+      e.preventDefault()
+      items[items.length - 1]?.focus()
+    } else if (e.key === 'Tab') {
+      close(false)
+    }
+  }
+
+  function onTriggerKey(e) {
+    if (!open && (e.key === 'ArrowDown' || e.key === 'Enter' || e.key === ' ')) {
+      e.preventDefault()
+      setOpen(true)
+    }
+  }
+
+  const triggerProps = {
+    ref: triggerRef,
+    'aria-haspopup': 'menu',
+    'aria-expanded': open,
+    'aria-controls': open ? menuId : undefined,
+    onClick: () => setOpen((o) => !o),
+    onKeyDown: onTriggerKey,
+  }
+
   return (
     <div className="sun-menu-wrap" ref={ref}>
       {iconOnly ? (
-        <IconBtn icon="download" label={label} bordered size={size} aria-haspopup="menu" aria-expanded={open} onClick={() => setOpen((o) => !o)} />
+        <IconBtn icon="download" label={label} bordered size={size} {...triggerProps} />
       ) : (
-        <Btn variant={variant} size={size} icon="download" iconRight="chevron-down" aria-haspopup="menu" aria-expanded={open} onClick={() => setOpen((o) => !o)}>{label}</Btn>
+        <Btn variant={variant} size={size} icon="download" iconRight="chevron-down" {...triggerProps}>{label}</Btn>
       )}
       {open && (
-        <div className={`sun-menu sun-menu--${align}`} role="menu">
+        <div id={menuId} className={`sun-menu sun-menu--${align}`} role="menu" aria-label={label} tabIndex={-1} onKeyDown={onMenuKey}>
           <div className="sun-menu__label">Exportar como</div>
-          {formats.map((f) => {
+          {valid.map((f, i) => {
             const m = FORMATS[f]
-            return m ? (
-              <button key={f} className="sun-menu__item" role="menuitem" onClick={() => pick(f)}>
+            return (
+              <button
+                key={f}
+                ref={(el) => { itemsRef.current[i] = el }}
+                className="sun-menu__item"
+                role="menuitem"
+                tabIndex={-1}
+                onClick={() => pick(f)}
+              >
                 <Icon name={m.icon} size={16} /><span>{m.label}</span>{m.kbd && <span className="kbd">{m.kbd}</span>}
               </button>
-            ) : null
+            )
           })}
         </div>
       )}
