@@ -60,3 +60,10 @@ class Config:
     SESSION_COOKIE_SAMESITE = 'Lax'
     SESSION_COOKIE_SECURE = _IS_PRODUCTION
     PERMANENT_SESSION_LIFETIME = timedelta(days=14)
+
+    MFA_ENC_KEY = os.environ.get('MFA_ENC_KEY') or None
+
+    SERVER_NAME = os.environ.get('SERVER_NAME') or None
+    SUPERADMIN_SUBDOMAIN = os.environ.get('SUPERADMIN_SUBDOMAIN') or None
+    SUPERADMIN_IP_ALLOWLIST = os.environ.get('SUPERADMIN_IP_ALLOWLIST', '')
+    SUPERADMIN_TRUST_PROXY = os.environ.get('SUPERADMIN_TRUST_PROXY', '').lower() in ('1', 'true', 'yes')

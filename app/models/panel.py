@@ -39,7 +39,9 @@ class Panel(BaseModel):
     height = db.Column(db.Integer, nullable=False)  # Altura en mm
     width = db.Column(db.Integer, nullable=False)  # Ancho en mm
     datasheet = db.Column(db.String(200))  # Ruta al datasheet PDF
-    
+    needs_review = db.Column(db.Boolean, nullable=False, default=False)
+    review_notes = db.Column(db.String(500))
+
     def to_dict(self):
         return {
             'id': self.id,
@@ -57,7 +59,9 @@ class Panel(BaseModel):
             't_noct': self.t_noct,
             'height': self.height,
             'width': self.width,
-            'datasheet': self.datasheet
+            'datasheet': self.datasheet,
+            'needs_review': self.needs_review,
+            'review_notes': self.review_notes,
         }
     
     def __repr__(self):
