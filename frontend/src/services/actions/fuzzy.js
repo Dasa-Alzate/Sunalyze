@@ -1,4 +1,4 @@
-function scoreText(query, text) {
+export function scoreText(query, text) {
   const q = query.toLowerCase()
   const t = text.toLowerCase()
   let score = 0
