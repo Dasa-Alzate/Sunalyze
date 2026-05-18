@@ -1,12 +1,17 @@
 """Usuario autenticable por correo/contraseña."""
 
 import json
+from datetime import datetime, timedelta
 
 from werkzeug.security import generate_password_hash, check_password_hash
 
 from app.extensions import db
 from app import mfa
 from .database import BaseModel
+
+FAILED_LOGIN_THRESHOLD = 5
+LOGIN_ATTEMPT_WINDOW = timedelta(minutes=15)
+LOCKOUT_DURATION = timedelta(minutes=15)
 
 
 class User(BaseModel):
@@ -21,6 +26,10 @@ class User(BaseModel):
     mfa_secret = db.Column(db.Text)
     mfa_enabled = db.Column(db.Boolean, nullable=False, default=False)
     mfa_recovery_codes = db.Column(db.Text)
+    failed_login_count = db.Column(db.Integer, nullable=False, default=0)
+    last_failed_login_at = db.Column(db.DateTime, nullable=True)
+    lockout_until = db.Column(db.DateTime, nullable=True)
+    last_login_at = db.Column(db.DateTime, nullable=True)
 
     memberships = db.relationship('Membership', back_populates='user', cascade='all, delete-orphan')
 
@@ -61,6 +70,36 @@ class User(BaseModel):
     def verify_totp(self, code):
         secret = mfa.decrypt_secret(self.mfa_secret)
         return bool(secret) and mfa.verify_totp(secret, code)
+
+    def is_locked_out(self, now=None):
+        """True si la cuenta esta bloqueada por intentos fallidos."""
+        now = now or datetime.utcnow()
+        return self.lockout_until is not None and self.lockout_until > now
+
+    def register_failed_login(self, now=None):
+        """Suma un intento fallido (soft lockout por ventana) y bloquea al llegar al umbral.
+
+        Si el ultimo fallo es mas antiguo que la ventana, el contador se
+        reinicia antes de sumar (mitiga el lockout como vector de DoS).
+        """
+        now = now or datetime.utcnow()
+        if (
+            self.last_failed_login_at is None
+            or now - self.last_failed_login_at > LOGIN_ATTEMPT_WINDOW
+        ):
+            self.failed_login_count = 0
+        self.failed_login_count += 1
+        self.last_failed_login_at = now
+        if self.failed_login_count >= FAILED_LOGIN_THRESHOLD:
+            self.lockout_until = now + LOCKOUT_DURATION
+
+    def register_successful_login(self, now=None):
+        """Resetea el estado de bloqueo y marca el ultimo acceso."""
+        now = now or datetime.utcnow()
+        self.failed_login_count = 0
+        self.last_failed_login_at = None
+        self.lockout_until = None
+        self.last_login_at = now
 
     @property
     def full_name(self):

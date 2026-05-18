@@ -27,6 +27,7 @@ class Permission:
     MEMBER_INVITE = 'member:invite'
     MEMBER_MANAGE = 'member:manage'
     ORG_MANAGE = 'org:manage'
+    AUDIT_VIEW = 'audit:view'
 
 
 ALL_PERMISSIONS = frozenset(
@@ -44,6 +45,7 @@ _ADMIN = _MEMBER | {
     Permission.PROJECT_DELETE,
     Permission.CATALOG_MANAGE,
     Permission.MEMBER_INVITE, Permission.MEMBER_MANAGE,
+    Permission.AUDIT_VIEW,
 }
 
 ROLE_PERMISSIONS = {
