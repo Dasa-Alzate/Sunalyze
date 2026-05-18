@@ -1,7 +1,7 @@
-"""Comandos de línea del portal de superadmin: bootstrap de acceso.
+"""Comandos de línea: portal de superadmin y scrapers de catálogos.
 
-`flask superadmin grant <email>` da acceso (alta inicial del primer superadmin,
-que no puede crearse desde la web). `revoke` y `list` complementan.
+- `flask superadmin grant|revoke|mfa-reset|list <email>` — bootstrap del portal.
+- `flask scrape list` · `flask scrape run <brand> [--dry-run]` — scrapers de marcas.
 """
 
 import click
@@ -9,8 +9,11 @@ from flask.cli import AppGroup
 
 from app.extensions import db
 from app.models.user import User
+from app.scrapers.registry import available
+from app.scrapers.service import ScraperService
 
 superadmin_cli = AppGroup('superadmin', help='Gestión del portal de superadmin.')
+scrape_cli = AppGroup('scrape', help='Scrapers de catálogos de marcas.')
 
 
 def _find(email):
@@ -61,5 +64,37 @@ def list_superadmins():
         click.echo(f'  {u.email}')
 
 
+@scrape_cli.command('list')
+def list_brands():
+    click.echo('Marcas con scraper: ' + (', '.join(available()) or '(ninguna)'))
+
+
+@scrape_cli.command('run')
+@click.argument('brand')
+@click.option('--dry-run', is_flag=True, help='No escribe; reporta qué haría.')
+def run(brand, dry_run):
+    try:
+        report = ScraperService.run(brand, dry_run=dry_run)
+    except ValueError as exc:
+        raise click.ClickException(str(exc))
+    click.echo(f"[{report['brand']}] dry_run={report['dry_run']}  "
+               f"creados={len(report['created'])} actualizados={len(report['updated'])} "
+               f"a_revisar={len(report['review'])} bloqueados={len(report['blocked'])} "
+               f"omitidos={len(report['skipped'])} errores={len(report['errors'])}")
+    for d in report['created'] + report['updated']:
+        falta = ', '.join(d.get('parcial_sin') or []) or 'completo'
+        marca = ' ⚑ revisión' if d.get('needs_review') else ''
+        click.echo(f"   ✓ {d.get('nombre')}  [{d['id']}]  (sin: {falta}){marca}")
+    for r in report['review']:
+        click.echo(f"   ⚑ {r['id']}: {r['reason']}")
+    for b in report['blocked']:
+        click.echo(f"   ⛔ {b['id']}: {b['reason']}")
+    for s in report['skipped']:
+        click.echo(f"   ⤫ {s['id']}: {s['reason']}")
+    for e in report['errors']:
+        click.echo(f"   ! {e['ref']}: {e['error']}")
+
+
 def register_cli(app):
     app.cli.add_command(superadmin_cli)
+    app.cli.add_command(scrape_cli)
