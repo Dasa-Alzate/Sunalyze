@@ -27,6 +27,7 @@ class Permission:
     CATALOG_MANAGE = 'catalog:manage'
     MEMBER_INVITE = 'member:invite'
     MEMBER_MANAGE = 'member:manage'
+    MODULE_MANAGE = 'module:manage'
     ORG_MANAGE = 'org:manage'
     AUDIT_VIEW = 'audit:view'
     ACCOUNT_EXPORT = 'account:export'
@@ -51,6 +52,7 @@ _ADMIN = _MEMBER | {
     Permission.CATALOG_MANAGE,
     Permission.MEMBER_INVITE, Permission.MEMBER_MANAGE,
     Permission.AUDIT_VIEW,
+    Permission.MODULE_MANAGE,
 }
 
 ROLE_PERMISSIONS = {
@@ -77,6 +79,24 @@ def current_permissions():
 
 def has_permission(permission):
     return permission in current_permissions()
+
+
+def require_flag(key):
+    """Gate de feature flag: 403 si el flag no está activo en el contexto actual.
+
+    Ortogonal al permiso (RBAC) y al rol de plataforma: responde "¿está la
+    funcionalidad habilitada aquí?", no "¿te dejan hacerlo?".
+    """
+    def decorator(fn):
+        @wraps(fn)
+        def wrapper(*args, **kwargs):
+            from app.services.flag_service import FlagService
+            user = current_user()
+            if FlagService.is_enabled(key, current_org_id(), user.id if user else None):
+                return fn(*args, **kwargs)
+            raise Forbidden('Esta función no está habilitada en tu espacio.')
+        return wrapper
+    return decorator
 
 
 def require_permission(*permissions):

@@ -2,6 +2,7 @@
 
 - `flask superadmin grant|revoke|mfa-reset|list <email>` — bootstrap del portal.
 - `flask scrape list` · `flask scrape run <brand> [--dry-run]` — scrapers de marcas.
+- `flask flags seed` — asegura los feature flags por defecto.
 """
 
 import click
@@ -14,6 +15,7 @@ from app.scrapers.service import ScraperService
 
 superadmin_cli = AppGroup('superadmin', help='Gestión del portal de superadmin.')
 scrape_cli = AppGroup('scrape', help='Scrapers de catálogos de marcas.')
+flags_cli = AppGroup('flags', help='Gestión de feature flags.')
 
 
 def _find(email):
@@ -95,6 +97,14 @@ def run(brand, dry_run):
         click.echo(f"   ! {e['ref']}: {e['error']}")
 
 
+@flags_cli.command('seed')
+def seed_flags():
+    from app.services.flag_service import FlagService
+    created = FlagService.ensure_defaults()
+    click.echo(f'Flags por defecto asegurados ({created} creados).')
+
+
 def register_cli(app):
     app.cli.add_command(superadmin_cli)
     app.cli.add_command(scrape_cli)
+    app.cli.add_command(flags_cli)

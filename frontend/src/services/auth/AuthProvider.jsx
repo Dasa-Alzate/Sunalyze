@@ -15,6 +15,7 @@ export function AuthProvider({ children }) {
       user: data?.user || null,
       role: data?.role || null,
       permissions: data?.permissions || [],
+      flags: data?.flags || {},
     })
   }, [])
 
@@ -53,19 +54,25 @@ export function AuthProvider({ children }) {
 
   const can = useCallback((perm) => permissions.includes(perm), [permissions])
 
+  const flags = session?.flags || {}
+  const flag = useCallback((key) => !!flags[key], [flags])
+
   const value = useMemo(() => ({
     user,
     role: session?.role || null,
     permissions,
+    flags,
     loading: session === undefined,
     isAuthenticated: !!user,
+    isPlatformAdmin: !!user?.is_superadmin,
     org: user?.organizations?.[0] || null,
     can,
+    flag,
     login,
     register,
     logout,
     refresh,
-  }), [user, session, permissions, can, login, register, logout, refresh])
+  }), [user, session, permissions, flags, can, flag, login, register, logout, refresh])
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>
 }
