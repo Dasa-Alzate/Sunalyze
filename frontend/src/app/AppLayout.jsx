@@ -1,7 +1,9 @@
-import { NavLink, Outlet } from 'react-router-dom'
+import { useEffect, useRef, useState } from 'react'
+import { NavLink, Outlet, useLocation } from 'react-router-dom'
 import { Icon, IconBtn } from '@/shared/ui'
 import { TransitionLink, useTransition } from '@/services/transition'
 import { useAuth } from '@/services/auth'
+import { useCommands, isMac, formatShortcut } from '@/services/actions'
 import { toast } from '@/services/toast'
 
 const NAV = [
@@ -21,6 +23,7 @@ function initials(name) {
 function Sidebar() {
   const { user, org, logout } = useAuth()
   const { navigate } = useTransition()
+  const { openPalette } = useCommands()
   const items = NAV.filter((n) => !n.business || org?.type !== 'PERSONAL')
 
   async function onLogout() {
@@ -49,6 +52,10 @@ function Sidebar() {
         ))}
       </nav>
       <div className="sun-sidebar__foot">
+        <button type="button" className="sun-nav-item" onClick={openPalette}>
+          <Icon name="command" size={18} /><span>Comandos</span>
+          <span className="kbd" style={{ marginLeft: 'auto' }}>{formatShortcut({ mod: true, code: 'KeyK' }, isMac())}</span>
+        </button>
         <button className="sun-nav-item"><Icon name="settings" size={18} /><span>Ajustes</span></button>
         <div className="sun-userchip">
           <span className="sun-avatar">{initials(user?.full_name)}</span>
@@ -63,13 +70,38 @@ function Sidebar() {
   )
 }
 
+function routeLabel(pathname) {
+  const match = [...NAV].reverse().find((n) => (n.end ? pathname === n.to : pathname.startsWith(n.to)))
+  return match?.label || 'Sunalyze'
+}
+
+function useRouteFocus(mainRef) {
+  const location = useLocation()
+  const [announcement, setAnnouncement] = useState('')
+  const first = useRef(true)
+  useEffect(() => {
+    if (first.current) {
+      first.current = false
+      return
+    }
+    const label = routeLabel(location.pathname)
+    setAnnouncement(`${label}, página cargada`)
+    if (mainRef.current) mainRef.current.focus({ preventScroll: true })
+  }, [location.pathname, mainRef])
+  return announcement
+}
+
 export function AppLayout() {
+  const mainRef = useRef(null)
+  const announcement = useRouteFocus(mainRef)
   return (
     <div className="sun-app">
+      <a className="sun-skip-link" href="#main">Saltar al contenido</a>
       <Sidebar />
-      <main className="sun-main">
+      <main id="main" ref={mainRef} tabIndex={-1} className="sun-main">
         <Outlet />
       </main>
+      <div className="sr-only" role="status" aria-live="polite" aria-atomic="true">{announcement}</div>
     </div>
   )
 }

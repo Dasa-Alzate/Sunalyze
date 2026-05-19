@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useId } from 'react'
 import { useSearchParams } from 'react-router-dom'
 import { Btn, Icon, Field, Spinner } from '@/shared/ui'
 import { useTransition } from '@/services/transition'
@@ -8,14 +8,18 @@ import { api } from '@/api/client'
 
 const PATHS = { landing: '/', login: '/login', signup: '/signup', forgot: '/recuperar', app: '/app', reset: '/reset-password' }
 
+function pathOf(key) {
+  return PATHS[key] || key
+}
+
 function useGo() {
   const { navigate } = useTransition()
-  return (key) => navigate(PATHS[key] || key)
+  return (key) => navigate(pathOf(key))
 }
 
 function TopBrand({ go }) {
   return (
-    <a className="auth__topbrand" href="#" onClick={(e) => { e.preventDefault(); go('landing') }}>
+    <a className="auth__topbrand" href={pathOf('landing')} onClick={(e) => { e.preventDefault(); go('landing') }}>
       <span className="mark"><Icon name="sun" size={16} strokeWidth={2.4} /></span>Sunalyze
     </a>
   )
@@ -34,16 +38,19 @@ function Shell({ go, children }) {
 
 function PasswordField({ label = 'Contraseña', hint, autoComplete = 'current-password', value, onChange }) {
   const [show, setShow] = useState(false)
+  const fieldId = useId()
+  const hintId = `${fieldId}-hint`
   return (
     <div className="sun-field">
-      <label className="sun-field__label">{label}</label>
+      <label className="sun-field__label" htmlFor={fieldId}>{label}</label>
       <div className="auth-pw">
-        <input className="sun-input" type={show ? 'text' : 'password'} autoComplete={autoComplete}
-          placeholder="••••••••" style={{ paddingRight: 38 }} value={value} onChange={onChange} />
-        <button type="button" className="sun-iconbtn sun-iconbtn--sm auth-reveal" aria-label={show ? 'Ocultar' : 'Mostrar'}
+        <input id={fieldId} className="sun-input" type={show ? 'text' : 'password'} autoComplete={autoComplete}
+          placeholder="••••••••" style={{ paddingRight: 38 }} value={value} onChange={onChange}
+          aria-describedby={hint ? hintId : undefined} />
+        <button type="button" className="sun-iconbtn sun-iconbtn--sm auth-reveal" aria-label={show ? 'Ocultar contraseña' : 'Mostrar contraseña'}
           onClick={() => setShow((s) => !s)}><Icon name={show ? 'eye-off' : 'eye'} size={16} /></button>
       </div>
-      {hint && <span className="sun-field__hint">{hint}</span>}
+      {hint && <span id={hintId} className="sun-field__hint">{hint}</span>}
     </div>
   )
 }
@@ -102,12 +109,12 @@ export function Login() {
             <PasswordField value={password} onChange={(e) => setPassword(e.target.value)} />
             <div className="auth-aux">
               <label className="sun-check"><input type="checkbox" checked={remember} onChange={(e) => setRemember(e.target.checked)} /><span className="sun-check__box"><Icon name="check" size={13} /></span><span>Mantener sesión</span></label>
-              <a href="#" onClick={(e) => { e.preventDefault(); go('forgot') }}>¿Olvidaste tu contraseña?</a>
+              <a href={pathOf('forgot')} onClick={(e) => { e.preventDefault(); go('forgot') }}>¿Olvidaste tu contraseña?</a>
             </div>
             <Btn variant="primary" size="lg" block type="submit" iconRight="arrow-right" disabled={busy} data-busy={busy}>{busy ? 'Entrando…' : 'Iniciar sesión'}</Btn>
             <SSO />
           </form>
-          <div className="auth-foot">¿No tienes cuenta? <a href="#" onClick={(e) => { e.preventDefault(); go('signup') }}>Crear cuenta gratis</a></div>
+          <div className="auth-foot">¿No tienes cuenta? <a href={pathOf('signup')} onClick={(e) => { e.preventDefault(); go('signup') }}>Crear cuenta gratis</a></div>
         </div>
         <p className="auth-legal">Al continuar aceptas las <a href="#">Condiciones</a> y la <a href="#">Política de privacidad</a> de Sunalyze.</p>
       </div>
@@ -178,7 +185,7 @@ export function Signup() {
             <Btn variant="primary" size="lg" block type="submit" iconRight="arrow-right" disabled={busy} data-busy={busy}>{busy ? 'Creando…' : 'Crear cuenta'}</Btn>
             <SSO />
           </form>
-          <div className="auth-foot">¿Ya tienes cuenta? <a href="#" onClick={(e) => { e.preventDefault(); go('login') }}>Iniciar sesión</a></div>
+          <div className="auth-foot">¿Ya tienes cuenta? <a href={pathOf('login')} onClick={(e) => { e.preventDefault(); go('login') }}>Iniciar sesión</a></div>
         </div>
       </div>
     </Shell>
@@ -220,7 +227,7 @@ export function ForgotPassword() {
                 <Field label="Correo electrónico" icon="mail" type="email" autoComplete="username" placeholder="tu@empresa.es" value={email} onChange={(e) => setEmail(e.target.value)} />
                 <Btn variant="primary" size="lg" block type="submit" iconRight="send" disabled={busy} data-busy={busy}>{busy ? 'Enviando…' : 'Enviar enlace'}</Btn>
               </form>
-              <div className="auth-foot"><a href="#" onClick={(e) => { e.preventDefault(); go('login') }}><Icon name="arrow-left" size={14} style={{ marginRight: 5, verticalAlign: '-2px' }} />Volver a iniciar sesión</a></div>
+              <div className="auth-foot"><a href={pathOf('login')} onClick={(e) => { e.preventDefault(); go('login') }}><Icon name="arrow-left" size={14} style={{ marginRight: 5, verticalAlign: '-2px' }} />Volver a iniciar sesión</a></div>
             </>
           ) : (
             <div className="auth-success">
@@ -278,7 +285,7 @@ export function ResetPassword() {
               <Btn variant="primary" size="lg" block type="submit" iconRight="check" disabled={busy} data-busy={busy}>{busy ? 'Guardando…' : 'Guardar contraseña'}</Btn>
             </form>
           )}
-          <div className="auth-foot"><a href="#" onClick={(e) => { e.preventDefault(); go('login') }}>Volver a iniciar sesión</a></div>
+          <div className="auth-foot"><a href={pathOf('login')} onClick={(e) => { e.preventDefault(); go('login') }}>Volver a iniciar sesión</a></div>
         </div>
       </div>
     </Shell>

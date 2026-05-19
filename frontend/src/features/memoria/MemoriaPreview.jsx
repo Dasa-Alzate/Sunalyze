@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from 'react'
+import { useEffect, useState } from 'react'
 import { useParams, useNavigate } from 'react-router-dom'
 import { Topbar } from '@/shared/ui'
 import { Btn, IconBtn, Icon, Dot, Field, SelectField, Spinner, ErrorState } from '@/shared/ui'
@@ -198,12 +198,12 @@ export default function MemoriaPreview() {
                 const note = missingNote(s)
                 return (
                   <div key={s.id} className={`sun-msection${open === s.id ? ' sun-msection--active' : ''}`}>
-                    <div className="sun-msection__head" onClick={() => setOpen(open === s.id ? null : s.id)}>
+                    <button type="button" className="sun-msection__head" aria-expanded={open === s.id} onClick={() => setOpen(open === s.id ? null : s.id)}>
                       <Dot state={st} />
                       <span className="sun-msection__title">{s.title}</span>
                       {note && <span className="sun-badge sun-badge--warning"><Icon name="alert-triangle" size={12} />{note}</span>}
                       <Icon name={open === s.id ? 'chevron-down' : 'chevron-right'} size={16} style={{ color: 'var(--text-subtle)' }} />
-                    </div>
+                    </button>
                     {open === s.id && (
                       <div className="sun-msection__body">
                         <div className="sun-speclist" style={{ marginTop: 'var(--space-4)' }}>
