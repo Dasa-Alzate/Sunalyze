@@ -32,6 +32,8 @@ class Permission:
     AUDIT_VIEW = 'audit:view'
     ACCOUNT_EXPORT = 'account:export'
     ACCOUNT_DELETE = 'account:delete'
+    TEMPLATE_VIEW = 'template:view'
+    TEMPLATE_MANAGE = 'template:manage'
 
 
 ALL_PERMISSIONS = frozenset(
@@ -44,6 +46,7 @@ _MEMBER = {
     Permission.EQUIPMENT_VIEW, Permission.EQUIPMENT_EDIT,
     Permission.CATALOG_SUBSCRIBE,
     Permission.ACCOUNT_EXPORT, Permission.ACCOUNT_DELETE,
+    Permission.TEMPLATE_VIEW,
 }
 
 _ADMIN = _MEMBER | {
@@ -53,6 +56,7 @@ _ADMIN = _MEMBER | {
     Permission.MEMBER_INVITE, Permission.MEMBER_MANAGE,
     Permission.AUDIT_VIEW,
     Permission.MODULE_MANAGE,
+    Permission.TEMPLATE_MANAGE,
 }
 
 ROLE_PERMISSIONS = {
