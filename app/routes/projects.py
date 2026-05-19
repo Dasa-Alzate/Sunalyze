@@ -14,7 +14,7 @@ logger = logging.getLogger(__name__)
 projects_bp = Blueprint('projects', __name__)
 
 _EDITABLE_FIELDS = [
-    'cliente', 'direccion', 'localidad', 'estado',
+    'cliente', 'direccion', 'localidad',
     'latitud', 'longitud', 'necesidad', 'autoconsumo',
     'coplanar', 'inclinacion', 'azimut',
     'panel_id', 'inverter_id',
