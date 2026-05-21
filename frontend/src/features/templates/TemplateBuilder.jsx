@@ -1,10 +1,13 @@
-import { useEffect, useRef, useState } from 'react'
+import { useEffect, useMemo, useRef, useState } from 'react'
 import { useParams, useNavigate } from 'react-router-dom'
 import { Topbar, Btn, IconBtn, Icon, Field, Spinner, ErrorState, Badge } from '@/shared/ui'
 import { api } from '@/api/client'
 import { toast } from '@/services/toast'
+import { useAuth } from '@/services/auth/AuthProvider'
 import VariablePicker from './VariablePicker'
 import LivePreview from './LivePreview'
+import ProjectDocuments from './ProjectDocuments'
+import { validateBody } from './expressionValidator'
 import { kindLabel, STATUS_TONES } from './constants'
 
 let localSeq = 0
@@ -16,6 +19,8 @@ function newSection() {
 export default function TemplateBuilder() {
   const { id } = useParams()
   const nav = useNavigate()
+  const auth = useAuth()
+  const can = auth?.can || (() => false)
   const [template, setTemplate] = useState(null)
   const [sections, setSections] = useState([])
   const [loading, setLoading] = useState(true)
@@ -41,6 +46,13 @@ export default function TemplateBuilder() {
   }, [id])
 
   const readOnly = !!template && (template.is_system || template.org_id == null)
+  const canManage = can('template:manage')
+
+  const errorsBySection = useMemo(() => {
+    const map = {}
+    sections.forEach((s) => { map[s.id] = validateBody(s.body || '') })
+    return map
+  }, [sections])
 
   function touch() { setSignature((n) => n + 1) }
 
@@ -164,8 +176,28 @@ export default function TemplateBuilder() {
                           value={s.body || ''}
                           onChange={(e) => updateSection(s.id, { body: e.target.value })}
                           aria-label={`Cuerpo de la sección ${i + 1}`}
+                          aria-invalid={(errorsBySection[s.id] || []).length > 0 ? 'true' : undefined}
+                          aria-describedby={(errorsBySection[s.id] || []).length > 0 ? `sec-errors-${s.id}` : undefined}
                         />
                       </Field>
+                      {(errorsBySection[s.id] || []).length > 0 && (
+                        <ul
+                          id={`sec-errors-${s.id}`}
+                          role="alert"
+                          className="sun-speclist"
+                          style={{ listStyle: 'none', margin: 0, padding: 0, display: 'flex', flexDirection: 'column', gap: 'var(--space-1)' }}
+                        >
+                          {(errorsBySection[s.id] || []).map((err, ei) => (
+                            <li key={ei} className="sun-field__error" style={{ display: 'flex', gap: 'var(--space-1)', alignItems: 'flex-start' }}>
+                              <Icon name="alert-circle" size={13} />
+                              <span>
+                                {err.message}
+                                {err.expr ? <> <code style={{ fontFamily: 'var(--font-mono)' }}>{`{{ ${err.expr} }}`}</code> (posición {err.start})</> : null}
+                              </span>
+                            </li>
+                          ))}
+                        </ul>
+                      )}
                       {!readOnly && (
                         <Btn variant="secondary" size="sm" icon="braces" onClick={() => setPicker(s.id)}>
                           Insertar variable
@@ -184,7 +216,10 @@ export default function TemplateBuilder() {
             )}
           </div>
 
-          <LivePreview templateId={Number(id)} contentSignature={signature} />
+          <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--space-5)' }}>
+            <LivePreview templateId={Number(id)} contentSignature={signature} />
+            <ProjectDocuments templateId={Number(id)} canManage={canManage && !readOnly} />
+          </div>
         </div>
       </div>
 

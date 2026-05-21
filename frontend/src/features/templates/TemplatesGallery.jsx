@@ -5,6 +5,7 @@ import { api } from '@/api/client'
 import { toast } from '@/services/toast'
 import { kindLabel, STATUS_TONES } from './constants'
 import CreateTemplateDialog from './CreateTemplateDialog'
+import AssignTemplateDialog from './AssignTemplateDialog'
 
 const TABS = [
   { key: 'bank', label: 'Banco', icon: 'library' },
@@ -12,7 +13,7 @@ const TABS = [
   { key: 'library', label: 'Biblioteca', icon: 'bookmark' },
 ]
 
-function TemplateCard({ template, installation, onOpen, onInstall, onUninstall, onFavorite }) {
+function TemplateCard({ template, installation, onOpen, onInstall, onUninstall, onFavorite, onOrganize }) {
   const statusTone = STATUS_TONES[template.status] || STATUS_TONES.draft
   return (
     <div className="sun-card module-card">
@@ -41,7 +42,10 @@ function TemplateCard({ template, installation, onOpen, onInstall, onUninstall, 
             <Btn variant="secondary" size="sm" icon="pencil" onClick={() => onOpen(template)}>Editar</Btn>
           )}
           {installation ? (
-            <Btn variant="secondary" size="sm" icon="x" onClick={() => onUninstall(installation)}>Quitar de la selección</Btn>
+            <>
+              <Btn variant="secondary" size="sm" icon="tag" onClick={() => onOrganize(installation)}>Organizar</Btn>
+              <Btn variant="secondary" size="sm" icon="x" onClick={() => onUninstall(installation)}>Quitar de la selección</Btn>
+            </>
           ) : (
             <Btn variant="primary" size="sm" icon="plus" onClick={() => onInstall(template)}>Instalar</Btn>
           )}
@@ -64,6 +68,7 @@ export default function TemplatesGallery() {
   const [labelFilter, setLabelFilter] = useState('')
   const [favoritesOnly, setFavoritesOnly] = useState(false)
   const [creating, setCreating] = useState(false)
+  const [organizing, setOrganizing] = useState(null)
 
   function loadLibrary() {
     return api.templates.library({ favorite: favoritesOnly || undefined, categoryId: categoryFilter || undefined })
@@ -116,6 +121,19 @@ export default function TemplatesGallery() {
 
   function onCreated(tpl) { setCreating(false); nav(`/app/plantillas/${tpl.id}`) }
 
+  function refreshTaxonomy() {
+    Promise.all([
+      api.templates.categories().then(setCategories),
+      api.templates.labels().then(setLabels),
+    ]).catch((e) => setError(e.message))
+  }
+
+  function onOrganized() {
+    setOrganizing(null)
+    refreshTaxonomy()
+    loadLibrary().catch((e) => setError(e.message))
+  }
+
   const libraryFiltered = useMemo(() => {
     let rows = library || []
     if (labelFilter) rows = rows.filter((i) => (i.labels || []).some((l) => String(l.id) === labelFilter))
@@ -148,6 +166,7 @@ export default function TemplatesGallery() {
               onInstall={install}
               onUninstall={uninstall}
               onFavorite={favorite}
+              onOrganize={setOrganizing}
             />
           )
         })}
@@ -215,6 +234,15 @@ export default function TemplatesGallery() {
         )}
       </div>
       {creating && <CreateTemplateDialog onCreated={onCreated} onClose={() => setCreating(false)} />}
+      {organizing && (
+        <AssignTemplateDialog
+          installation={organizing}
+          categories={categories}
+          labels={labels}
+          onClose={() => setOrganizing(null)}
+          onSaved={onOrganized}
+        />
+      )}
     </>
   )
 }
