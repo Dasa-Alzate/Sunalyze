@@ -6,7 +6,9 @@ biblioteca de una organización son sus `TemplateInstallation` (plantillas selec
 favorito, categoría y etiquetas). Quitar de la selección borra solo la fila de instalación,
 nunca la plantilla system.
 
-`GeneratedDocument` no se modela todavía (nota para futuro; la firma de memoria ya existe).
+`GeneratedDocument` registra cada PDF producido a partir de una plantilla + un proyecto,
+fijando la versión de plantilla usada (`template_version_id`) para trazabilidad y un hash
+SHA-256 de los bytes como prueba de integridad (mismo patrón que `MemoriaSignature`).
 """
 
 import json
@@ -28,6 +30,7 @@ class DocumentKind:
 
 TEMPLATE_SCOPES = ('system', 'org')
 TEMPLATE_STATUSES = ('draft', 'published', 'archived')
+DOCUMENT_STATUSES = ('generated', 'failed')
 
 
 class ReportTemplate(BaseModel):
@@ -240,3 +243,61 @@ class InstallationLabel(BaseModel):
     label_id = db.Column(
         db.Integer, db.ForeignKey('template_labels.id'), nullable=False, index=True
     )
+
+
+class GeneratedDocument(BaseModel):
+    """PDF generado desde una plantilla (versión fijada) y un proyecto.
+
+    Org-scoped. `template_version_id` fija la versión exacta usada para que el documento sea
+    reproducible y trazable aunque la plantilla evolucione. `pdf_path` es la ruta del artefacto
+    (relativa a `instance_path`); `pdf_sha256`/`pdf_size_bytes` son el snapshot de integridad.
+    """
+
+    __tablename__ = 'generated_documents'
+
+    org_id = db.Column(db.Integer, db.ForeignKey('organizations.id'), nullable=False, index=True)
+    project_id = db.Column(
+        db.Integer, db.ForeignKey('projects.id'), nullable=False, index=True
+    )
+    template_id = db.Column(
+        db.Integer, db.ForeignKey('report_templates.id'), nullable=False, index=True
+    )
+    template_version_id = db.Column(
+        db.Integer, db.ForeignKey('template_versions.id'), nullable=False, index=True
+    )
+    kind = db.Column(db.String(40), nullable=False, index=True)
+    pdf_path = db.Column(db.String(500), nullable=False)
+    pdf_sha256 = db.Column(db.String(64), nullable=False)
+    pdf_size_bytes = db.Column(db.Integer, nullable=False, default=0)
+    status = db.Column(db.String(20), nullable=False, default='generated')
+    generated_by = db.Column(db.Integer, db.ForeignKey('users.id'), nullable=True)
+    generated_at = db.Column(db.DateTime, nullable=True)
+
+    project = db.relationship('Project')
+    template = db.relationship('ReportTemplate')
+    template_version = db.relationship('TemplateVersion')
+    generated_by_user = db.relationship('User', foreign_keys=[generated_by])
+
+    def to_dict(self):
+        return {
+            'id': self.id,
+            'org_id': self.org_id,
+            'project_id': self.project_id,
+            'template_id': self.template_id,
+            'template_version_id': self.template_version_id,
+            'template_version': self.template_version.version if self.template_version else None,
+            'template_name': self.template.name if self.template else None,
+            'kind': self.kind,
+            'pdf_sha256': self.pdf_sha256,
+            'pdf_size_bytes': self.pdf_size_bytes,
+            'status': self.status,
+            'generated_by': self.generated_by,
+            'generated_by_name': (
+                self.generated_by_user.full_name if self.generated_by_user else None
+            ),
+            'generated_at': self.generated_at.isoformat() if self.generated_at else None,
+            'created_at': self.created_at.isoformat() if self.created_at else None,
+        }
+
+    def __repr__(self):
+        return f'<GeneratedDocument t{self.template_id}/v{self.template_version_id} p{self.project_id}>'

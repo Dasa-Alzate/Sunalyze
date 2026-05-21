@@ -5,14 +5,16 @@ lectura exige TEMPLATE_VIEW; la escritura, TEMPLATE_MANAGE (owner+admin). El alc
 org_id se aplica en TemplateService (sin IDOR).
 """
 
-from flask import Blueprint, request, jsonify
+from flask import Blueprint, request, jsonify, Response
 
 from app.security import current_org_id, current_user
 from app.authz import require_permission, require_flag, Permission
 from app.services.template_service import TemplateService
+from app.services.document_service import DocumentService
 from app.services.template_engine import variable_catalog
 from app.schemas.templates import (
     TemplateCreateSchema, TemplateUpdateSchema, ContentSchema, PreviewSchema,
+    GenerateSchema,
     CategorySchema, LabelSchema, FavoriteSchema, CategoryAssignSchema, LabelsAssignSchema,
 )
 
@@ -112,6 +114,36 @@ def preview_template(template_id):
     result = TemplateService.preview(
         current_org_id(), template_id, data.project_id, user=current_user())
     return jsonify(result)
+
+
+@templates_bp.route('/api/templates/<int:template_id>/generate', methods=['POST'])
+@require_flag(FLAG)
+@require_permission(Permission.TEMPLATE_MANAGE)
+def generate_document(template_id):
+    data = GenerateSchema(**_body())
+    document = DocumentService.generate(
+        current_org_id(), template_id, data.project_id, user=current_user())
+    return jsonify(document.to_dict()), 201
+
+
+@templates_bp.route('/api/projects/<int:project_id>/documents', methods=['GET'])
+@require_flag(FLAG)
+@require_permission(Permission.TEMPLATE_VIEW)
+def list_project_documents(project_id):
+    return jsonify(DocumentService.list_for_project(current_org_id(), project_id))
+
+
+@templates_bp.route('/api/documents/<int:doc_id>/download', methods=['GET'])
+@require_flag(FLAG)
+@require_permission(Permission.TEMPLATE_VIEW)
+def download_document(doc_id):
+    document, pdf_bytes = DocumentService.read_pdf_bytes(current_org_id(), doc_id)
+    filename = f'documento-{document.id}.pdf'
+    return Response(
+        pdf_bytes,
+        mimetype='application/pdf',
+        headers={'Content-Disposition': f'attachment; filename={filename}'},
+    )
 
 
 @templates_bp.route('/api/templates/library', methods=['GET'])
