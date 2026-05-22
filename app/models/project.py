@@ -37,6 +37,8 @@ class Project(BaseModel):
 
     panel_id = db.Column(db.Integer, db.ForeignKey('panels.id'))
     inverter_id = db.Column(db.Integer, db.ForeignKey('inverters.id'))
+    battery_id = db.Column(db.Integer, db.ForeignKey('batteries.id'))
+    battery_quantity = db.Column(db.Integer, default=1)
 
     referencia_catastral = db.Column(db.String(40))
     cups = db.Column(db.String(40))
@@ -48,6 +50,7 @@ class Project(BaseModel):
 
     panel = db.relationship('Panel', foreign_keys=[panel_id])
     inverter = db.relationship('Inverter', foreign_keys=[inverter_id])
+    battery = db.relationship('Battery', foreign_keys=[battery_id])
 
     signatures = db.relationship(
         'MemoriaSignature',
@@ -115,8 +118,11 @@ class Project(BaseModel):
             'azimut': self.azimut,
             'panel_id': self.panel_id,
             'inverter_id': self.inverter_id,
+            'battery_id': self.battery_id,
+            'battery_quantity': self.battery_quantity,
             'panel_nombre': self.panel.nombre if self.panel else None,
             'inverter_nombre': self.inverter.nombre if self.inverter else None,
+            'battery_nombre': self.battery.nombre if self.battery else None,
             'referencia_catastral': self.referencia_catastral,
             'cups': self.cups,
             'compania': self.compania,

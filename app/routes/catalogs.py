@@ -22,7 +22,7 @@ def create_catalog():
     data = CatalogSchema(**(request.get_json(silent=True) or {}))
     catalog = CatalogService.create_catalog(current_org_id(), data.nombre, data.descripcion)
     return jsonify({**catalog.to_dict(), 'own': True, 'subscribed': False,
-                    'counts': {'panels': 0, 'inverters': 0, 'wires': 0}}), 201
+                    'counts': {'panels': 0, 'inverters': 0, 'batteries': 0, 'wires': 0}}), 201
 
 
 @catalogs_bp.route('/api/catalogs/<int:catalog_id>', methods=['DELETE'])

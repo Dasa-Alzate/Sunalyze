@@ -6,6 +6,7 @@ import os
 from app.extensions import db
 from app.models.panel import Panel
 from app.models.inverter import Inverter
+from app.models.battery import Battery
 from app.models.installation_defaults import InstallationDefaults
 from app.models.catalog import Catalog, CatalogSubscription
 from app.models.organization import Organization
@@ -13,6 +14,37 @@ from app.models.organization import Organization
 logger = logging.getLogger(__name__)
 
 BRAND_DISPLAY = {'JASolar': 'JA Solar'}
+
+SEED_BATTERIES = [
+    {
+        'nombre': 'BYD Battery-Box Premium HVS 5.1',
+        'capacity_kwh': 5.12,
+        'usable_kwh': 5.12,
+        'dod': 100.0,
+        'power_kw': 5.1,
+        'voltage': 204.0,
+        'technology': 'LiFePO4',
+        'round_trip_efficiency': 96.0,
+        'max_cycles': 6000,
+        'height': 649,
+        'width': 585,
+        'depth': 298,
+    },
+    {
+        'nombre': 'Pylontech US5000',
+        'capacity_kwh': 4.8,
+        'usable_kwh': 4.56,
+        'dod': 95.0,
+        'power_kw': 3.55,
+        'voltage': 48.0,
+        'technology': 'LiFePO4',
+        'round_trip_efficiency': 95.0,
+        'max_cycles': 6000,
+        'height': 132,
+        'width': 442,
+        'depth': 410,
+    },
+]
 
 
 def _brand_from_name(nombre):
@@ -84,6 +116,11 @@ def load_initial_data():
             )
             db.session.add(inverter)
 
+        for battery_data in SEED_BATTERIES:
+            catalog = _official_catalog(_brand_from_name(battery_data['nombre']))
+            battery = Battery(catalog_id=catalog.id, **battery_data)
+            db.session.add(battery)
+
         InstallationDefaults.query.delete()
         defaults = InstallationDefaults(
             dc_material='cobre/unipolar',
@@ -120,7 +157,7 @@ def ensure_marketplace():
     oficiales. Seguro de ejecutar tras cada migracion.
     """
     orphans = 0
-    for model in (Panel, Inverter):
+    for model in (Panel, Inverter, Battery):
         for row in model.query.filter(model.catalog_id.is_(None)).all():
             row.catalog_id = _official_catalog(_brand_from_name(row.nombre)).id
             orphans += 1

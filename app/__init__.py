@@ -28,7 +28,7 @@ def create_app():
     logger.info('Sunalyze application started')
 
     from app.models import (  # noqa: F401
-        panel, inverter, wire, installation_defaults, project,
+        panel, inverter, battery, wire, installation_defaults, project,
         user, organization, membership, catalog, invitation, flag,
         support_ticket, superadmin_audit, scrape_run, audit_event,
         memoria_signature, project_event, report_template,

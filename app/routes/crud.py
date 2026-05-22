@@ -11,6 +11,7 @@ from flask import Blueprint, request, jsonify
 from app.extensions import db
 from app.models.panel import Panel
 from app.models.inverter import Inverter
+from app.models.battery import Battery
 from app.models.wire import Wire
 from app.security import current_org_id
 from app.authz import require_permission, Permission
@@ -40,6 +41,17 @@ RESOURCES = {
         'numeric': ['y', 'power_max', 'power', 'vmax', 'I_max_input', 'I_max_output'],
         'integer': [],
         'defaults': {'y': 0},
+    },
+    'batteries': {
+        'model': Battery,
+        'required': ['nombre', 'capacity_kwh', 'power_kw', 'voltage'],
+        'fields': ['nombre', 'capacity_kwh', 'usable_kwh', 'dod', 'power_kw', 'voltage',
+                   'technology', 'round_trip_efficiency', 'max_cycles',
+                   'height', 'width', 'depth', 'datasheet'],
+        'numeric': ['capacity_kwh', 'usable_kwh', 'dod', 'power_kw', 'voltage',
+                    'round_trip_efficiency'],
+        'integer': ['max_cycles', 'height', 'width', 'depth'],
+        'defaults': {},
     },
     'wires': {
         'model': Wire,
@@ -92,7 +104,7 @@ def _editable_row(cfg, item_id, org_id):
     return row
 
 
-@crud_bp.route('/api/<any(panels,inverters,wires):resource>', methods=['GET'])
+@crud_bp.route('/api/<any(panels,inverters,batteries,wires):resource>', methods=['GET'])
 @require_permission(Permission.EQUIPMENT_VIEW)
 def list_equipment(resource):
     cfg = _cfg(resource)
@@ -106,7 +118,7 @@ def list_equipment(resource):
     return jsonify([_serialize(r, own_ids) for r in query.all()])
 
 
-@crud_bp.route('/api/<any(panels,inverters,wires):resource>/<int:item_id>', methods=['GET'])
+@crud_bp.route('/api/<any(panels,inverters,batteries,wires):resource>/<int:item_id>', methods=['GET'])
 @require_permission(Permission.EQUIPMENT_VIEW)
 def get_equipment(resource, item_id):
     cfg = _cfg(resource)
@@ -116,7 +128,7 @@ def get_equipment(resource, item_id):
     return jsonify(_serialize(row, set(CatalogService.own_catalog_ids(org_id))))
 
 
-@crud_bp.route('/api/<any(panels,inverters,wires):resource>', methods=['POST'])
+@crud_bp.route('/api/<any(panels,inverters,batteries,wires):resource>', methods=['POST'])
 @require_permission(Permission.EQUIPMENT_EDIT)
 def create_equipment(resource):
     cfg = _cfg(resource)
@@ -138,7 +150,7 @@ def create_equipment(resource):
     return jsonify(_serialize(row, {catalog.id})), 201
 
 
-@crud_bp.route('/api/<any(panels,inverters,wires):resource>/<int:item_id>', methods=['PUT'])
+@crud_bp.route('/api/<any(panels,inverters,batteries,wires):resource>/<int:item_id>', methods=['PUT'])
 @require_permission(Permission.EQUIPMENT_EDIT)
 def update_equipment(resource, item_id):
     cfg = _cfg(resource)
@@ -156,7 +168,7 @@ def update_equipment(resource, item_id):
     return jsonify(_serialize(row, set(CatalogService.own_catalog_ids(org_id))))
 
 
-@crud_bp.route('/api/<any(panels,inverters,wires):resource>/<int:item_id>', methods=['DELETE'])
+@crud_bp.route('/api/<any(panels,inverters,batteries,wires):resource>/<int:item_id>', methods=['DELETE'])
 @require_permission(Permission.EQUIPMENT_EDIT)
 def delete_equipment(resource, item_id):
     cfg = _cfg(resource)
