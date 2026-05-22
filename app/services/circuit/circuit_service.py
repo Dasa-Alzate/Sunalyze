@@ -77,6 +77,8 @@ class CircuitService:
             cable_section=data.get('ac_cable_section', ''),
             has_zero_injection=bool(data.get('ac_has_zero_injection', False)),
             zero_injection_model=data.get('ac_zero_injection_model', ''),
+            has_battery=bool(data.get('has_battery', False)),
+            battery_model=data.get('battery_model', ''),
         )
 
         return SystemConfig(dc=dc, ac=ac, style=style or DiagramStyle())

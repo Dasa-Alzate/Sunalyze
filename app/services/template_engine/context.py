@@ -10,13 +10,15 @@ from .catalog import whitelist
 
 
 def build_context(project, user=None, org=None):
-    """Arma el dict de entidades (project, panel, inverter, wire, user, org) desde un Project.
+    """Arma el dict de entidades (project, panel, inverter, battery, wire, user, org) desde un Project.
 
-    No hay modelo de batería en el dominio (omitido, anotado). El cableado (`wire`) se toma del
-    primer cable del catálogo del panel si existe; es opcional y None-safe.
+    La batería es opcional: si el proyecto no tiene una, `battery` es None y sus variables
+    resuelven a vacío sin romper. El cableado (`wire`) se toma del primer cable del catálogo del
+    panel si existe; es opcional y None-safe.
     """
     panel = getattr(project, 'panel', None)
     inverter = getattr(project, 'inverter', None)
+    battery = getattr(project, 'battery', None)
     wire = _project_wire(panel)
     if org is None:
         org = _project_org(project)
@@ -24,6 +26,7 @@ def build_context(project, user=None, org=None):
         'project': project,
         'panel': panel,
         'inverter': inverter,
+        'battery': battery,
         'wire': wire,
         'user': user,
         'org': org,

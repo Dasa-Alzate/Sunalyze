@@ -9,7 +9,7 @@ Col 6–9:   AC protection box + House distribution box
 """
 
 from ..components import (
-    CircuitBreaker, Differential, Fuse, Ground, Inverter, Meter, SurgeArrester,
+    Battery, CircuitBreaker, Differential, Fuse, Ground, Inverter, Meter, SurgeArrester,
 )
 from ..config import ACConfig, DCConfig, DiagramStyle
 from ..diagram import Diagram
@@ -34,6 +34,8 @@ class FullSystemDiagram:
         y_ac_bus = y_dc_bus - 0.3
 
         TOTAL_ROWS = max(dc_rows + 1.5, 7.0)
+        if ac.has_battery:
+            TOTAL_ROWS = max(TOTAL_ROWS, max(y_dc_bus + 2.0, dc_rows + 0.5) + 2.5)
 
         d = Diagram(cols=11.0, rows=TOTAL_ROWS, style=self.style)
 
@@ -65,6 +67,14 @@ class FullSystemDiagram:
         d.place_scaled(Inverter(), 4, y_dc_bus - 1.5, 2.0, 3.0,
                        label=ac.inverter_model[:14], label_pos="below")
         d.wire(6.0, y_ac_bus, 6.5, y_ac_bus)
+
+        if ac.has_battery:
+            y_bat = max(y_dc_bus + 2.0, dc_rows + 0.5)
+            d.dot(3.5, y_dc_bus)
+            d.wire(3.5, y_dc_bus, 3.5, y_bat + 0.5)
+            d.wire(3.5, y_bat + 0.5, 4.0, y_bat + 0.5)
+            d.place_scaled(Battery(), 4.0, y_bat, 1.5, 1.5,
+                           label=(ac.battery_model[:14] or "Bateria"), label_pos="below")
 
         # ── AC protection box ─────────────────────────────────────────────
         d.box(6.4, 0.1, 9.9, 3.2, title="CUADRO PROTECCIÓN AC")
