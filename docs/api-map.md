@@ -1,6 +1,6 @@
 # API map
 
-Mapa autogenerado por `flask api-map`. Endpoints `/api`: 80.
+Mapa autogenerado por `flask api-map`. Endpoints `/api`: 86.
 
 No editar a mano: regenerar con `flask api-map`.
 
@@ -69,6 +69,17 @@ No editar a mano: regenerar con `flask api-map`.
 | GET | `/api/emails` | `emails.list_emails` |  |
 | GET | `/api/emails/<template_id>/preview` | `emails.preview_email` |  |
 | POST | `/api/emails/<template_id>/send` | `emails.send_email` |  |
+
+## finance
+
+| Método(s) | Ruta | Endpoint | Resumen |
+| --- | --- | --- | --- |
+| POST | `/api/projects/<int:project_id>/financial/compute` | `finance.compute_financial` |  |
+| GET | `/api/projects/<int:project_id>/financial/scenarios` | `finance.list_scenarios` |  |
+| POST | `/api/projects/<int:project_id>/financial/scenarios` | `finance.create_scenario` |  |
+| DELETE | `/api/projects/<int:project_id>/financial/scenarios/<int:scenario_id>` | `finance.delete_scenario` |  |
+| GET | `/api/projects/<int:project_id>/financial/scenarios/<int:scenario_id>` | `finance.get_scenario` |  |
+| PATCH | `/api/projects/<int:project_id>/financial/scenarios/<int:scenario_id>` | `finance.update_scenario` |  |
 
 ## gdpr
 

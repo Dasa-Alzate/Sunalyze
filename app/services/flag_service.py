@@ -25,6 +25,10 @@ DEFAULT_FLAGS = [
      'descripcion': 'Constructor de plantillas de documentos con variables del proyecto y biblioteca de la organización.',
      'default_enabled': False, 'is_visible': True, 'help_url': '#', 'price': 0,
      'thumbnail_path': '/brand-logos/aiko.svg', 'image_path': '/brand-logos/aiko.svg'},
+    {'key': 'finance', 'nombre': 'Análisis financiero', 'titulo': 'Análisis financiero',
+     'descripcion': 'Estudio económico por proyecto: payback, TIR, VAN, LCOE y CO₂ evitado, con escenarios contado vs financiado.',
+     'default_enabled': False, 'is_visible': True, 'help_url': '#', 'price': 0,
+     'thumbnail_path': '/brand-logos/longi.svg', 'image_path': '/brand-logos/longi.svg'},
 ]
 
 
