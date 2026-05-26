@@ -88,7 +88,7 @@ def delete_template(template_id):
     return jsonify({'ok': True})
 
 
-@templates_bp.route('/api/templates/<int:template_id>/content', methods=['PUT'])
+@templates_bp.route('/api/templates/<int:template_id>/content', methods=['PATCH'])
 @require_flag(FLAG)
 @require_permission(Permission.TEMPLATE_MANAGE)
 def save_content(template_id):

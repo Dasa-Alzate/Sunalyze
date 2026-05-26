@@ -107,7 +107,7 @@ class BatteryCrudTest(_Base):
         self.assertEqual(resp.status_code, 200)
         self.assertEqual(len(resp.get_json()), 1)
 
-        resp = client.put(f'/api/batteries/{bat_id}', json={'power_kw': 6.5})
+        resp = client.patch(f'/api/batteries/{bat_id}', json={'power_kw': 6.5})
         self.assertEqual(resp.status_code, 200)
         self.assertEqual(resp.get_json()['power_kw'], 6.5)
 
@@ -208,7 +208,7 @@ def _fake_pvgis_df():
     return df, meta
 
 
-class BatteryPutPersistTest(_Base):
+class BatteryPatchPersistTest(_Base):
     def _make_battery(self):
         battery = Battery(nombre='Pylontech US5000', capacity_kwh=4.8, power_kw=3.5,
                           voltage=48.0, usable_kwh=4.56, dod=95.0,
@@ -218,7 +218,7 @@ class BatteryPutPersistTest(_Base):
         db.session.flush()
         return battery
 
-    def test_put_assigns_battery_and_persists(self):
+    def test_patch_assigns_battery_and_persists(self):
         client = self._login()
         battery = self._make_battery()
         db.session.commit()
@@ -227,7 +227,7 @@ class BatteryPutPersistTest(_Base):
         self.assertEqual(resp.status_code, 201)
         project_id = resp.get_json()['id']
 
-        resp = client.put(f'/api/projects/{project_id}', json={
+        resp = client.patch(f'/api/projects/{project_id}', json={
             'battery_id': battery.id, 'battery_quantity': 2,
         })
         self.assertEqual(resp.status_code, 200)
@@ -240,11 +240,11 @@ class BatteryPutPersistTest(_Base):
         self.assertEqual(reloaded.battery_id, battery.id)
         self.assertEqual(reloaded.battery_quantity, 2)
 
-    def test_put_invalid_battery_is_404(self):
+    def test_patch_invalid_battery_is_404(self):
         client = self._login()
         resp = client.post('/api/projects', json={'cliente': 'X'})
         project_id = resp.get_json()['id']
-        resp = client.put(f'/api/projects/{project_id}', json={'battery_id': 99999})
+        resp = client.patch(f'/api/projects/{project_id}', json={'battery_id': 99999})
         self.assertEqual(resp.status_code, 404)
 
 

@@ -96,7 +96,7 @@ def create_project():
     return jsonify(project.to_dict()), 201
 
 
-@projects_bp.route('/api/projects/<int:project_id>', methods=['PUT'])
+@projects_bp.route('/api/projects/<int:project_id>', methods=['PATCH'])
 @require_permission(Permission.PROJECT_EDIT)
 def update_project(project_id):
     project = _owned_or_404(project_id)

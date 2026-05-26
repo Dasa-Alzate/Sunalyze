@@ -57,7 +57,6 @@ export class ApiError extends Error {
 
 const get = (p) => request(p)
 const post = (p, body) => request(p, { method: 'POST', body: JSON.stringify(body) })
-const put = (p, body) => request(p, { method: 'PUT', body: JSON.stringify(body) })
 const patch = (p, body) => request(p, { method: 'PATCH', body: JSON.stringify(body) })
 const del = (p, body) => request(p, body !== undefined ? { method: 'DELETE', body: JSON.stringify(body) } : { method: 'DELETE' })
 
@@ -65,32 +64,32 @@ export const api = {
   panels: {
     list: () => get('/api/panels'),
     create: (b) => post('/api/panels', b),
-    update: (id, b) => put(`/api/panels/${id}`, b),
+    update: (id, b) => patch(`/api/panels/${id}`, b),
     remove: (id) => del(`/api/panels/${id}`),
   },
   inverters: {
     list: () => get('/api/inverters'),
     create: (b) => post('/api/inverters', b),
-    update: (id, b) => put(`/api/inverters/${id}`, b),
+    update: (id, b) => patch(`/api/inverters/${id}`, b),
     remove: (id) => del(`/api/inverters/${id}`),
   },
   batteries: {
     list: () => get('/api/batteries'),
     create: (b) => post('/api/batteries', b),
-    update: (id, b) => put(`/api/batteries/${id}`, b),
+    update: (id, b) => patch(`/api/batteries/${id}`, b),
     remove: (id) => del(`/api/batteries/${id}`),
   },
   wires: {
     list: () => get('/api/wires'),
     create: (b) => post('/api/wires', b),
-    update: (id, b) => put(`/api/wires/${id}`, b),
+    update: (id, b) => patch(`/api/wires/${id}`, b),
     remove: (id) => del(`/api/wires/${id}`),
   },
   projects: {
     list: (estado) => get(`/api/projects${estado && estado !== 'todos' ? `?estado=${estado}` : ''}`),
     get: (id) => get(`/api/projects/${id}`),
     create: (b) => post('/api/projects', b),
-    update: (id, b) => put(`/api/projects/${id}`, b),
+    update: (id, b) => patch(`/api/projects/${id}`, b),
     remove: (id) => del(`/api/projects/${id}`),
     duplicate: (id) => post(`/api/projects/${id}/duplicate`),
   },
@@ -137,7 +136,7 @@ export const api = {
     create: (b) => post('/api/templates', b),
     update: (id, b) => patch(`/api/templates/${id}`, b),
     remove: (id) => del(`/api/templates/${id}`),
-    saveContent: (id, b) => put(`/api/templates/${id}/content`, b),
+    saveContent: (id, b) => patch(`/api/templates/${id}/content`, b),
     publish: (id) => post(`/api/templates/${id}/publish`, {}),
     preview: (id, projectId) => post(`/api/templates/${id}/preview`, { project_id: projectId }),
     library: ({ favorite, categoryId } = {}) => {

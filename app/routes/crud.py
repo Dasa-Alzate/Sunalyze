@@ -150,7 +150,7 @@ def create_equipment(resource):
     return jsonify(_serialize(row, {catalog.id})), 201
 
 
-@crud_bp.route('/api/<any(panels,inverters,batteries,wires):resource>/<int:item_id>', methods=['PUT'])
+@crud_bp.route('/api/<any(panels,inverters,batteries,wires):resource>/<int:item_id>', methods=['PATCH'])
 @require_permission(Permission.EQUIPMENT_EDIT)
 def update_equipment(resource, item_id):
     cfg = _cfg(resource)
