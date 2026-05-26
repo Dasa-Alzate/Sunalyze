@@ -74,6 +74,12 @@ export const api = {
     update: (id, b) => put(`/api/inverters/${id}`, b),
     remove: (id) => del(`/api/inverters/${id}`),
   },
+  batteries: {
+    list: () => get('/api/batteries'),
+    create: (b) => post('/api/batteries', b),
+    update: (id, b) => put(`/api/batteries/${id}`, b),
+    remove: (id) => del(`/api/batteries/${id}`),
+  },
   wires: {
     list: () => get('/api/wires'),
     create: (b) => post('/api/wires', b),

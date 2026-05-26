@@ -1,0 +1,14 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<svg width="120" height="120" viewBox="0 0 120 120" version="1.1" xmlns="http://www.w3.org/2000/svg">
+  <g fill="none" stroke="#131316" stroke-width="1.1">
+    <rect x="10" y="20" width="100" height="80" />
+    <path d="M 35 42 H 85" />
+    <path d="M 50 54 H 70" />
+    <path d="M 35 70 H 85" />
+    <path d="M 50 82 H 70" />
+    <path d="M 86 32 H 100" />
+    <path d="M 93 25 V 39" />
+    <path d="M 60 0 V 20" />
+    <path d="M 60 100 V 120" />
+  </g>
+</svg>

@@ -14,9 +14,21 @@ export function MemoriaDocument({ values = {} }) {
         sobre {String(values.panels_place || '—').toLowerCase()}, {String(values.panels_disposition || '—').toLowerCase()}. {values.inyection_type || ''}.
         Potencia contratada {values.hired_power_kw || '—'} kW, suministro {String(values.input_v_type || '—').toLowerCase()} a {values.input_v || '—'} V.
       </p>
-      <p style={{ fontWeight: 700, color: 'var(--ink-800)', marginTop: 14 }}>2. Esquema unifilar</p>
+      {values.battery_nombre && (
+        <>
+          <p style={{ fontWeight: 700, color: 'var(--ink-800)', marginTop: 14 }}>2. Acumulación</p>
+          <p>
+            Sistema de acumulación con {values.battery_quantity > 1 ? `${values.battery_quantity} × ` : ''}{values.battery_nombre}
+            {values.battery_capacity_kwh ? `, capacidad nominal ${values.battery_capacity_kwh} kWh` : ''}
+            {values.battery_usable_kwh ? ` (${values.battery_usable_kwh} kWh útiles)` : ''}
+            {values.battery_power_kw ? `, potencia ${values.battery_power_kw} kW` : ''}
+            {values.battery_technology ? `, tecnología ${values.battery_technology}` : ''}.
+          </p>
+        </>
+      )}
+      <p style={{ fontWeight: 700, color: 'var(--ink-800)', marginTop: 14 }}>{values.battery_nombre ? '3' : '2'}. Esquema unifilar</p>
       <div className="sun-page__diagram">
-        <UnifilarStrip />
+        <UnifilarStrip battery={!!values.battery_nombre} />
       </div>
     </div>
   )
