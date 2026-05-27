@@ -10,6 +10,8 @@ from app.models.project import Project
 from app.models.financial_scenario import FinancialScenario
 from app.errors import NotFound, ValidationError
 from app.services.finance import compute
+from app.services.finance.engine import _gross_capex
+from app.services.subsidies import SubsidyService
 
 
 class FinanceService:
@@ -46,17 +48,33 @@ class FinanceService:
             return float(project.autoconsumo) / 100.0
         return None
 
+    @staticmethod
+    def resolve_subsidies(project, assumptions, ccaa=None, municipio=None):
+        capex_with_vat = _gross_capex(assumptions) * (1.0 + float(assumptions.iva_pct))
+        return SubsidyService.applicable(
+            project=project,
+            capex=capex_with_vat,
+            system_kwp=getattr(project, 'kwp', None),
+            ccaa=ccaa,
+            municipio=municipio,
+        )
+
     @classmethod
     def compute_for_project(cls, org_id, project_id, assumptions,
-                            production_kwh_year=None, self_consumption_ratio=None):
+                            production_kwh_year=None, self_consumption_ratio=None,
+                            apply_subsidies=False, ccaa=None, municipio=None):
         project = cls._project_or_404(org_id, project_id)
         production = cls.resolve_production(project, production_kwh_year)
         ratio = cls.resolve_self_consumption_ratio(project, self_consumption_ratio)
+        incentives = [i.model_dump() for i in assumptions.incentives]
+        if apply_subsidies:
+            incentives = incentives + cls.resolve_subsidies(
+                project, assumptions, ccaa=ccaa, municipio=municipio)
         return compute(
             assumptions,
             production,
             self_consumption_ratio=ratio,
-            incentives=[i.model_dump() for i in assumptions.incentives],
+            incentives=incentives,
         )
 
     @classmethod
@@ -92,6 +110,8 @@ class FinanceService:
             org_id, project_id, data.assumptions,
             production_kwh_year=data.production_kwh_year,
             self_consumption_ratio=data.self_consumption_ratio,
+            apply_subsidies=data.apply_subsidies,
+            ccaa=data.ccaa, municipio=data.municipio,
         )
         scenario = FinancialScenario(
             org_id=org_id, project_id=project_id, name=data.name,
@@ -115,6 +135,8 @@ class FinanceService:
                 org_id, project_id, data.assumptions,
                 production_kwh_year=data.production_kwh_year,
                 self_consumption_ratio=data.self_consumption_ratio,
+                apply_subsidies=data.apply_subsidies,
+                ccaa=data.ccaa, municipio=data.municipio,
             )
             scenario.assumptions = data.assumptions.model_dump()
             scenario.results = results

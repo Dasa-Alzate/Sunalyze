@@ -142,8 +142,8 @@ class TemplateService:
         if not isinstance(content, list):
             raise ValidationError('El contenido debe ser una lista de secciones.')
         resolver = ContextResolver({
-            'project': None, 'panel': None, 'inverter': None,
-            'wire': None, 'user': None, 'org': None,
+            'project': None, 'panel': None, 'inverter': None, 'battery': None,
+            'wire': None, 'user': None, 'org': None, 'finance': None,
         })
         for idx, section in enumerate(content):
             if not isinstance(section, dict):
