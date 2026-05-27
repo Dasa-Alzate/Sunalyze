@@ -116,7 +116,7 @@ export function Login() {
           </form>
           <div className="auth-foot">¿No tienes cuenta? <a href={pathOf('signup')} onClick={(e) => { e.preventDefault(); go('signup') }}>Crear cuenta gratis</a></div>
         </div>
-        <p className="auth-legal">Al continuar aceptas las <a href="#">Condiciones</a> y la <a href="#">Política de privacidad</a> de Sunalyze.</p>
+        <p className="auth-legal">Al continuar aceptas las <a href="/legal/terminos" onClick={(e) => { e.preventDefault(); go('/legal/terminos') }}>Condiciones</a> y la <a href="/legal/privacidad" onClick={(e) => { e.preventDefault(); go('/legal/privacidad') }}>Política de privacidad</a> de Sunalyze.</p>
       </div>
     </Shell>
   )

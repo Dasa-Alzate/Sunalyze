@@ -16,6 +16,7 @@ import Marketplace from '@/features/marketplace/Marketplace'
 import TemplatesGallery from '@/features/templates/TemplatesGallery'
 import TemplateBuilder from '@/features/templates/TemplateBuilder'
 import FinanceWorkspace from '@/features/finance/FinanceWorkspace'
+import { PrivacyPolicy, Terms, Cookies } from '@/features/legal/Legal'
 
 export const router = createBrowserRouter([
   {
@@ -28,6 +29,9 @@ export const router = createBrowserRouter([
       { path: '/reset-password', element: <ResetPassword /> },
       { path: '/verificar', element: <VerifyEmail /> },
       { path: '/invitacion', element: <AcceptInvitation /> },
+      { path: '/legal/privacidad', element: <PrivacyPolicy /> },
+      { path: '/legal/terminos', element: <Terms /> },
+      { path: '/legal/cookies', element: <Cookies /> },
       {
         path: '/app',
         element: <RequireAuth><AppLayout /></RequireAuth>,
