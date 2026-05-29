@@ -29,6 +29,10 @@ DEFAULT_FLAGS = [
      'descripcion': 'Estudio económico por proyecto: payback, TIR, VAN, LCOE y CO₂ evitado, con escenarios contado vs financiado.',
      'default_enabled': False, 'is_visible': True, 'help_url': '#', 'price': 0,
      'thumbnail_path': '/brand-logos/longi.svg', 'image_path': '/brand-logos/longi.svg'},
+    {'key': 'posventa', 'nombre': 'Posventa', 'titulo': 'Posventa',
+     'descripcion': 'Seguimiento de instalaciones tras la entrega: estado operativo, visitas de mantenimiento, incidencias y lecturas de produccion esperado-vs-real.',
+     'default_enabled': False, 'is_visible': True, 'help_url': '#', 'price': 0,
+     'thumbnail_path': '/brand-logos/aiko.svg', 'image_path': '/brand-logos/aiko.svg'},
 ]
 
 
