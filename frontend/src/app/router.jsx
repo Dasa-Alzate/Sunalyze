@@ -16,6 +16,7 @@ import Marketplace from '@/features/marketplace/Marketplace'
 import TemplatesGallery from '@/features/templates/TemplatesGallery'
 import TemplateBuilder from '@/features/templates/TemplateBuilder'
 import FinanceWorkspace from '@/features/finance/FinanceWorkspace'
+import InstallationsWorkspace from '@/features/posventa/InstallationsWorkspace'
 import { PrivacyPolicy, Terms, Cookies } from '@/features/legal/Legal'
 
 export const router = createBrowserRouter([
@@ -48,6 +49,7 @@ export const router = createBrowserRouter([
           { path: 'plantillas', element: <RequireFlag flag="templates"><TemplatesGallery /></RequireFlag> },
           { path: 'plantillas/:id', element: <RequireFlag flag="templates"><TemplateBuilder /></RequireFlag> },
           { path: 'finanzas', element: <RequireFlag flag="finance"><FinanceWorkspace /></RequireFlag> },
+          { path: 'posventa', element: <RequireFlag flag="posventa"><InstallationsWorkspace /></RequireFlag> },
           { path: 'admin/flags', element: <RequirePlatformAdmin><Flags /></RequirePlatformAdmin> },
         ],
       },

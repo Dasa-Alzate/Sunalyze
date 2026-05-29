@@ -320,3 +320,34 @@
 .finance-scenario-list { list-style: none; margin: 0 0 var(--space-4); padding: 0; display: flex; flex-direction: column; gap: var(--space-2); }
 .finance-scenario-item { display: flex; align-items: center; justify-content: space-between; padding: var(--space-2) var(--space-3); border: 1px solid var(--border-subtle); border-radius: var(--radius-md); }
 .finance-scenario-item__actions { display: inline-flex; gap: var(--space-2); align-items: center; }
+
+/* ---------------------------------- Posventa: instalaciones ---------------------------------- */
+.posventa-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap: var(--space-4); }
+.posventa-card { padding: 0; }
+.posventa-card__btn { width: 100%; text-align: left; background: transparent; border: 0; cursor: pointer; padding: var(--space-5); display: flex; flex-direction: column; gap: var(--space-3); border-radius: inherit; }
+.posventa-card__btn:hover { background: var(--ink-100); }
+.posventa-card__head { display: flex; align-items: center; justify-content: space-between; gap: var(--space-3); }
+.posventa-card__head strong { font-size: var(--text-md); color: var(--text-strong); }
+.posventa-card__meta { display: flex; flex-wrap: wrap; gap: var(--space-3); font-size: var(--text-sm); color: var(--text-muted); }
+.posventa-card__meta span { display: inline-flex; align-items: center; gap: 4px; }
+
+.posventa-detail__head { display: flex; align-items: center; gap: var(--space-4); flex-wrap: wrap; margin-bottom: var(--space-4); }
+.posventa-detail__title { display: flex; align-items: center; gap: var(--space-3); font-size: var(--text-xl); font-weight: var(--fw-bold); color: var(--text-strong); }
+.posventa-detail__statuschange { margin-left: auto; min-width: 200px; }
+.posventa-detail__summary { display: flex; flex-wrap: wrap; gap: var(--space-5); margin-bottom: var(--space-4); font-size: var(--text-sm); color: var(--text-muted); }
+.posventa-detail__summary span { display: inline-flex; align-items: center; gap: 6px; }
+
+.posventa-list { list-style: none; margin: var(--space-3) 0 0; padding: 0; display: flex; flex-direction: column; gap: var(--space-2); }
+.posventa-item { display: flex; align-items: flex-start; justify-content: space-between; gap: var(--space-4); padding: var(--space-3) var(--space-4); border: 1px solid var(--border-subtle); border-radius: var(--radius-md); }
+.posventa-item__main { display: flex; flex-direction: column; gap: var(--space-2); min-width: 0; }
+.posventa-item__title { display: flex; align-items: center; flex-wrap: wrap; gap: var(--space-2); }
+.posventa-item__meta { display: flex; flex-wrap: wrap; gap: var(--space-3); font-size: var(--text-sm); color: var(--text-muted); }
+.posventa-item__meta span { display: inline-flex; align-items: center; gap: 4px; }
+.posventa-item__notes { margin: 0; font-size: var(--text-sm); color: var(--text-body); }
+.posventa-item__actions { display: inline-flex; align-items: center; gap: var(--space-2); flex: none; }
+
+.posventa-performance { display: grid; grid-template-columns: minmax(220px, 0.8fr) 1.2fr; gap: var(--space-5); align-items: center; margin-top: var(--space-3); }
+@media (max-width: 720px) { .posventa-performance { grid-template-columns: 1fr; } }
+.posventa-performance__metrics { display: grid; grid-template-columns: repeat(auto-fit, minmax(120px, 1fr)); gap: var(--space-4); }
+.posventa-note { display: flex; align-items: flex-start; gap: var(--space-2); margin-top: var(--space-4); padding: var(--space-3) var(--space-4); border-radius: var(--radius-md); background: var(--surface-sunken); border: 1px solid var(--border-subtle); font-size: var(--text-sm); color: var(--text-muted); }
+.posventa-note svg { flex: none; margin-top: 2px; }
