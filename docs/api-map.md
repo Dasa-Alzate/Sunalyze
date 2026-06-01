@@ -1,6 +1,6 @@
 # API map
 
-Mapa autogenerado por `flask api-map`. Endpoints `/api`: 86.
+Mapa autogenerado por `flask api-map`. Endpoints `/api`: 108.
 
 No editar a mano: regenerar con `flask api-map`.
 
@@ -124,6 +124,38 @@ No editar a mano: regenerar con `flask api-map`.
 | GET | `/api/modules` | `modules.list_modules` |  |
 | POST | `/api/modules/<key>/disable` | `modules.disable_module` |  |
 | POST | `/api/modules/<key>/enable` | `modules.enable_module` |  |
+
+## notifications
+
+| Método(s) | Ruta | Endpoint | Resumen |
+| --- | --- | --- | --- |
+| GET | `/api/notifications` | `notifications.list_notifications` |  |
+| POST | `/api/notifications/<int:notification_id>/read` | `notifications.mark_read` |  |
+| POST | `/api/notifications/read-all` | `notifications.mark_all_read` |  |
+| GET | `/api/notifications/unread-count` | `notifications.unread_count` |  |
+| GET | `/api/pending-work` | `notifications.pending_work` |  |
+
+## posventa
+
+| Método(s) | Ruta | Endpoint | Resumen |
+| --- | --- | --- | --- |
+| GET | `/api/installations` | `posventa.list_installations` |  |
+| POST | `/api/installations` | `posventa.create_installation` |  |
+| GET | `/api/installations/<int:installation_id>` | `posventa.get_installation` |  |
+| PATCH | `/api/installations/<int:installation_id>` | `posventa.update_installation` |  |
+| GET | `/api/installations/<int:installation_id>/incidents` | `posventa.list_incidents` |  |
+| POST | `/api/installations/<int:installation_id>/incidents` | `posventa.create_incident` |  |
+| DELETE | `/api/installations/<int:installation_id>/incidents/<int:incident_id>` | `posventa.delete_incident` |  |
+| PATCH | `/api/installations/<int:installation_id>/incidents/<int:incident_id>` | `posventa.update_incident` |  |
+| GET | `/api/installations/<int:installation_id>/maintenance` | `posventa.list_maintenance` |  |
+| POST | `/api/installations/<int:installation_id>/maintenance` | `posventa.create_maintenance` |  |
+| DELETE | `/api/installations/<int:installation_id>/maintenance/<int:visit_id>` | `posventa.delete_maintenance` |  |
+| PATCH | `/api/installations/<int:installation_id>/maintenance/<int:visit_id>` | `posventa.update_maintenance` |  |
+| GET | `/api/installations/<int:installation_id>/performance` | `posventa.get_performance` |  |
+| GET | `/api/installations/<int:installation_id>/readings` | `posventa.list_readings` |  |
+| POST | `/api/installations/<int:installation_id>/readings` | `posventa.create_reading` |  |
+| DELETE | `/api/installations/<int:installation_id>/readings/<int:reading_id>` | `posventa.delete_reading` |  |
+| PATCH | `/api/installations/<int:installation_id>/readings/<int:reading_id>` | `posventa.update_reading` |  |
 
 ## projects
 
