@@ -1,6 +1,6 @@
 # API map
 
-Mapa autogenerado por `flask api-map`. Endpoints `/api`: 86.
+Mapa autogenerado por `flask api-map`. Endpoints `/api`: 105.
 
 No editar a mano: regenerar con `flask api-map`.
 
@@ -40,6 +40,7 @@ No editar a mano: regenerar con `flask api-map`.
 | GET | `/api/catalogs` | `catalogs.list_catalogs` |  |
 | POST | `/api/catalogs` | `catalogs.create_catalog` |  |
 | DELETE | `/api/catalogs/<int:catalog_id>` | `catalogs.delete_catalog` |  |
+| POST | `/api/catalogs/<int:catalog_id>/restore` | `catalogs.restore_catalog` |  |
 | POST | `/api/catalogs/<int:catalog_id>/subscribe` | `catalogs.subscribe` |  |
 | POST | `/api/catalogs/<int:catalog_id>/unsubscribe` | `catalogs.unsubscribe` |  |
 | GET | `/api/marketplace` | `catalogs.marketplace` |  |
@@ -125,6 +126,28 @@ No editar a mano: regenerar con `flask api-map`.
 | POST | `/api/modules/<key>/disable` | `modules.disable_module` |  |
 | POST | `/api/modules/<key>/enable` | `modules.enable_module` |  |
 
+## posventa
+
+| Método(s) | Ruta | Endpoint | Resumen |
+| --- | --- | --- | --- |
+| GET | `/api/installations` | `posventa.list_installations` |  |
+| POST | `/api/installations` | `posventa.create_installation` |  |
+| GET | `/api/installations/<int:installation_id>` | `posventa.get_installation` |  |
+| PATCH | `/api/installations/<int:installation_id>` | `posventa.update_installation` |  |
+| GET | `/api/installations/<int:installation_id>/incidents` | `posventa.list_incidents` |  |
+| POST | `/api/installations/<int:installation_id>/incidents` | `posventa.create_incident` |  |
+| DELETE | `/api/installations/<int:installation_id>/incidents/<int:incident_id>` | `posventa.delete_incident` |  |
+| PATCH | `/api/installations/<int:installation_id>/incidents/<int:incident_id>` | `posventa.update_incident` |  |
+| GET | `/api/installations/<int:installation_id>/maintenance` | `posventa.list_maintenance` |  |
+| POST | `/api/installations/<int:installation_id>/maintenance` | `posventa.create_maintenance` |  |
+| DELETE | `/api/installations/<int:installation_id>/maintenance/<int:visit_id>` | `posventa.delete_maintenance` |  |
+| PATCH | `/api/installations/<int:installation_id>/maintenance/<int:visit_id>` | `posventa.update_maintenance` |  |
+| GET | `/api/installations/<int:installation_id>/performance` | `posventa.get_performance` |  |
+| GET | `/api/installations/<int:installation_id>/readings` | `posventa.list_readings` |  |
+| POST | `/api/installations/<int:installation_id>/readings` | `posventa.create_reading` |  |
+| DELETE | `/api/installations/<int:installation_id>/readings/<int:reading_id>` | `posventa.delete_reading` |  |
+| PATCH | `/api/installations/<int:installation_id>/readings/<int:reading_id>` | `posventa.update_reading` |  |
+
 ## projects
 
 | Método(s) | Ruta | Endpoint | Resumen |
@@ -135,6 +158,7 @@ No editar a mano: regenerar con `flask api-map`.
 | GET | `/api/projects/<int:project_id>` | `projects.get_project` |  |
 | PATCH | `/api/projects/<int:project_id>` | `projects.update_project` |  |
 | POST | `/api/projects/<int:project_id>/duplicate` | `projects.duplicate_project` |  |
+| POST | `/api/projects/<int:project_id>/restore` | `projects.restore_project` |  |
 
 ## templates
 

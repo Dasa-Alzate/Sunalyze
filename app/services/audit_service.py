@@ -76,3 +76,57 @@ class AuditService:
             .limit(limit)
             .all()
         )
+
+    @staticmethod
+    def feed_for_org(org_id, limit=50, offset=0):
+        """Pagina la bitacora de una org (offset-based) para el feed de actividad.
+
+        Devuelve un dict con `items` enriquecidos (enlace resuelto al objeto),
+        `total`, `limit`, `offset` y `has_more`, de modo que el frontend pueda
+        pintar la paginacion sin una segunda llamada.
+        """
+        base = AuditEvent.query.filter(AuditEvent.org_id == org_id)
+        total = base.count()
+        events = (
+            base
+            .order_by(AuditEvent.created_at.desc(), AuditEvent.id.desc())
+            .limit(limit)
+            .offset(offset)
+            .all()
+        )
+        items = [AuditService.to_feed_dict(e) for e in events]
+        return {
+            'items': items,
+            'total': total,
+            'limit': limit,
+            'offset': offset,
+            'has_more': offset + len(events) < total,
+        }
+
+    @staticmethod
+    def resolve_link(entity_type, entity_id):
+        """Resuelve `entity_type -> ruta` de frontend para enlazar al objeto.
+
+        Mapa estatico de dominio a ruta de la SPA. Devuelve None cuando no hay
+        ruta conocida o falta el `entity_id`, para que el frontend lo trate como
+        evento sin enlace.
+        """
+        if entity_id is None or not entity_type:
+            return None
+        routes = {
+            'project': f'/app/proyectos/{entity_id}',
+            'catalog': '/app/equipos',
+            'equipment': '/app/equipos',
+            'panel': '/app/equipos',
+            'inverter': '/app/equipos',
+            'battery': '/app/equipos',
+            'wire': '/app/equipos',
+        }
+        return routes.get(entity_type)
+
+    @staticmethod
+    def to_feed_dict(event):
+        """Serializa un AuditEvent para el feed: `to_dict` + enlace resuelto."""
+        data = event.to_dict()
+        data['link'] = AuditService.resolve_link(event.entity_type, event.entity_id)
+        return data
