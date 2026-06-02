@@ -18,7 +18,9 @@ from app.extensions import db
 from app.models.project import Project, ESTADOS
 from app.models.memoria_signature import MemoriaSignature
 from app.models.project_event import ProjectEvent
+from app.models.membership import Membership
 from app.errors import NotFound, ValidationError, Conflict
+from app.services.notification_service import NotificationService
 
 logger = logging.getLogger(__name__)
 
@@ -94,6 +96,15 @@ class LegalizationService:
             project, user, project.estado, project.estado,
             note or 'Memoria tecnica firmada.',
         ))
+        recipients = [
+            m.user_id for m in
+            Membership.query.filter(Membership.org_id == project.org_id).all()
+        ]
+        NotificationService.notify(
+            recipients, 'memoria.signed', actor=user, org_id=project.org_id,
+            entity_type='project', entity_id=project.id,
+            payload={'cliente': project.cliente, 'pdf_sha256': signature.pdf_sha256},
+        )
         db.session.commit()
         logger.info('Memoria firmada p%s por u%s', project.id,
                     user.id if user else None)

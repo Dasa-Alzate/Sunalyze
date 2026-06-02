@@ -32,7 +32,7 @@ def create_app():
         user, organization, membership, catalog, invitation, flag,
         support_ticket, superadmin_audit, scrape_run, audit_event,
         memoria_signature, project_event, report_template,
-        financial_scenario, installation,
+        financial_scenario, installation, notification,
     )
 
     from app.routes.main import bp as main_bp
@@ -51,6 +51,7 @@ def create_app():
     from app.routes.templates import templates_bp
     from app.routes.finance import finance_bp
     from app.routes.posventa import posventa_bp
+    from app.routes.notifications import notifications_bp
 
     app.register_blueprint(main_bp)
     app.register_blueprint(crud_bp)
@@ -68,6 +69,7 @@ def create_app():
     app.register_blueprint(templates_bp)
     app.register_blueprint(finance_bp)
     app.register_blueprint(posventa_bp)
+    app.register_blueprint(notifications_bp)
 
     from app.errors import register_error_handlers
     register_error_handlers(app)

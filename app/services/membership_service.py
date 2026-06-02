@@ -16,6 +16,7 @@ from app.models.invitation import Invitation, INVITABLE_ROLES
 from app.errors import ValidationError, NotFound, Forbidden, Conflict
 from app.db_helpers import commit_or_conflict
 from app.services.audit_service import AuditService
+from app.services.notification_service import NotificationService
 
 logger = logging.getLogger(__name__)
 
@@ -113,6 +114,14 @@ class MembershipService:
             expires_at=Invitation.default_expiry(),
         )
         db.session.add(invitation)
+        db.session.flush()
+        if existing_user:
+            NotificationService.notify(
+                [existing_user.id], 'invitation.received', actor=inviter,
+                org_id=org_id, entity_type='invitation', entity_id=invitation.id,
+                payload={'org_nombre': org.nombre, 'role': role,
+                         'inviter': inviter.full_name},
+            )
         db.session.commit()
         logger.info('Invitación creada %s -> org %s (%s)', email, org_id, role)
         return invitation
@@ -195,6 +204,11 @@ class MembershipService:
             entity_type='membership', entity_id=target.id,
             payload={'target_user_id': target_user_id, 'from': previous_role, 'to': new_role},
         )
+        NotificationService.notify(
+            [target_user_id], 'membership.role_changed', actor=actor,
+            org_id=org_id, entity_type='membership', entity_id=target.id,
+            payload={'from': previous_role, 'to': new_role},
+        )
         db.session.commit()
         logger.info('Rol cambiado u%s -> %s en org %s', target_user_id, new_role, org_id)
         return target
@@ -217,6 +231,11 @@ class MembershipService:
             'membership.remove', actor=actor, org_id=org_id,
             entity_type='membership', entity_id=target.id,
             payload={'target_user_id': target_user_id, 'role': target.role},
+        )
+        NotificationService.notify(
+            [target_user_id], 'membership.removed', actor=actor,
+            org_id=org_id, entity_type='membership', entity_id=None,
+            payload={'role': target.role, 'org_id': org_id},
         )
         db.session.delete(target)
         db.session.commit()
