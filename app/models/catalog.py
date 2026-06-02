@@ -1,10 +1,10 @@
 """Catalogos de equipos: del marketplace (org_id NULL) o propios de un workspace."""
 
 from app.extensions import db
-from .database import BaseModel
+from .database import BaseModel, SoftDeleteMixin
 
 
-class Catalog(BaseModel):
+class Catalog(BaseModel, SoftDeleteMixin):
     """Coleccion de equipos.
 
     org_id NULL -> catalogo publico del marketplace (solo lectura para los
