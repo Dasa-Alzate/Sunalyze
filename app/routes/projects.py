@@ -35,7 +35,7 @@ def _validate_battery(data, org_id):
     battery = Battery.query.get(battery_id)
     visible = CatalogService.visible_catalog_ids(org_id)
     if not battery or battery.catalog_id not in visible:
-        raise NotFound('Bateria no encontrada')
+        raise NotFound('Bateria no encontrada', code='battery.not_found')
 
 
 def _apply(project, data):
@@ -50,7 +50,7 @@ def _owned_or_404(project_id):
     org_id = current_org_id()
     project = Project.query.get(project_id)
     if not project or project.org_id != org_id:
-        raise NotFound('Proyecto no encontrado.')
+        raise NotFound('Proyecto no encontrado.', code='project.not_found')
     return project
 
 
@@ -76,11 +76,11 @@ def get_project(project_id):
 def create_project():
     data = request.get_json(silent=True)
     if not data:
-        raise ValidationError('Cuerpo JSON requerido.')
+        raise ValidationError('Cuerpo JSON requerido.', code='request.body_required')
     if not data.get('cliente'):
-        raise ValidationError('Campo requerido: cliente.')
+        raise ValidationError('Campo requerido: cliente.', code='project.cliente_required')
     if data.get('estado') and data['estado'] not in ESTADOS:
-        raise ValidationError(f"Estado invalido. Validos: {', '.join(ESTADOS)}")
+        raise ValidationError(f"Estado invalido. Validos: {', '.join(ESTADOS)}", code='project.invalid_estado')
 
     _validate_battery(data, current_org_id())
     project = Project(cliente=data['cliente'], org_id=current_org_id())
@@ -102,9 +102,9 @@ def update_project(project_id):
     project = _owned_or_404(project_id)
     data = request.get_json(silent=True)
     if not data:
-        raise ValidationError('Cuerpo JSON requerido.')
+        raise ValidationError('Cuerpo JSON requerido.', code='request.body_required')
     if data.get('estado') and data['estado'] not in ESTADOS:
-        raise ValidationError(f"Estado invalido. Validos: {', '.join(ESTADOS)}")
+        raise ValidationError(f"Estado invalido. Validos: {', '.join(ESTADOS)}", code='project.invalid_estado')
     _validate_battery(data, current_org_id())
     changed = sorted(
         f for f in _EDITABLE_FIELDS

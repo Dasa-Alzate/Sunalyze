@@ -5,6 +5,7 @@ from flask import Blueprint, request, jsonify, current_app
 from app.schemas.members import InviteSchema, ChangeRoleSchema
 from app.services.membership_service import MembershipService
 from app.services.email_service import EmailService
+from app.services.auth_service import AuthService
 from app.security import current_user, current_org_id, set_current_org, login_required
 from app.authz import require_permission, Permission
 
@@ -33,12 +34,14 @@ def create_invitation():
     data = InviteSchema(**(request.get_json(silent=True) or {}))
     invitation = MembershipService.invite(current_org_id(), current_user(), data.email, data.role)
     accept_path = f'/invitacion?token={invitation.token}'
+    invitee = AuthService.find_active_by_email(invitation.email)
+    recipient_locale = invitee.locale if invitee else current_user().locale
     EmailService.send('invitation', invitation.email, {
         'org_nombre': invitation.organization.nombre if invitation.organization else 'Sunalyze',
         'inviter': current_user().full_name,
         'role': invitation.role,
         'accept_url': f'{_base_url()}{accept_path}',
-    })
+    }, locale=recipient_locale)
     return jsonify({**invitation.to_dict(), 'accept_link': _dev_link(accept_path)}), 201
 
 

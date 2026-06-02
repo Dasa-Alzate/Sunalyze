@@ -20,7 +20,7 @@ def _owned_or_404(project_id):
     org_id = current_org_id()
     project = Project.query.get(project_id)
     if not project or project.org_id != org_id:
-        raise NotFound('Proyecto no encontrado.')
+        raise NotFound('Proyecto no encontrado.', code='project.not_found')
     return project
 
 
