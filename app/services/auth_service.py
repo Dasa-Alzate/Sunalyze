@@ -25,7 +25,7 @@ class AuthService:
     def register(email, password, first_name, last_name='', company=''):
         email = email.strip().lower()
         if User.query.filter_by(email=email).first():
-            raise Conflict('Ya existe una cuenta con ese correo.')
+            raise Conflict('Ya existe una cuenta con ese correo.', code='auth.email_taken')
 
         user = User(email=email, first_name=first_name.strip(), last_name=last_name.strip())
         user.set_password(password)
@@ -59,13 +59,13 @@ class AuthService:
         user = User.active().filter_by(email=email.strip().lower()).first()
 
         if user and user.is_locked_out():
-            raise Forbidden('Cuenta bloqueada temporalmente por intentos fallidos. Intenta mas tarde.')
+            raise Forbidden('Cuenta bloqueada temporalmente por intentos fallidos. Intenta mas tarde.', code='auth.account_locked')
 
         if not user or not user.check_password(password):
             if user:
                 user.register_failed_login()
                 db.session.commit()
-            raise Unauthorized('Correo o contraseña incorrectos.')
+            raise Unauthorized('Correo o contraseña incorrectos.', code='auth.invalid_credentials')
 
         user.register_successful_login()
         AuditService.record(
@@ -79,8 +79,12 @@ class AuthService:
         return user
 
     @staticmethod
+    def find_active_by_email(email):
+        return User.active().filter_by(email=email.strip().lower()).first()
+
+    @staticmethod
     def request_password_reset(email):
-        user = User.active().filter_by(email=email.strip().lower()).first()
+        user = AuthService.find_active_by_email(email)
         if not user:
             return None
         return tokens.issue(tokens.RESET_PASSWORD, {'uid': user.id})
@@ -90,7 +94,7 @@ class AuthService:
         data = tokens.verify(tokens.RESET_PASSWORD, token, max_age_seconds=3600)
         user = User.active().filter_by(id=data.get('uid')).first()
         if not user:
-            raise NotFound('Usuario no encontrado.')
+            raise NotFound('Usuario no encontrado.', code='auth.user_not_found')
         user.set_password(new_password)
         db.session.commit()
         return user
@@ -100,7 +104,7 @@ class AuthService:
         data = tokens.verify(tokens.VERIFY_EMAIL, token, max_age_seconds=86400)
         user = User.active().filter_by(id=data.get('uid')).first()
         if not user:
-            raise NotFound('Usuario no encontrado.')
+            raise NotFound('Usuario no encontrado.', code='auth.user_not_found')
         user.email_verified = True
         db.session.commit()
         return user

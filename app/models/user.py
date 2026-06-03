@@ -25,6 +25,7 @@ class User(BaseModel, SoftDeleteMixin):
     last_name = db.Column(db.String(80), default='')
     email_verified = db.Column(db.Boolean, nullable=False, default=False)
     is_superadmin = db.Column(db.Boolean, nullable=False, default=False)
+    locale = db.Column(db.String(5), nullable=False, default='es', server_default='es')
     mfa_secret = db.Column(db.Text)
     mfa_enabled = db.Column(db.Boolean, nullable=False, default=False)
     mfa_recovery_codes = db.Column(db.Text)
@@ -145,6 +146,7 @@ class User(BaseModel, SoftDeleteMixin):
             'full_name': self.full_name,
             'email_verified': self.email_verified,
             'is_superadmin': self.is_superadmin,
+            'locale': self.locale or 'es',
             'privacy_accepted_at': self.privacy_accepted_at.isoformat() if self.privacy_accepted_at else None,
             'organizations': [
                 {**m.organization.to_dict(), 'role': m.role}

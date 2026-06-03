@@ -105,7 +105,7 @@ class GdprService:
         equipo y la integridad del workspace).
         """
         if user.is_deleted:
-            raise Conflict('La cuenta ya fue eliminada.')
+            raise Conflict('La cuenta ya fue eliminada.', code='account.already_deleted')
 
         for org_id in GdprService._owned_org_ids(user):
             org = Organization.active().filter_by(id=org_id).first()

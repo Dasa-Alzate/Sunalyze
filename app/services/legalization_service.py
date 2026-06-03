@@ -78,7 +78,7 @@ class LegalizationService:
         como `is_current`. Deja constancia en el historial de eventos.
         """
         if not pdf_sha256:
-            raise ValidationError('Hash del PDF requerido para firmar la memoria.')
+            raise ValidationError('Hash del PDF requerido para firmar la memoria.', code='memoria.hash_required')
 
         for previous in project.signatures:
             previous.is_current = False
@@ -126,7 +126,7 @@ class LegalizationService:
         from_estado = project.estado
 
         if to_estado == from_estado:
-            raise Conflict(f"El proyecto ya esta en estado '{to_estado}'.")
+            raise Conflict(f"El proyecto ya esta en estado '{to_estado}'.", code='legalization.same_estado')
 
         if not LegalizationService.can_transition(from_estado, to_estado):
             allowed = sorted(LegalizationService.allowed_transitions(from_estado))

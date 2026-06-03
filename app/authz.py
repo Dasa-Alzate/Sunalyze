@@ -98,7 +98,7 @@ def require_flag(key):
             user = current_user()
             if FlagService.is_enabled(key, current_org_id(), user.id if user else None):
                 return fn(*args, **kwargs)
-            raise Forbidden('Esta función no está habilitada en tu espacio.')
+            raise Forbidden('Esta función no está habilitada en tu espacio.', code='authz.feature_disabled')
         return wrapper
     return decorator
 
@@ -113,12 +113,12 @@ def require_permission(*permissions):
         @wraps(fn)
         def wrapper(*args, **kwargs):
             if current_user() is None:
-                raise Unauthorized('Inicia sesión para continuar.')
+                raise Unauthorized('Inicia sesión para continuar.', code='auth.login_required')
             if current_role() is None:
-                raise Forbidden('No tienes acceso a este workspace.')
+                raise Forbidden('No tienes acceso a este workspace.', code='auth.no_workspace_access')
             granted = current_permissions()
             if not all(p in granted for p in permissions):
-                raise Forbidden('No tienes permiso para realizar esta acción.')
+                raise Forbidden('No tienes permiso para realizar esta acción.', code='authz.forbidden')
             return fn(*args, **kwargs)
         return wrapper
     return decorator
