@@ -2,15 +2,16 @@
 
 from flask import Blueprint, request, jsonify, current_app
 
-from app.schemas.auth import RegisterSchema, LoginSchema, ForgotSchema, ResetSchema, VerifySchema
+from app.schemas.auth import RegisterSchema, LoginSchema, ForgotSchema, ResetSchema, VerifySchema, LocaleSchema
 from app.services.auth_service import AuthService
 from app.services.email_service import EmailService
-from app.security import login_user, logout_user, current_user
+from app.security import login_user, logout_user, current_user, login_required
 from app.authz import current_role, current_permissions
-from app.extensions import limiter
+from app.extensions import limiter, db
 from app.services.flag_service import FlagService
 from app.security import current_org_id
-from app.i18n import resolve_locale
+from app.i18n import resolve_locale, normalize_locale
+from app.errors import ValidationError
 
 auth_bp = Blueprint('auth', __name__)
 
@@ -69,6 +70,19 @@ def logout():
 @auth_bp.route('/api/auth/me', methods=['GET'])
 def me():
     return jsonify(_session_payload(current_user()))
+
+
+@auth_bp.route('/api/auth/me', methods=['PATCH'])
+@login_required
+def update_me():
+    data = LocaleSchema(**(request.get_json(silent=True) or {}))
+    locale = normalize_locale(data.locale)
+    if not locale:
+        raise ValidationError('Idioma no soportado.', code='auth.locale_unsupported')
+    user = current_user()
+    user.locale = locale
+    db.session.commit()
+    return jsonify(_session_payload(user))
 
 
 @auth_bp.route('/api/auth/forgot-password', methods=['POST'])

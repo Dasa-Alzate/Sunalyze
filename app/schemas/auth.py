@@ -64,3 +64,7 @@ class ResetSchema(BaseModel):
 
 class VerifySchema(BaseModel):
     token: str = Field(min_length=8)
+
+
+class LocaleSchema(BaseModel):
+    locale: str = Field(min_length=2, max_length=10)

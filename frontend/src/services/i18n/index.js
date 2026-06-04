@@ -1,0 +1,5 @@
+export { default as i18n, SUPPORTED_LOCALES, DEFAULT_LOCALE, normalizeLocale } from './config'
+export { I18nProvider, applyLocale } from './I18nProvider'
+export { setActiveLocale, getActiveLocale, uiLocaleTag, TECHNICAL_LOCALE } from './locale'
+export { messageForError } from './errorMessage'
+export { useTranslation } from 'react-i18next'

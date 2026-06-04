@@ -1,23 +1,25 @@
 import { useEffect, useRef, useState } from 'react'
 import { NavLink, Outlet, useLocation } from 'react-router-dom'
+import { useTranslation } from 'react-i18next'
 import { Icon, IconBtn } from '@/shared/ui'
+import { LanguageSwitcher } from '@/shared/LanguageSwitcher'
 import { TransitionLink, useTransition } from '@/services/transition'
 import { useAuth } from '@/services/auth'
 import { useCommands, isMac, formatShortcut } from '@/services/actions'
 import { toast } from '@/services/toast'
 
 const NAV = [
-  { to: '/app', label: 'Resumen', icon: 'layout-dashboard', end: true },
-  { to: '/app/proyectos', label: 'Proyectos', icon: 'folder' },
-  { to: '/app/diseno', label: 'Diseño', icon: 'sliders-horizontal' },
-  { to: '/app/equipos', label: 'Equipos', icon: 'package' },
-  { to: '/app/modulos', label: 'Módulos', icon: 'store' },
-  { to: '/app/equipo', label: 'Equipo', icon: 'users', business: true },
-  { to: '/app/memoria', label: 'Memoria', icon: 'file-text' },
-  { to: '/app/plantillas', label: 'Plantillas', icon: 'layout-template', flag: 'templates' },
-  { to: '/app/finanzas', label: 'Finanzas', icon: 'calculator', flag: 'finance' },
-  { to: '/app/posventa', label: 'Posventa', icon: 'plug-zap', flag: 'posventa' },
-  { to: '/app/admin/flags', label: 'Flags', icon: 'flag', platform: true },
+  { to: '/app', key: 'resumen', icon: 'layout-dashboard', end: true },
+  { to: '/app/proyectos', key: 'proyectos', icon: 'folder' },
+  { to: '/app/diseno', key: 'diseno', icon: 'sliders-horizontal' },
+  { to: '/app/equipos', key: 'equipos', icon: 'package' },
+  { to: '/app/modulos', key: 'modulos', icon: 'store' },
+  { to: '/app/equipo', key: 'equipo', icon: 'users', business: true },
+  { to: '/app/memoria', key: 'memoria', icon: 'file-text' },
+  { to: '/app/plantillas', key: 'plantillas', icon: 'layout-template', flag: 'templates' },
+  { to: '/app/finanzas', key: 'finanzas', icon: 'calculator', flag: 'finance' },
+  { to: '/app/posventa', key: 'posventa', icon: 'plug-zap', flag: 'posventa' },
+  { to: '/app/admin/flags', key: 'flags', icon: 'flag', platform: true },
 ]
 
 function initials(name) {
@@ -26,6 +28,7 @@ function initials(name) {
 }
 
 function Sidebar() {
+  const { t } = useTranslation('nav')
   const { user, org, logout, isPlatformAdmin, flag } = useAuth()
   const { navigate } = useTransition()
   const { openPalette } = useCommands()
@@ -33,7 +36,7 @@ function Sidebar() {
 
   async function onLogout() {
     await logout()
-    toast('success', 'Sesión cerrada')
+    toast('success', t('logout'))
     navigate('/')
   }
 
@@ -41,7 +44,7 @@ function Sidebar() {
     <aside className="sun-sidebar">
       <TransitionLink to="/" className="sun-sidebar__brand">
         <Icon name="sun" size={22} color="var(--green-600)" strokeWidth={2.2} />
-        <span>Sunalyze</span>
+        <span>{t('brand')}</span>
       </TransitionLink>
       <nav className="sun-sidebar__nav">
         {items.map((n) => (
@@ -52,35 +55,31 @@ function Sidebar() {
             className={({ isActive }) => `sun-nav-item${isActive ? ' sun-nav-item--active' : ''}`}
           >
             <Icon name={n.icon} size={18} />
-            <span>{n.label}</span>
+            <span>{t(`items.${n.key}`)}</span>
           </NavLink>
         ))}
       </nav>
       <div className="sun-sidebar__foot">
         <button type="button" className="sun-nav-item" onClick={openPalette}>
-          <Icon name="command" size={18} /><span>Comandos</span>
+          <Icon name="command" size={18} /><span>{t('commands')}</span>
           <span className="kbd" style={{ marginLeft: 'auto' }}>{formatShortcut({ mod: true, code: 'KeyK' }, isMac())}</span>
         </button>
-        <button className="sun-nav-item"><Icon name="settings" size={18} /><span>Ajustes</span></button>
+        <LanguageSwitcher />
         <div className="sun-userchip">
           <span className="sun-avatar">{initials(user?.full_name)}</span>
           <div className="sun-userchip__meta">
-            <strong>{user?.full_name || 'Usuario'}</strong>
-            <span>{org?.nombre || 'Mi espacio'}</span>
+            <strong>{user?.full_name || t('user')}</strong>
+            <span>{org?.nombre || t('myWorkspace')}</span>
           </div>
-          <IconBtn icon="log-out" label="Cerrar sesión" size="sm" onClick={onLogout} style={{ marginLeft: 'auto' }} />
+          <IconBtn icon="log-out" label={t('logout')} size="sm" onClick={onLogout} style={{ marginLeft: 'auto' }} />
         </div>
       </div>
     </aside>
   )
 }
 
-function routeLabel(pathname) {
-  const match = [...NAV].reverse().find((n) => (n.end ? pathname === n.to : pathname.startsWith(n.to)))
-  return match?.label || 'Sunalyze'
-}
-
 function useRouteFocus(mainRef) {
+  const { t } = useTranslation('nav')
   const location = useLocation()
   const [announcement, setAnnouncement] = useState('')
   const first = useRef(true)
@@ -89,19 +88,21 @@ function useRouteFocus(mainRef) {
       first.current = false
       return
     }
-    const label = routeLabel(location.pathname)
-    setAnnouncement(`${label}, página cargada`)
+    const match = [...NAV].reverse().find((n) => (n.end ? location.pathname === n.to : location.pathname.startsWith(n.to)))
+    const label = match ? t(`items.${match.key}`) : t('brand')
+    setAnnouncement(t('pageLoaded', { label }))
     if (mainRef.current) mainRef.current.focus({ preventScroll: true })
-  }, [location.pathname, mainRef])
+  }, [location.pathname, mainRef, t])
   return announcement
 }
 
 export function AppLayout() {
+  const { t } = useTranslation('nav')
   const mainRef = useRef(null)
   const announcement = useRouteFocus(mainRef)
   return (
     <div className="sun-app">
-      <a className="sun-skip-link" href="#main">Saltar al contenido</a>
+      <a className="sun-skip-link" href="#main">{t('skipToContent')}</a>
       <Sidebar />
       <main id="main" ref={mainRef} tabIndex={-1} className="sun-main">
         <Outlet />

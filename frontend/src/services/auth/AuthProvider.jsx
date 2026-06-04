@@ -1,5 +1,6 @@
 import { createContext, useContext, useEffect, useState, useCallback, useMemo } from 'react'
 import { api } from '@/api/client'
+import { applyLocale } from '@/services/i18n'
 
 const AuthContext = createContext(null)
 
@@ -11,11 +12,13 @@ export function AuthProvider({ children }) {
   const [session, setSession] = useState(undefined)
 
   const applySession = useCallback((data) => {
+    applyLocale(data?.user?.locale || data?.locale)
     setSession({
       user: data?.user || null,
       role: data?.role || null,
       permissions: data?.permissions || [],
       flags: data?.flags || {},
+      locale: data?.user?.locale || data?.locale || null,
     })
   }, [])
 
@@ -49,6 +52,12 @@ export function AuthProvider({ children }) {
     return d.user
   }, [applySession])
 
+  const setLocale = useCallback(async (locale) => {
+    const d = await api.auth.updateLocale(locale)
+    applySession(d)
+    return d.user
+  }, [applySession])
+
   const user = session?.user || null
   const permissions = session?.permissions || []
 
@@ -66,13 +75,15 @@ export function AuthProvider({ children }) {
     isAuthenticated: !!user,
     isPlatformAdmin: !!user?.is_superadmin,
     org: user?.organizations?.[0] || null,
+    locale: session?.locale || null,
     can,
     flag,
     login,
     register,
     logout,
     refresh,
-  }), [user, session, permissions, flags, can, flag, login, register, logout, refresh])
+    setLocale,
+  }), [user, session, permissions, flags, can, flag, login, register, logout, refresh, setLocale])
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>
 }

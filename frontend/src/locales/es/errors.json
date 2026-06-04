@@ -1,0 +1,71 @@
+{
+  "error": {
+    "bad_request": "Solicitud no válida.",
+    "validation": "Hay datos no válidos. Revisa el formulario.",
+    "not_found": "No se ha encontrado el recurso.",
+    "unauthorized": "Inicia sesión para continuar.",
+    "forbidden": "No tienes permisos para esta acción.",
+    "conflict": "La operación entra en conflicto con el estado actual.",
+    "internal": "Error interno del servidor. Inténtalo de nuevo."
+  },
+  "request": {
+    "body_required": "Faltan datos en la solicitud."
+  },
+  "auth": {
+    "email_taken": "Ya existe una cuenta con ese correo.",
+    "invalid_credentials": "Correo o contraseña incorrectos.",
+    "account_locked": "Cuenta bloqueada temporalmente por intentos fallidos. Inténtalo más tarde.",
+    "user_not_found": "No se ha encontrado el usuario.",
+    "login_required": "Inicia sesión para continuar.",
+    "locale_unsupported": "Idioma no soportado."
+  },
+  "account": {
+    "already_deleted": "La cuenta ya estaba eliminada."
+  },
+  "project": {
+    "not_found": "No se ha encontrado el proyecto.",
+    "cliente_required": "El cliente es obligatorio.",
+    "invalid_estado": "Estado de proyecto no válido."
+  },
+  "battery": {
+    "not_found": "No se ha encontrado la batería."
+  },
+  "installation": {
+    "not_found": "No se ha encontrado la instalación."
+  },
+  "invitation": {
+    "not_found": "No se ha encontrado la invitación.",
+    "expired": "La invitación ha caducado.",
+    "revoked": "La invitación fue revocada.",
+    "already_accepted": "La invitación ya fue aceptada.",
+    "already_member": "Ya eres miembro de este espacio.",
+    "already_pending": "Ya hay una invitación pendiente para ese correo.",
+    "already_processed": "La invitación ya fue procesada.",
+    "not_pending": "La invitación no está pendiente.",
+    "invalid_role": "Rol de invitación no válido.",
+    "role_too_high": "No puedes invitar con un rol superior al tuyo.",
+    "personal_space": "No se puede invitar en un espacio personal."
+  },
+  "membership": {
+    "not_found": "No se ha encontrado el miembro.",
+    "invalid_role": "Rol no válido.",
+    "last_owner": "No puedes dejar el espacio sin propietario.",
+    "grant_role_too_high": "No puedes asignar un rol superior al tuyo.",
+    "target_role_too_high": "No puedes modificar a un miembro con rol superior.",
+    "owner_only_transfer": "Solo el propietario puede transferir la propiedad."
+  },
+  "workspace": {
+    "not_found": "No se ha encontrado el espacio de trabajo.",
+    "not_member": "No perteneces a este espacio de trabajo.",
+    "no_seats": "No quedan plazas disponibles en el plan."
+  },
+  "memoria": {
+    "hash_required": "Se requiere el hash de la memoria."
+  },
+  "posventa": {
+    "project_id_required": "Se requiere el identificador del proyecto."
+  },
+  "legalization": {
+    "same_estado": "El proyecto ya está en ese estado."
+  }
+}
