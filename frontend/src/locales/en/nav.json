@@ -11,6 +11,8 @@
     "plantillas": "Templates",
     "finanzas": "Finance",
     "posventa": "After-sales",
+    "actividad": "Activity",
+    "papelera": "Trash",
     "flags": "Flags"
   },
   "commands": "Commands",

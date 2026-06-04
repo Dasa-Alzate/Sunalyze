@@ -1,0 +1,23 @@
+{
+  "title": "Papelera",
+  "subtitle": "Elementos eliminados que puedes restaurar.",
+  "empty": "La papelera está vacía.",
+  "sections": {
+    "projects": "Proyectos",
+    "catalogs": "Catálogos"
+  },
+  "deletedAt": "Eliminado el {{date}}",
+  "restore": "Restaurar",
+  "restoreProject": "Restaurar proyecto {{name}}",
+  "restoreCatalog": "Restaurar catálogo {{name}}",
+  "confirm": {
+    "title": "Restaurar elemento",
+    "project": "¿Restaurar el proyecto «{{name}}»? Volverá a aparecer en tu lista de proyectos.",
+    "catalog": "¿Restaurar el catálogo «{{name}}»? Volverá a tu biblioteca de equipos.",
+    "accept": "Restaurar",
+    "cancel": "Cancelar"
+  },
+  "restored": "Elemento restaurado",
+  "restoreError": "No se pudo restaurar el elemento",
+  "untitled": "Sin nombre"
+}

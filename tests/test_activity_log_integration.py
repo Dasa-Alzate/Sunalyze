@@ -160,6 +160,37 @@ class CatalogSoftDeleteTest(_Base):
         self.assertFalse(fresh.is_deleted)
 
 
+class DeletedListingFilterTest(_Base):
+    def test_projects_deleted_filter_returns_only_deleted(self):
+        client = self._login()
+        keep = client.post('/api/projects', json={'cliente': 'Activo'}).get_json()['id']
+        gone = client.post('/api/projects', json={'cliente': 'Borrado'}).get_json()['id']
+        client.delete(f'/api/projects/{gone}')
+
+        default_listing = client.get('/api/projects').get_json()
+        default_ids = [p['id'] for p in default_listing]
+        self.assertIn(keep, default_ids)
+        self.assertNotIn(gone, default_ids)
+
+        deleted_listing = client.get('/api/projects?deleted=true').get_json()
+        deleted_ids = [p['id'] for p in deleted_listing]
+        self.assertEqual(deleted_ids, [gone])
+        self.assertIsNotNone(deleted_listing[0]['deleted_at'])
+
+    def test_catalogs_deleted_filter_returns_only_deleted(self):
+        client = self._login()
+        cid = client.post('/api/catalogs', json={'nombre': 'Cat borrado'}).get_json()['id']
+        client.delete(f'/api/catalogs/{cid}')
+
+        default_library = client.get('/api/catalogs').get_json()
+        self.assertNotIn(cid, [c['id'] for c in default_library])
+
+        deleted_library = client.get('/api/catalogs?deleted=true').get_json()
+        self.assertEqual([c['id'] for c in deleted_library], [cid])
+        self.assertTrue(deleted_library[0]['own'])
+        self.assertIsNotNone(deleted_library[0]['deleted_at'])
+
+
 class AuditFeedTest(_Base):
     def test_feed_paginates_and_resolves_link(self):
         client = self._login()

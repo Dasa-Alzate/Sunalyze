@@ -20,6 +20,8 @@ const NAV = [
   { to: '/app/plantillas', key: 'plantillas', icon: 'layout-template', flag: 'templates' },
   { to: '/app/finanzas', key: 'finanzas', icon: 'calculator', flag: 'finance' },
   { to: '/app/posventa', key: 'posventa', icon: 'plug-zap', flag: 'posventa' },
+  { to: '/app/actividad', key: 'actividad', icon: 'activity', perm: 'audit:view' },
+  { to: '/app/papelera', key: 'papelera', icon: 'trash-2', perm: 'project:delete' },
   { to: '/app/admin/flags', key: 'flags', icon: 'flag', platform: true },
 ]
 
@@ -30,10 +32,10 @@ function initials(name) {
 
 function Sidebar() {
   const { t } = useTranslation('nav')
-  const { user, org, logout, isPlatformAdmin, flag } = useAuth()
+  const { user, org, logout, isPlatformAdmin, flag, can } = useAuth()
   const { navigate } = useTransition()
   const { openPalette } = useCommands()
-  const items = NAV.filter((n) => (!n.business || org?.type !== 'PERSONAL') && (!n.platform || isPlatformAdmin) && (!n.flag || flag(n.flag)))
+  const items = NAV.filter((n) => (!n.business || org?.type !== 'PERSONAL') && (!n.platform || isPlatformAdmin) && (!n.flag || flag(n.flag)) && (!n.perm || can(n.perm)))
 
   async function onLogout() {
     await logout()

@@ -15,7 +15,14 @@ catalogs_bp = Blueprint('catalogs', __name__)
 @catalogs_bp.route('/api/catalogs', methods=['GET'])
 @require_permission(Permission.EQUIPMENT_VIEW)
 def list_catalogs():
+    if request.args.get('deleted', '').lower() in ('1', 'true', 'yes'):
+        return list_deleted_catalogs()
     return jsonify(CatalogService.library(current_org_id()))
+
+
+@require_permission(Permission.CATALOG_MANAGE)
+def list_deleted_catalogs():
+    return jsonify(CatalogService.deleted_library(current_org_id()))
 
 
 @catalogs_bp.route('/api/catalogs', methods=['POST'])

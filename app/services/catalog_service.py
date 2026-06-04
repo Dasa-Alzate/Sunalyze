@@ -80,6 +80,20 @@ class CatalogService:
         return [cls._serialize(c, org_id, subscribed) for c in own + subs]
 
     @classmethod
+    def deleted_library(cls, org_id):
+        """Catalogos propios soft-deleteados del workspace, para la papelera."""
+        if not org_id:
+            return []
+        rows = Catalog.with_deleted().filter(
+            Catalog.org_id == org_id, Catalog.deleted_at.isnot(None)
+        ).order_by(Catalog.deleted_at.desc()).all()
+        return [
+            {**c.to_dict(), 'own': True,
+             'deleted_at': c.deleted_at.isoformat() if c.deleted_at else None}
+            for c in rows
+        ]
+
+    @classmethod
     def marketplace(cls, org_id):
         subscribed = set(cls.subscribed_catalog_ids(org_id))
         public = Catalog.query.filter(

@@ -36,6 +36,13 @@ export function date(value, options = { dateStyle: 'medium' }) {
   return d.toLocaleDateString(uiLocaleTag(), options)
 }
 
+export function dateTime(value, options = { dateStyle: 'medium', timeStyle: 'short' }) {
+  if (!value) return PLACEHOLDER
+  const d = value instanceof Date ? value : new Date(value)
+  if (Number.isNaN(d.getTime())) return PLACEHOLDER
+  return d.toLocaleString(uiLocaleTag(), options)
+}
+
 export function techNum(value, decimals = 2) {
   if (isBlank(value)) return PLACEHOLDER
   return Number(value).toLocaleString(TECHNICAL_LOCALE, {
