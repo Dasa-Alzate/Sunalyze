@@ -1,6 +1,6 @@
 # API map
 
-Mapa autogenerado por `flask api-map`. Endpoints `/api`: 105.
+Mapa autogenerado por `flask api-map`. Endpoints `/api`: 110.
 
 No editar a mano: regenerar con `flask api-map`.
 
@@ -125,6 +125,16 @@ No editar a mano: regenerar con `flask api-map`.
 | GET | `/api/modules` | `modules.list_modules` |  |
 | POST | `/api/modules/<key>/disable` | `modules.disable_module` |  |
 | POST | `/api/modules/<key>/enable` | `modules.enable_module` |  |
+
+## notifications
+
+| Método(s) | Ruta | Endpoint | Resumen |
+| --- | --- | --- | --- |
+| GET | `/api/notifications` | `notifications.list_notifications` |  |
+| POST | `/api/notifications/<int:notification_id>/read` | `notifications.mark_read` |  |
+| POST | `/api/notifications/read-all` | `notifications.mark_all_read` |  |
+| GET | `/api/notifications/unread-count` | `notifications.unread_count` |  |
+| GET | `/api/pending-work` | `notifications.pending_work` |  |
 
 ## posventa
 
