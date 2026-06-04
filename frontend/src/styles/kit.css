@@ -101,3 +101,21 @@
 .sun-speclist { display: grid; grid-template-columns: 1fr 1fr; gap: var(--space-3); }
 
 @keyframes sunToastIn { from { opacity: 0; transform: translateY(8px); } to { opacity: 1; transform: translateY(0); } }
+
+/* ---- Notifications ---- */
+.sun-notif-bell__icon { position: relative; display: inline-flex; }
+.sun-notif-badge { position: absolute; top: -6px; right: -8px; min-width: 16px; height: 16px; padding: 0 4px; border-radius: var(--radius-pill); background: var(--danger); color: #fff; font-size: 10px; font-weight: 700; line-height: 16px; text-align: center; }
+.sun-notif-center__actions { display: flex; align-items: center; gap: var(--space-2); }
+.sun-notif-center__more { display: flex; justify-content: center; padding-top: var(--space-2); }
+.sun-notif-list { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: var(--space-1); }
+.sun-notif-item { display: flex; align-items: center; gap: var(--space-2); border-radius: var(--radius-sm); }
+.sun-notif-item:hover { background: var(--ink-100); }
+.sun-notif-item__main { flex: 1; display: flex; align-items: center; gap: var(--space-2); padding: var(--space-2) var(--space-3); border: 0; background: transparent; color: var(--text-muted); font-family: var(--font-sans); font-size: var(--text-sm); text-align: left; cursor: pointer; }
+.sun-notif-item--unread .sun-notif-item__main { color: var(--text-strong); font-weight: var(--fw-medium); }
+.sun-notif-item__dot { width: 7px; height: 7px; flex: none; border-radius: var(--radius-pill); background: var(--primary); }
+.sun-notif-item__text { flex: 1; }
+.sun-notif-empty { display: flex; flex-direction: column; align-items: center; gap: var(--space-2); padding: var(--space-8) var(--space-4); color: var(--text-subtle); text-align: center; }
+.sun-pending-list { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: var(--space-2); }
+.sun-pending-item { display: flex; align-items: center; gap: var(--space-3); }
+.sun-pending-item__count { min-width: 26px; height: 24px; padding: 0 6px; display: inline-flex; align-items: center; justify-content: center; border-radius: var(--radius-pill); background: var(--amber-100); color: var(--amber-700); font-weight: 700; font-size: var(--text-sm); flex: none; }
+.sun-pending-item__label { flex: 1; font-size: var(--text-sm); color: var(--text-strong); }

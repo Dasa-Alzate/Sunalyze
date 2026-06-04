@@ -5,6 +5,7 @@ import { Btn, Dot, Badge, Icon, Card, Spinner, ErrorState } from '@/shared/ui'
 import { api } from '@/api/client'
 import { estadoMeta, relativo } from '@/shared/estados'
 import { dec } from '@/shared/format'
+import PendingWorkPanel from '@/features/notifications/PendingWorkPanel'
 
 export default function Dashboard() {
   const nav = useNavigate()
@@ -80,6 +81,7 @@ export default function Dashboard() {
               </Card>
 
               <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--space-5)' }}>
+                <PendingWorkPanel />
                 <Card className="sun-card--pad">
                   <div className="sun-section-title"><h3>Empezar</h3></div>
                   <p style={{ fontSize: 'var(--text-sm)', color: 'var(--text-muted)', marginBottom: 'var(--space-4)' }}>De coordenadas a memoria técnica firmable en 10 minutos.</p>

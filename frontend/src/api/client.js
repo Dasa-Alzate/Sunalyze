@@ -192,6 +192,15 @@ export const api = {
       remove: (id, readingId) => del(`/api/installations/${id}/readings/${readingId}`),
     },
   },
+  notifications: {
+    list: (page = 1, perPage = 20) => get(`/api/notifications?page=${page}&per_page=${perPage}`),
+    unreadCount: () => get('/api/notifications/unread-count'),
+    markRead: (id) => post(`/api/notifications/${id}/read`, {}),
+    readAll: () => post('/api/notifications/read-all', {}),
+  },
+  pendingWork: {
+    get: () => get('/api/pending-work'),
+  },
   auth: {
     me: () => get('/api/auth/me'),
     updateLocale: (locale) => patch('/api/auth/me', { locale }),

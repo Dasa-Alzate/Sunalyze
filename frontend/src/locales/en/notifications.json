@@ -1,0 +1,37 @@
+{
+  "bell": {
+    "label": "Notifications",
+    "labelWithCount": "Notifications, {{count}} unread",
+    "open": "Open notifications"
+  },
+  "center": {
+    "title": "Notifications",
+    "empty": "You have no notifications",
+    "markAll": "Mark all as read",
+    "markRead": "Mark as read",
+    "unread": "Unread",
+    "loadMore": "Load more",
+    "liveUnread": "{{count}} unread notifications",
+    "liveUnread_one": "{{count}} unread notification",
+    "liveUnread_zero": "No unread notifications"
+  },
+  "types": {
+    "project.shared": "A project was shared with you",
+    "membership.added": "You were added to the team",
+    "membership.role_changed": "Your role has changed",
+    "invitation.created": "New invitation",
+    "default": "New notification"
+  },
+  "pending": {
+    "title": "Pending work",
+    "empty": "You are all caught up, nothing pending",
+    "go": "Go",
+    "items": {
+      "projects.draft": "Draft projects",
+      "analysis.stale": "Projects without an up-to-date analysis",
+      "invitations.pending": "Pending invitations",
+      "account.email_unverified": "Unverified email",
+      "memoria.missing": "Unsigned technical reports"
+    }
+  }
+}
