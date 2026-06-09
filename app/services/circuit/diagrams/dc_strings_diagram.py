@@ -27,7 +27,7 @@ class DCStringsDiagram:
 
     def render(self) -> str:
         cfg = self.cfg
-        N = cfg.num_strings
+        N = max(1, cfg.num_strings)
 
         # ── Vertical bus x-coordinate (centre of column 1) ────────────────
         BUS = 1.5
