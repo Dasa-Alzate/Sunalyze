@@ -116,13 +116,28 @@ class AnalysisController:
             wires_loss = 0.985
             Operation_temp_cell = 50
 
-            lat = float(data.get('latitud'))
-            lon = float(data.get('longitud'))
+            # Validar presencia de los numéricos requeridos ANTES de parsear,
+            # para devolver un 400 claro en vez de un 500 por float(None).
+            required_inputs = ['latitud', 'longitud', 'autoconsumo', 'necesidad']
+            missing_inputs = [k for k in required_inputs if data.get(k) in (None, '')]
+            if missing_inputs:
+                return jsonify({
+                    "error": f"Faltan campos requeridos en el cuerpo JSON: {', '.join(missing_inputs)}."
+                }), 400
+
+            try:
+                lat = float(data.get('latitud'))
+                lon = float(data.get('longitud'))
+                autoconsumo = float(data.get('autoconsumo')) / 100
+                necesidad = float(data.get('necesidad'))
+            except (TypeError, ValueError):
+                return jsonify({
+                    "error": "Los campos 'latitud', 'longitud', 'autoconsumo' y 'necesidad' deben ser numéricos."
+                }), 400
+
             coplanar = bool(data.get('coplanar'))
             start_year = int(data.get('start', 2020))
             end_year = int(data.get('end', 2023))
-            autoconsumo = float(data.get('autoconsumo')) / 100
-            necesidad = float(data.get('necesidad'))
 
             panel_temp_loss = panel.tcp
             cell_noct = panel.t_noct
@@ -142,11 +157,6 @@ class AnalysisController:
                 inclinacion = beta_optimal
                 azimut = 0
 
-            if lat is None or lon is None:
-                return jsonify({
-                    "error": "Debes enviar 'lat' y 'lon' en el cuerpo JSON."
-                }), 400
-            
             # Obtener datos de irradiancia CON CACHE
             df, meta = AnalysisController._get_pvgis_data_cached(lat, lon, start_year, end_year)
 
