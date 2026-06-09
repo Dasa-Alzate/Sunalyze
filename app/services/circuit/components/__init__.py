@@ -1,8 +1,6 @@
 """Electrical circuit component symbols."""
 
-from .solar_panel import SolarPanel
 from .fuse import Fuse
-from .switch_dc import SwitchDC
 from .switch import Switch
 from .inverter import Inverter
 from .circuit_breaker import CircuitBreaker
@@ -16,9 +14,7 @@ from .generator_fv import FVGenerator
 from .zero_injection import ZeroInjection
 
 __all__ = [
-    "SolarPanel",
     "Fuse",
-    "SwitchDC",
     "Switch",
     "Inverter",
     "CircuitBreaker",

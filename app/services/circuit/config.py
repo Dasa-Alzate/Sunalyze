@@ -14,9 +14,6 @@ class DiagramStyle:
 
     # Layout constants (px)
     CELL: int = 120     # Component cell size (each component fits in CELL×CELL)
-    WIRE: int = 50      # Gap between components (wire stub length)
-    ROW_H: int = 200    # Vertical spacing between strings (CELL + padding)
-    MARGIN: int = 50    # Canvas margin
 
 
 @dataclass

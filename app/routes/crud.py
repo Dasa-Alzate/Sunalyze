@@ -286,5 +286,3 @@ def calculate_section():
     except Exception:
         logger.exception("Error en calculate_section")
         return jsonify({'error': 'Error interno del servidor'}), 500
-    
-# ========== PROTECTIONS CRUD ==========
