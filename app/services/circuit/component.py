@@ -2,6 +2,7 @@
 
 from abc import ABC, abstractmethod
 from typing import ClassVar
+from xml.sax.saxutils import escape
 
 
 class Component(ABC):
@@ -64,9 +65,10 @@ class Component(ABC):
     @staticmethod
     def _text(x: float, y: float, text: str, style,
               anchor: str = "middle") -> str:
+        safe_text = escape(str(text))
         return (
             f'<text x="{x}" y="{y}" text-anchor="{anchor}"'
             f' font-family="{style.font_family}"'
             f' font-size="{style.font_size}"'
-            f' fill="{style.label_color}">{text}</text>'
+            f' fill="{style.label_color}">{safe_text}</text>'
         )
