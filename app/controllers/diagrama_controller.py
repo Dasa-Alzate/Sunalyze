@@ -1,8 +1,11 @@
 """Controlador para la generación de diagramas funcionales."""
 
+import logging
 from flask import render_template, jsonify
 from app.models.panel import Panel
 from app.models.inverter import Inverter
+
+logger = logging.getLogger(__name__)
 
 
 class DiagramaController:
@@ -20,6 +23,11 @@ class DiagramaController:
             HTML renderizado o respuesta de error JSON.
         """
         try:
+            if not data or data.get('panel_id') in (None, ''):
+                return jsonify({"error": "El campo 'panel_id' es requerido."}), 400
+            if data.get('inverter_id') in (None, ''):
+                return jsonify({"error": "El campo 'inverter_id' es requerido."}), 400
+
             panel = Panel.query.get(data['panel_id'])
             if not panel:
                 return jsonify({"error": "Panel no encontrado"}), 400
@@ -46,5 +54,6 @@ class DiagramaController:
                 panel_protection_i=data.get('panel_protection_i', ''),
             )
 
-        except Exception as e:
-            return jsonify({"error": str(e)}), 500
+        except Exception:
+            logger.exception("Error en get_diagrama_completo")
+            return jsonify({"error": "Error interno del servidor"}), 500

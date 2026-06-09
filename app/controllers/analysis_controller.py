@@ -3,8 +3,11 @@
 from flask import jsonify
 import pvlib
 import math
+import logging
 from app.models.panel import Panel
 from app.models.inverter import Inverter
+
+logger = logging.getLogger(__name__)
 
 class AnalysisController:
     """
@@ -81,7 +84,9 @@ class AnalysisController:
     def calculate_panel_requirements(data):
         """Calcula los requisitos de paneles y encuentra inversores compatibles"""
         try:
-            # Obtener datos del panel desde la base de datos
+            if not data or data.get('panel_id') in (None, ''):
+                return jsonify({"error": "El campo 'panel_id' es requerido."}), 400
+
             panel = Panel.query.get(data['panel_id'])
             if not panel:
                 return jsonify({"error": "Panel no encontrado"}), 400
@@ -116,8 +121,6 @@ class AnalysisController:
             wires_loss = 0.985
             Operation_temp_cell = 50
 
-            # Validar presencia de los numéricos requeridos ANTES de parsear,
-            # para devolver un 400 claro en vez de un 500 por float(None).
             required_inputs = ['latitud', 'longitud', 'autoconsumo', 'necesidad']
             missing_inputs = [k for k in required_inputs if data.get(k) in (None, '')]
             if missing_inputs:
@@ -133,6 +136,15 @@ class AnalysisController:
             except (TypeError, ValueError):
                 return jsonify({
                     "error": "Los campos 'latitud', 'longitud', 'autoconsumo' y 'necesidad' deben ser numéricos."
+                }), 400
+
+            if autoconsumo <= 0:
+                return jsonify({"error": "El campo 'autoconsumo' debe ser mayor que 0."}), 400
+            if necesidad <= 0:
+                return jsonify({"error": "El campo 'necesidad' debe ser mayor que 0."}), 400
+            if panel.width <= 0 or panel.height <= 0:
+                return jsonify({
+                    "error": f"El panel '{panel.nombre}' tiene dimensiones invalidas: 'width' y 'height' deben ser mayores que 0."
                 }), 400
 
             coplanar = bool(data.get('coplanar'))
@@ -214,7 +226,7 @@ class AnalysisController:
             max_cell_amount = None
             if inverter:
                 max_cell_amount = inverter.vmax / (
-                    coeficiente_v_temp * (((coldest_temp + df['temp_air'].min()) / 2) - 25) + voc_cell
+                    coeficiente_v_temp * (coldest_temp - 25) + voc_cell
                 )
             
             vmax_coldest_day = panel.voc * (1 + (-1 * panel.tcv * (25 - coldest_temp) / 100))
@@ -289,9 +301,10 @@ class AnalysisController:
             
             return jsonify(response_data)
             
-        except Exception as e:
-            return jsonify({"error": str(e)}), 500
-    
+        except Exception:
+            logger.exception("Error en calculate_panel_requirements")
+            return jsonify({"error": "Error interno del servidor"}), 500
+
     @staticmethod
     def _find_compatible_inverters(panel, total_field_power, coldest_temp, cell_amount, show_all=False):
         """Encuentra inversores compatibles basado en el panel y potencia del campo"""

@@ -1,8 +1,11 @@
+import logging
 from flask import Blueprint, request, jsonify
 from app import db
 from app.models.panel import Panel
 from app.models.inverter import Inverter
 from app.models.wire import Wire
+
+logger = logging.getLogger(__name__)
 
 crud_bp = Blueprint('crud', __name__)
 
@@ -21,8 +24,10 @@ def get_panel(panel_id):
 
 @crud_bp.route('/api/panels', methods=['POST'])
 def create_panel():
-    data = request.get_json()
-    
+    data = request.get_json(silent=True)
+    if not data:
+        return jsonify({'error': 'Cuerpo JSON requerido'}), 400
+
     # Validación básica
     required_fields = ['nombre', 'power', 'voc', 'vmp', 'imp']
     for field in required_fields:
@@ -52,8 +57,10 @@ def create_panel():
 @crud_bp.route('/api/panels/<int:panel_id>', methods=['PUT'])
 def update_panel(panel_id):
     panel = Panel.query.get_or_404(panel_id)
-    data = request.get_json()
-    
+    data = request.get_json(silent=True)
+    if not data:
+        return jsonify({'error': 'Cuerpo JSON requerido'}), 400
+
     # Actualizar campos
     update_fields = ['nombre', 'y', 'tcp', 'tcv', 'voc', 'vmp', 'imp',
                     'isc', 'power', 't_noct', 'height', 'width']
@@ -86,8 +93,10 @@ def get_inverter(inverter_id):
 
 @crud_bp.route('/api/inverters', methods=['POST'])
 def create_inverter():
-    data = request.get_json()
-    
+    data = request.get_json(silent=True)
+    if not data:
+        return jsonify({'error': 'Cuerpo JSON requerido'}), 400
+
     required_fields = ['nombre', 'power', 'vmax', 'I_max_input', 'I_max_output']
     for field in required_fields:
         if field not in data:
@@ -111,9 +120,11 @@ def create_inverter():
 @crud_bp.route('/api/inverters/<int:inverter_id>', methods=['PUT'])
 def update_inverter(inverter_id):
     inverter = Inverter.query.get_or_404(inverter_id)
-    data = request.get_json()
-    
-    update_fields = ['nombre', 'y', 'power_max', 'power', 'vmax', 
+    data = request.get_json(silent=True)
+    if not data:
+        return jsonify({'error': 'Cuerpo JSON requerido'}), 400
+
+    update_fields = ['nombre', 'y', 'power_max', 'power', 'vmax',
                     'I_max_input', 'I_max_output']
     
     for field in update_fields:
@@ -138,8 +149,9 @@ def get_all_wires():
     try:
         wires = Wire.query.all()
         return jsonify([wire.to_dict() for wire in wires])
-    except Exception as e:
-        return jsonify({'error': str(e)}), 500
+    except Exception:
+        logger.exception("Error en get_all_wires")
+        return jsonify({'error': 'Error interno del servidor'}), 500
 
 # GET - Obtener un wire por ID
 @crud_bp.route('/api/wires/<int:wire_id>', methods=['GET'])
@@ -151,8 +163,10 @@ def get_wire(wire_id):
 @crud_bp.route('/api/wires', methods=['POST'])
 def create_wire():
     try:
-        data = request.get_json()
-        
+        data = request.get_json(silent=True)
+        if not data:
+            return jsonify({'error': 'Cuerpo JSON requerido'}), 400
+
         # Validaciones básicas
         required_fields = ['seccion', 'corriente', 'tipo', 'material', 'no_conductores']
         for field in required_fields:
@@ -172,16 +186,19 @@ def create_wire():
         db.session.commit()
         
         return jsonify(wire.to_dict()), 201
-        
-    except Exception as e:
+
+    except Exception:
         db.session.rollback()
-        return jsonify({'error': str(e)}), 500
+        logger.exception("Error en create_wire")
+        return jsonify({'error': 'Error interno del servidor'}), 500
 
 # PUT - Actualizar wire existente
 @crud_bp.route('/api/wires/<int:wire_id>', methods=['PUT'])
 def update_wire(wire_id):
     wire = Wire.query.get_or_404(wire_id)
-    data = request.get_json()
+    data = request.get_json(silent=True)
+    if not data:
+        return jsonify({'error': 'Cuerpo JSON requerido'}), 400
 
     update_fields = ['seccion', 'corriente', 'tipo', 'material', 'no_conductores']
     for field in update_fields:
@@ -225,15 +242,18 @@ def search_wires():
         
         wires = query.all()
         return jsonify([wire.to_dict() for wire in wires])
-        
-    except Exception as e:
-        return jsonify({'error': str(e)}), 500
+
+    except Exception:
+        logger.exception("Error en search_wires")
+        return jsonify({'error': 'Error interno del servidor'}), 500
 
 @crud_bp.route('/api/wires/calculate-section', methods=['POST'])
 def calculate_section():
     try:
-        data = request.get_json()
-        
+        data = request.get_json(silent=True)
+        if not data:
+            return jsonify({'error': 'Cuerpo JSON requerido'}), 400
+
         # Validar campos requeridos
         required_fields = ['tipo', 'material', 'no_conductores', 'i_section']
         for field in required_fields:
@@ -262,8 +282,9 @@ def calculate_section():
             'corriente': wire.corriente,
             'wire': wire.to_dict()
         })
-        
-    except Exception as e:
-        return jsonify({'error': str(e)}), 500
+
+    except Exception:
+        logger.exception("Error en calculate_section")
+        return jsonify({'error': 'Error interno del servidor'}), 500
     
 # ========== PROTECTIONS CRUD ==========
