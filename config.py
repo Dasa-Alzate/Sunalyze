@@ -3,12 +3,9 @@ from dotenv import load_dotenv
 
 load_dotenv()
 
-# FLASK_ENV decide si exigimos secretos explícitos (producción) o si
-# permitimos defaults de desarrollo. En producción NUNCA caemos a defaults.
 _ENV = os.environ.get('FLASK_ENV', 'development').lower()
 _IS_PRODUCTION = _ENV == 'production'
 
-# Default SOLO para desarrollo local. En producción DATABASE_URL es obligatoria.
 _DEV_DB_URL = 'mysql+pymysql://root:0000@localhost/sunalyze'
 
 _db_url = os.environ.get('DATABASE_URL')
@@ -20,7 +17,6 @@ if _db_url is None:
         )
     _db_url = _DEV_DB_URL
 
-# Normalizar el esquema legacy 'mysql://' al driver pymysql.
 if _db_url.startswith('mysql://'):
     _db_url = 'mysql+pymysql://' + _db_url[len('mysql://'):]
 
