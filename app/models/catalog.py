@@ -17,6 +17,8 @@ class Catalog(BaseModel, SoftDeleteMixin):
     descripcion = db.Column(db.String(255), default='')
     org_id = db.Column(db.Integer, db.ForeignKey('organizations.id'), index=True)
     is_official = db.Column(db.Boolean, nullable=False, default=False)
+    scraper_name = db.Column(db.String(100), index=True)
+    is_active = db.Column(db.Boolean, nullable=False, default=True)
 
     @property
     def is_marketplace(self):
@@ -30,6 +32,8 @@ class Catalog(BaseModel, SoftDeleteMixin):
             'org_id': self.org_id,
             'is_official': self.is_official,
             'is_marketplace': self.is_marketplace,
+            'scraper_name': self.scraper_name,
+            'is_active': self.is_active,
         }
 
     def __repr__(self):
