@@ -11,15 +11,15 @@ def load_initial_data():
     """Carga los datos iniciales desde el JSON a la base de datos"""
     
     json_path = os.path.join(os.path.dirname(__file__), '../../data/database.json')
-    
+
     try:
+        if Panel.query.first() or Inverter.query.first():
+            print("Datos iniciales ya presentes, se omite la carga.")
+            return
+
         with open(json_path, 'r', encoding='utf-8') as f:
             data = json.load(f)
-        
-        # Limpiar tablas existentes
-        Panel.query.delete()
-        Inverter.query.delete()
-        
+
         # Cargar paneles
         for panel_data in data.get('placas', []):
             panel = Panel(
