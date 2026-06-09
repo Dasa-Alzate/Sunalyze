@@ -863,7 +863,7 @@ async function calculateLengthByLength(a) {
         const length_b = (((vmp * noPanels * delta_v) / (2 * resistivity)) - (length_a * current_a / section_a)) * section_b / current_b;
 
         input_b.value = length_b.toFixed(2);
-        results_data[`wire_length_${n}`] = length_b.toFixed(2);
+        results_data[`wire_length_${b}`] = length_b.toFixed(2);
         
         console.log(`📏📏📏 Longitud calculada para tramo ${b}: ${length_b.toFixed(2)}m`);
         
