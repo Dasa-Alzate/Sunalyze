@@ -65,6 +65,9 @@ const step5Container = document.getElementById("step5-container");
 const calculosSection = document.getElementById("calculos-section");
 const errorMessage = document.getElementById("error-message");
 
+const MAX_VOLTAGE_DROP_RATIO = 0.015;
+const COPPER_RESISTIVITY = 0.01724;
+
 const FUSE_CONFIG = {
     panels: {
         keys: [
@@ -111,8 +114,6 @@ document.getElementById('chk-show-all-inverters')?.addEventListener('change', ()
 // Funciones principales
 async function loadEquipmentData() {
     try {
-        console.log('Cargando datos del equipo...');
-        
         const panelsResponse = await fetch('/api/panels');
         if (!panelsResponse.ok) throw new Error('Error cargando paneles');
         panels = await panelsResponse.json();
@@ -121,15 +122,11 @@ async function loadEquipmentData() {
         if (!invertersResponse.ok) throw new Error('Error cargando inversores');
         inverters = await invertersResponse.json();
 
-        console.log(`Cargados ${panels.length} paneles y ${inverters.length} inversores`);
-
         // Inicializar Fuse.js
         initializeFuse();
 
         // Inicializar SearchBoxes
         initializeSearchBoxes();
-        
-        console.log('Aplicación inicializada correctamente');
 
     } catch (error) {
         console.error('Error cargando datos:', error);
@@ -154,7 +151,6 @@ function initializeSearchBoxes() {
         fuseInstance: fusePanels,
         data: panels,
         onSelect: (item) => {
-            console.log('Panel seleccionado:', item.nombre);
             handlePanelAnalysis();
         }
     });
@@ -169,9 +165,7 @@ function initializeSearchBoxes() {
         placeholder: 'Buscar inversor compatible...',
         fuseInstance: fuseInverters,
         data: [], // Inicialmente vacío
-        onSelect: (item) => {
-            console.log('Inversor seleccionado:', item.nombre);
-        }
+        onSelect: (item) => {}
     });
 
     panelSearchBox.init();
@@ -252,8 +246,6 @@ function updateWire(e, a) {
 
 async function runWireUpdate(e, a) {
     try {
-        console.log(`🔄 Iniciando actualización para tramo ${a}...`);
-
         // Validar que los elementos existen
         const input_a = document.getElementById("input-length-" + a);
         const b = a === 1 ? 2 : 1
@@ -262,34 +254,42 @@ async function runWireUpdate(e, a) {
         }
 
         // Paso 1: Calcular sección del tramo A
-        console.log(`📐 Paso 1: Calculando sección para tramo ${a}`);
         await calculateWireSection(a);
-        
+
         // Pequeña pausa para asegurar que el DOM se actualice
         await new Promise(resolve => setTimeout(resolve, 50));
-        
+
         // Paso 2: Calcular longitud del tramo B basado en A
-        console.log(`📏 Paso 2: Calculando longitud para tramo ${b}`);
         await calculateLengthByLength(a);
-        
+
         // Pequeña pausa para asegurar que el DOM se actualice
         await new Promise(resolve => setTimeout(resolve, 50));
-        
+
         // Paso 3: Calcular sección del tramo B
-        console.log(`📐 Paso 3: Calculando sección para tramo ${b}`);
         await calculateWireSection(b);
-        
-        console.log(`✅ Actualización completada exitosamente para tramo ${a}`);
-        
+
     } catch (error) {
         console.error(`❌ Error en updateWire para tramo ${a}:`, error);
         // Puedes mostrar un mensaje al usuario si lo deseas
     }
 }
 
+function buildAnalysisBody(extra) {
+    const selectedPanel = getSelectedPanel();
+    return {
+        latitud: latitudValue.value,
+        longitud: longitudValue.value,
+        coplanar: chk.checked,
+        inclinacion: chk.checked ? inclinacionValue.value : 0,
+        azimut: chk.checked ? 180 + parseFloat(azimutValue.value) : 180,
+        panel_id: selectedPanel.id,
+        autoconsumo: selectAutoconsumo.value,
+        necesidad: necesidadValue.value,
+        ...extra
+    };
+}
+
 async function handlePanelAnalysis() {
-    console.log("Iniciando análisis de paneles");
-    
     clearErrors();
     const selectedPanel = getSelectedPanel();
 
@@ -299,22 +299,14 @@ async function handlePanelAnalysis() {
     }
 
     const loading = showLoading('step2');
-    
+
     try {
         const res = await fetch('/api/panel-analysis', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({
-                latitud: latitudValue.value,
-                longitud: longitudValue.value,
-                coplanar: chk.checked,
-                inclinacion: chk.checked ? inclinacionValue.value : 0,
-                azimut: chk.checked ? 180 + parseFloat(azimutValue.value) : 180,
-                panel_id: selectedPanel.id,
-                autoconsumo: selectAutoconsumo.value,
-                necesidad: necesidadValue.value,
+            body: JSON.stringify(buildAnalysisBody({
                 show_all_inverters: document.getElementById('chk-show-all-inverters')?.checked || false
-            })
+            }))
         });
 
         if (!res.ok) {
@@ -326,7 +318,6 @@ async function handlePanelAnalysis() {
         // Hidratar el searchbox de inversores con los compatibles
         if (data.compatible_inverters && data.compatible_inverters.length > 0) {
             inverterSearchBox.setData(data.compatible_inverters);
-            console.log(`Cargados ${data.compatible_inverters.length} inversores compatibles`);
             deviceInverterSection.classList.remove("hidden");
             deviceSubmitSection.classList.remove("hidden");
             setTimeout(() => {
@@ -347,36 +338,26 @@ async function handlePanelAnalysis() {
 }
 
 async function handleCompleteAnalysis() {
-    console.log("Iniciando análisis completo");
-    
     clearErrors();
     showStep4Content();
-    
+
     const selectedPanel = getSelectedPanel();
     const selectedInverter = getSelectedInverter();
-    
+
     if (!selectedPanel || !selectedInverter) {
         showError('Por favor selecciona un panel y un inversor');
         return;
     }
 
     const loading = showLoading('step4');
-    
+
     try {
         const res = await fetch('/api/panel-analysis', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({
-                latitud: latitudValue.value,
-                longitud: longitudValue.value,
-                coplanar: chk.checked,
-                inclinacion: chk.checked ? inclinacionValue.value : 0,
-                azimut: chk.checked ? 180 + parseFloat(azimutValue.value) : 180,
-                panel_id: selectedPanel.id,
-                inverter_id: selectedInverter.id,
-                autoconsumo: selectAutoconsumo.value,
-                necesidad: necesidadValue.value
-            })
+            body: JSON.stringify(buildAnalysisBody({
+                inverter_id: selectedInverter.id
+            }))
         });
 
         if (!res.ok) {
@@ -385,7 +366,6 @@ async function handleCompleteAnalysis() {
         
         const data = await res.json();
         results_data = { ...results_data, ...data };
-        console.log("results_data", results_data);
 
         displayCompleteResults(data);
 
@@ -638,8 +618,6 @@ printUpdateBtn?.addEventListener('click', function() {
 
 async function loadAndRenderDiagram(analysisData, selectedPanel, selectedInverter) {
     try {
-        console.log("Cargando diagrama del sistema...");
-        
         // Preparar datos para el endpoint del diagrama
         const diagramData = {
             panel_id: selectedPanel.id,
@@ -701,9 +679,7 @@ async function loadAndRenderDiagram(analysisData, selectedPanel, selectedInverte
                 updateWire(e, 2);
             });
         }
-        
-        console.log("✅ Diagrama renderizado correctamente");
-        
+
     } catch (error) {
         console.error('❌ Error cargando el diagrama:', error);
         // No mostramos error al usuario para no confundir, solo log
@@ -767,14 +743,6 @@ async function calculateWireSection(n) {
             throw new Error('Valor de n no válido. Debe ser 1 o 2.');
         }
         
-        console.log(`Calculando sección para tramo ${n}:`, {
-            installationType,
-            material,
-            conductors,
-            i_section,
-            length
-        });
-
         // Hacer request al endpoint
         const response = await fetch('/api/wires/calculate-section', {
             method: 'POST',
@@ -805,7 +773,6 @@ async function calculateWireSection(n) {
         if (sectionElement) {
             sectionElement.textContent = `${data.seccion}`;
             results_data[`wire_section_${n}`] = data.seccion;
-            console.log(`Sección calculada para tramo ${n}: ${data.seccion}mm²`);
         } else {
             console.warn(`Elemento txt-section-${n} no encontrado`);
         }
@@ -834,28 +801,23 @@ async function calculateLengthByLength(a) {
         const section_a_text = document.getElementById("txt-section-" + a).textContent;
         const section_a = parseFloat(section_a_text.replace('mm²', ''));
         
-        const b = a == 1 ? 2 : 1;
+        const b = a === 1 ? 2 : 1;
         const input_b = document.getElementById("input-length-" + b);
-        
+
         const section_b_text = document.getElementById("txt-section-" + b).textContent;
         const section_b = parseFloat(section_b_text.replace('mm²', ''));
-        
+
         const current_a = getSelectedPanel().imp;
         const current_b = getSelectedInverter().I_max_output;
         const vmp = getSelectedPanel().vmp;
 
         const length_a = parseFloat(input_a.value);
-        
-        const delta_v = 0.015;
-        const resistivity = 0.01724;
 
-        const length_b = (((vmp * noPanels * delta_v) / (2 * resistivity)) - (length_a * current_a / section_a)) * section_b / current_b;
+        const length_b = (((vmp * noPanels * MAX_VOLTAGE_DROP_RATIO) / (2 * COPPER_RESISTIVITY)) - (length_a * current_a / section_a)) * section_b / current_b;
 
         input_b.value = length_b.toFixed(2);
         results_data[`wire_length_${b}`] = length_b.toFixed(2);
-        
-        console.log(`📏📏📏 Longitud calculada para tramo ${b}: ${length_b.toFixed(2)}m`);
-        
+
     } catch (error) {
         console.error(`❌ Error en calculateLengthByLength para tramo ${a}:`, error);
         throw error; // Propagar el error para que updateWire lo capture
@@ -873,7 +835,6 @@ function getSelectedInverter() {
 
 // Inicializar la aplicación
 document.addEventListener('DOMContentLoaded', function() {
-    console.log('Sunalyze iniciando...');
     loadEquipmentData();
 });
 

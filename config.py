@@ -17,8 +17,14 @@ if _db_url is None:
         )
     _db_url = _DEV_DB_URL
 
-if _db_url.startswith('mysql://'):
-    _db_url = 'mysql+pymysql://' + _db_url[len('mysql://'):]
+_SCHEME_REWRITES = (
+    ('postgres://', 'postgresql://'),
+    ('mysql://', 'mysql+pymysql://'),
+)
+for _old_scheme, _new_scheme in _SCHEME_REWRITES:
+    if _db_url.startswith(_old_scheme):
+        _db_url = _new_scheme + _db_url[len(_old_scheme):]
+        break
 
 
 def _resolve_secret_key():

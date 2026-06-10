@@ -1,11 +1,12 @@
-"""Fuse (fusible) circuit symbol — IEC 60617."""
+"""Switch (interruptor/seccionador) circuit symbol — IEC 60617."""
 
 from ..component import Component
 
 
 class Switch(Component):
     """
-    IEC 60617 fuse symbol: conductor through a rectangular cartridge.
+    IEC 60617 switch/disconnector symbol: a conductor broken by a hinged
+    contact arm that lifts away from the fixed contact to open the circuit.
     """
 
     def render(self, style, label: str = "", **kwargs) -> str:

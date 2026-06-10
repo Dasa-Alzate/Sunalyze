@@ -9,6 +9,10 @@ from app.models.inverter import Inverter
 
 logger = logging.getLogger(__name__)
 
+DIRTY_LOSS = 0.97
+WIRES_LOSS = 0.985
+OPERATION_TEMP_CELL = 50
+
 class AnalysisController:
     """
     Controlador para el dimensionamiento de instalaciones fotovoltaicas.
@@ -34,17 +38,17 @@ class AnalysisController:
         
         # Verificar si ya está en cache
         if cache_key in AnalysisController._PVGIS_CACHE:
-            print(f"✅ Cache hit para: {cache_key}")
+            logger.debug("Cache hit para: %s", cache_key)
             return AnalysisController._PVGIS_CACHE[cache_key]
-        
-        print(f"🔄 Cache miss, llamando a PVGIS para: {cache_key}")
-        
+
+        logger.debug("Cache miss, llamando a PVGIS para: %s", cache_key)
+
         # Limpiar cache si es muy grande (FIFO)
         if len(AnalysisController._PVGIS_CACHE) >= AnalysisController._PVGIS_CACHE_MAX_SIZE:
             # Eliminar la entrada más antigua
             oldest_key = next(iter(AnalysisController._PVGIS_CACHE))
             del AnalysisController._PVGIS_CACHE[oldest_key]
-            print(f"🧹 Cache limpiado, eliminada entrada: {oldest_key}")
+            logger.debug("Cache limpiado, eliminada entrada: %s", oldest_key)
         
         # Llamar a la API de PVGIS
         df, meta = pvlib.iotools.get_pvgis_hourly(
@@ -62,7 +66,7 @@ class AnalysisController:
         
         # Guardar en cache
         AnalysisController._PVGIS_CACHE[cache_key] = (df, meta)
-        print(f"💾 Datos guardados en cache. Tamaño actual: {len(AnalysisController._PVGIS_CACHE)}")
+        logger.debug("Datos guardados en cache. Tamaño actual: %s", len(AnalysisController._PVGIS_CACHE))
         
         return df, meta
 
@@ -102,10 +106,6 @@ class AnalysisController:
                 return jsonify({
                     "error": f"El panel '{panel.nombre}' tiene campos incompletos en la base de datos: {', '.join(missing)}. Contacta al administrador."
                 }), 400
-
-            dirty_loss = 0.97
-            wires_loss = 0.985
-            Operation_temp_cell = 50
 
             required_inputs = ['latitud', 'longitud', 'autoconsumo', 'necesidad']
             missing_inputs = [k for k in required_inputs if data.get(k) in (None, '')]
@@ -181,7 +181,7 @@ class AnalysisController:
                 irradiance_factor_loss = 1 - (1.2 * 0.0001 * (inclinacion - beta_optimal)**2)
             
             # Pérdida por temperatura
-            temp_power_loss = 1 - ((25 - (cell_temp + Operation_temp_cell)/2) * panel_temp_loss / 100)
+            temp_power_loss = 1 - ((25 - (cell_temp + OPERATION_TEMP_CELL)/2) * panel_temp_loss / 100)
 
             # Determinar y_inversor
             if inverter:
@@ -190,7 +190,7 @@ class AnalysisController:
                 y_inversor = 0.97  # Valor por defecto
 
             # Eficiencia total del sistema
-            total_y = y_placa * y_inversor * wires_loss * dirty_loss * temp_power_loss * irradiance_factor_loss
+            total_y = y_placa * y_inversor * WIRES_LOSS * DIRTY_LOSS * temp_power_loss * irradiance_factor_loss
             
             # Energías
             sec_energy = necesidad / (autoconsumo * 1000)
@@ -336,8 +336,8 @@ class AnalysisController:
             
             return inverters_data
             
-        except Exception as e:
-            print(f"Error buscando inversores compatibles: {e}")
+        except Exception:
+            logger.exception("Error buscando inversores compatibles")
             return []
 
     # Holiiii... este es mi intento por hacer algo util
