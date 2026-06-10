@@ -12,6 +12,7 @@ from sqlalchemy.exc import IntegrityError
 
 from app.extensions import db
 from app.models.catalog import Catalog, CatalogSubscription
+from app.scrapers.brands import normalize_brand
 from app.errors import NotFound, Forbidden, ValidationError
 
 logger = logging.getLogger(__name__)
@@ -26,7 +27,7 @@ class CatalogService:
         if not org_id:
             return []
         rows = db.session.query(Catalog.id).filter(
-            Catalog.org_id == org_id, Catalog.deleted_at.is_(None)
+            Catalog.org_id == org_id, Catalog.deleted_at.is_(None), Catalog.is_active.is_(True)
         ).all()
         return [r[0] for r in rows]
 
@@ -37,7 +38,8 @@ class CatalogService:
         rows = (
             db.session.query(CatalogSubscription.catalog_id)
             .join(Catalog, Catalog.id == CatalogSubscription.catalog_id)
-            .filter(CatalogSubscription.org_id == org_id, Catalog.deleted_at.is_(None))
+            .filter(CatalogSubscription.org_id == org_id, Catalog.deleted_at.is_(None),
+                    Catalog.is_active.is_(True))
             .all()
         )
         return [r[0] for r in rows]
@@ -72,10 +74,10 @@ class CatalogService:
     def library(cls, org_id):
         subscribed = set(cls.subscribed_catalog_ids(org_id))
         own = Catalog.query.filter(
-            Catalog.org_id == org_id, Catalog.deleted_at.is_(None)
+            Catalog.org_id == org_id, Catalog.deleted_at.is_(None), Catalog.is_active.is_(True)
         ).order_by(Catalog.nombre).all()
         subs = Catalog.query.filter(
-            Catalog.id.in_(subscribed), Catalog.deleted_at.is_(None)
+            Catalog.id.in_(subscribed), Catalog.deleted_at.is_(None), Catalog.is_active.is_(True)
         ).order_by(Catalog.nombre).all() if subscribed else []
         return [cls._serialize(c, org_id, subscribed) for c in own + subs]
 
@@ -97,9 +99,26 @@ class CatalogService:
     def marketplace(cls, org_id):
         subscribed = set(cls.subscribed_catalog_ids(org_id))
         public = Catalog.query.filter(
-            Catalog.org_id.is_(None), Catalog.deleted_at.is_(None)
+            Catalog.org_id.is_(None), Catalog.deleted_at.is_(None), Catalog.is_active.is_(True)
         ).order_by(Catalog.nombre).all()
         return [cls._serialize(c, org_id, subscribed) for c in public]
+
+    @staticmethod
+    def official_catalog(display_name, *, active=True):
+        """Catálogo oficial de una marca, localizado por scraper_name normalizado.
+
+        Si no existe lo crea (marketplace, oficial). `active=False` lo deja en
+        cuarentena: invisible para usuarios hasta que un superusuario lo active.
+        """
+        key = normalize_brand(display_name)
+        catalog = Catalog.query.filter_by(scraper_name=key, org_id=None).first()
+        if not catalog:
+            catalog = Catalog(nombre=display_name.strip(), scraper_name=key,
+                              descripcion=f'Catálogo oficial de {display_name.strip()}',
+                              org_id=None, is_official=True, is_active=active)
+            db.session.add(catalog)
+            db.session.flush()
+        return catalog
 
     @staticmethod
     def create_catalog(org_id, nombre, descripcion=''):
@@ -171,7 +190,9 @@ class CatalogService:
 
     @staticmethod
     def bootstrap_org(org_id):
-        officials = Catalog.query.filter(Catalog.org_id.is_(None), Catalog.is_official.is_(True)).all()
+        officials = Catalog.query.filter(
+            Catalog.org_id.is_(None), Catalog.is_official.is_(True), Catalog.is_active.is_(True)
+        ).all()
         for catalog in officials:
             exists = CatalogSubscription.query.filter_by(org_id=org_id, catalog_id=catalog.id).first()
             if not exists:
