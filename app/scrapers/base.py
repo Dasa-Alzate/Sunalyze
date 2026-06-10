@@ -21,6 +21,7 @@ class NormalizedProduct:
     external_id: str
     source_url: str = ''
     fields: dict = field(default_factory=dict)
+    brand: str = None
 
     def missing_vital(self):
         return [k for k in VITAL[self.kind] if self.fields.get(k) in (None, '')]
