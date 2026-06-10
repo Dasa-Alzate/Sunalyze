@@ -1,12 +1,10 @@
 """Orquestación del scraping: discover → fetch → parse → upsert con provenance.
 
-Reglas:
-- Solo se persisten productos con sus campos VITALES; los parciales (sin campos
-  no-vitales) se guardan igual, con esos campos a null.
-- Upsert por (catálogo de la marca, external_id); si el equipo está `is_locked`
-  (editado a mano) NO se pisa.
-- dry_run no escribe: reporta qué haría.
-- Cada corrida queda registrada en `ScrapeRun`.
+Enruta cada producto al catálogo de su marca (`product.brand`) y al modelo de su
+tipo (`product.kind`). Si el scraper exige marca por producto (`requires_product_brand`)
+y no se dedujo, el producto se rechaza. Dedup dentro de la marca: external_id →
+nombre normalizado (consulta global por el unique) → vitales con tolerancia; en el
+match por vitales sobrevive el nombre existente. `is_locked` nunca se pisa.
 """
 
 import logging
@@ -15,24 +13,16 @@ from datetime import datetime
 from app.extensions import db
 from app.models.panel import Panel
 from app.models.inverter import Inverter
-from app.models.catalog import Catalog
 from app.models.scrape_run import ScrapeRun
+from app.services.catalog_service import CatalogService
 from app.scrapers.registry import get_scraper
 from app.scrapers import acceptance
 
 logger = logging.getLogger(__name__)
 
 _MODEL = {'panel': Panel, 'inverter': Inverter}
-
-
-def _official_catalog(brand):
-    catalog = Catalog.query.filter_by(nombre=brand, org_id=None).first()
-    if not catalog:
-        catalog = Catalog(nombre=brand, descripcion=f'Catálogo oficial de {brand}',
-                          org_id=None, is_official=True)
-        db.session.add(catalog)
-        db.session.flush()
-    return catalog
+_VITAL_NUM = {'panel': ('power', 'voc', 'vmp', 'imp'), 'inverter': ('power', 'vmax')}
+_TOL = 0.02
 
 
 class ScraperService:
@@ -46,9 +36,7 @@ class ScraperService:
         report = {'brand': scraper.brand, 'dry_run': dry_run,
                   'created': [], 'updated': [], 'review': [], 'blocked': [],
                   'skipped': [], 'errors': []}
-
-        catalog = _official_catalog(scraper.brand)
-        Model = _MODEL[scraper.kind]
+        catalog_cache = {}
 
         for ref in scraper.discover():
             try:
@@ -60,48 +48,94 @@ class ScraperService:
                 continue
 
             for product in products:
-                verdict = acceptance.evaluate(product, scraper.brand)
-                if verdict['verdict'] == 'blocked':
+                catalog_brand = product.brand or (
+                    None if getattr(scraper, 'requires_product_brand', False) else scraper.brand)
+                if not catalog_brand:
+                    report['blocked'].append({'id': product.external_id, 'reason': 'sin marca deducida'})
+                    continue
+                if product.kind not in _MODEL:
                     report['blocked'].append({'id': product.external_id,
-                                              'reason': '; '.join(verdict['block'])})
+                                              'reason': f'tipo no soportado: {product.kind}'})
+                    continue
+
+                verdict = acceptance.evaluate(product, catalog_brand)
+                if verdict['verdict'] == 'blocked':
+                    report['blocked'].append({'id': product.external_id, 'reason': '; '.join(verdict['block'])})
                     continue
                 review_notes = '; '.join(verdict['review']) if verdict['verdict'] == 'review' else None
-                action = ScraperService._upsert(Model, catalog, scraper.brand, product,
-                                                dry_run, review_notes)
+
+                if catalog_brand not in catalog_cache:
+                    catalog_cache[catalog_brand] = CatalogService.official_catalog(catalog_brand, active=False)
+                catalog = catalog_cache[catalog_brand]
+                Model = _MODEL[product.kind]
+
+                action = ScraperService._upsert(Model, catalog, catalog_brand, product, dry_run, review_notes)
                 report[action['result']].append(action['detail'])
-                if review_notes:
+                if review_notes and action['result'] != 'blocked':
                     report['review'].append({'id': product.external_id, 'reason': review_notes})
 
         ScraperService._record_run(scraper.brand, dry_run, report)
         return report
 
     @staticmethod
-    def _upsert(Model, catalog, brand, product, dry_run, review_notes=None):
+    def _find_existing(Model, catalog, product):
         existing = Model.query.filter_by(catalog_id=catalog.id, external_id=product.external_id).first()
-        if not existing:
-            existing = Model.query.filter_by(nombre=product.fields.get('nombre')).first()
+        if existing:
+            return existing, 'external_id'
+        nombre = product.fields.get('nombre')
+        by_name = Model.query.filter_by(nombre=nombre).first() if nombre else None
+        if by_name:
+            return by_name, ('name' if by_name.catalog_id == catalog.id else 'name_other_catalog')
+        match = ScraperService._match_by_vitals(Model, catalog, product)
+        if match:
+            return match, 'vitals'
+        return None, None
 
+    @staticmethod
+    def _match_by_vitals(Model, catalog, product):
+        fields = _VITAL_NUM[product.kind]
+        target = {f: product.fields.get(f) for f in fields}
+        if any(target[f] is None for f in fields):
+            return None
+        for row in Model.query.filter_by(catalog_id=catalog.id).all():
+            ok = True
+            for f in fields:
+                rv = getattr(row, f, None)
+                if rv is None or abs(rv - target[f]) > _TOL * max(abs(target[f]), 1e-9):
+                    ok = False
+                    break
+            if ok:
+                return row
+        return None
+
+    @staticmethod
+    def _upsert(Model, catalog, brand, product, dry_run, review_notes=None):
+        existing, matched_by = ScraperService._find_existing(Model, catalog, product)
+
+        if matched_by == 'name_other_catalog':
+            return {'result': 'blocked',
+                    'detail': {'id': product.external_id, 'reason': 'nombre colisiona con otra marca'}}
         if existing and existing.is_locked:
-            return {'result': 'skipped', 'detail': {'id': product.external_id, 'reason': 'bloqueado (edición manual)'}}
-
-        partial = sorted(set(['y', 'power_max', 'I_max_input', 'I_max_output',
-                              'tcp', 'tcv', 'isc', 't_noct', 'height', 'width'])
-                         - set(product.fields.keys()))
+            return {'result': 'skipped',
+                    'detail': {'id': product.external_id, 'reason': 'bloqueado (edición manual)'}}
 
         if dry_run:
-            result = 'updated' if existing else 'created'
-            return {'result': result, 'detail': {'id': product.external_id,
-                    'nombre': product.fields.get('nombre'), 'parcial_sin': partial,
-                    'needs_review': bool(review_notes)}}
+            return {'result': 'updated' if existing else 'created',
+                    'detail': {'id': product.external_id, 'nombre': product.fields.get('nombre'),
+                               'matched_by': matched_by, 'needs_review': bool(review_notes)}}
 
         row = existing or Model(catalog_id=catalog.id)
+        skip_keys = {'nombre'} if matched_by == 'vitals' else set()
         for key, value in product.fields.items():
+            if key in skip_keys:
+                continue
             if hasattr(row, key):
                 setattr(row, key, value)
         row.catalog_id = catalog.id
         row.source = f'scraper:{brand.lower()}'
         row.source_url = product.source_url
-        row.external_id = product.external_id
+        if matched_by != 'vitals':
+            row.external_id = product.external_id
         row.scraped_at = datetime.utcnow()
         row.needs_review = bool(review_notes)
         row.review_notes = review_notes
@@ -109,8 +143,8 @@ class ScraperService:
             db.session.add(row)
         db.session.commit()
         return {'result': 'updated' if existing else 'created',
-                'detail': {'id': product.external_id, 'nombre': row.nombre, 'parcial_sin': partial,
-                           'needs_review': bool(review_notes)}}
+                'detail': {'id': product.external_id, 'nombre': row.nombre,
+                           'matched_by': matched_by, 'needs_review': bool(review_notes)}}
 
     @staticmethod
     def _record_run(brand, dry_run, report):
