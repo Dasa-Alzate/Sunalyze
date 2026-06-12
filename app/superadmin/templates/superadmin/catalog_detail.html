@@ -1,0 +1,22 @@
+{% extends 'superadmin/base.html' %}
+{% set active_nav = 'catalogs' %}
+{% block body %}
+<h1>{{ c.nombre }} {% if not c.is_active %}<span class="tag warn">inactivo</span>{% endif %}</h1>
+<p class="muted">scraper_name: {{ c.scraper_name or '—' }} · {{ counts.panels }} paneles · {{ counts.inverters }} inversores</p>
+<h2>Editar</h2>
+<form method="post" action="{{ url_for('superadmin.catalog_edit', catalog_id=c.id) }}">
+  <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+  <label>Nombre</label><input type="text" name="nombre" value="{{ c.nombre }}">
+  <label>scraper_name</label><input type="text" name="scraper_name" value="{{ c.scraper_name or '' }}">
+  <label>Descripción</label><input type="text" name="descripcion" value="{{ c.descripcion }}">
+  <p><button class="primary">Guardar</button></p>
+</form>
+<h2>Merge en otro catálogo</h2>
+<form method="get" action="{{ url_for('superadmin.catalog_merge_preview', catalog_id=c.id) }}">
+  <label>Destino</label>
+  <select name="target">
+    {% for t in targets %}<option value="{{ t.id }}">{{ t.nombre }}</option>{% endfor %}
+  </select>
+  <p><button>Previsualizar merge</button></p>
+</form>
+{% endblock %}
