@@ -3,6 +3,7 @@
 - `flask superadmin grant|revoke|mfa-reset|list <email>` — bootstrap del portal.
 - `flask scrape list` · `flask scrape run <brand> [--dry-run]` — scrapers de marcas.
 - `flask flags seed` — asegura los feature flags por defecto.
+- `flask docs seed` — siembra el banco oficial de tipos de documento (España).
 """
 
 import os
@@ -19,6 +20,7 @@ from app.scrapers.service import ScraperService
 superadmin_cli = AppGroup('superadmin', help='Gestión del portal de superadmin.')
 scrape_cli = AppGroup('scrape', help='Scrapers de catálogos de marcas.')
 flags_cli = AppGroup('flags', help='Gestión de feature flags.')
+docs_cli = AppGroup('docs', help='Banco oficial de tipos de documento.')
 
 
 def _find(email):
@@ -107,6 +109,17 @@ def seed_flags():
     click.echo(f'Flags por defecto asegurados ({created} creados).')
 
 
+@docs_cli.command('seed')
+def seed_docs():
+    """Siembra el banco oficial de tipos de documento (España). Idempotente."""
+    from app.services.document_bank import DocumentBankSeeder
+    report = DocumentBankSeeder.seed()
+    click.echo(
+        f"Banco oficial de documentos ES: {report['created']} creados, "
+        f"{report['skipped']} ya existían."
+    )
+
+
 _HTTP_METHODS = ('GET', 'POST', 'PATCH', 'PUT', 'DELETE')
 
 
@@ -181,4 +194,5 @@ def register_cli(app):
     app.cli.add_command(superadmin_cli)
     app.cli.add_command(scrape_cli)
     app.cli.add_command(flags_cli)
+    app.cli.add_command(docs_cli)
     app.cli.add_command(api_map)
