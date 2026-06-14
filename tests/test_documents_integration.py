@@ -126,6 +126,110 @@ class HtmlAssemblyTest(_Base):
         self.assertIn('LR5-410', html)
         self.assertIn('@page', html)
 
+    def test_es_render_is_default_no_regression(self):
+        html, *_ = DocumentService.build_document_html(
+            self.org_a.id, self.template_a.id, self.project_a.id, user=self.user_a)
+        self.assertIn('lang="es"', html)
+        self.assertIn('size: A4', html)
+
+
+class JurisdictionRenderTest(_Base):
+    def _money_template(self, country=None, locale=None, currency=None):
+        tpl = TemplateService.create_template(
+            self.org_a.id, self.user_a.id, DocumentKind.PROPUESTA_COMERCIAL, 'Oferta',
+            country=country, locale=locale, currency=currency,
+            content=[{'id': 's1', 'type': 'text', 'title': 'Oferta',
+                      'body': 'CAPEX {{ finance.net_capex | money }}'}])
+        TemplateService.publish(self.org_a.id, tpl.id)
+        return tpl
+
+    def _seed_finance(self):
+        from app.models.financial_scenario import FinancialScenario
+        sc = FinancialScenario(
+            org_id=self.org_a.id, project_id=self.project_a.id, name='base',
+            is_default=True, results={'capex': {'net_eur': 12000.0}, 'metrics': {},
+                                      'incentives': {}})
+        db.session.add(sc)
+        db.session.commit()
+
+    def test_us_render_lang_letter_and_dollar(self):
+        self._seed_finance()
+        tpl = self._money_template(country='US')
+        html, *_ = DocumentService.build_document_html(
+            self.org_a.id, tpl.id, self.project_a.id, user=self.user_a)
+        self.assertIn('lang="en"', html)
+        self.assertIn('size: Letter', html)
+        self.assertIn('$12,000.00', html)
+
+    def test_es_render_euro_and_a4(self):
+        self._seed_finance()
+        tpl = self._money_template(country='ES')
+        html, *_ = DocumentService.build_document_html(
+            self.org_a.id, tpl.id, self.project_a.id, user=self.user_a)
+        self.assertIn('lang="es"', html)
+        self.assertIn('size: A4', html)
+        self.assertIn('12.000,00 €', html)
+
+
+class PosventaVarsRenderTest(_Base):
+    def test_installation_vars_resolve_in_template(self):
+        from app.models.installation import Installation
+        inst = Installation(org_id=self.org_a.id, project_id=self.project_a.id,
+                            status='operativa', expected_annual_kwh=9000.0)
+        db.session.add(inst)
+        db.session.commit()
+        tpl = TemplateService.create_template(
+            self.org_a.id, self.user_a.id, DocumentKind.CERTIFICADO, 'Cert',
+            content=[{'id': 's1', 'type': 'text', 'title': 'Cert',
+                      'body': 'Estado {{ installation.status }}'}])
+        TemplateService.publish(self.org_a.id, tpl.id)
+        html, *_ = DocumentService.build_document_html(
+            self.org_a.id, tpl.id, self.project_a.id, user=self.user_a)
+        self.assertIn('Estado operativa', html)
+
+    def test_installation_vars_empty_without_installation(self):
+        tpl = TemplateService.create_template(
+            self.org_a.id, self.user_a.id, DocumentKind.CERTIFICADO, 'Cert2',
+            content=[{'id': 's1', 'type': 'text', 'title': 'Cert',
+                      'body': 'Estado[{{ installation.status }}]'}])
+        TemplateService.publish(self.org_a.id, tpl.id)
+        html, *_ = DocumentService.build_document_html(
+            self.org_a.id, tpl.id, self.project_a.id, user=self.user_a)
+        self.assertIn('Estado[]', html)
+
+
+class BrandingRenderTest(_Base):
+    def test_branding_applies_logo_color_footer(self):
+        from app.models.organization import OrgBrandingProfile
+        db.session.add(OrgBrandingProfile(
+            org_id=self.org_a.id, logo_path='generated/a/logo.png',
+            primary_color='#ff0000', footer_text='Mi pie legal'))
+        db.session.commit()
+        html, *_ = DocumentService.build_document_html(
+            self.org_a.id, self.template_a.id, self.project_a.id, user=self.user_a)
+        self.assertIn('generated/a/logo.png', html)
+        self.assertIn('#ff0000', html)
+        self.assertIn('Mi pie legal', html)
+
+    def test_no_branding_default_render(self):
+        html, *_ = DocumentService.build_document_html(
+            self.org_a.id, self.template_a.id, self.project_a.id, user=self.user_a)
+        self.assertNotIn('<img class="tpl-logo"', html)
+        self.assertNotIn('<footer class="tpl-footer"', html)
+
+
+class TagColumnsTest(_Base):
+    def test_tag_columns_persist_in_to_dict(self):
+        tpl = TemplateService.create_template(
+            self.org_a.id, self.user_a.id, DocumentKind.SOLICITUD_CONEXION, 'Conexion',
+            country='ES', region='Madrid', required_by='distribuidora',
+            stage='legalizacion', locale='es', currency='EUR')
+        data = tpl.to_dict()
+        self.assertEqual(data['required_by'], 'distribuidora')
+        self.assertEqual(data['stage'], 'legalizacion')
+        self.assertEqual(data['locale'], 'es')
+        self.assertEqual(data['currency'], 'EUR')
+
 
 class GenerateTest(_Base):
     @unittest.skipUnless(WEASYPRINT_OK, 'WeasyPrint requiere libs nativas (Pango)')

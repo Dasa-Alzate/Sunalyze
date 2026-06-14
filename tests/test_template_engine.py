@@ -13,7 +13,10 @@ from app.services.template_engine.context import ContextResolver
 from app.services.template_engine.errors import TemplateError
 from app.services.template_engine.filters import (
     filter_number, filter_thousands, filter_ellipsis, filter_upper, filter_lower,
+    filter_money,
 )
+from app.services.template_engine.jurisdiction import resolve_jurisdiction
+from app.models.report_template import DocumentKind, document_kind_var_groups
 
 
 class _Box:
@@ -54,6 +57,26 @@ class VariableResolutionTest(unittest.TestCase):
         r = ContextResolver({'project': None, 'panel': None, 'inverter': None,
                              'wire': None, 'user': None, 'org': None})
         self.assertEqual(render_text('valor={{ panel.power }}', r), 'valor=')
+
+    def test_posventa_vars_resolve(self):
+        context = {
+            'installation': _Box(status='operativa', expected_annual_kwh=9000.0,
+                                 commissioned_at=None, warranty_until=None, notes='ok'),
+            'maintenance': _Box(kind='preventivo', status='realizada', scheduled_at=None,
+                                done_at=None, technician='Bob', notes=''),
+            'incident': _Box(title='Fallo string', description='', severity='alta',
+                             status='abierta', opened_at=None, resolved_at=None),
+        }
+        r = ContextResolver(context)
+        self.assertEqual(evaluate(parse_expression('installation.status'), r), 'operativa')
+        self.assertEqual(evaluate(parse_expression('maintenance.technician'), r), 'Bob')
+        self.assertEqual(evaluate(parse_expression('incident.title'), r), 'Fallo string')
+
+    def test_posventa_vars_empty_without_installation(self):
+        r = ContextResolver({'installation': None, 'maintenance': None, 'incident': None})
+        self.assertEqual(render_text('{{ installation.status }}', r), '')
+        self.assertEqual(render_text('{{ maintenance.technician }}', r), '')
+        self.assertEqual(render_text('{{ incident.title }}', r), '')
 
 
 class CalculationTest(unittest.TestCase):
@@ -102,6 +125,71 @@ class FilterTest(unittest.TestCase):
         r = _resolver()
         with self.assertRaises(TemplateError):
             evaluate(parse_expression('panel.power | system'), r)
+
+
+class I18nFilterTest(unittest.TestCase):
+    def test_number_respects_locale(self):
+        self.assertEqual(filter_number(1234.5, 2, presentation={'locale': 'es'}), '1234,50')
+        self.assertEqual(filter_number(1234.5, 2, presentation={'locale': 'en'}), '1234.50')
+
+    def test_thousands_respects_locale(self):
+        self.assertEqual(
+            filter_thousands(1234567.5, 2, presentation={'locale': 'es'}), '1.234.567,50')
+        self.assertEqual(
+            filter_thousands(1234567.5, 2, presentation={'locale': 'en'}), '1,234,567.50')
+
+    def test_money_eur_vs_usd(self):
+        eur = filter_money(1234.5, 2, presentation={'locale': 'es', 'currency': 'EUR'})
+        usd = filter_money(1234.5, 2, presentation={'locale': 'en', 'currency': 'USD'})
+        self.assertEqual(eur, '1.234,50 €')
+        self.assertEqual(usd, '$1,234.50')
+
+    def test_money_in_pipeline_reads_resolver_presentation(self):
+        context = {'finance': _Box(net_capex=12000.0)}
+        from app.services.template_engine.context import ContextResolver
+        r_us = ContextResolver(context, presentation={'locale': 'en', 'currency': 'USD'})
+        r_es = ContextResolver(context, presentation={'locale': 'es', 'currency': 'EUR'})
+        self.assertEqual(evaluate(parse_expression('finance.net_capex | money'), r_us),
+                         '$12,000.00')
+        self.assertEqual(evaluate(parse_expression('finance.net_capex | money'), r_es),
+                         '12.000,00 €')
+
+
+class JurisdictionTest(unittest.TestCase):
+    def test_country_drives_profile(self):
+        self.assertEqual(resolve_jurisdiction('US'),
+                         {'locale': 'en', 'currency': 'USD', 'page_size': 'Letter'})
+        self.assertEqual(resolve_jurisdiction('ES'),
+                         {'locale': 'es', 'currency': 'EUR', 'page_size': 'A4'})
+
+    def test_default_is_es(self):
+        self.assertEqual(resolve_jurisdiction(None)['currency'], 'EUR')
+        self.assertEqual(resolve_jurisdiction('ZZ')['page_size'], 'A4')
+
+    def test_explicit_overrides(self):
+        prof = resolve_jurisdiction('US', currency='EUR')
+        self.assertEqual(prof['currency'], 'EUR')
+        self.assertEqual(prof['locale'], 'en')
+
+
+class DocumentKindRegistryTest(unittest.TestCase):
+    def test_new_kinds_present(self):
+        for key in ('contrato', 'certificado', 'informe_mantenimiento', 'solicitud_conexion'):
+            self.assertIn(key, DocumentKind.ALL)
+            self.assertTrue(DocumentKind.is_valid(key))
+            self.assertTrue(DocumentKind.label(key))
+
+    def test_legacy_kinds_preserved(self):
+        for key in ('memoria_calculo', 'documento_legal', 'propuesta_comercial', 'analisis_caso'):
+            self.assertIn(key, DocumentKind.ALL)
+
+    def test_var_groups_drive_catalog(self):
+        from app.services.template_engine.catalog import variable_catalog
+        groups = {g['entity'] for g in variable_catalog('certificado')}
+        self.assertIn('installation', groups)
+        self.assertIn('maintenance', groups)
+        self.assertIn('incident', groups)
+        self.assertNotIn('installation', document_kind_var_groups('memoria_calculo'))
 
 
 class SecuritySSTITest(unittest.TestCase):

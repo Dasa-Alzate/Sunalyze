@@ -236,13 +236,18 @@ def _collect_call_args(atoms, lparen_index, resolver, depth):
 
 
 def evaluate(parsed, resolver):
-    """Evalúa un ParsedExpression contra un resolver de variables y aplica los filtros."""
+    """Evalúa un ParsedExpression contra un resolver de variables y aplica los filtros.
+
+    La presentación (locale/currency) se toma del resolver, de modo que los filtros
+    numéricos y de moneda formatean según la jurisdicción de la plantilla.
+    """
     if parsed.is_path:
         value = _resolve_atom(parsed.atoms[0], resolver)
     else:
         value = _eval_arithmetic(parsed.atoms, resolver)
+    presentation = getattr(resolver, 'presentation', None)
     for name, args in parsed.filters:
-        value = apply_filter(name, value, args)
+        value = apply_filter(name, value, args, presentation=presentation)
     return value
 
 

@@ -46,17 +46,19 @@ def render_section(section, resolver, on_error='placeholder'):
     }
 
 
-def render_version(version_content, project, user=None, org=None, on_error='placeholder'):
+def render_version(version_content, project, user=None, org=None, on_error='placeholder',
+                   presentation=None):
     """Renderiza la lista ordenada de secciones de un TemplateVersion contra un Project.
 
-    Devuelve {'sections': [...], 'html': '...'} donde cada sección lleva su HTML resuelto y
-    `html` es el documento ensamblado, listo para WeasyPrint.
+    `presentation` (locale/currency de la jurisdicción de la plantilla) gobierna el formateo
+    numérico y de moneda de los filtros. Devuelve {'sections': [...], 'html': '...'} donde cada
+    sección lleva su HTML resuelto y `html` es el documento ensamblado, listo para WeasyPrint.
     """
     sections = version_content if isinstance(version_content, list) else (
         version_content.get('sections', []) if isinstance(version_content, dict) else []
     )
     context = build_context(project, user=user, org=org)
-    resolver = ContextResolver(context)
+    resolver = ContextResolver(context, presentation=presentation)
     rendered = [render_section(s, resolver, on_error) for s in sections]
     html = _assemble_html(rendered)
     return {'sections': rendered, 'html': html}
