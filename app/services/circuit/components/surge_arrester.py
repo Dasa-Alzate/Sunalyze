@@ -1,6 +1,6 @@
 """Surge arrester / overvoltage protector (descargador de sobretensiones) symbol."""
 
-from ..component import Component
+from ..core.component import Component
 
 
 class SurgeArrester(Component):
@@ -9,6 +9,8 @@ class SurgeArrester(Component):
     Downward-pointing triangle (arrester body) connected to a ground symbol.
     Oriented vertically: top is the live connection, bottom is earth.
     """
+
+    PORTS = {"in": (60, 0), "pe": (60, 120)}
 
     def render(self, style, label: str = "", **kwargs) -> str:
         c = ""

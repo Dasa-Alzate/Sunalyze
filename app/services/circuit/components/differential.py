@@ -1,6 +1,6 @@
 """Residual current device / differential circuit breaker symbol."""
 
-from ..component import Component
+from ..core.component import Component
 
 
 class Differential(Component):

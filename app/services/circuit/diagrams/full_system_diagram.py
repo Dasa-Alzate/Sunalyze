@@ -11,8 +11,8 @@ Col 6–9:   AC protection box + House distribution box
 from ..components import (
     Battery, CircuitBreaker, Differential, Fuse, Ground, Inverter, Meter, SurgeArrester,
 )
-from ..config import ACConfig, DCConfig, DiagramStyle
-from ..diagram import Diagram
+from ..core.config import ACConfig, DCConfig, DiagramStyle
+from ..core.diagram import Diagram
 
 
 class FullSystemDiagram:

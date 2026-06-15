@@ -1,6 +1,6 @@
 """Panel string group symbol."""
 
-from ..component import Component
+from ..core.component import Component
 
 
 class StringGroup(Component):
@@ -9,6 +9,8 @@ class StringGroup(Component):
     Represents each string of series-connected panels at the DC protection input.
     Based on assets/unifilar/panel.svg exact paths.
     """
+
+    PORTS = {"out": (120, 60), "in": (0, 60)}
 
     def render(self, style, label: str = "", index: int = 1,
                panels: int = 0, voltage: float = 0.0, **kwargs) -> str:

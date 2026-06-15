@@ -5,6 +5,7 @@ from xml.sax.saxutils import escape
 
 from .box_area import BoxArea
 from .config import DiagramStyle
+from .geometry import CELL as _CELL, transform_ports
 from .wire import Wire
 
 
@@ -85,12 +86,13 @@ class Diagram:
         label: str = "",
         label_pos: str = "below",
         **kwargs,
-    ) -> "Diagram":
-        """Place a component at grid cell (gx, gy)."""
-        self._comps.append(
-            _PlacedComponent(component, gx, gy, orientation, label, label_pos, kwargs)
+    ) -> "_PlacedComponent":
+        """Place a component at grid cell (gx, gy). Returns the placement."""
+        pc = _PlacedComponent(
+            component, gx, gy, orientation, label, label_pos, kwargs
         )
-        return self
+        self._comps.append(pc)
+        return pc
 
     def place_scaled(
         self,
@@ -102,14 +104,13 @@ class Diagram:
         label: str = "",
         label_pos: str = "below",
         **kwargs,
-    ) -> "Diagram":
-        """Place a component scaled to (w_cells × h_cells) grid cells."""
-        self._comps.append(
-            _PlacedComponent(
-                component, gx, gy, 0, label, label_pos, kwargs, w_cells, h_cells
-            )
+    ) -> "_PlacedComponent":
+        """Place a component scaled to (w_cells × h_cells) grid cells. Returns the placement."""
+        pc = _PlacedComponent(
+            component, gx, gy, 0, label, label_pos, kwargs, w_cells, h_cells
         )
-        return self
+        self._comps.append(pc)
+        return pc
 
     def wire(self, x1: float, y1: float, x2: float, y2: float) -> "Diagram":
         """Draw a wire between two grid coordinates."""
@@ -133,6 +134,37 @@ class Diagram:
     ) -> "Diagram":
         """Draw a free text label at a grid coordinate."""
         self._labels.append(_FreeLabel(gx, gy, text, anchor))
+        return self
+
+    # ── Connection points ────────────────────────────────────────────────────
+
+    def port(self, placement: "_PlacedComponent", name: str) -> tuple[float, float]:
+        """Return the absolute grid coordinate of a named port on a placement."""
+        comp = placement.component
+        try:
+            local = comp.connection_points(placement.orientation)
+        except AttributeError:
+            local = transform_ports(getattr(comp, "PORTS", {}), placement.orientation)
+        if name not in local:
+            raise KeyError(
+                f"{type(comp).__name__} has no port '{name}'; available: {sorted(local)}"
+            )
+        lx, ly = local[name]
+        gx = placement.gx + (lx / _CELL) * placement.w_cells
+        gy = placement.gy + (ly / _CELL) * placement.h_cells
+        return gx, gy
+
+    def connect(
+        self,
+        placement_a: "_PlacedComponent",
+        port_a: str,
+        placement_b: "_PlacedComponent",
+        port_b: str,
+    ) -> "Diagram":
+        """Draw a wire between a named port of two placed components."""
+        x1, y1 = self.port(placement_a, port_a)
+        x2, y2 = self.port(placement_b, port_b)
+        self._wires.append(Wire(x1, y1, x2, y2))
         return self
 
     # ── Render ──────────────────────────────────────────────────────────────

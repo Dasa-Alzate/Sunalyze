@@ -1,6 +1,6 @@
 """Zero injection / network analyzer device symbol."""
 
-from ..component import Component
+from ..core.component import Component
 
 
 class ZeroInjection(Component):

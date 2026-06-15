@@ -1,6 +1,6 @@
 """kWh bidirectional energy meter symbol (contador bidireccional)."""
 
-from ..component import Component
+from ..core.component import Component
 
 
 class Meter(Component):

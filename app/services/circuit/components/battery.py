@@ -1,6 +1,6 @@
 """Battery storage (almacenamiento) circuit symbol."""
 
-from ..component import Component
+from ..core.component import Component
 
 
 class Battery(Component):
@@ -9,6 +9,8 @@ class Battery(Component):
     Rectangle enclosing two stacked battery cells (long/short plate pairs),
     with a "+" terminal mark. Connection is on the top edge (DC).
     """
+
+    PORTS = {"in": (60, 0), "out": (60, 0)}
 
     def render(self, style, label: str = "", **kwargs) -> str:
         c = ""

@@ -1,6 +1,6 @@
 # API map
 
-Mapa autogenerado por `flask api-map`. Endpoints `/api`: 114.
+Mapa autogenerado por `flask api-map`. Endpoints `/api`: 115.
 
 No editar a mano: regenerar con `flask api-map`.
 
@@ -51,6 +51,7 @@ No editar a mano: regenerar con `flask api-map`.
 | Método(s) | Ruta | Endpoint | Resumen |
 | --- | --- | --- | --- |
 | GET | `/api/circuit/<string:diagram_type>` | `circuit.get_diagram` |  |
+| GET | `/api/circuit/templates` | `circuit.get_templates` |  |
 
 ## crud
 

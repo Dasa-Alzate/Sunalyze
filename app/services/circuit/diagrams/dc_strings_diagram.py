@@ -15,8 +15,8 @@ Row N onwards:   Protection chain — Fuse, MCB, SPD tap, Switch, Inverter, Grou
 from ..components import (
     CircuitBreaker, Fuse, Ground, Inverter, StringGroup, Switch,
 )
-from ..config import DCConfig, DiagramStyle
-from ..diagram import Diagram
+from ..core.config import DCConfig, DiagramStyle
+from ..core.diagram import Diagram
 
 
 class DCStringsDiagram:

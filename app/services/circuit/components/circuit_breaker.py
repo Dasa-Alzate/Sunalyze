@@ -1,6 +1,6 @@
 """Magnetothermic circuit breaker (magnetotérmico / MCB) circuit symbol."""
 
-from ..component import Component
+from ..core.component import Component
 
 
 class CircuitBreaker(Component):
