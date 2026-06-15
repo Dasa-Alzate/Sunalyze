@@ -1,0 +1,49 @@
+{
+  "title": "Single-line diagram",
+  "crumb": "Projects",
+  "intro": "Pick a template and adjust the parameters to generate the single-line diagram of the installation.",
+  "template": {
+    "label": "Template",
+    "hint": "Base diagram to generate"
+  },
+  "toggles": {
+    "fuses": "With string fuses",
+    "battery": "With batteries"
+  },
+  "sections": {
+    "dc": "PV array (DC)",
+    "ac": "Output and inverter (AC)"
+  },
+  "fields": {
+    "panel_model": "Panel model",
+    "panel_voc": "Panel Voc",
+    "panel_isc": "Panel Isc",
+    "panels_per_string": "Panels per string",
+    "num_strings": "Number of strings",
+    "dc_fuse_i": "DC fuse",
+    "dc_switch_v": "DC switch voltage",
+    "dc_cable_section": "DC cable section",
+    "inverter_model": "Inverter model",
+    "inverter_power": "Inverter power",
+    "inverter_output_i": "Output current",
+    "ac_phases": "Phases",
+    "ac_mcb_i": "Circuit breaker",
+    "ac_rcd_i": "Residual-current device",
+    "ac_rcd_sensitivity": "RCD sensitivity",
+    "ac_cable_section": "AC cable section"
+  },
+  "phases": {
+    "mono": "Single-phase",
+    "tri": "Three-phase"
+  },
+  "preview": {
+    "title": "Live preview",
+    "alt": "Single-line diagram of the installation",
+    "loading": "Generating diagram…",
+    "error": "Could not generate the diagram with these parameters."
+  },
+  "actions": {
+    "download": "Download SVG"
+  },
+  "open": "Single-line diagram"
+}

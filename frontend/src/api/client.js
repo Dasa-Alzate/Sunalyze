@@ -213,6 +213,13 @@ export const api = {
   pendingWork: {
     get: () => get('/api/pending-work'),
   },
+  circuit: {
+    templates: () => get('/api/circuit/templates'),
+    svgUrl: (template, params = {}) => {
+      const qs = new URLSearchParams(params).toString()
+      return `/api/circuit/${template}${qs ? `?${qs}` : ''}`
+    },
+  },
   auth: {
     me: () => get('/api/auth/me'),
     updateLocale: (locale) => patch('/api/auth/me', { locale }),

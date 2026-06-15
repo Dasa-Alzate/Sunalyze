@@ -7,6 +7,7 @@ import { Login, Signup, ForgotPassword, ResetPassword, VerifyEmail } from '@/fea
 import Dashboard from '@/features/dashboard/Dashboard'
 import ProjectList from '@/features/projects/ProjectList'
 import Wizard from '@/features/design/Wizard'
+import CircuitDiagram from '@/features/design/CircuitDiagram'
 import EquipmentLibrary from '@/features/equipment/EquipmentLibrary'
 import MemoriaPreview from '@/features/memoria/MemoriaPreview'
 import Team from '@/features/team/Team'
@@ -44,6 +45,8 @@ export const router = createBrowserRouter([
           { path: 'proyectos', element: <ProjectList /> },
           { path: 'diseno', element: <Wizard /> },
           { path: 'diseno/:id', element: <Wizard /> },
+          { path: 'diagrama', element: <CircuitDiagram /> },
+          { path: 'diagrama/:id', element: <CircuitDiagram /> },
           { path: 'equipos', element: <EquipmentLibrary /> },
           { path: 'equipo', element: <Team /> },
           { path: 'memoria', element: <MemoriaPreview /> },
