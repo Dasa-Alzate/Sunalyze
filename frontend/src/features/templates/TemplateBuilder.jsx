@@ -1,6 +1,7 @@
 import { useEffect, useMemo, useRef, useState } from 'react'
 import { useParams, useNavigate } from 'react-router-dom'
-import { Topbar, Btn, IconBtn, Icon, Field, Spinner, ErrorState, Badge } from '@/shared/ui'
+import { useTranslation } from 'react-i18next'
+import { Topbar, Btn, IconBtn, Icon, Field, SelectField, Spinner, ErrorState, Badge } from '@/shared/ui'
 import { api } from '@/api/client'
 import { toast } from '@/services/toast'
 import { useAuth } from '@/services/auth/AuthProvider'
@@ -8,7 +9,7 @@ import VariablePicker from './VariablePicker'
 import LivePreview from './LivePreview'
 import ProjectDocuments from './ProjectDocuments'
 import { validateBody } from './expressionValidator'
-import { kindLabel, STATUS_TONES } from './constants'
+import { kindLabel, stageLabel, TEMPLATE_STAGES, STATUS_TONES } from './constants'
 
 let localSeq = 0
 function newSection() {
@@ -20,9 +21,12 @@ export default function TemplateBuilder() {
   const { id } = useParams()
   const nav = useNavigate()
   const auth = useAuth()
+  const { t } = useTranslation('templates')
   const can = auth?.can || (() => false)
   const [template, setTemplate] = useState(null)
   const [sections, setSections] = useState([])
+  const [meta, setMeta] = useState({ country: '', region: '', required_by: '', stage: '', locale: '', currency: '' })
+  const [savingMeta, setSavingMeta] = useState(false)
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState(null)
   const [saving, setSaving] = useState(false)
@@ -39,6 +43,14 @@ export default function TemplateBuilder() {
         if (!alive) return
         setTemplate(tpl)
         setSections(Array.isArray(tpl.content) ? tpl.content.map((s) => ({ ...s })) : [])
+        setMeta({
+          country: tpl.country || '',
+          region: tpl.region || '',
+          required_by: tpl.required_by || '',
+          stage: tpl.stage || '',
+          locale: tpl.locale || '',
+          currency: tpl.currency || '',
+        })
       })
       .catch((e) => alive && setError(e.message))
       .finally(() => alive && setLoading(false))
@@ -96,6 +108,26 @@ export default function TemplateBuilder() {
     touch()
   }
 
+  async function saveMeta() {
+    setSavingMeta(true)
+    try {
+      const tpl = await api.templates.update(Number(id), {
+        country: meta.country.trim() || null,
+        region: meta.region.trim() || null,
+        required_by: meta.required_by.trim() || null,
+        stage: meta.stage || null,
+        locale: meta.locale.trim() || null,
+        currency: meta.currency.trim() || null,
+      })
+      setTemplate((prev) => ({ ...prev, ...tpl }))
+      toast('success', t('editor.jurisdiction'))
+    } catch (e) {
+      toast('error', e.message)
+    } finally {
+      setSavingMeta(false)
+    }
+  }
+
   async function save(publish) {
     setSaving(true)
     try {
@@ -137,11 +169,36 @@ export default function TemplateBuilder() {
       <div className="sun-content">
         <div className="sun-memoria">
           <div>
-            <div style={{ display: 'flex', alignItems: 'center', gap: 'var(--space-2)', marginBottom: 'var(--space-4)' }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: 'var(--space-2)', flexWrap: 'wrap', marginBottom: 'var(--space-4)' }}>
               <Badge tone="neutral">{kindLabel(template?.kind)}</Badge>
               <Badge tone={statusTone.tone}>{statusTone.label}</Badge>
+              {template?.stage && <Badge tone="info" icon="git-branch">{stageLabel(template.stage)}</Badge>}
+              {template?.country && <Badge tone="neutral" icon="map-pin">{template.country}</Badge>}
+              {template?.required_by && <Badge tone="neutral" icon="landmark">{template.required_by}</Badge>}
               {readOnly && <Badge tone="neutral" icon="lock">Solo lectura</Badge>}
             </div>
+
+            {!readOnly && (
+              <details className="sun-card" style={{ padding: 'var(--space-4)', marginBottom: 'var(--space-5)' }}>
+                <summary style={{ cursor: 'pointer', fontWeight: 600 }}>{t('editor.jurisdiction')}</summary>
+                <div className="sun-speclist" style={{ marginTop: 'var(--space-3)' }}>
+                  <Field label={t('fields.country')} value={meta.country} onChange={(e) => setMeta((m) => ({ ...m, country: e.target.value }))} />
+                  <Field label={t('fields.region')} value={meta.region} onChange={(e) => setMeta((m) => ({ ...m, region: e.target.value }))} />
+                  <Field label={t('fields.requiredBy')} value={meta.required_by} onChange={(e) => setMeta((m) => ({ ...m, required_by: e.target.value }))} />
+                  <SelectField
+                    label={t('fields.stage')}
+                    value={meta.stage}
+                    onChange={(e) => setMeta((m) => ({ ...m, stage: e.target.value }))}
+                    options={[{ value: '', label: t('fields.stagePlaceholder') }, ...TEMPLATE_STAGES]}
+                  />
+                  <Field label={t('fields.locale')} hint={t('fields.localeHint')} value={meta.locale} onChange={(e) => setMeta((m) => ({ ...m, locale: e.target.value }))} />
+                  <Field label={t('fields.currency')} hint={t('fields.currencyHint')} value={meta.currency} onChange={(e) => setMeta((m) => ({ ...m, currency: e.target.value }))} />
+                  <div>
+                    <Btn variant="secondary" icon="save" busy={savingMeta} onClick={saveMeta}>{t('editor.jurisdiction')}</Btn>
+                  </div>
+                </div>
+              </details>
+            )}
 
             <div className="sun-memoria__sections">
               {sections.length === 0 && (

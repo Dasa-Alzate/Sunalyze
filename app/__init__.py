@@ -54,6 +54,7 @@ def create_app(config_overrides=None):
     from app.routes.finance import finance_bp
     from app.routes.posventa import posventa_bp
     from app.routes.notifications import notifications_bp
+    from app.routes.org import org_bp
 
     app.register_blueprint(main_bp)
     app.register_blueprint(crud_bp)
@@ -72,6 +73,7 @@ def create_app(config_overrides=None):
     app.register_blueprint(finance_bp)
     app.register_blueprint(posventa_bp)
     app.register_blueprint(notifications_bp)
+    app.register_blueprint(org_bp)
 
     from app.errors import register_error_handlers
     register_error_handlers(app)

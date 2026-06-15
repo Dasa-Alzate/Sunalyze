@@ -1,0 +1,29 @@
+{
+  "fields": {
+    "name": "Nombre",
+    "kind": "Tipo de documento",
+    "description": "Descripción",
+    "country": "País",
+    "region": "Región / comunidad",
+    "requiredBy": "Exigido por",
+    "stage": "Etapa",
+    "locale": "Idioma (override)",
+    "currency": "Moneda (override)",
+    "stagePlaceholder": "Sin etapa",
+    "localeHint": "Deja vacío para usar el del país.",
+    "currencyHint": "Código ISO de 3 letras (p. ej. EUR)."
+  },
+  "filters": {
+    "stage": "Etapa",
+    "country": "País",
+    "all": "Todas",
+    "allCountries": "Todos"
+  },
+  "editor": {
+    "jurisdiction": "Jurisdicción y etiquetas"
+  },
+  "create": {
+    "title": "Nueva plantilla",
+    "saved": "Plantilla creada"
+  }
+}

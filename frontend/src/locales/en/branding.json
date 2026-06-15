@@ -1,0 +1,16 @@
+{
+  "title": "Organization branding",
+  "crumb": "Organization",
+  "intro": "Customize the logo, color and footer applied to generated documents.",
+  "fields": {
+    "logoPath": "Logo (URL or path)",
+    "logoHint": "Public URL or path to the logo. No file is uploaded.",
+    "primaryColor": "Primary color",
+    "colorText": "Color value",
+    "footerText": "Footer text"
+  },
+  "preview": "Preview",
+  "save": "Save branding",
+  "saved": "Branding updated",
+  "saveError": "Could not save branding"
+}

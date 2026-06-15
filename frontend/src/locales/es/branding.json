@@ -1,0 +1,16 @@
+{
+  "title": "Marca de la organización",
+  "crumb": "Organización",
+  "intro": "Personaliza el logo, el color y el pie de página que se aplican a los documentos generados.",
+  "fields": {
+    "logoPath": "Logo (URL o ruta)",
+    "logoHint": "URL pública o ruta del logo. No se sube ningún archivo.",
+    "primaryColor": "Color principal",
+    "colorText": "Valor del color",
+    "footerText": "Texto del pie de página"
+  },
+  "preview": "Vista previa",
+  "save": "Guardar marca",
+  "saved": "Marca actualizada",
+  "saveError": "No se pudo guardar la marca"
+}
