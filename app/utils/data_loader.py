@@ -1,18 +1,44 @@
-"""Utilidad para cargar datos iniciales desde JSON a la base de datos."""
+"""Carga de datos iniciales: catalogo oficial del marketplace por marca."""
 
 import json
 import logging
 import os
-from app import db
+from app.extensions import db
 from app.models.panel import Panel
 from app.models.inverter import Inverter
 from app.models.installation_defaults import InstallationDefaults
+from app.models.catalog import Catalog, CatalogSubscription
+from app.models.organization import Organization
 
 logger = logging.getLogger(__name__)
 
+BRAND_DISPLAY = {'JASolar': 'JA Solar'}
+
+
+def _brand_from_name(nombre):
+    token = nombre.split()[0]
+    if '-' in token:
+        token = token.split('-')[0]
+    return BRAND_DISPLAY.get(token, token)
+
+
+def _official_catalog(brand):
+    catalog = Catalog.query.filter_by(nombre=brand, org_id=None).first()
+    if not catalog:
+        catalog = Catalog(
+            nombre=brand,
+            descripcion=f'Catálogo oficial de {brand}',
+            org_id=None,
+            is_official=True,
+        )
+        db.session.add(catalog)
+        db.session.flush()
+    return catalog
+
+
 def load_initial_data():
     """Carga los datos iniciales desde el JSON a la base de datos"""
-    
+
     json_path = os.path.join(os.path.dirname(__file__), '../../data/database.json')
 
     try:
@@ -23,9 +49,10 @@ def load_initial_data():
         with open(json_path, 'r', encoding='utf-8') as f:
             data = json.load(f)
 
-        # Cargar paneles
         for panel_data in data.get('placas', []):
+            catalog = _official_catalog(_brand_from_name(panel_data['nombre']))
             panel = Panel(
+                catalog_id=catalog.id,
                 nombre=panel_data['nombre'],
                 y=panel_data['y'],
                 tcp=panel_data['tcp'],
@@ -41,10 +68,11 @@ def load_initial_data():
                 datasheet=panel_data.get('datasheet')
             )
             db.session.add(panel)
-        
-        # Cargar inversores
+
         for inverter_data in data.get('inversores', []):
+            catalog = _official_catalog(_brand_from_name(inverter_data['nombre']))
             inverter = Inverter(
+                catalog_id=catalog.id,
                 nombre=inverter_data['nombre'],
                 y=inverter_data['y'],
                 power_max=inverter_data.get('power_max', inverter_data.get('power', 0)),
@@ -55,8 +83,7 @@ def load_initial_data():
                 datasheet=inverter_data.get('datasheet')
             )
             db.session.add(inverter)
-        
-        # Cargar configuración por defecto de instalación
+
         InstallationDefaults.query.delete()
         defaults = InstallationDefaults(
             dc_material='cobre/unipolar',
@@ -83,3 +110,30 @@ def load_initial_data():
         logger.exception("Error cargando datos iniciales")
         db.session.rollback()
         raise
+
+
+def ensure_marketplace():
+    """Backfill idempotente del marketplace.
+
+    Asigna catalogo oficial por marca a los equipos huerfanos (catalog_id
+    NULL) y suscribe todos los workspaces existentes a los catalogos
+    oficiales. Seguro de ejecutar tras cada migracion.
+    """
+    orphans = 0
+    for model in (Panel, Inverter):
+        for row in model.query.filter(model.catalog_id.is_(None)).all():
+            row.catalog_id = _official_catalog(_brand_from_name(row.nombre)).id
+            orphans += 1
+
+    officials = Catalog.query.filter(Catalog.org_id.is_(None), Catalog.is_official.is_(True)).all()
+    subscribed = 0
+    for org in Organization.query.all():
+        for catalog in officials:
+            exists = CatalogSubscription.query.filter_by(org_id=org.id, catalog_id=catalog.id).first()
+            if not exists:
+                db.session.add(CatalogSubscription(org_id=org.id, catalog_id=catalog.id))
+                subscribed += 1
+
+    db.session.commit()
+    logger.info('Marketplace asegurado: %d equipos asignados, %d suscripciones creadas, %d catalogos oficiales',
+                orphans, subscribed, len(officials))

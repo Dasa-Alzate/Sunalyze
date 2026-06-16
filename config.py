@@ -1,30 +1,32 @@
 import os
+import logging
+import secrets
+from datetime import timedelta
 from dotenv import load_dotenv
 
 load_dotenv()
 
+logger = logging.getLogger(__name__)
+
 _ENV = os.environ.get('FLASK_ENV', 'development').lower()
 _IS_PRODUCTION = _ENV == 'production'
 
-_DEV_DB_URL = 'mysql+pymysql://root:0000@localhost/sunalyze'
 
-_db_url = os.environ.get('DATABASE_URL')
-if _db_url is None:
-    if _IS_PRODUCTION:
+def _resolve_database_url():
+    url = os.environ.get('DATABASE_URL')
+    if not url:
         raise RuntimeError(
-            "DATABASE_URL debe estar definida en producción (FLASK_ENV=production). "
-            "Configúrala en el entorno; ver .env.example."
+            "DATABASE_URL no está definida. Copia .env.example a .env y configúrala "
+            "(p. ej. mysql+pymysql://usuario:password@127.0.0.1:3306/sunalyze)."
         )
-    _db_url = _DEV_DB_URL
-
-_SCHEME_REWRITES = (
-    ('postgres://', 'postgresql://'),
-    ('mysql://', 'mysql+pymysql://'),
-)
-for _old_scheme, _new_scheme in _SCHEME_REWRITES:
-    if _db_url.startswith(_old_scheme):
-        _db_url = _new_scheme + _db_url[len(_old_scheme):]
-        break
+    rewrites = (
+        ('postgres://', 'postgresql://'),
+        ('mysql://', 'mysql+pymysql://'),
+    )
+    for old_scheme, new_scheme in rewrites:
+        if url.startswith(old_scheme):
+            return new_scheme + url[len(old_scheme):]
+    return url
 
 
 def _resolve_secret_key():
@@ -36,13 +38,23 @@ def _resolve_secret_key():
             "SECRET_KEY debe estar definida en producción (FLASK_ENV=production). "
             "Genera una con: python -c \"import secrets; print(secrets.token_hex(32))\""
         )
-    return 'dev-only-insecure-key-change-in-prod'
+    logger.warning(
+        "SECRET_KEY no definida: usando una clave efímera aleatoria (las sesiones "
+        "se invalidarán al reiniciar). Define SECRET_KEY en tu .env para persistirlas."
+    )
+    return secrets.token_hex(32)
 
 
 class Config:
     SECRET_KEY = _resolve_secret_key()
     BASE_DIR = os.path.abspath(os.path.dirname(__file__))
-    SQLALCHEMY_DATABASE_URI = _db_url
+    SQLALCHEMY_DATABASE_URI = _resolve_database_url()
     SQLALCHEMY_TRACK_MODIFICATIONS = False
     CACHE_TYPE = 'SimpleCache'
     CACHE_DEFAULT_TIMEOUT = 300
+    IS_PRODUCTION = _IS_PRODUCTION
+
+    SESSION_COOKIE_HTTPONLY = True
+    SESSION_COOKIE_SAMESITE = 'Lax'
+    SESSION_COOKIE_SECURE = _IS_PRODUCTION
+    PERMANENT_SESSION_LIFETIME = timedelta(days=14)

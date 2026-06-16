@@ -1,0 +1,1 @@
+export { GeoMap } from './GeoMap'

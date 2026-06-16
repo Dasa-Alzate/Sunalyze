@@ -16,6 +16,9 @@ class Wire(BaseModel):
     """
     __tablename__ = 'wires'
 
+    catalog_id = db.Column(db.Integer, db.ForeignKey('catalogs.id'), index=True)
+    catalog = db.relationship('Catalog')
+
     seccion = db.Column(db.Float, nullable=False)
     corriente = db.Column(db.Float, nullable=False)
     tipo = db.Column(db.String(10), nullable=False)
@@ -25,6 +28,8 @@ class Wire(BaseModel):
     def to_dict(self):
         return {
             'id': self.id,
+            'catalog_id': self.catalog_id,
+            'catalog_nombre': self.catalog.nombre if self.catalog else None,
             'seccion': self.seccion,
             'corriente': self.corriente,
             'tipo': self.tipo,

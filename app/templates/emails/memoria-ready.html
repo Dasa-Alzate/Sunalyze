@@ -1,0 +1,68 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Tu memoria técnica está lista</title>
+</head>
+<body style="margin:0; padding:0; background:#faf9f8; font-family:'Segoe UI Variable Text','Segoe UI',-apple-system,Helvetica,Arial,sans-serif; -webkit-font-smoothing:antialiased;">
+<div style="display:none; max-height:0; overflow:hidden; opacity:0;">La memoria técnica de {{ cliente|default('J. García') }} ({{ kwp|default('6,60') }} kWp) está lista para descargar.</div>
+<table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="background:#faf9f8;">
+  <tr><td align="center" style="padding:32px 16px;">
+    <table role="presentation" width="600" cellpadding="0" cellspacing="0" style="width:600px; max-width:100%; background:#ffffff; border:1px solid #e1dfdd; border-radius:12px; overflow:hidden;">
+      <tr><td style="background:#107c41; padding:22px 32px;">
+        <table role="presentation" cellpadding="0" cellspacing="0"><tr>
+          <td style="vertical-align:middle; padding-right:10px;"><span style="display:inline-block; width:30px; height:30px; background:rgba(255,255,255,0.16); border-radius:6px; text-align:center; line-height:30px; color:#ffffff; font-size:17px;">&#9728;</span></td>
+          <td style="vertical-align:middle; color:#ffffff; font-size:19px; font-weight:700; letter-spacing:-0.01em;">Sunalyze</td>
+        </tr></table>
+      </td></tr>
+      <tr><td align="center" style="padding:34px 40px 0;">
+        <span style="display:inline-block; width:56px; height:56px; background:#e9f4ee; border-radius:50%; text-align:center; line-height:56px; color:#107c41; font-size:26px;">&#10003;</span>
+      </td></tr>
+      <tr><td align="center" style="padding:16px 40px 6px;">
+        <h1 style="margin:0 0 10px; font-size:24px; line-height:1.2; font-weight:700; color:#242424; letter-spacing:-0.02em;">Tu memoria técnica está lista</h1>
+        <p style="margin:0; font-size:15px; line-height:1.6; color:#616161;">El documento y el esquema unifilar de <strong style="color:#424242;">{{ cliente|default('J. García') }}</strong> se han generado correctamente.</p>
+      </td></tr>
+      <tr><td style="padding:24px 40px 4px;">
+        <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="border:1px solid #e1dfdd; border-radius:8px;">
+          <tr>
+            <td style="padding:16px 18px; border-right:1px solid #f3f2f1; border-bottom:1px solid #f3f2f1; width:50%;">
+              <div style="font-size:11px; font-weight:700; letter-spacing:0.06em; text-transform:uppercase; color:#8a8886;">Campo FV</div>
+              <div style="font-size:22px; font-weight:700; color:#242424; margin-top:3px;">{{ kwp|default('6,60') }} <span style="font-size:13px; color:#616161; font-weight:500;">kWp</span></div>
+            </td>
+            <td style="padding:16px 18px; border-bottom:1px solid #f3f2f1;">
+              <div style="font-size:11px; font-weight:700; letter-spacing:0.06em; text-transform:uppercase; color:#8a8886;">Producción</div>
+              <div style="font-size:22px; font-weight:700; color:#242424; margin-top:3px;">{{ produccion|default('7,9') }} <span style="font-size:13px; color:#616161; font-weight:500;">MWh/año</span></div>
+            </td>
+          </tr>
+          <tr>
+            <td style="padding:16px 18px; border-right:1px solid #f3f2f1;">
+              <div style="font-size:11px; font-weight:700; letter-spacing:0.06em; text-transform:uppercase; color:#8a8886;">Paneles</div>
+              <div style="font-size:22px; font-weight:700; color:#242424; margin-top:3px;">{{ paneles|default(12) }} <span style="font-size:13px; color:#616161; font-weight:500;">· {{ strings|default('2 × 6') }}</span></div>
+            </td>
+            <td style="padding:16px 18px;">
+              <div style="font-size:11px; font-weight:700; letter-spacing:0.06em; text-transform:uppercase; color:#8a8886;">Normativa</div>
+              <div style="font-size:15px; font-weight:600; color:#107c41; margin-top:8px;">{{ norma|default('ITC-BT-40') }} ✓</div>
+            </td>
+          </tr>
+        </table>
+      </td></tr>
+      <tr><td align="center" style="padding:24px 40px 6px;">
+        <table role="presentation" cellpadding="0" cellspacing="0"><tr>
+          <td style="border-radius:6px; background:#107c41; padding-right:0;">
+            <a href="{{ pdf_url|default('#') }}" style="display:inline-block; padding:13px 28px; font-size:15px; font-weight:600; color:#ffffff; text-decoration:none; border-radius:6px;">Descargar memoria (PDF)</a>
+          </td>
+        </tr></table>
+      </td></tr>
+      <tr><td align="center" style="padding:6px 40px 34px;">
+        <a href="{{ project_url|default('#') }}" style="font-size:14px; font-weight:600; color:#0f6cbd; text-decoration:none;">Ver el proyecto en Sunalyze &rarr;</a>
+      </td></tr>
+      <tr><td style="background:#faf9f8; border-top:1px solid #e1dfdd; padding:22px 40px;">
+        <p style="margin:0 0 6px; font-size:12px; color:#8a8886; line-height:1.5;">Sunalyze · Diseño y legalización fotovoltaica · España</p>
+        <p style="margin:0; font-size:12px; color:#bdbdbd; line-height:1.5;">Recibes este correo por una actividad en tu proyecto. <a href="#" style="color:#8a8886;">Preferencias</a> · <a href="#" style="color:#8a8886;">Privacidad</a></p>
+      </td></tr>
+    </table>
+  </td></tr>
+</table>
+</body>
+</html>

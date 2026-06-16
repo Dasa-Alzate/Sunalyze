@@ -32,6 +32,16 @@ data/datasheets/**/*.pdf
 # Node
 node_modules/
 
+# Frontend build (artefacto: se compila en local/deploy, no se versiona)
+frontend/dist/
+
 # Documentación de trabajo interna (no versionada)
 documentation/
 docs/api/
+
+# Visual Companion / brainstorm (local, no versionado)
+.superpowers/
+
+# Python venv local de verificación/arranque
+.venv/
+sunalyze_dev.db
