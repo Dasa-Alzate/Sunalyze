@@ -112,6 +112,20 @@ describe('CircuitDiagram · diagrama unifilar', () => {
     await waitFor(() => expect(select.value).toBe('solar-sin-fusibles'))
   })
 
+  it('surfaces the backend 422 message instead of a silent failure', async () => {
+    fetchMock.mockImplementation(() => Promise.resolve({
+      ok: false,
+      status: 422,
+      json: () => Promise.resolve({
+        error: 'Datos invalidos',
+        details: [{ field: 'num_strings', msg: 'Input should be greater than or equal to 1' }],
+      }),
+    }))
+    renderAt('/app/diagrama')
+    await screen.findByLabelText('Plantilla')
+    await waitFor(() => expect(screen.getByText(/num_strings/)).toBeInTheDocument())
+  })
+
   it('seeds params from the project panel/inverter and pre-selects battery', async () => {
     renderAt('/app/diagrama/5')
     const select = await screen.findByLabelText('Plantilla')
