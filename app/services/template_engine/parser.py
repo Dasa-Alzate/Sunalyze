@@ -271,9 +271,9 @@ def render_text(text, resolver, on_error='placeholder'):
             parsed = parse_expression(expr)
             value = evaluate(parsed, resolver)
             return _stringify(value)
-        except TemplateError:
+        except TemplateError as exc:
             if on_error == 'raise':
-                raise
+                raise TemplateError(f"en «{{{{ {expr} }}}}»: {exc}") from exc
             return f'[{expr}]'
 
     return _PLACEHOLDER_RE.sub(_sub, text)

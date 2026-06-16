@@ -275,6 +275,30 @@ class FilterRobustnessTest(unittest.TestCase):
             filter_number('1e999')
 
 
+class ErrorContextTest(unittest.TestCase):
+    """En modo raise, el error nombra la expresión concreta que falló (feedback al autor)."""
+
+    def test_render_text_raise_names_expression(self):
+        r = _resolver()
+        with self.assertRaises(TemplateError) as ctx:
+            render_text('Total: {{ panel.precio }} eur', r, on_error='raise')
+        message = str(ctx.exception)
+        self.assertIn('panel.precio', message)
+        self.assertIn('{{ panel.precio }}', message)
+
+    def test_render_section_raise_names_expression(self):
+        from app.services.template_engine.renderer import render_section
+        r = _resolver()
+        with self.assertRaises(TemplateError) as ctx:
+            render_section({'title': 'x', 'body': '{{ finance.foo }}'}, r, on_error='raise')
+        self.assertIn('finance.foo', str(ctx.exception))
+
+    def test_placeholder_mode_unaffected(self):
+        r = _resolver()
+        self.assertEqual(render_text('{{ panel.precio }}', r, on_error='placeholder'),
+                         '[panel.precio]')
+
+
 class NewFiltersTest(unittest.TestCase):
     def test_capitalize(self):
         self.assertEqual(filter_capitalize('hola MUNDO'), 'Hola MUNDO')

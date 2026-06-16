@@ -147,6 +147,7 @@ class TemplateService:
         resolver = ContextResolver({
             'project': None, 'panel': None, 'inverter': None, 'battery': None,
             'wire': None, 'user': None, 'org': None, 'finance': None,
+            'installation': None, 'maintenance': None, 'incident': None,
         })
         for idx, section in enumerate(content):
             if not isinstance(section, dict):
