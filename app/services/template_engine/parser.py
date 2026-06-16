@@ -10,6 +10,7 @@ sobre números, rutas y los operadores `+ - * / ( )` más las funciones `round` 
 evaluación aritmética usa un algoritmo shunting-yard propio: nunca se evalúa código.
 """
 
+import math
 import re
 
 from .errors import TemplateError
@@ -112,13 +113,17 @@ def _to_number(value):
     if isinstance(value, bool):
         raise TemplateError('No se puede operar aritméticamente con un booleano.')
     if isinstance(value, (int, float)):
-        return value
-    if isinstance(value, str):
+        number = value
+    elif isinstance(value, str):
         try:
-            return float(value)
+            number = float(value)
         except ValueError:
             raise TemplateError(f"Valor no numérico en cálculo: '{value}'.")
-    raise TemplateError('Valor no numérico en cálculo.')
+    else:
+        raise TemplateError('Valor no numérico en cálculo.')
+    if isinstance(number, float) and not math.isfinite(number):
+        raise TemplateError('Valor numérico no finito en cálculo.')
+    return number
 
 
 def _apply_op(op, left, right):
