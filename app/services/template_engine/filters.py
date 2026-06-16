@@ -148,6 +148,28 @@ def filter_lower(value, presentation=None):
     return ('' if value is None else str(value)).lower()
 
 
+def filter_capitalize(value, presentation=None):
+    """Primera letra en mayúscula, el resto sin tocar (no baja el resto, a diferencia de str)."""
+    text = '' if value is None else str(value)
+    return text[:1].upper() + text[1:] if text else ''
+
+
+def filter_title(value, presentation=None):
+    """Cada palabra con inicial mayúscula (útil para nombres propios en minúscula)."""
+    return ('' if value is None else str(value)).title()
+
+
+def filter_default(value, fallback='', presentation=None):
+    """Devuelve `fallback` cuando el valor está ausente (None o cadena en blanco).
+
+    Pareja natural de los filtros None-safe: `{{ finance.net_capex | money | default('N/D') }}`
+    muestra un texto de reemplazo en vez de un hueco cuando el dato no existe.
+    """
+    if value is None or (isinstance(value, str) and value.strip() == ''):
+        return fallback
+    return value
+
+
 FILTERS = {
     'number': filter_number,
     'thousands': filter_thousands,
@@ -157,6 +179,9 @@ FILTERS = {
     'ellipsis': filter_ellipsis,
     'upper': filter_upper,
     'lower': filter_lower,
+    'capitalize': filter_capitalize,
+    'title': filter_title,
+    'default': filter_default,
 }
 
 
