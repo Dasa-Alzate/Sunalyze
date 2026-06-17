@@ -42,8 +42,20 @@ docker compose --env-file .env.docker up -d --build
 # la app queda en http://<host>:8000  (sirve el SPA + la API)
 ```
 
-`docker compose` levanta `db` (MySQL 8.4, con healthcheck y volumen persistente) y
-`web`. `web` espera a que `db` esté `healthy`, migra y arranca.
+`docker compose` levanta `db` (MySQL 8.4, con healthcheck y volumen persistente),
+`redis` (rate-limit + cache compartidos) y `web`. `web` espera a que `db` y `redis`
+estén `healthy`, migra y arranca.
+
+## Estado compartido (Redis)
+
+El rate limiting y la cache son compartidos entre workers vía Redis, configurable por env:
+
+- `RATELIMIT_STORAGE_URI` (Flask-Limiter) → `redis://redis:6379/0` en compose.
+- `CACHE_TYPE=RedisCache` + `CACHE_REDIS_URL` (Flask-Caching) → `redis://redis:6379/1`.
+
+Sin estas variables (p. ej. en desarrollo local sin Redis) el sistema cae a
+`memory://` y `SimpleCache` por proceso: funcional, pero los límites no se comparten
+entre workers. El cliente `redis` ya está en `requirements.txt`.
 
 ## Producción
 
@@ -55,10 +67,5 @@ docker compose --env-file .env.docker up -d --build
 
 ## Limitaciones conocidas (deuda, no bloqueante)
 
-- **Rate-limit y cache son por proceso** (`memory://` / `SimpleCache`). Con varios
-  workers de gunicorn los límites no se comparten. `redis` ya está en `requirements`;
-  el siguiente paso es hacer `RATELIMIT_STORAGE_URI`/`CACHE_TYPE` configurables por env
-  y añadir un servicio `redis` al compose. Mientras tanto, `WEB_CONCURRENCY=1` da
-  límites exactos.
 - La imagen no fija versión de fuentes; si la memoria PDF necesita una tipografía
   concreta, añádela en la etapa runtime.

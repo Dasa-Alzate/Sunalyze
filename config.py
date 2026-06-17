@@ -50,8 +50,10 @@ class Config:
     BASE_DIR = os.path.abspath(os.path.dirname(__file__))
     SQLALCHEMY_DATABASE_URI = _resolve_database_url()
     SQLALCHEMY_TRACK_MODIFICATIONS = False
-    CACHE_TYPE = 'SimpleCache'
+    CACHE_TYPE = os.environ.get('CACHE_TYPE', 'SimpleCache')
+    CACHE_REDIS_URL = os.environ.get('CACHE_REDIS_URL') or None
     CACHE_DEFAULT_TIMEOUT = 300
+    RATELIMIT_STORAGE_URI = os.environ.get('RATELIMIT_STORAGE_URI') or 'memory://'
     IS_PRODUCTION = _IS_PRODUCTION
 
     SESSION_COOKIE_HTTPONLY = True
