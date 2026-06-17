@@ -18,6 +18,7 @@ from app.models.inverter import Inverter
 from app.models.catalog import Catalog
 from app.models.scrape_run import ScrapeRun
 from app.scrapers.registry import get_scraper
+from app.scrapers import acceptance
 
 logger = logging.getLogger(__name__)
 
@@ -58,10 +59,10 @@ class ScraperService:
                 continue
 
             for product in products:
-                missing = product.missing_vital()
-                if missing:
+                reasons = acceptance.evaluate(product, scraper.brand)
+                if reasons:
                     report['skipped'].append({'id': product.external_id,
-                                              'reason': f"faltan campos vitales: {', '.join(missing)}"})
+                                              'reason': '; '.join(reasons)})
                     continue
                 action = ScraperService._upsert(Model, catalog, scraper.brand, product, dry_run)
                 report[action['result']].append(action['detail'])
