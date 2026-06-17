@@ -72,6 +72,24 @@ def has_permission(permission):
     return permission in current_permissions()
 
 
+def require_flag(key):
+    """Gate de feature flag: 403 si el flag no está activo en el contexto actual.
+
+    Ortogonal al permiso (RBAC) y al rol de plataforma: responde "¿está la
+    funcionalidad habilitada aquí?", no "¿te dejan hacerlo?".
+    """
+    def decorator(fn):
+        @wraps(fn)
+        def wrapper(*args, **kwargs):
+            from app.services.flag_service import FlagService
+            user = current_user()
+            if FlagService.is_enabled(key, current_org_id(), user.id if user else None):
+                return fn(*args, **kwargs)
+            raise Forbidden('Esta función no está habilitada en tu espacio.')
+        return wrapper
+    return decorator
+
+
 def is_platform_admin():
     user = current_user()
     return bool(user and user.is_platform_admin)

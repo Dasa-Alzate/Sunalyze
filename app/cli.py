@@ -48,5 +48,16 @@ def list_admins():
         click.echo(f'  {user.email}  ({user.full_name})')
 
 
+flags_cli = AppGroup('flags', help='Gestión de feature flags.')
+
+
+@flags_cli.command('seed')
+def seed_flags():
+    from app.services.flag_service import FlagService
+    created = FlagService.ensure_defaults()
+    click.echo(f'Flags por defecto asegurados ({created} creados).')
+
+
 def register_cli(app):
     app.cli.add_command(platform_cli)
+    app.cli.add_command(flags_cli)

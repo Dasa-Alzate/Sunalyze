@@ -48,7 +48,7 @@ const get = (p) => request(p)
 const post = (p, body) => request(p, { method: 'POST', body: JSON.stringify(body) })
 const put = (p, body) => request(p, { method: 'PUT', body: JSON.stringify(body) })
 const patch = (p, body) => request(p, { method: 'PATCH', body: JSON.stringify(body) })
-const del = (p) => request(p, { method: 'DELETE' })
+const del = (p, body) => request(p, body !== undefined ? { method: 'DELETE', body: JSON.stringify(body) } : { method: 'DELETE' })
 
 export const api = {
   panels: {
@@ -98,6 +98,14 @@ export const api = {
     revoke: (id) => del(`/api/invitations/${id}`),
     get: (token) => get(`/api/invitations/${token}`),
     accept: (token) => post(`/api/invitations/${token}/accept`, {}),
+  },
+  admin: {
+    flags: () => get('/api/admin/flags'),
+    upsertFlag: (b) => post('/api/admin/flags', b),
+    setOverride: (key, b) => post(`/api/admin/flags/${key}/override`, b),
+    clearOverride: (key, b) => del(`/api/admin/flags/${key}/override`, b),
+    organizations: () => get('/api/admin/organizations'),
+    users: () => get('/api/admin/users'),
   },
   auth: {
     me: () => get('/api/auth/me'),
