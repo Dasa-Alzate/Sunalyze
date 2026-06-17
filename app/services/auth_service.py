@@ -49,14 +49,14 @@ class AuthService:
 
     @staticmethod
     def authenticate(email, password):
-        user = User.query.filter_by(email=email.strip().lower()).first()
+        user = User.active().filter_by(email=email.strip().lower()).first()
         if not user or not user.check_password(password):
             raise Unauthorized('Correo o contraseña incorrectos.')
         return user
 
     @staticmethod
     def request_password_reset(email):
-        user = User.query.filter_by(email=email.strip().lower()).first()
+        user = User.active().filter_by(email=email.strip().lower()).first()
         if not user:
             return None
         return tokens.issue(tokens.RESET_PASSWORD, {'uid': user.id})
@@ -64,7 +64,7 @@ class AuthService:
     @staticmethod
     def reset_password(token, new_password):
         data = tokens.verify(tokens.RESET_PASSWORD, token, max_age_seconds=3600)
-        user = User.query.get(data.get('uid'))
+        user = User.active().filter_by(id=data.get('uid')).first()
         if not user:
             raise NotFound('Usuario no encontrado.')
         user.set_password(new_password)
