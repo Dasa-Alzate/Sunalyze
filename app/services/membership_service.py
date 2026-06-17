@@ -15,6 +15,7 @@ from app.models.membership import Membership
 from app.models.invitation import Invitation, INVITABLE_ROLES
 from app.errors import ValidationError, NotFound, Forbidden, Conflict
 from app.db_helpers import commit_or_conflict
+from app.services.audit_service import AuditService
 
 logger = logging.getLogger(__name__)
 
@@ -187,7 +188,13 @@ class MembershipService:
         if target.role == 'owner' and new_role != 'owner' and MembershipService._owner_count(org_id) <= 1:
             raise Conflict('El workspace debe tener al menos un propietario.')
 
+        previous_role = target.role
         target.role = new_role
+        AuditService.record(
+            'membership.change_role', actor=actor, org_id=org_id,
+            entity_type='membership', entity_id=target.id,
+            payload={'target_user_id': target_user_id, 'from': previous_role, 'to': new_role},
+        )
         db.session.commit()
         logger.info('Rol cambiado u%s -> %s en org %s', target_user_id, new_role, org_id)
         return target
@@ -206,6 +213,11 @@ class MembershipService:
         if target.role == 'owner' and MembershipService._owner_count(org_id) <= 1:
             raise Conflict('No puedes expulsar al último propietario del workspace.')
 
+        AuditService.record(
+            'membership.remove', actor=actor, org_id=org_id,
+            entity_type='membership', entity_id=target.id,
+            payload={'target_user_id': target_user_id, 'role': target.role},
+        )
         db.session.delete(target)
         db.session.commit()
         logger.info('Miembro expulsado u%s de org %s', target_user_id, org_id)
