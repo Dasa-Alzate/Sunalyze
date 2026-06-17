@@ -17,11 +17,46 @@ import struct
 import time
 from urllib.parse import quote
 
+from cryptography.fernet import Fernet, InvalidToken
+from flask import current_app
+
 DIGITS = 6
 PERIOD = 30
 SECRET_BYTES = 20
 RECOVERY_CODE_COUNT = 10
 _PBKDF2_ITERATIONS = 120000
+
+
+def _fernet():
+    """Construye el cifrador Fernet a partir de la clave resuelta de config."""
+    configured = current_app.config.get('MFA_ENC_KEY')
+    if configured:
+        key = configured.encode('ascii') if isinstance(configured, str) else configured
+    else:
+        secret_key = current_app.config['SECRET_KEY']
+        material = secret_key.encode('utf-8') if isinstance(secret_key, str) else secret_key
+        key = base64.urlsafe_b64encode(hashlib.sha256(material).digest())
+    return Fernet(key)
+
+
+def encrypt_secret(plaintext):
+    """Cifra un secreto base32 en claro y devuelve el token Fernet (str)."""
+    return _fernet().encrypt(plaintext.encode('utf-8')).decode('ascii')
+
+
+def decrypt_secret(token):
+    """Descifra un token Fernet al secreto base32 original.
+
+    Devuelve `None` si el token es inválido (corrupto o clave cambiada), de
+    modo que la capa superior pueda tratarlo como no enrolado y forzar reenrol.
+    """
+    if not token:
+        return None
+    raw = token.encode('ascii') if isinstance(token, str) else token
+    try:
+        return _fernet().decrypt(raw).decode('utf-8')
+    except (InvalidToken, ValueError, TypeError):
+        return None
 
 
 def generate_secret():

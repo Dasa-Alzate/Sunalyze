@@ -18,7 +18,7 @@ class User(BaseModel):
     last_name = db.Column(db.String(80), default='')
     email_verified = db.Column(db.Boolean, nullable=False, default=False)
     is_superadmin = db.Column(db.Boolean, nullable=False, default=False)
-    mfa_secret = db.Column(db.String(64))
+    mfa_secret = db.Column(db.Text)
     mfa_enabled = db.Column(db.Boolean, nullable=False, default=False)
     mfa_recovery_codes = db.Column(db.Text)
 
@@ -52,14 +52,15 @@ class User(BaseModel):
         """Activa MFA con el secreto confirmado y genera códigos de recuperación.
 
         Devuelve los códigos en claro (solo se muestran una vez)."""
-        self.mfa_secret = secret
+        self.mfa_secret = mfa.encrypt_secret(secret)
         self.mfa_enabled = True
         codes = mfa.generate_recovery_codes()
         self.set_recovery_codes(codes)
         return codes
 
     def verify_totp(self, code):
-        return bool(self.mfa_secret) and mfa.verify_totp(self.mfa_secret, code)
+        secret = mfa.decrypt_secret(self.mfa_secret)
+        return bool(secret) and mfa.verify_totp(secret, code)
 
     @property
     def full_name(self):
