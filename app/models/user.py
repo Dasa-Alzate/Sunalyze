@@ -70,7 +70,7 @@ class User(BaseModel, SoftDeleteMixin):
             'privacy_accepted_at': self.privacy_accepted_at.isoformat() if self.privacy_accepted_at else None,
             'organizations': [
                 {**m.organization.to_dict(), 'role': m.role}
-                for m in self.memberships if m.organization
+                for m in self.memberships if m.organization and not m.organization.is_deleted
             ],
         }
 

@@ -74,7 +74,7 @@ class AuthService:
     @staticmethod
     def verify_email(token):
         data = tokens.verify(tokens.VERIFY_EMAIL, token, max_age_seconds=86400)
-        user = User.query.get(data.get('uid'))
+        user = User.active().filter_by(id=data.get('uid')).first()
         if not user:
             raise NotFound('Usuario no encontrado.')
         user.email_verified = True
