@@ -27,10 +27,16 @@ def run(brand, dry_run):
         raise click.ClickException(str(exc))
     click.echo(f"[{report['brand']}] dry_run={report['dry_run']}  "
                f"creados={len(report['created'])} actualizados={len(report['updated'])} "
+               f"a_revisar={len(report['review'])} bloqueados={len(report['blocked'])} "
                f"omitidos={len(report['skipped'])} errores={len(report['errors'])}")
     for d in report['created'] + report['updated']:
         falta = ', '.join(d.get('parcial_sin') or []) or 'completo'
-        click.echo(f"   ✓ {d.get('nombre')}  [{d['id']}]  (sin: {falta})")
+        marca = ' ⚑ revisión' if d.get('needs_review') else ''
+        click.echo(f"   ✓ {d.get('nombre')}  [{d['id']}]  (sin: {falta}){marca}")
+    for r in report['review']:
+        click.echo(f"   ⚑ {r['id']}: {r['reason']}")
+    for b in report['blocked']:
+        click.echo(f"   ⛔ {b['id']}: {b['reason']}")
     for s in report['skipped']:
         click.echo(f"   ⤫ {s['id']}: {s['reason']}")
     for e in report['errors']:
