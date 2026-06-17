@@ -1,0 +1,36 @@
+{% extends 'superadmin/base.html' %}
+{% set active_nav = 'migr' %}
+{% block body %}
+<h1>Migraciones</h1>
+<div class="cards">
+  <div class="card"><div class="n" style="font-size:15px">{{ status.current or '(base)' }}</div><div class="l">Revisión actual</div></div>
+  <div class="card"><div class="n" style="font-size:15px">{{ status.head or '—' }}</div><div class="l">Head (objetivo)</div></div>
+  <div class="card"><div class="n">{% if status.up_to_date %}<span class="tag ok">al día</span>{% else %}<span class="tag warn">pendiente</span>{% endif %}</div><div class="l">Estado</div></div>
+</div>
+
+{% if not status.up_to_date %}
+<h2>Aplicar migraciones pendientes</h2>
+<form method="post" action="{{ url_for('superadmin.migrations_upgrade') }}">
+  <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+  <label><input type="checkbox" name="confirm" value="upgrade" style="width:auto"> Confirmo aplicar <code>upgrade</code> hasta <code>{{ status.head }}</code></label>
+  <button class="primary" type="submit" style="margin-top:10px">Ejecutar upgrade</button>
+  <span class="muted">El downgrade no está disponible desde la web.</span>
+</form>
+{% endif %}
+
+<h2>Historial</h2>
+<table>
+  <tr><th>Revisión</th><th>Mensaje</th><th>Estado</th></tr>
+  {% for r in history %}
+  <tr>
+    <td><code>{{ r.revision[:12] }}</code></td>
+    <td>{{ r.message }}</td>
+    <td>
+      {% if r.is_current %}<span class="tag acc">actual</span>
+      {% elif r.is_applied %}<span class="tag ok">aplicada</span>
+      {% else %}<span class="tag warn">pendiente</span>{% endif %}
+    </td>
+  </tr>
+  {% endfor %}
+</table>
+{% endblock %}

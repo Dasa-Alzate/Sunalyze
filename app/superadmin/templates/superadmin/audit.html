@@ -1,0 +1,18 @@
+{% extends 'superadmin/base.html' %}
+{% set active_nav = 'audit' %}
+{% block body %}
+<h1>Auditoría (últimas {{ entries|length }})</h1>
+<table>
+  <tr><th>Fecha</th><th>Actor</th><th>IP</th><th>Acción</th><th>Objetivo</th><th>Detalle</th></tr>
+  {% for e in entries %}
+  <tr>
+    <td class="muted">{{ e.created_at.strftime('%Y-%m-%d %H:%M:%S') if e.created_at else '' }}</td>
+    <td>{{ e.actor_email or '—' }}</td>
+    <td class="muted">{{ e.ip or '—' }}</td>
+    <td><code>{{ e.action }}</code></td>
+    <td class="muted">{{ e.target or '—' }}</td>
+    <td class="muted">{{ e.detail or '—' }}</td>
+  </tr>
+  {% else %}<tr><td colspan="6" class="muted">Sin registros.</td></tr>{% endfor %}
+</table>
+{% endblock %}

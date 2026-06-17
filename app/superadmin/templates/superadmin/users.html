@@ -1,0 +1,23 @@
+{% extends 'superadmin/base.html' %}
+{% set active_nav = 'users' %}
+{% block body %}
+<h1>Usuarios ({{ users|length }})</h1>
+<table>
+  <tr><th>Email</th><th>Nombre</th><th>Verificado</th><th>Orgs</th><th>Superadmin</th><th></th></tr>
+  {% for u in users %}
+  <tr>
+    <td>{{ u.email }}</td>
+    <td>{{ u.full_name }}</td>
+    <td>{% if u.email_verified %}<span class="tag ok">sí</span>{% else %}<span class="tag warn">no</span>{% endif %}</td>
+    <td class="muted">{{ u.memberships|length }}</td>
+    <td>{% if u.is_superadmin %}<span class="tag acc">superadmin</span>{% else %}—{% endif %}</td>
+    <td>
+      <form class="inline" method="post" action="{{ url_for('superadmin.users_toggle_superadmin', user_id=u.id) }}">
+        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+        <button class="{{ 'danger' if u.is_superadmin else '' }}">{{ 'Revocar' if u.is_superadmin else 'Conceder' }}</button>
+      </form>
+    </td>
+  </tr>
+  {% endfor %}
+</table>
+{% endblock %}
