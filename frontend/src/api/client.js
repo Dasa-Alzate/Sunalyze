@@ -99,6 +99,11 @@ export const api = {
     get: (token) => get(`/api/invitations/${token}`),
     accept: (token) => post(`/api/invitations/${token}/accept`, {}),
   },
+  modules: {
+    list: () => get('/api/modules'),
+    enable: (key) => post(`/api/modules/${key}/enable`, {}),
+    disable: (key) => post(`/api/modules/${key}/disable`, {}),
+  },
   admin: {
     flags: () => get('/api/admin/flags'),
     upsertFlag: (b) => post('/api/admin/flags', b),

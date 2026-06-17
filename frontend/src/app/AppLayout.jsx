@@ -9,6 +9,7 @@ const NAV = [
   { to: '/app/proyectos', label: 'Proyectos', icon: 'folder' },
   { to: '/app/diseno', label: 'Diseño', icon: 'sliders-horizontal' },
   { to: '/app/equipos', label: 'Equipos', icon: 'package' },
+  { to: '/app/modulos', label: 'Módulos', icon: 'store' },
   { to: '/app/equipo', label: 'Equipo', icon: 'users', business: true },
   { to: '/app/memoria', label: 'Memoria', icon: 'file-text' },
   { to: '/app/admin/flags', label: 'Flags', icon: 'flag', platform: true },

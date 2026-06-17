@@ -18,17 +18,30 @@ class Flag(BaseModel):
 
     key = db.Column(db.String(80), nullable=False, unique=True, index=True)
     nombre = db.Column(db.String(120), nullable=False)
-    descripcion = db.Column(db.String(255), default='')
+    titulo = db.Column(db.String(150), default='')
+    descripcion = db.Column(db.String(500), default='')
     default_enabled = db.Column(db.Boolean, nullable=False, default=False)
     status = db.Column(db.String(20), nullable=False, default='active')
+
+    is_visible = db.Column(db.Boolean, nullable=False, default=False)
+    image_path = db.Column(db.String(255))
+    thumbnail_path = db.Column(db.String(255))
+    help_url = db.Column(db.String(255))
+    price = db.Column(db.Numeric(10, 2))
 
     def to_dict(self):
         return {
             'key': self.key,
             'nombre': self.nombre,
+            'titulo': self.titulo or '',
             'descripcion': self.descripcion or '',
             'default_enabled': self.default_enabled,
             'status': self.status,
+            'is_visible': self.is_visible,
+            'image_path': self.image_path,
+            'thumbnail_path': self.thumbnail_path,
+            'help_url': self.help_url,
+            'price': float(self.price) if self.price is not None else None,
         }
 
     def __repr__(self):
