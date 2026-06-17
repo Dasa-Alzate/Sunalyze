@@ -45,3 +45,6 @@ docs/api/
 # Python venv local de verificación/arranque
 .venv/
 sunalyze_dev.db
+
+# Docker env con secretos (no versionar)
+.env.docker
