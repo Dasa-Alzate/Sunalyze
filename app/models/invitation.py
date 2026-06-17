@@ -19,7 +19,7 @@ class Invitation(BaseModel):
     """Invitacion pendiente de aceptacion, vinculada a un email y una org."""
     __tablename__ = 'invitations'
 
-    org_id = db.Column(db.Integer, db.ForeignKey('organizations.id'), nullable=False)
+    org_id = db.Column(db.Integer, db.ForeignKey('organizations.id'), nullable=False, index=True)
     email = db.Column(db.String(255), nullable=False, index=True)
     role = db.Column(db.String(20), nullable=False, default='member')
     invited_by_user_id = db.Column(db.Integer, db.ForeignKey('users.id'), nullable=False)
