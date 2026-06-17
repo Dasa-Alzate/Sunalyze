@@ -2,8 +2,9 @@
 
 from app import db
 from .database import BaseModel
+from .provenance import ProvenanceMixin
 
-class Inverter(BaseModel):
+class Inverter(BaseModel, ProvenanceMixin):
     """
     Representa un inversor con sus especificaciones tecnicas.
 
@@ -22,13 +23,13 @@ class Inverter(BaseModel):
     catalog = db.relationship('Catalog')
 
     nombre = db.Column(db.String(100), nullable=False, unique=True)
-    y = db.Column(db.Float, nullable=False)  # Eficiencia
-    power_max = db.Column(db.Float, nullable=False)  # Potencia máxima DC
-    power = db.Column(db.Float, nullable=False)  # Potencia nominal AC
-    vmax = db.Column(db.Float, nullable=False)  # Voltaje máximo
-    I_max_input = db.Column(db.Float, nullable=False)  # Corriente máxima entrada
-    I_max_output = db.Column(db.Float, nullable=False)  # Corriente máxima salida
-    datasheet = db.Column(db.String(200))  # Ruta al datasheet PDF
+    power = db.Column(db.Float, nullable=False)
+    vmax = db.Column(db.Float, nullable=False)
+    y = db.Column(db.Float)
+    power_max = db.Column(db.Float)
+    I_max_input = db.Column(db.Float)
+    I_max_output = db.Column(db.Float)
+    datasheet = db.Column(db.String(200))
     
     def to_dict(self):
         return {
@@ -42,7 +43,8 @@ class Inverter(BaseModel):
             'vmax': self.vmax,
             'I_max_input': self.I_max_input,
             'I_max_output': self.I_max_output,
-            'datasheet': self.datasheet
+            'datasheet': self.datasheet,
+            **self.provenance_dict(),
         }
     
     def __repr__(self):

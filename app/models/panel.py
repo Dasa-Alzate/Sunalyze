@@ -2,8 +2,9 @@
 
 from app import db
 from .database import BaseModel
+from .provenance import ProvenanceMixin
 
-class Panel(BaseModel):
+class Panel(BaseModel, ProvenanceMixin):
     """
     Representa un panel solar con sus especificaciones tecnicas.
 
@@ -27,18 +28,18 @@ class Panel(BaseModel):
     catalog = db.relationship('Catalog')
 
     nombre = db.Column(db.String(100), nullable=False, unique=True)
-    y = db.Column(db.Float, nullable=False)  # Eficiencia
-    tcp = db.Column(db.Float, nullable=False)  # Coeficiente temperatura potencia
-    tcv = db.Column(db.Float, nullable=False)  # Coeficiente temperatura voltaje
-    voc = db.Column(db.Float, nullable=False)  # Voltaje circuito abierto
-    vmp = db.Column(db.Float, nullable=False)  # Voltaje punto máxima potencia
-    imp = db.Column(db.Float, nullable=False)  # Corriente punto máxima potencia
-    isc = db.Column(db.Float, nullable=False)  # Corriente corto circuito
-    power = db.Column(db.Float, nullable=False)  # Potencia en W
-    t_noct = db.Column(db.Float, nullable=False)  # Temperatura NOCT
-    height = db.Column(db.Integer, nullable=False)  # Altura en mm
-    width = db.Column(db.Integer, nullable=False)  # Ancho en mm
-    datasheet = db.Column(db.String(200))  # Ruta al datasheet PDF
+    voc = db.Column(db.Float, nullable=False)
+    vmp = db.Column(db.Float, nullable=False)
+    imp = db.Column(db.Float, nullable=False)
+    power = db.Column(db.Float, nullable=False)
+    y = db.Column(db.Float)
+    tcp = db.Column(db.Float)
+    tcv = db.Column(db.Float)
+    isc = db.Column(db.Float)
+    t_noct = db.Column(db.Float)
+    height = db.Column(db.Integer)
+    width = db.Column(db.Integer)
+    datasheet = db.Column(db.String(200))
     
     def to_dict(self):
         return {
@@ -57,7 +58,8 @@ class Panel(BaseModel):
             't_noct': self.t_noct,
             'height': self.height,
             'width': self.width,
-            'datasheet': self.datasheet
+            'datasheet': self.datasheet,
+            **self.provenance_dict(),
         }
     
     def __repr__(self):
