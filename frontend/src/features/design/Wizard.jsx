@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from 'react'
+import { useEffect, useId, useMemo, useState } from 'react'
 import { useNavigate, useParams } from 'react-router-dom'
 import { Topbar } from '@/shared/ui'
 import { Btn, Icon, Field, SelectField, ExportMenu, Spinner, ErrorState } from '@/shared/ui'
@@ -248,14 +248,14 @@ export default function Wizard() {
               <>
                 <div className="sun-divider">Selección de equipos</div>
                 <div className="sun-field" style={{ marginBottom: 'var(--space-4)' }}>
-                  <label className="sun-field__label">Panel solar <span className="req">*</span></label>
-                  <SearchSelect placeholder="Buscar panel (nombre, potencia…)" options={panels} value={panel} onPick={pickPanel} meta={panelMeta} />
+                  <span className="sun-field__label" id="ss-panel">Panel solar <span className="req">*</span></span>
+                  <SearchSelect labelId="ss-panel" placeholder="Buscar panel (nombre, potencia…)" options={panels} value={panel} onPick={pickPanel} meta={panelMeta} />
                 </div>
                 <div className="sun-field">
-                  <label className="sun-field__label">
+                  <span className="sun-field__label" id="ss-inverter">
                     Inversor <span style={{ color: 'var(--text-subtle)', fontWeight: 500 }}>· opcional — déjalo vacío para ver compatibles</span>
-                  </label>
-                  <SearchSelect placeholder="Buscar inversor…" options={inverters} value={inverter} onPick={pickInverter} meta={inverterMeta} clearable onClear={() => { setInverterId(null); if (results) setStale(true) }} />
+                  </span>
+                  <SearchSelect labelId="ss-inverter" placeholder="Buscar inversor…" options={inverters} value={inverter} onPick={pickInverter} meta={inverterMeta} clearable onClear={() => { setInverterId(null); if (results) setStale(true) }} />
                 </div>
                 <label className="sun-check" style={{ marginTop: 'var(--space-4)' }}>
                   <input type="checkbox" checked={showAll} onChange={(e) => setShowAll(e.target.checked)} />
@@ -351,36 +351,48 @@ function inverterMeta(i) {
   return `${dec(i.power)} kW · Vmax ${int(i.vmax)} V`
 }
 
-function SearchSelect({ placeholder, options, value, onPick, meta, clearable, onClear }) {
+function SearchSelect({ placeholder, options, value, onPick, meta, clearable, onClear, labelId }) {
   const [open, setOpen] = useState(false)
   const [q, setQ] = useState('')
+  const listId = useId()
   const list = q ? options.filter((o) => o.nombre.toLowerCase().includes(q.toLowerCase())) : options
   return (
     <div className="sun-search" onMouseLeave={() => setOpen(false)}>
-      <div className="sun-search__control" onClick={() => setOpen(true)}>
+      <div className="sun-search__control">
         <Icon name="search" size={16} />
         <input
           className="sun-search__input"
+          role="combobox"
+          aria-expanded={open}
+          aria-controls={listId}
+          aria-labelledby={labelId}
           placeholder={value ? value.nombre : placeholder}
           value={q}
           onFocus={() => setOpen(true)}
           onChange={(e) => { setQ(e.target.value); setOpen(true) }}
         />
-        {value && clearable && <Icon name="x" size={16} color="var(--text-subtle)" onClick={(e) => { e.stopPropagation(); onClear && onClear() }} style={{ cursor: 'pointer' }} />}
+        {value && clearable && (
+          <button type="button" className="sun-search__clear" aria-label="Borrar selección" onClick={(e) => { e.stopPropagation(); onClear && onClear() }}>
+            <Icon name="x" size={16} color="var(--text-subtle)" />
+          </button>
+        )}
         {value && !clearable && <Icon name="check" size={16} color="var(--state-valid)" />}
       </div>
       {open && (
-        <div className="sun-search__menu">
+        <div className="sun-search__menu" role="listbox" id={listId}>
           {list.length === 0 && <div className="sun-search__empty">Sin coincidencias</div>}
           {list.map((o) => (
-            <div
+            <button
+              type="button"
               key={o.id}
+              role="option"
+              aria-selected={value && value.id === o.id}
               className={`sun-search__opt${value && value.id === o.id ? ' sun-search__opt--active' : ''}`}
               onClick={() => { onPick(o); setOpen(false); setQ('') }}
             >
               <span className="sun-search__opt-name">{o.nombre}</span>
               <span className="sun-search__opt-meta">{meta(o)}</span>
-            </div>
+            </button>
           ))}
         </div>
       )}
