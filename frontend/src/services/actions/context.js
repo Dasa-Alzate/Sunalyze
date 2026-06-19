@@ -5,9 +5,12 @@ export const CommandContext = createContext({
   closePalette: () => {},
   openSheet: () => {},
   closeSheet: () => {},
+  openConsole: () => {},
+  closeConsole: () => {},
   runAction: () => {},
   paletteOpen: false,
   sheetOpen: false,
+  consoleOpen: false,
 })
 
 export function useCommands() {

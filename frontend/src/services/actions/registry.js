@@ -29,6 +29,14 @@ const ACTIONS = [
     run: (ctx) => ctx.openSheet(),
   },
   {
+    id: 'console.open',
+    label: 'Abrir consola',
+    keywords: ['consola', 'console', 'cli', 'terminal', 'comando'],
+    group: 'General',
+    shortcut: { mod: true, shift: true, code: 'KeyP' },
+    run: (ctx) => ctx.openConsole(),
+  },
+  {
     id: 'nav.dashboard',
     label: 'Ir al resumen',
     keywords: ['dashboard', 'resumen', 'inicio', 'home'],
