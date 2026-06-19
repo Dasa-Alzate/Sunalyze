@@ -52,7 +52,7 @@ export default function AcceptInvitation() {
     <div className="auth">
       <div className="auth__bg" />
       <div className="auth__grid-lines" />
-      <a className="auth__topbrand" href="#" onClick={(e) => { e.preventDefault(); navigate('/') }}>
+      <a className="auth__topbrand" href="/" onClick={(e) => { e.preventDefault(); navigate('/') }}>
         <span className="mark"><Icon name="sun" size={16} strokeWidth={2.4} /></span>Sunalyze
       </a>
       <div className="web-view">
@@ -70,7 +70,7 @@ export default function AcceptInvitation() {
               <Btn variant="primary" size="lg" block iconRight="arrow-right" disabled={busy} data-busy={busy} onClick={join}>
                 {busy ? 'Uniéndote…' : 'Unirme al equipo'}
               </Btn>
-              <div className="auth-foot"><a href="#" onClick={(e) => { e.preventDefault(); navigate('/app') }}>Ahora no</a></div>
+              <div className="auth-foot"><a href="/app" onClick={(e) => { e.preventDefault(); navigate('/app') }}>Ahora no</a></div>
             </>
           )}
           {state === 'invalid' && (

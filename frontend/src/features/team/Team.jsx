@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react'
-import { Topbar, Btn, IconBtn, Icon, Badge, Field, SelectField, Spinner, ErrorState } from '@/shared/ui'
+import { Topbar, Btn, IconBtn, Icon, Badge, Field, SelectField, Spinner, ErrorState, Scrim } from '@/shared/ui'
 import { api } from '@/api/client'
 import { toast } from '@/services/toast'
 import { useAuth } from '@/services/auth'
@@ -223,7 +223,7 @@ function InviteDrawer({ onClose, onSave }) {
   const [values, setValues] = useState({ email: '', role: 'member' })
   const set = (k) => (e) => setValues((s) => ({ ...s, [k]: e.target.value }))
   return (
-    <div className="sun-scrim" onClick={(e) => { if (e.target.classList.contains('sun-scrim')) onClose() }}>
+    <Scrim onClose={onClose} label="Invitar persona">
       <div className="sun-drawer">
         <div className="sun-drawer__head">
           <h3>Invitar persona</h3>
@@ -246,6 +246,6 @@ function InviteDrawer({ onClose, onSave }) {
           <Btn variant="primary" icon="send" onClick={() => onSave(values)}>Enviar invitación</Btn>
         </div>
       </div>
-    </div>
+    </Scrim>
   )
 }

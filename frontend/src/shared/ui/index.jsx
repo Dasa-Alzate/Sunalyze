@@ -1,4 +1,4 @@
-import { useState, useRef, useEffect } from 'react'
+import { useState, useRef, useEffect, useId } from 'react'
 import * as Lucide from 'lucide-react'
 import { useAsyncAction } from '@/shared/useAsyncAction'
 
@@ -94,19 +94,26 @@ export function Metric({ label, value, unit, stale, info }) {
   )
 }
 
-export function Field({ label, hint, error, required, icon, numeric, children, ...rest }) {
+export function Field({ id, label, hint, error, required, icon, numeric, children, ...rest }) {
+  const autoId = useId()
+  const fieldId = id || autoId
+  const msgId = `${fieldId}-msg`
+  const describedBy = error || hint ? msgId : undefined
   const control = children || (
     <input
+      id={fieldId}
       className="sun-input"
       data-numeric={numeric ? '' : undefined}
       aria-invalid={error ? 'true' : undefined}
+      aria-describedby={describedBy}
+      aria-required={required ? 'true' : undefined}
       {...rest}
     />
   )
   return (
     <div className="sun-field">
       {label && (
-        <label className="sun-field__label">
+        <label className="sun-field__label" htmlFor={fieldId}>
           {label}
           {required && <span className="req">*</span>}
         </label>
@@ -118,19 +125,21 @@ export function Field({ label, hint, error, required, icon, numeric, children, .
         </div>
       ) : control}
       {error ? (
-        <span className="sun-field__error"><Icon name="alert-circle" size={13} />{error}</span>
+        <span id={msgId} className="sun-field__error"><Icon name="alert-circle" size={13} />{error}</span>
       ) : hint ? (
-        <span className="sun-field__hint">{hint}</span>
+        <span id={msgId} className="sun-field__hint">{hint}</span>
       ) : null}
     </div>
   )
 }
 
-export function SelectField({ label, options = [], children, ...rest }) {
+export function SelectField({ id, label, options = [], children, ...rest }) {
+  const autoId = useId()
+  const fieldId = id || autoId
   return (
     <div className="sun-field">
-      {label && <label className="sun-field__label">{label}</label>}
-      <select className="sun-select" {...rest}>
+      {label && <label className="sun-field__label" htmlFor={fieldId}>{label}</label>}
+      <select id={fieldId} className="sun-select" {...rest}>
         {children}
         {options.map((o) => {
           const v = typeof o === 'object' ? o.value : o
@@ -144,6 +153,20 @@ export function SelectField({ label, options = [], children, ...rest }) {
 
 export function Card({ className = '', children, ...rest }) {
   return <div className={`sun-card ${className}`} {...rest}>{children}</div>
+}
+
+export function Scrim({ onClose, label = 'Diálogo', children }) {
+  useEffect(() => {
+    function onKey(e) { if (e.key === 'Escape') onClose && onClose() }
+    document.addEventListener('keydown', onKey)
+    return () => document.removeEventListener('keydown', onKey)
+  }, [onClose])
+  return (
+    <div className="sun-scrim" role="dialog" aria-modal="true" aria-label={label}>
+      <button type="button" className="sun-scrim__backdrop" aria-label="Cerrar" onClick={onClose} />
+      {children}
+    </div>
+  )
 }
 
 const FORMATS = {

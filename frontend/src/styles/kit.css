@@ -1,5 +1,12 @@
 /* Sunalyze app shell + screen layout — kit-local styles. */
 
+.sr-only { position: absolute; width: 1px; height: 1px; padding: 0; margin: -1px; overflow: hidden; clip: rect(0, 0, 0, 0); white-space: nowrap; border: 0; }
+
+.sun-skip-link { position: fixed; top: var(--space-3); left: var(--space-3); z-index: 100; background: var(--surface-card); color: var(--text-strong); border: 1px solid var(--border-strong); border-radius: var(--radius-sm); padding: var(--space-2) var(--space-4); font-family: var(--font-sans); font-size: var(--text-base); font-weight: var(--fw-medium); box-shadow: var(--shadow-md); transform: translateY(-150%); transition: transform var(--dur-fast) var(--ease-out); }
+.sun-skip-link:focus { transform: translateY(0); }
+
+.sun-main:focus, .sun-main:focus-visible { outline: none; }
+
 .sun-app { display: grid; grid-template-columns: var(--sidebar-w) 1fr; min-height: 100vh; background: var(--bg-app); }
 
 /* ---- Sidebar (light Fluent rail) ---- */
@@ -61,7 +68,7 @@
 .sun-memoria { display: grid; grid-template-columns: 1fr 1fr; gap: var(--space-5); align-items: start; }
 .sun-memoria__sections { display: flex; flex-direction: column; gap: var(--space-2); }
 .sun-msection { border: 1px solid var(--border); border-radius: var(--radius-md); background: var(--surface-card); overflow: hidden; }
-.sun-msection__head { display: flex; align-items: center; gap: var(--space-3); padding: var(--space-3) var(--space-4); cursor: pointer; }
+.sun-msection__head { display: flex; align-items: center; gap: var(--space-3); padding: var(--space-3) var(--space-4); cursor: pointer; width: 100%; border: 0; background: transparent; text-align: left; font: inherit; color: inherit; }
 .sun-msection--active { border-color: var(--state-warn); }
 .sun-msection__title { font-weight: 600; font-size: var(--text-base); color: var(--text-strong); flex: 1; }
 .sun-msection__body { padding: 0 var(--space-4) var(--space-4); border-top: 1px solid var(--border-subtle); }
@@ -75,7 +82,8 @@
 
 /* ---- Drawer ---- */
 .sun-scrim { position: fixed; inset: 0; background: var(--surface-overlay); z-index: 40; display: flex; justify-content: flex-end; }
-.sun-drawer { width: 440px; max-width: 92vw; background: var(--surface-card); height: 100%; box-shadow: var(--shadow-overlay); display: flex; flex-direction: column; }
+.sun-scrim__backdrop { position: absolute; inset: 0; border: 0; padding: 0; margin: 0; background: transparent; cursor: default; }
+.sun-drawer { position: relative; z-index: 1; width: 440px; max-width: 92vw; background: var(--surface-card); height: 100%; box-shadow: var(--shadow-overlay); display: flex; flex-direction: column; }
 .sun-drawer__head { display: flex; align-items: center; justify-content: space-between; padding: var(--space-5); border-bottom: 1px solid var(--border-subtle); }
 .sun-drawer__head h3 { font-size: var(--text-lg); font-weight: 700; }
 .sun-drawer__body { padding: var(--space-5); overflow-y: auto; display: flex; flex-direction: column; gap: var(--space-4); }
