@@ -1,0 +1,17 @@
+{% extends 'superadmin/base.html' %}
+{% set active_nav = 'orgs' %}
+{% block body %}
+<h1>Organizaciones ({{ orgs|length }})</h1>
+<table>
+  <tr><th>Nombre</th><th>Tipo</th><th>Plan</th><th>Asientos</th><th>Miembros</th></tr>
+  {% for o in orgs %}
+  <tr>
+    <td>{{ o.nombre }}</td>
+    <td class="muted">{{ o.type }}</td>
+    <td><span class="tag acc">{{ o.plan }}</span></td>
+    <td class="muted">{{ o.seats }}</td>
+    <td class="muted">{{ o.memberships|length }}</td>
+  </tr>
+  {% endfor %}
+</table>
+{% endblock %}

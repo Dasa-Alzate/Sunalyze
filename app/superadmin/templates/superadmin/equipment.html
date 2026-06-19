@@ -1,0 +1,28 @@
+{% extends 'superadmin/base.html' %}
+{% set active_nav = 'equip' %}
+{% macro review_table(items, kind) %}
+<table>
+  <tr><th>Nombre</th><th>Catálogo</th><th>Fuente</th><th>Notas de revisión</th><th></th></tr>
+  {% for it in items %}
+  <tr>
+    <td>{{ it.nombre }}</td>
+    <td class="muted">{{ it.catalog.nombre if it.catalog else '—' }}</td>
+    <td class="muted">{{ it.source if it.source is defined else 'manual' }}</td>
+    <td class="muted">{{ it.review_notes or '—' }}</td>
+    <td>
+      <form class="inline" method="post" action="{{ url_for('superadmin.equipment_approve', kind=kind, item_id=it.id) }}">
+        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+        <button class="primary">Aprobar</button>
+      </form>
+    </td>
+  </tr>
+  {% else %}<tr><td colspan="5" class="muted">Nada por revisar.</td></tr>{% endfor %}
+</table>
+{% endmacro %}
+{% block body %}
+<h1>Equipos por revisar</h1>
+<h2>Paneles ({{ panels|length }})</h2>
+{{ review_table(panels, 'panel') }}
+<h2>Inversores ({{ inverters|length }})</h2>
+{{ review_table(inverters, 'inverter') }}
+{% endblock %}

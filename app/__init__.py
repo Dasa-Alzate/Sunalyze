@@ -30,6 +30,7 @@ def create_app():
     from app.models import (  # noqa: F401
         panel, inverter, wire, installation_defaults, project,
         user, organization, membership, catalog, invitation,
+        support_ticket, superadmin_audit,
     )
 
     from app.routes.main import bp as main_bp
@@ -55,6 +56,12 @@ def create_app():
 
     from app.security_headers import register_security
     register_security(app)
+
+    from app.superadmin import register_superadmin
+    register_superadmin(app)
+
+    from app.cli import register_cli
+    register_cli(app)
 
     _register_spa(app)
 
