@@ -56,7 +56,7 @@ class AuthService:
         persiste en su propia transaccion. En el camino feliz, el reseteo, el
         marcado de `last_login` y el evento `auth.login` van en el mismo commit.
         """
-        user = User.query.filter_by(email=email.strip().lower()).first()
+        user = User.active().filter_by(email=email.strip().lower()).first()
 
         if user and user.is_locked_out():
             raise Forbidden('Cuenta bloqueada temporalmente por intentos fallidos. Intenta mas tarde.')
@@ -80,7 +80,7 @@ class AuthService:
 
     @staticmethod
     def request_password_reset(email):
-        user = User.query.filter_by(email=email.strip().lower()).first()
+        user = User.active().filter_by(email=email.strip().lower()).first()
         if not user:
             return None
         return tokens.issue(tokens.RESET_PASSWORD, {'uid': user.id})
@@ -88,7 +88,7 @@ class AuthService:
     @staticmethod
     def reset_password(token, new_password):
         data = tokens.verify(tokens.RESET_PASSWORD, token, max_age_seconds=3600)
-        user = User.query.get(data.get('uid'))
+        user = User.active().filter_by(id=data.get('uid')).first()
         if not user:
             raise NotFound('Usuario no encontrado.')
         user.set_password(new_password)
@@ -98,7 +98,7 @@ class AuthService:
     @staticmethod
     def verify_email(token):
         data = tokens.verify(tokens.VERIFY_EMAIL, token, max_age_seconds=86400)
-        user = User.query.get(data.get('uid'))
+        user = User.active().filter_by(id=data.get('uid')).first()
         if not user:
             raise NotFound('Usuario no encontrado.')
         user.email_verified = True
