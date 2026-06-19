@@ -10,3 +10,9 @@
 .sun-trans__mark svg { animation: sunRaySpin 3.4s linear infinite; }
 
 @keyframes sunRaySpin { from { transform: rotate(0) } to { transform: rotate(360deg) } }
+
+@media (prefers-reduced-motion: reduce) {
+  .sun-trans--cover, .sun-trans--reveal { transition: none; }
+  .sun-trans__mark, .sun-trans--cover .sun-trans__mark, .sun-trans--reveal .sun-trans__mark { transition: none; opacity: 0; }
+  .sun-trans__mark svg { animation: none; }
+}
