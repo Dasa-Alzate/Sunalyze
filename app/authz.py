@@ -19,6 +19,7 @@ class Permission:
     PROJECT_CREATE = 'project:create'
     PROJECT_EDIT = 'project:edit'
     PROJECT_DELETE = 'project:delete'
+    PROJECT_LEGALIZE = 'project:legalize'
     MEMORIA_SIGN = 'memoria:sign'
     EQUIPMENT_VIEW = 'equipment:view'
     EQUIPMENT_EDIT = 'equipment:edit'
@@ -46,6 +47,7 @@ _MEMBER = {
 
 _ADMIN = _MEMBER | {
     Permission.PROJECT_DELETE,
+    Permission.PROJECT_LEGALIZE,
     Permission.CATALOG_MANAGE,
     Permission.MEMBER_INVITE, Permission.MEMBER_MANAGE,
     Permission.AUDIT_VIEW,

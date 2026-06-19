@@ -5,7 +5,7 @@ import json
 from app import db
 from .database import BaseModel
 
-ESTADOS = ('borrador', 'diseno', 'memoria')
+ESTADOS = ('borrador', 'en_revision', 'presentado', 'aprobado', 'rechazado')
 
 
 class Project(BaseModel):
@@ -14,8 +14,9 @@ class Project(BaseModel):
 
     Agrupa los datos del cliente, el emplazamiento, los equipos elegidos,
     los parametros de la memoria tecnica y los resultados del ultimo
-    dimensionamiento. El estado refleja el avance en el flujo
-    borrador -> diseno -> memoria (el "semaforo" del diseno).
+    dimensionamiento. El estado refleja el avance en el flujo de
+    legalizacion borrador -> en_revision -> presentado -> aprobado,
+    con rechazado como salida alternativa.
     """
     __tablename__ = 'projects'
 
@@ -47,6 +48,27 @@ class Project(BaseModel):
 
     panel = db.relationship('Panel', foreign_keys=[panel_id])
     inverter = db.relationship('Inverter', foreign_keys=[inverter_id])
+
+    signatures = db.relationship(
+        'MemoriaSignature',
+        backref='project',
+        cascade='all, delete-orphan',
+        order_by='MemoriaSignature.created_at.desc()',
+    )
+    events = db.relationship(
+        'ProjectEvent',
+        backref='project',
+        cascade='all, delete-orphan',
+        order_by='ProjectEvent.created_at.desc()',
+    )
+
+    @property
+    def current_signature(self):
+        """Devuelve la firma de memoria vigente, o None si no hay ninguna."""
+        for signature in self.signatures:
+            if signature.is_current:
+                return signature
+        return None
 
     @property
     def resultados(self):
@@ -103,6 +125,8 @@ class Project(BaseModel):
             'resultados': self.resultados,
             'kwp': self.kwp,
             'n_paneles': self.n_paneles,
+            'memoria_firmada': self.current_signature is not None,
+            'firma': self.current_signature.to_dict() if self.current_signature else None,
             'created_at': self.created_at.isoformat() if self.created_at else None,
             'updated_at': self.updated_at.isoformat() if self.updated_at else None,
         }
