@@ -4,9 +4,10 @@ import logging
 from flask import Blueprint, request, jsonify
 from app.extensions import db
 from app.models.project import Project, ESTADOS
-from app.security import current_org_id
+from app.security import current_org_id, current_user
 from app.authz import require_permission, Permission
 from app.errors import NotFound, ValidationError
+from app.services.audit_service import AuditService
 
 logger = logging.getLogger(__name__)
 
@@ -69,6 +70,12 @@ def create_project():
     project = Project(cliente=data['cliente'], org_id=current_org_id())
     _apply(project, data)
     db.session.add(project)
+    db.session.flush()
+    AuditService.record(
+        'project.create', actor=current_user(), org_id=current_org_id(),
+        entity_type='project', entity_id=project.id,
+        payload={'cliente': project.cliente},
+    )
     db.session.commit()
     return jsonify(project.to_dict()), 201
 
@@ -82,7 +89,16 @@ def update_project(project_id):
         raise ValidationError('Cuerpo JSON requerido.')
     if data.get('estado') and data['estado'] not in ESTADOS:
         raise ValidationError(f"Estado invalido. Validos: {', '.join(ESTADOS)}")
+    changed = sorted(
+        f for f in _EDITABLE_FIELDS
+        if f in data and data[f] != getattr(project, f)
+    )
     _apply(project, data)
+    AuditService.record(
+        'project.update', actor=current_user(), org_id=current_org_id(),
+        entity_type='project', entity_id=project.id,
+        payload={'changed_fields': changed},
+    )
     db.session.commit()
     return jsonify(project.to_dict())
 
@@ -91,6 +107,11 @@ def update_project(project_id):
 @require_permission(Permission.PROJECT_DELETE)
 def delete_project(project_id):
     project = _owned_or_404(project_id)
+    AuditService.record(
+        'project.delete', actor=current_user(), org_id=current_org_id(),
+        entity_type='project', entity_id=project.id,
+        payload={'cliente': project.cliente},
+    )
     db.session.delete(project)
     db.session.commit()
     return jsonify({'message': 'Proyecto eliminado correctamente'})
