@@ -4,6 +4,9 @@ import logging
 from flask import Blueprint, request, jsonify, Response
 from app.services.email_service import EmailService
 from app.security import login_required
+from app.extensions import limiter
+from app.superadmin.guards import is_superadmin
+from app.errors import Forbidden
 
 logger = logging.getLogger(__name__)
 
@@ -29,7 +32,10 @@ def preview_email(template_id):
 
 @emails_bp.route('/api/emails/<template_id>/send', methods=['POST'])
 @login_required
+@limiter.limit('10 per hour')
 def send_email(template_id):
+    if not is_superadmin():
+        raise Forbidden('Solo un superadmin puede enviar correos.', code='auth.superadmin_required')
     data = request.get_json(silent=True) or {}
     to = data.get('to')
     if not to:
