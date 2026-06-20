@@ -6,7 +6,7 @@ from app.services.email_service import EmailService
 from app.security import login_required
 from app.extensions import limiter
 from app.superadmin.guards import is_superadmin
-from app.errors import Forbidden
+from app.errors import Forbidden, NotFound, ValidationError
 
 logger = logging.getLogger(__name__)
 
@@ -26,7 +26,7 @@ def preview_email(template_id):
         context = request.args.to_dict()
         rendered = EmailService.render(template_id, context)
     except KeyError:
-        return jsonify({'error': f'Plantilla desconocida: {template_id}'}), 404
+        raise NotFound(f'Plantilla desconocida: {template_id}', code='email.template_not_found')
     return Response(rendered['html'], mimetype='text/html')
 
 
@@ -39,9 +39,9 @@ def send_email(template_id):
     data = request.get_json(silent=True) or {}
     to = data.get('to')
     if not to:
-        return jsonify({'error': "Campo requerido: 'to'"}), 400
+        raise ValidationError("Campo requerido: 'to'.", code='email.to_required')
     try:
         result = EmailService.send(template_id, to, data.get('context'))
     except KeyError:
-        return jsonify({'error': f'Plantilla desconocida: {template_id}'}), 404
+        raise NotFound(f'Plantilla desconocida: {template_id}', code='email.template_not_found')
     return jsonify(result)
