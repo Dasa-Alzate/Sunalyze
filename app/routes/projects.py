@@ -10,6 +10,7 @@ from app.errors import NotFound, ValidationError
 from app.services.audit_service import AuditService
 from app.services.catalog_service import CatalogService
 from app.models.battery import Battery
+from app.schemas.project import ProjectCreateSchema, ProjectUpdateSchema
 
 logger = logging.getLogger(__name__)
 
@@ -101,14 +102,13 @@ def create_project():
     data = request.get_json(silent=True)
     if not data:
         raise ValidationError('Cuerpo JSON requerido.', code='request.body_required')
-    if not data.get('cliente'):
-        raise ValidationError('Campo requerido: cliente.', code='project.cliente_required')
     if data.get('estado') and data['estado'] not in ESTADOS:
         raise ValidationError(f"Estado invalido. Validos: {', '.join(ESTADOS)}", code='project.invalid_estado')
 
-    _validate_battery(data, current_org_id())
-    project = Project(cliente=data['cliente'], org_id=current_org_id())
-    _apply(project, data)
+    clean = ProjectCreateSchema(**data).model_dump(exclude_unset=True)
+    _validate_battery(clean, current_org_id())
+    project = Project(cliente=clean['cliente'], org_id=current_org_id())
+    _apply(project, clean)
     db.session.add(project)
     db.session.flush()
     AuditService.record(
@@ -129,12 +129,13 @@ def update_project(project_id):
         raise ValidationError('Cuerpo JSON requerido.', code='request.body_required')
     if data.get('estado') and data['estado'] not in ESTADOS:
         raise ValidationError(f"Estado invalido. Validos: {', '.join(ESTADOS)}", code='project.invalid_estado')
-    _validate_battery(data, current_org_id())
+    clean = ProjectUpdateSchema(**data).model_dump(exclude_unset=True)
+    _validate_battery(clean, current_org_id())
     changed = sorted(
         f for f in _EDITABLE_FIELDS
-        if f in data and data[f] != getattr(project, f)
+        if f in clean and clean[f] != getattr(project, f)
     )
-    _apply(project, data)
+    _apply(project, clean)
     AuditService.record(
         'project.update', actor=current_user(), org_id=current_org_id(),
         entity_type='project', entity_id=project.id,
