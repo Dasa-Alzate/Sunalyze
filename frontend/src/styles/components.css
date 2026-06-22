@@ -305,3 +305,18 @@
 .sun-cli__suggest { list-style: none; margin: 0; padding: var(--space-2) var(--space-5) var(--space-3); display: flex; flex-wrap: wrap; gap: var(--space-2); border-top: 1px solid var(--border-subtle); }
 .sun-cli__suggest-item { font-family: var(--font-mono); font-size: var(--text-2xs); color: var(--text-subtle); background: var(--surface-sunken);
   border: 1px solid var(--border-subtle); border-radius: var(--radius-sm); padding: 1px 6px; }
+
+.finance-layout { display: grid; grid-template-columns: minmax(320px, 0.9fr) 1.4fr; gap: var(--space-5); align-items: start; }
+.finance-layout__form, .finance-layout__results { min-width: 0; }
+@media (max-width: 960px) { .finance-layout { grid-template-columns: 1fr; } }
+.finance-form { display: flex; flex-direction: column; gap: var(--space-5); }
+.finance-fieldset { border: 0; margin: 0; padding: 0; display: flex; flex-direction: column; gap: var(--space-3); }
+.finance-fieldset legend { padding: 0; margin-bottom: var(--space-1); }
+.finance-check { display: inline-flex; align-items: center; gap: var(--space-2); cursor: pointer; font-size: var(--text-base); color: var(--text-body); }
+.finance-check input { width: 16px; height: 16px; accent-color: var(--primary); }
+.finance-kpis { display: grid; grid-template-columns: repeat(auto-fit, minmax(140px, 1fr)); gap: var(--space-4); margin-bottom: var(--space-5); }
+.finance-chart, .finance-incentives, .finance-dashboard > .sun-section-title { margin-top: var(--space-4); }
+.finance-save-row { display: flex; gap: var(--space-3); align-items: flex-end; margin-top: var(--space-4); padding-top: var(--space-4); border-top: 1px solid var(--border-subtle); }
+.finance-scenario-list { list-style: none; margin: 0 0 var(--space-4); padding: 0; display: flex; flex-direction: column; gap: var(--space-2); }
+.finance-scenario-item { display: flex; align-items: center; justify-content: space-between; padding: var(--space-2) var(--space-3); border: 1px solid var(--border-subtle); border-radius: var(--radius-md); }
+.finance-scenario-item__actions { display: inline-flex; gap: var(--space-2); align-items: center; }

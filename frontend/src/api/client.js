@@ -159,6 +159,14 @@ export const api = {
     projectDocuments: (projectId) => get(`/api/projects/${projectId}/documents`),
     downloadDocument: (docId) => requestBlob(`/api/documents/${docId}/download`),
   },
+  finance: {
+    compute: (projectId, b) => post(`/api/projects/${projectId}/financial/compute`, b),
+    scenarios: (projectId) => get(`/api/projects/${projectId}/financial/scenarios`),
+    createScenario: (projectId, b) => post(`/api/projects/${projectId}/financial/scenarios`, b),
+    getScenario: (projectId, sid) => get(`/api/projects/${projectId}/financial/scenarios/${sid}`),
+    updateScenario: (projectId, sid, b) => patch(`/api/projects/${projectId}/financial/scenarios/${sid}`, b),
+    removeScenario: (projectId, sid) => del(`/api/projects/${projectId}/financial/scenarios/${sid}`),
+  },
   auth: {
     me: () => get('/api/auth/me'),
     register: (b) => post('/api/auth/register', b),

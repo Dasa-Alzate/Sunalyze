@@ -15,6 +15,7 @@ import Flags from '@/features/admin/Flags'
 import Marketplace from '@/features/marketplace/Marketplace'
 import TemplatesGallery from '@/features/templates/TemplatesGallery'
 import TemplateBuilder from '@/features/templates/TemplateBuilder'
+import FinanceWorkspace from '@/features/finance/FinanceWorkspace'
 
 export const router = createBrowserRouter([
   {
@@ -42,6 +43,7 @@ export const router = createBrowserRouter([
           { path: 'modulos', element: <Marketplace /> },
           { path: 'plantillas', element: <RequireFlag flag="templates"><TemplatesGallery /></RequireFlag> },
           { path: 'plantillas/:id', element: <RequireFlag flag="templates"><TemplateBuilder /></RequireFlag> },
+          { path: 'finanzas', element: <RequireFlag flag="finance"><FinanceWorkspace /></RequireFlag> },
           { path: 'admin/flags', element: <RequirePlatformAdmin><Flags /></RequirePlatformAdmin> },
         ],
       },
