@@ -184,8 +184,8 @@ function OverridesDrawer({ flag, onClose, onChanged }) {
   const [overrides, setOverrides] = useState(flag.overrides.filter((o) => o.scope !== 'global'))
 
   useEffect(() => {
-    api.admin.organizations().then((o) => setTargets((t) => ({ ...t, org: o }))).catch(() => {})
-    api.admin.users().then((u) => setTargets((t) => ({ ...t, user: u }))).catch(() => {})
+    api.admin.organizations().then((o) => setTargets((t) => ({ ...t, org: o }))).catch((e) => toast('error', 'No se pudieron cargar las organizaciones', e.message))
+    api.admin.users().then((u) => setTargets((t) => ({ ...t, user: u }))).catch((e) => toast('error', 'No se pudieron cargar los usuarios', e.message))
   }, [])
 
   const list = targets[scope] || []

@@ -61,7 +61,7 @@ export default function FinanceWorkspace() {
     if (!pid) return
     api.finance.scenarios(Number(pid))
       .then((list) => setScenarios(list || []))
-      .catch(() => setScenarios([]))
+      .catch((e) => { setScenarios([]); toast('error', 'No se pudieron cargar los escenarios', e.message) })
   }
 
   useEffect(() => { loadScenarios(projectId) }, [projectId])
