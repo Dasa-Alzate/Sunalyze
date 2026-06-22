@@ -112,6 +112,34 @@ export const api = {
     organizations: () => get('/api/admin/organizations'),
     users: () => get('/api/admin/users'),
   },
+  templates: {
+    list: (kind) => get(`/api/templates${kind ? `?kind=${encodeURIComponent(kind)}` : ''}`),
+    bank: (kind) => get(`/api/templates/bank${kind ? `?kind=${encodeURIComponent(kind)}` : ''}`),
+    variables: (kind) => get(`/api/templates/variables/${encodeURIComponent(kind)}`),
+    get: (id) => get(`/api/templates/${id}`),
+    create: (b) => post('/api/templates', b),
+    update: (id, b) => patch(`/api/templates/${id}`, b),
+    remove: (id) => del(`/api/templates/${id}`),
+    saveContent: (id, b) => put(`/api/templates/${id}/content`, b),
+    publish: (id) => post(`/api/templates/${id}/publish`, {}),
+    preview: (id, projectId) => post(`/api/templates/${id}/preview`, { project_id: projectId }),
+    library: ({ favorite, categoryId } = {}) => {
+      const qs = []
+      if (favorite !== undefined) qs.push(`favorite=${favorite}`)
+      if (categoryId !== undefined && categoryId !== null) qs.push(`category_id=${categoryId}`)
+      return get(`/api/templates/library${qs.length ? `?${qs.join('&')}` : ''}`)
+    },
+    install: (id) => post(`/api/templates/${id}/install`, {}),
+    uninstall: (instId) => del(`/api/templates/library/${instId}`),
+    setFavorite: (instId, isFavorite) => post(`/api/templates/library/${instId}/favorite`, { is_favorite: isFavorite }),
+    setCategory: (instId, categoryId) => post(`/api/templates/library/${instId}/category`, { category_id: categoryId }),
+    setLabels: (instId, labelIds) => post(`/api/templates/library/${instId}/labels`, { label_ids: labelIds }),
+    categories: () => get('/api/templates/categories'),
+    createCategory: (name) => post('/api/templates/categories', { name }),
+    removeCategory: (id) => del(`/api/templates/categories/${id}`),
+    labels: () => get('/api/templates/labels'),
+    createLabel: (name) => post('/api/templates/labels', { name }),
+  },
   auth: {
     me: () => get('/api/auth/me'),
     register: (b) => post('/api/auth/register', b),

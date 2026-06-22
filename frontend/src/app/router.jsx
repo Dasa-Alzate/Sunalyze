@@ -1,7 +1,7 @@
 import { createBrowserRouter } from 'react-router-dom'
 import { RootLayout } from './RootLayout'
 import { AppLayout } from './AppLayout'
-import { RequireAuth, RequirePlatformAdmin } from '@/services/auth'
+import { RequireAuth, RequirePlatformAdmin, RequireFlag } from '@/services/auth'
 import Landing from '@/features/marketing/Landing'
 import { Login, Signup, ForgotPassword, ResetPassword, VerifyEmail } from '@/features/auth/Auth'
 import Dashboard from '@/features/dashboard/Dashboard'
@@ -13,6 +13,8 @@ import Team from '@/features/team/Team'
 import AcceptInvitation from '@/features/team/AcceptInvitation'
 import Flags from '@/features/admin/Flags'
 import Marketplace from '@/features/marketplace/Marketplace'
+import TemplatesGallery from '@/features/templates/TemplatesGallery'
+import TemplateBuilder from '@/features/templates/TemplateBuilder'
 
 export const router = createBrowserRouter([
   {
@@ -38,6 +40,8 @@ export const router = createBrowserRouter([
           { path: 'memoria', element: <MemoriaPreview /> },
           { path: 'memoria/:id', element: <MemoriaPreview /> },
           { path: 'modulos', element: <Marketplace /> },
+          { path: 'plantillas', element: <RequireFlag flag="templates"><TemplatesGallery /></RequireFlag> },
+          { path: 'plantillas/:id', element: <RequireFlag flag="templates"><TemplateBuilder /></RequireFlag> },
           { path: 'admin/flags', element: <RequirePlatformAdmin><Flags /></RequirePlatformAdmin> },
         ],
       },
