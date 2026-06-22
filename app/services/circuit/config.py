@@ -42,6 +42,8 @@ class ACConfig:
     cable_section: str          # e.g. "6 mm²"
     has_zero_injection: bool = False
     zero_injection_model: str = ""
+    has_battery: bool = False
+    battery_model: str = ""
 
 
 @dataclass

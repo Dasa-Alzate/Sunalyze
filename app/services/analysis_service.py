@@ -11,6 +11,7 @@ import logging
 
 from app.models.panel import Panel
 from app.models.inverter import Inverter
+from app.models.battery import Battery
 from app.errors import ValidationError, NotFound
 from app.gateways.pvgis_client import PvgisClient
 
@@ -19,6 +20,10 @@ logger = logging.getLogger(__name__)
 DIRTY_LOSS = 0.97
 WIRES_LOSS = 0.985
 OPERATION_TEMP_CELL = 50
+
+DEFAULT_ROUND_TRIP_EFFICIENCY = 0.90
+DEFAULT_DOD = 0.90
+DAYS_PER_YEAR = 365
 
 
 class AnalysisService:
@@ -213,7 +218,80 @@ class AnalysisService:
         else:
             result['compatible_inverters'] = compatible_inverters
 
+        battery_id = data.get('battery_id')
+        if battery_id not in (None, ''):
+            battery = Battery.query.get(battery_id)
+            if not battery or (visible_catalog_ids is not None and battery.catalog_id not in visible_catalog_ids):
+                raise NotFound('Bateria no encontrada')
+            battery_quantity = data.get('battery_quantity') or 1
+            try:
+                battery_quantity = max(1, int(battery_quantity))
+            except (TypeError, ValueError):
+                battery_quantity = 1
+            result['battery'] = AnalysisService._battery_analysis(
+                battery, battery_quantity, necesidad, autoconsumo, annual_production,
+            )
+
         return result
+
+    @staticmethod
+    def _battery_analysis(battery, quantity, necesidad, autoconsumo, annual_production):
+        """Dimensionado de capacidad y estimacion de uplift de autoconsumo (v1, balance diario).
+
+        Heuristica documentada (no es simulacion horaria): capa el aporte de la bateria por la
+        capacidad util entregable (usable * round_trip_efficiency), por el excedente diario
+        disponible y por el hueco de consumo no cubierto por autoconsumo directo.
+        """
+        dod = (battery.dod / 100) if battery.dod else DEFAULT_DOD
+        rte = (battery.round_trip_efficiency / 100) if battery.round_trip_efficiency else DEFAULT_ROUND_TRIP_EFFICIENCY
+
+        if battery.usable_kwh:
+            usable_per_unit = battery.usable_kwh
+        elif battery.capacity_kwh and battery.dod:
+            usable_per_unit = battery.capacity_kwh * dod
+        else:
+            usable_per_unit = battery.capacity_kwh or 0.0
+
+        bank_usable_kwh = usable_per_unit * quantity
+
+        daily_consumption_kwh = (necesidad / 1000) / DAYS_PER_YEAR
+        daily_production_kwh = (annual_production or 0.0) / DAYS_PER_YEAR
+        daily_surplus_kwh = max(0.0, daily_production_kwh - daily_consumption_kwh * autoconsumo)
+        daily_unmet_kwh = daily_consumption_kwh * (1 - autoconsumo)
+
+        deliverable_kwh = bank_usable_kwh * rte
+        daily_battery_kwh = min(deliverable_kwh, daily_surplus_kwh, daily_unmet_kwh)
+
+        uplift_pct = (daily_battery_kwh / daily_consumption_kwh * 100) if daily_consumption_kwh > 0 else 0.0
+        estimated_self_consumption_pct = min(100.0, autoconsumo * 100 + uplift_pct)
+
+        recommended_usable_kwh = daily_surplus_kwh
+        recommended_capacity_kwh = (recommended_usable_kwh / dod) if dod > 0 else recommended_usable_kwh
+
+        return {
+            'battery_id': battery.id,
+            'nombre': battery.nombre,
+            'quantity': quantity,
+            'bank_usable_kwh': round(bank_usable_kwh, 2),
+            'bank_capacity_kwh': round((battery.capacity_kwh or 0.0) * quantity, 2),
+            'round_trip_efficiency': round(rte, 3),
+            'dod': round(dod, 3),
+            'daily_consumption_kwh': round(daily_consumption_kwh, 2),
+            'daily_production_kwh': round(daily_production_kwh, 2),
+            'daily_surplus_kwh': round(daily_surplus_kwh, 2),
+            'recommended_usable_kwh': round(recommended_usable_kwh, 2),
+            'recommended_capacity_kwh': round(recommended_capacity_kwh, 2),
+            'annual_battery_contribution_kwh': round(daily_battery_kwh * DAYS_PER_YEAR, 2),
+            'self_consumption_uplift_pct': round(uplift_pct, 1),
+            'estimated_self_consumption_pct': round(estimated_self_consumption_pct, 1),
+            'method': 'daily_balance_v1',
+            'method_note': (
+                'Estimacion por balance diario promediado (no simulacion horaria). Asume excedente '
+                'diurno representativo y consumo nocturno suficiente para descargar la bateria a '
+                'diario. No modela estacionalidad ni dias nublados consecutivos. La cifra fina '
+                'requiere datos horarios de consumo (futuro).'
+            ),
+        }
 
     @staticmethod
     def _find_compatible_inverters(panel, total_field_power, coldest_temp, cell_amount,

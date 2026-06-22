@@ -5,7 +5,7 @@ la vez el metadato que la Fase 2 (editor) consumirá para ofrecer inserción de 
 mismo espíritu que el registro de acciones del power-user. No ejecuta nada; es declarativo.
 
 `propuesta_comercial` queda declarada con catálogo financiero vacío a la espera del módulo de
-finanzas. No hay modelo de batería en el dominio, por lo que se omite (anotado).
+finanzas. La entidad `battery` se resuelve a vacío cuando el proyecto no tiene batería asignada.
 """
 
 
@@ -55,6 +55,18 @@ INVERTER_VARS = [
     _var('inverter.y', 'Eficiencia del inversor (%)', 'number'),
 ]
 
+BATTERY_VARS = [
+    _var('battery.nombre', 'Modelo de la batería', 'text'),
+    _var('battery.capacity_kwh', 'Capacidad nominal (kWh)', 'number'),
+    _var('battery.usable_kwh', 'Capacidad útil (kWh)', 'number'),
+    _var('battery.dod', 'Profundidad de descarga (%)', 'number'),
+    _var('battery.power_kw', 'Potencia (kW)', 'number'),
+    _var('battery.voltage', 'Voltaje (V)', 'number'),
+    _var('battery.technology', 'Tecnología', 'text'),
+    _var('battery.round_trip_efficiency', 'Eficiencia ida y vuelta (%)', 'number'),
+    _var('battery.max_cycles', 'Ciclos máximos', 'number'),
+]
+
 WIRE_VARS = [
     _var('wire.seccion', 'Sección del cable (mm²)', 'number'),
     _var('wire.corriente', 'Corriente admisible (A)', 'number'),
@@ -80,6 +92,7 @@ _PROJECT_GROUPS = [
     {'entity': 'project', 'label': 'Proyecto', 'vars': PROJECT_VARS},
     {'entity': 'panel', 'label': 'Panel', 'vars': PANEL_VARS},
     {'entity': 'inverter', 'label': 'Inversor', 'vars': INVERTER_VARS},
+    {'entity': 'battery', 'label': 'Batería', 'vars': BATTERY_VARS},
     {'entity': 'wire', 'label': 'Cableado', 'vars': WIRE_VARS},
     {'entity': 'user', 'label': 'Usuario', 'vars': USER_VARS},
     {'entity': 'org', 'label': 'Organización', 'vars': ORG_VARS},

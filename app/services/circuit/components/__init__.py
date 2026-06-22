@@ -12,6 +12,7 @@ from .meter import Meter
 from .grid_symbol import GridSymbol
 from .generator_fv import FVGenerator
 from .zero_injection import ZeroInjection
+from .battery import Battery
 
 __all__ = [
     "Fuse",
@@ -26,4 +27,5 @@ __all__ = [
     "GridSymbol",
     "FVGenerator",
     "ZeroInjection",
+    "Battery",
 ]

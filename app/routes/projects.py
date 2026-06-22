@@ -8,6 +8,8 @@ from app.security import current_org_id, current_user
 from app.authz import require_permission, Permission
 from app.errors import NotFound, ValidationError
 from app.services.audit_service import AuditService
+from app.services.catalog_service import CatalogService
+from app.models.battery import Battery
 
 logger = logging.getLogger(__name__)
 
@@ -18,9 +20,22 @@ _EDITABLE_FIELDS = [
     'latitud', 'longitud', 'necesidad', 'autoconsumo',
     'coplanar', 'inclinacion', 'azimut',
     'panel_id', 'inverter_id',
+    'battery_id', 'battery_quantity',
     'referencia_catastral', 'cups', 'compania',
     'potencia_contratada', 'tipo_voltaje',
 ]
+
+
+def _validate_battery(data, org_id):
+    if 'battery_id' not in data:
+        return
+    battery_id = data.get('battery_id')
+    if battery_id in (None, ''):
+        return
+    battery = Battery.query.get(battery_id)
+    visible = CatalogService.visible_catalog_ids(org_id)
+    if not battery or battery.catalog_id not in visible:
+        raise NotFound('Bateria no encontrada')
 
 
 def _apply(project, data):
@@ -67,6 +82,7 @@ def create_project():
     if data.get('estado') and data['estado'] not in ESTADOS:
         raise ValidationError(f"Estado invalido. Validos: {', '.join(ESTADOS)}")
 
+    _validate_battery(data, current_org_id())
     project = Project(cliente=data['cliente'], org_id=current_org_id())
     _apply(project, data)
     db.session.add(project)
@@ -89,6 +105,7 @@ def update_project(project_id):
         raise ValidationError('Cuerpo JSON requerido.')
     if data.get('estado') and data['estado'] not in ESTADOS:
         raise ValidationError(f"Estado invalido. Validos: {', '.join(ESTADOS)}")
+    _validate_battery(data, current_org_id())
     changed = sorted(
         f for f in _EDITABLE_FIELDS
         if f in data and data[f] != getattr(project, f)

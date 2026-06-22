@@ -13,6 +13,7 @@ from flask import render_template
 
 from app.models.panel import Panel
 from app.models.inverter import Inverter
+from app.models.battery import Battery
 from app.models.installation_defaults import InstallationDefaults
 from app.services.circuit import CircuitService, DCConfig, ACConfig, SystemConfig
 from app.services.graph_service import GraphService
@@ -57,8 +58,13 @@ class MemoriaService:
             if not defaults:
                 raise DomainError('Configuración de instalación no encontrada', status_code=500)
 
+            battery = None
+            if form_data.get('battery_id'):
+                battery = Battery.query.get(form_data.get('battery_id'))
+
             template_vars = MemoriaService._build_template_vars(form_data, panel, inverter, defaults)
-            template_vars.update(MemoriaService._build_circuit_svgs(form_data, panel, inverter))
+            template_vars.update(MemoriaService._build_battery_vars(form_data, battery))
+            template_vars.update(MemoriaService._build_circuit_svgs(form_data, panel, inverter, battery))
             template_vars.update(MemoriaService._build_graph_svgs(form_data))
 
         html_string = render_template('memoria_tecnica_pdf.html', **template_vars)
@@ -154,7 +160,32 @@ class MemoriaService:
         }
 
     @staticmethod
-    def _build_circuit_svgs(data, panel, inverter):
+    def _build_battery_vars(data, battery):
+        try:
+            battery_quantity = max(1, int(data.get('battery_quantity') or 1))
+        except (TypeError, ValueError):
+            battery_quantity = 1
+        if not battery:
+            return {
+                'has_battery': False,
+                'battery_quantity': battery_quantity,
+            }
+        return {
+            'has_battery': True,
+            'battery_quantity': battery_quantity,
+            'battery_model': battery.nombre,
+            'battery_capacity_kwh': battery.capacity_kwh,
+            'battery_usable_kwh': battery.usable_kwh,
+            'battery_dod': battery.dod,
+            'battery_power_kw': battery.power_kw,
+            'battery_voltage': battery.voltage,
+            'battery_technology': battery.technology,
+            'battery_round_trip_efficiency': battery.round_trip_efficiency,
+            'battery_max_cycles': battery.max_cycles,
+        }
+
+    @staticmethod
+    def _build_circuit_svgs(data, panel, inverter, battery=None):
         def _f(key, default=0.0):
             try:
                 return float(data.get(key) or default)
@@ -197,6 +228,8 @@ class MemoriaService:
                 cable_section=data.get('wire_ac_section') or data.get('wire_ac_model') or '6 mm²',
                 has_zero_injection=bool(data.get('zero_inyection_model')),
                 zero_injection_model=data.get('zero_inyection_model') or '',
+                has_battery=battery is not None,
+                battery_model=battery.nombre if battery else '',
             )
 
             config = SystemConfig(dc=dc, ac=ac)
