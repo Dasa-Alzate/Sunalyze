@@ -16,6 +16,8 @@ from app.models.wire import Wire
 from app.security import current_org_id
 from app.authz import require_permission, Permission
 from app.services.catalog_service import CatalogService
+from app.services.audit_service import AuditService
+from app.security import current_user
 from app.db_helpers import commit_or_conflict
 from app.errors import NotFound, Forbidden, ValidationError
 
@@ -146,6 +148,13 @@ def create_equipment(resource):
     if resource == 'inverters' and row.power_max is None:
         row.power_max = row.power
     db.session.add(row)
+    db.session.flush()
+    AuditService.record(
+        'equipment.create', actor=current_user(), org_id=org_id,
+        entity_type=resource, entity_id=row.id,
+        payload={'resource': resource, 'nombre': data.get('nombre'),
+                 'catalog_id': catalog.id},
+    )
     commit_or_conflict('Ya existe un equipo con ese nombre.')
     return jsonify(_serialize(row, {catalog.id})), 201
 
@@ -172,8 +181,16 @@ def update_equipment(resource, item_id):
 @require_permission(Permission.EQUIPMENT_EDIT)
 def delete_equipment(resource, item_id):
     cfg = _cfg(resource)
-    row = _editable_row(cfg, item_id, current_org_id())
+    org_id = current_org_id()
+    row = _editable_row(cfg, item_id, org_id)
+    nombre = getattr(row, 'nombre', None)
+    catalog_id = row.catalog_id
     db.session.delete(row)
+    AuditService.record(
+        'equipment.delete', actor=current_user(), org_id=org_id,
+        entity_type=resource, entity_id=item_id,
+        payload={'resource': resource, 'nombre': nombre, 'catalog_id': catalog_id},
+    )
     db.session.commit()
     return jsonify({'message': 'Equipo eliminado correctamente'})
 
