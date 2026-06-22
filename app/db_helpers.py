@@ -17,4 +17,4 @@ def commit_or_conflict(message):
         db.session.commit()
     except IntegrityError:
         db.session.rollback()
-        raise Conflict(message)
+        raise Conflict(message, code='error.conflict')

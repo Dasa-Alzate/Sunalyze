@@ -21,21 +21,21 @@ def _installation_or_404(installation_id):
     org_id = current_org_id()
     installation = Installation.query.get(installation_id)
     if not installation or installation.org_id != org_id:
-        raise NotFound('Instalacion no encontrada.')
+        raise NotFound('Instalacion no encontrada.', code='installation.not_found')
     return installation
 
 
 def _child_or_404(model, child_id, installation):
     child = model.query.get(child_id)
     if not child or child.installation_id != installation.id:
-        raise NotFound('Recurso no encontrado.')
+        raise NotFound('Recurso no encontrado.', code='error.not_found')
     return child
 
 
 def _body():
     data = request.get_json(silent=True)
     if not data:
-        raise ValidationError('Cuerpo JSON requerido.')
+        raise ValidationError('Cuerpo JSON requerido.', code='request.body_required')
     return data
 
 
@@ -58,7 +58,7 @@ def list_installations():
 def create_installation():
     data = _body()
     if data.get('project_id') in (None, ''):
-        raise ValidationError('Campo requerido: project_id.')
+        raise ValidationError('Campo requerido: project_id.', code='posventa.project_id_required')
     installation = InstallationService.create_from_project(current_org_id(), data['project_id'])
     return jsonify(installation.to_dict()), 201
 

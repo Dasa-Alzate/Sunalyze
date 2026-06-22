@@ -44,7 +44,7 @@ def login_required(fn):
     @wraps(fn)
     def wrapper(*args, **kwargs):
         if current_user() is None:
-            raise Unauthorized('Inicia sesión para continuar.')
+            raise Unauthorized('Inicia sesión para continuar.', code='auth.login_required')
         return fn(*args, **kwargs)
     return wrapper
 
@@ -52,6 +52,6 @@ def login_required(fn):
 def require_membership(org_id):
     user = current_user()
     if user is None:
-        raise Unauthorized('Inicia sesión para continuar.')
+        raise Unauthorized('Inicia sesión para continuar.', code='auth.login_required')
     if not any(m.org_id == org_id for m in user.memberships):
-        raise Forbidden('No tienes acceso a este workspace.')
+        raise Forbidden('No tienes acceso a este workspace.', code='auth.no_workspace_access')

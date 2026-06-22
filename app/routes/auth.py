@@ -10,6 +10,7 @@ from app.authz import current_role, current_permissions
 from app.extensions import limiter
 from app.services.flag_service import FlagService
 from app.security import current_org_id
+from app.i18n import resolve_locale
 
 auth_bp = Blueprint('auth', __name__)
 
@@ -20,6 +21,7 @@ def _session_payload(user):
         'role': current_role() if user else None,
         'permissions': sorted(current_permissions()) if user else [],
         'flags': FlagService.resolve_all(current_org_id(), user.id) if user else {},
+        'locale': resolve_locale(user),
     }
 
 
@@ -44,7 +46,7 @@ def register():
     EmailService.send('welcome', user.email, {
         'first_name': user.first_name,
         'cta_url': f'{_base_url()}{verify_path}',
-    })
+    }, locale=user.locale)
     login_user(user)
     return jsonify({**_session_payload(user), 'verify_link': _dev_link(verify_path)}), 201
 
@@ -77,10 +79,11 @@ def forgot_password():
     dev_link = None
     if token:
         reset_path = f'/reset-password?token={token}'
+        recipient = AuthService.find_active_by_email(data.email)
         EmailService.send('reset-password', data.email, {
             'reset_url': f'{_base_url()}{reset_path}',
             'expires_minutes': 60,
-        })
+        }, locale=recipient.locale if recipient else None)
         dev_link = _dev_link(reset_path)
     return jsonify({'message': 'Si el correo existe, enviaremos un enlace.', 'reset_link': dev_link})
 
