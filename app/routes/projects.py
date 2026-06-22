@@ -46,10 +46,12 @@ def _apply(project, data):
         project.resultados = data['resultados']
 
 
-def _owned_or_404(project_id):
+def _owned_or_404(project_id, include_deleted=False):
     org_id = current_org_id()
     project = Project.query.get(project_id)
     if not project or project.org_id != org_id:
+        raise NotFound('Proyecto no encontrado.')
+    if project.is_deleted and not include_deleted:
         raise NotFound('Proyecto no encontrado.')
     return project
 
@@ -58,7 +60,10 @@ def _owned_or_404(project_id):
 @require_permission(Permission.PROJECT_VIEW)
 def list_projects():
     estado = request.args.get('estado')
-    query = Project.query.filter(Project.org_id == current_org_id())
+    query = Project.query.filter(
+        Project.org_id == current_org_id(),
+        Project.deleted_at.is_(None),
+    )
     if estado and estado != 'todos':
         query = query.filter(Project.estado == estado)
     projects = query.order_by(Project.updated_at.desc()).all()
@@ -124,14 +129,28 @@ def update_project(project_id):
 @require_permission(Permission.PROJECT_DELETE)
 def delete_project(project_id):
     project = _owned_or_404(project_id)
+    project.soft_delete()
     AuditService.record(
         'project.delete', actor=current_user(), org_id=current_org_id(),
         entity_type='project', entity_id=project.id,
         payload={'cliente': project.cliente},
     )
-    db.session.delete(project)
     db.session.commit()
     return jsonify({'message': 'Proyecto eliminado correctamente'})
+
+
+@projects_bp.route('/api/projects/<int:project_id>/restore', methods=['POST'])
+@require_permission(Permission.PROJECT_DELETE)
+def restore_project(project_id):
+    project = _owned_or_404(project_id, include_deleted=True)
+    project.deleted_at = None
+    AuditService.record(
+        'project.restore', actor=current_user(), org_id=current_org_id(),
+        entity_type='project', entity_id=project.id,
+        payload={'cliente': project.cliente},
+    )
+    db.session.commit()
+    return jsonify(project.to_dict())
 
 
 @projects_bp.route('/api/projects/<int:project_id>/duplicate', methods=['POST'])

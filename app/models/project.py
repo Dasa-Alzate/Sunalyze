@@ -3,12 +3,12 @@
 import json
 
 from app import db
-from .database import BaseModel
+from .database import BaseModel, SoftDeleteMixin
 
 ESTADOS = ('borrador', 'en_revision', 'presentado', 'aprobado', 'rechazado')
 
 
-class Project(BaseModel):
+class Project(BaseModel, SoftDeleteMixin):
     """
     Representa un proyecto persistente de diseno fotovoltaico.
 
