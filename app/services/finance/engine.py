@@ -41,6 +41,21 @@ def _capex_reductions(incentives):
     return total, cashflow_by_year
 
 
+def _incentives_breakdown(incentives):
+    items = []
+    total = 0.0
+    for inc in incentives or []:
+        amount = float(inc.get('amount', 0.0) or 0.0)
+        items.append({
+            'kind': inc.get('kind', 'capex_reduction'),
+            'amount': round(amount, 2),
+            'year': int(inc.get('year', 1) or 1),
+            'label': inc.get('label'),
+        })
+        total += amount
+    return {'items': items, 'total_eur': round(total, 2)}
+
+
 def _annuity(principal, annual_rate, years):
     if principal <= 0 or years <= 0:
         return 0.0
@@ -169,6 +184,7 @@ def compute(assumptions, production_kwh_year, self_consumption_ratio=None, incen
         },
         'annual_saving_year1_eur': round(
             (year1.get('saving_self_eur', 0.0) + year1.get('saving_surplus_eur', 0.0)), 2),
+        'incentives': _incentives_breakdown(incentives),
         'metrics': {
             'payback_simple_years': round(payback_simple, 2) if payback_simple is not None else None,
             'payback_discounted_years': round(payback_discounted, 2) if payback_discounted is not None else None,

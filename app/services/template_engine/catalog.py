@@ -88,6 +88,18 @@ ORG_VARS = [
     _var('org.plan', 'Plan', 'text'),
 ]
 
+FINANCE_VARS = [
+    _var('finance.net_capex', 'CAPEX neto (€)', 'number'),
+    _var('finance.annual_saving_year1_eur', 'Ahorro anual año 1 (€)', 'number'),
+    _var('finance.payback_years', 'Payback simple (años)', 'number'),
+    _var('finance.payback_discounted_years', 'Payback descontado (años)', 'number'),
+    _var('finance.irr', 'TIR', 'number'),
+    _var('finance.npv', 'VAN (€)', 'number'),
+    _var('finance.lcoe', 'LCOE (€/kWh)', 'number'),
+    _var('finance.co2_avoided_year', 'CO₂ evitado año 1 (kg)', 'number'),
+    _var('finance.incentives_total', 'Total incentivos (€)', 'number'),
+]
+
 _PROJECT_GROUPS = [
     {'entity': 'project', 'label': 'Proyecto', 'vars': PROJECT_VARS},
     {'entity': 'panel', 'label': 'Panel', 'vars': PANEL_VARS},
@@ -98,11 +110,15 @@ _PROJECT_GROUPS = [
     {'entity': 'org', 'label': 'Organización', 'vars': ORG_VARS},
 ]
 
+_FINANCE_GROUP = {'entity': 'finance', 'label': 'Finanzas', 'vars': FINANCE_VARS}
+
+_PROPOSAL_GROUPS = _PROJECT_GROUPS + [_FINANCE_GROUP]
+
 VARIABLE_CATALOG = {
     'memoria_calculo': _PROJECT_GROUPS,
     'documento_legal': _PROJECT_GROUPS,
     'analisis_caso': _PROJECT_GROUPS,
-    'propuesta_comercial': _PROJECT_GROUPS,
+    'propuesta_comercial': _PROPOSAL_GROUPS,
 }
 
 
@@ -114,7 +130,7 @@ def variable_catalog(kind):
 def whitelist():
     """Mapa entidad -> set de atributos resolubles, derivado del catálogo."""
     allowed = {}
-    for group in _PROJECT_GROUPS:
+    for group in _PROJECT_GROUPS + [_FINANCE_GROUP]:
         attrs = set()
         for v in group['vars']:
             attrs.add(v['path'].split('.', 1)[1])

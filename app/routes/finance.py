@@ -31,6 +31,8 @@ def compute_financial(project_id):
         current_org_id(), project_id, data.assumptions,
         production_kwh_year=data.production_kwh_year,
         self_consumption_ratio=data.self_consumption_ratio,
+        apply_subsidies=data.apply_subsidies,
+        ccaa=data.ccaa, municipio=data.municipio,
     )
     return jsonify(result)
 

@@ -59,6 +59,9 @@ class ComputeRequest(BaseModel):
     assumptions: FinancialAssumptions
     production_kwh_year: Optional[float] = Field(default=None, ge=0)
     self_consumption_ratio: Optional[float] = Field(default=None, ge=0, le=1)
+    apply_subsidies: bool = False
+    ccaa: Optional[str] = Field(default=None, max_length=80)
+    municipio: Optional[str] = Field(default=None, max_length=120)
 
 
 class ScenarioCreate(BaseModel):
@@ -67,6 +70,9 @@ class ScenarioCreate(BaseModel):
     is_default: bool = False
     production_kwh_year: Optional[float] = Field(default=None, ge=0)
     self_consumption_ratio: Optional[float] = Field(default=None, ge=0, le=1)
+    apply_subsidies: bool = False
+    ccaa: Optional[str] = Field(default=None, max_length=80)
+    municipio: Optional[str] = Field(default=None, max_length=120)
 
 
 class ScenarioUpdate(BaseModel):
@@ -75,3 +81,6 @@ class ScenarioUpdate(BaseModel):
     is_default: Optional[bool] = None
     production_kwh_year: Optional[float] = Field(default=None, ge=0)
     self_consumption_ratio: Optional[float] = Field(default=None, ge=0, le=1)
+    apply_subsidies: bool = False
+    ccaa: Optional[str] = Field(default=None, max_length=80)
+    municipio: Optional[str] = Field(default=None, max_length=120)
