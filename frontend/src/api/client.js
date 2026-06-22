@@ -9,6 +9,18 @@ export function csrfToken() {
 
 const MUTATING = new Set(['POST', 'PUT', 'PATCH', 'DELETE'])
 
+let unauthorizedHandler = null
+
+export function setUnauthorizedHandler(fn) {
+  unauthorizedHandler = fn
+}
+
+function notifyUnauthorized(path, status) {
+  if (status === 401 && unauthorizedHandler && !path.startsWith('/api/auth/')) {
+    unauthorizedHandler()
+  }
+}
+
 async function request(path, options = {}) {
   const method = (options.method || 'GET').toUpperCase()
   const headers = { 'Content-Type': 'application/json', ...(options.headers || {}) }
@@ -21,6 +33,7 @@ async function request(path, options = {}) {
   const text = await res.text()
   const data = text ? safeJson(text) : null
   if (!res.ok) {
+    notifyUnauthorized(path, res.status)
     const message = (data && (data.error || data.message)) || `Error ${res.status}`
     throw new ApiError(message, res.status, data)
   }
@@ -30,6 +43,7 @@ async function request(path, options = {}) {
 async function requestBlob(path, options = {}) {
   const res = await fetch(path, { credentials: 'include', ...options })
   if (!res.ok) {
+    notifyUnauthorized(path, res.status)
     const text = await res.text()
     const data = text ? safeJson(text) : null
     const message = (data && (data.error || data.message)) || `Error ${res.status}`

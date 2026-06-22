@@ -1,5 +1,5 @@
 import { createContext, useContext, useEffect, useState, useCallback, useMemo } from 'react'
-import { api } from '@/api/client'
+import { api, setUnauthorizedHandler } from '@/api/client'
 import { applyLocale } from '@/services/i18n'
 
 const AuthContext = createContext(null)
@@ -28,6 +28,16 @@ export function AuthProvider({ children }) {
       .then((d) => alive && applySession(d))
       .catch(() => alive && applySession(null))
     return () => { alive = false }
+  }, [applySession])
+
+  useEffect(() => {
+    setUnauthorizedHandler(() => {
+      applySession(null)
+      if (typeof window !== 'undefined' && window.location.pathname.startsWith('/app')) {
+        window.location.assign('/login')
+      }
+    })
+    return () => setUnauthorizedHandler(null)
   }, [applySession])
 
   const login = useCallback(async (credentials) => {
