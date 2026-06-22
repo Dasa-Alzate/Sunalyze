@@ -1,0 +1,23 @@
+{
+  "title": "Trash",
+  "subtitle": "Deleted items you can restore.",
+  "empty": "The trash is empty.",
+  "sections": {
+    "projects": "Projects",
+    "catalogs": "Catalogs"
+  },
+  "deletedAt": "Deleted on {{date}}",
+  "restore": "Restore",
+  "restoreProject": "Restore project {{name}}",
+  "restoreCatalog": "Restore catalog {{name}}",
+  "confirm": {
+    "title": "Restore item",
+    "project": "Restore the project \"{{name}}\"? It will reappear in your project list.",
+    "catalog": "Restore the catalog \"{{name}}\"? It will return to your equipment library.",
+    "accept": "Restore",
+    "cancel": "Cancel"
+  },
+  "restored": "Item restored",
+  "restoreError": "Could not restore the item",
+  "untitled": "Untitled"
+}

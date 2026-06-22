@@ -1,0 +1,30 @@
+{
+  "title": "Actividad",
+  "subtitle": "Bitácora de acciones de tu espacio de trabajo.",
+  "empty": "Todavía no hay actividad registrada.",
+  "loadMore": "Cargar más",
+  "showing": "{{count}} de {{total}}",
+  "openTarget": "Abrir objeto relacionado",
+  "by": "por {{actor}}",
+  "unknownActor": "Sistema",
+  "live": "{{count}} eventos cargados",
+  "actions": {
+    "project.create": "creó un proyecto",
+    "project.update": "actualizó un proyecto",
+    "project.delete": "eliminó un proyecto",
+    "project.restore": "restauró un proyecto",
+    "catalog.create": "creó un catálogo",
+    "catalog.delete": "eliminó un catálogo",
+    "catalog.restore": "restauró un catálogo",
+    "catalog.subscribe": "se suscribió a un catálogo",
+    "catalog.unsubscribe": "canceló la suscripción a un catálogo",
+    "equipment.create": "añadió un equipo",
+    "equipment.delete": "eliminó un equipo",
+    "equipment.approve": "aprobó un equipo",
+    "membership.change_role": "cambió un rol del equipo",
+    "membership.remove": "quitó a un miembro del equipo",
+    "auth.login": "inició sesión",
+    "mfa.enable": "activó la verificación en dos pasos",
+    "mfa.login": "inició sesión con verificación en dos pasos"
+  }
+}

@@ -56,9 +56,15 @@ def _owned_or_404(project_id, include_deleted=False):
     return project
 
 
+def _wants_deleted():
+    return request.args.get('deleted', '').lower() in ('1', 'true', 'yes')
+
+
 @projects_bp.route('/api/projects', methods=['GET'])
 @require_permission(Permission.PROJECT_VIEW)
 def list_projects():
+    if _wants_deleted():
+        return list_deleted_projects()
     estado = request.args.get('estado')
     query = Project.query.filter(
         Project.org_id == current_org_id(),
@@ -67,6 +73,19 @@ def list_projects():
     if estado and estado != 'todos':
         query = query.filter(Project.estado == estado)
     projects = query.order_by(Project.updated_at.desc()).all()
+    return jsonify([p.to_dict() for p in projects])
+
+
+@require_permission(Permission.PROJECT_DELETE)
+def list_deleted_projects():
+    projects = (
+        Project.query.filter(
+            Project.org_id == current_org_id(),
+            Project.deleted_at.isnot(None),
+        )
+        .order_by(Project.deleted_at.desc())
+        .all()
+    )
     return jsonify([p.to_dict() for p in projects])
 
 

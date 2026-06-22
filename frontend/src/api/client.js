@@ -87,18 +87,25 @@ export const api = {
   },
   projects: {
     list: (estado) => get(`/api/projects${estado && estado !== 'todos' ? `?estado=${estado}` : ''}`),
+    listDeleted: () => get('/api/projects?deleted=true'),
     get: (id) => get(`/api/projects/${id}`),
     create: (b) => post('/api/projects', b),
     update: (id, b) => patch(`/api/projects/${id}`, b),
     remove: (id) => del(`/api/projects/${id}`),
+    restore: (id) => post(`/api/projects/${id}/restore`, {}),
     duplicate: (id) => post(`/api/projects/${id}/duplicate`),
   },
   catalogs: {
     list: () => get('/api/catalogs'),
+    listDeleted: () => get('/api/catalogs?deleted=true'),
     create: (b) => post('/api/catalogs', b),
     remove: (id) => del(`/api/catalogs/${id}`),
+    restore: (id) => post(`/api/catalogs/${id}/restore`, {}),
     subscribe: (id) => post(`/api/catalogs/${id}/subscribe`, {}),
     unsubscribe: (id) => post(`/api/catalogs/${id}/unsubscribe`, {}),
+  },
+  audit: {
+    feed: ({ limit = 50, offset = 0 } = {}) => get(`/api/audit?limit=${limit}&offset=${offset}`),
   },
   marketplace: {
     list: () => get('/api/marketplace'),
