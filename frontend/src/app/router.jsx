@@ -1,7 +1,7 @@
 import { createBrowserRouter } from 'react-router-dom'
 import { RootLayout } from './RootLayout'
 import { AppLayout } from './AppLayout'
-import { RequireAuth } from '@/services/auth'
+import { RequireAuth, RequirePlatformAdmin } from '@/services/auth'
 import Landing from '@/features/marketing/Landing'
 import { Login, Signup, ForgotPassword, ResetPassword, VerifyEmail } from '@/features/auth/Auth'
 import Dashboard from '@/features/dashboard/Dashboard'
@@ -11,6 +11,8 @@ import EquipmentLibrary from '@/features/equipment/EquipmentLibrary'
 import MemoriaPreview from '@/features/memoria/MemoriaPreview'
 import Team from '@/features/team/Team'
 import AcceptInvitation from '@/features/team/AcceptInvitation'
+import Flags from '@/features/admin/Flags'
+import Marketplace from '@/features/marketplace/Marketplace'
 
 export const router = createBrowserRouter([
   {
@@ -35,6 +37,8 @@ export const router = createBrowserRouter([
           { path: 'equipo', element: <Team /> },
           { path: 'memoria', element: <MemoriaPreview /> },
           { path: 'memoria/:id', element: <MemoriaPreview /> },
+          { path: 'modulos', element: <Marketplace /> },
+          { path: 'admin/flags', element: <RequirePlatformAdmin><Flags /></RequirePlatformAdmin> },
         ],
       },
     ],

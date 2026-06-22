@@ -29,7 +29,7 @@ def create_app():
 
     from app.models import (  # noqa: F401
         panel, inverter, wire, installation_defaults, project,
-        user, organization, membership, catalog, invitation,
+        user, organization, membership, catalog, invitation, flag,
         support_ticket, superadmin_audit, scrape_run, audit_event,
         memoria_signature, project_event,
     )
@@ -45,6 +45,8 @@ def create_app():
     from app.routes.audit import audit_bp
     from app.routes.gdpr import gdpr_bp
     from app.routes.legalization import legalization_bp
+    from app.routes.admin import admin_bp
+    from app.routes.modules import modules_bp
 
     app.register_blueprint(main_bp)
     app.register_blueprint(crud_bp)
@@ -57,6 +59,8 @@ def create_app():
     app.register_blueprint(audit_bp)
     app.register_blueprint(gdpr_bp)
     app.register_blueprint(legalization_bp)
+    app.register_blueprint(admin_bp)
+    app.register_blueprint(modules_bp)
 
     from app.errors import register_error_handlers
     register_error_handlers(app)

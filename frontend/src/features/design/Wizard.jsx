@@ -7,6 +7,7 @@ import { dec, int, num } from '@/shared/format'
 import { exportRows } from '@/services/export'
 import { toast } from '@/services/toast'
 import { GeoMap } from '@/services/geo-map'
+import { useAuth } from '@/services/auth'
 
 const STEPS = [
   { title: 'Datos del lugar', icon: 'map-pin' },
@@ -25,6 +26,7 @@ const EMPTY_FORM = {
 export default function Wizard() {
   const { id } = useParams()
   const nav = useNavigate()
+  const { flag } = useAuth()
 
   const [loading, setLoading] = useState(true)
   const [loadError, setLoadError] = useState(null)
@@ -223,13 +225,15 @@ export default function Wizard() {
                   <Field label="Latitud" numeric type="number" step="any" value={form.latitud} onChange={(e) => patch({ latitud: e.target.value })} placeholder="38.352" required />
                   <Field label="Longitud" numeric type="number" step="any" value={form.longitud} onChange={(e) => patch({ longitud: e.target.value })} placeholder="-0.493" required />
                 </div>
-                <div style={{ marginTop: 'var(--space-4)' }}>
-                  <GeoMap
-                    lat={form.latitud}
-                    lon={form.longitud}
-                    onPick={(la, lo, name) => patch({ latitud: la, longitud: lo, localidad: form.localidad || (name ? name.split(',')[0] : form.localidad) })}
-                  />
-                </div>
+                {flag('geo_map') && (
+                  <div style={{ marginTop: 'var(--space-4)' }}>
+                    <GeoMap
+                      lat={form.latitud}
+                      lon={form.longitud}
+                      onPick={(la, lo, name) => patch({ latitud: la, longitud: lo, localidad: form.localidad || (name ? name.split(',')[0] : form.localidad) })}
+                    />
+                  </div>
+                )}
                 <label className="sun-check" style={{ marginTop: 'var(--space-4)' }}>
                   <input type="checkbox" checked={form.coplanar} onChange={(e) => patch({ coplanar: e.target.checked })} />
                   <span className="sun-check__box"><Icon name="check" size={13} /></span>
