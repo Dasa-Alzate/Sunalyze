@@ -53,6 +53,28 @@ const SCHEMAS = {
       { key: 'y', label: 'Eficiencia (%)', num: true },
     ],
   },
+  batteries: {
+    label: 'Baterías', singular: 'batería', icon: 'battery-charging', resource: 'batteries',
+    columns: [
+      { key: 'nombre', label: 'Nombre', name: true },
+      { key: 'capacity_kwh', label: 'kWh', num: true },
+      { key: 'usable_kwh', label: 'kWh útil', num: true },
+      { key: 'power_kw', label: 'kW', num: true },
+      { key: 'voltage', label: 'V', num: true },
+      { key: 'technology', label: 'Tecnología' },
+    ],
+    fields: [
+      { key: 'nombre', label: 'Nombre', required: true, placeholder: 'Ej: BYD HVS 5.1' },
+      { key: 'capacity_kwh', label: 'Capacidad nominal (kWh)', num: true, required: true },
+      { key: 'usable_kwh', label: 'Capacidad útil (kWh)', num: true },
+      { key: 'dod', label: 'Profundidad de descarga (%)', num: true },
+      { key: 'power_kw', label: 'Potencia (kW)', num: true, required: true },
+      { key: 'voltage', label: 'Voltaje (V)', num: true, required: true },
+      { key: 'technology', label: 'Tecnología', placeholder: 'Ej: LiFePO4' },
+      { key: 'round_trip_efficiency', label: 'Eficiencia ida y vuelta (%)', num: true },
+      { key: 'max_cycles', label: 'Ciclos máximos', num: true },
+    ],
+  },
   wires: {
     label: 'Cables', singular: 'cable', icon: 'cable', resource: 'wires',
     columns: [
@@ -72,7 +94,7 @@ const SCHEMAS = {
   },
 }
 
-const TAB_ORDER = ['panels', 'inverters', 'wires']
+const TAB_ORDER = ['panels', 'inverters', 'batteries', 'wires']
 
 export default function EquipmentLibrary() {
   const { can } = useAuth()
@@ -80,7 +102,7 @@ export default function EquipmentLibrary() {
   const canManage = can('catalog:manage')
   const canSubscribe = can('catalog:subscribe')
   const [tab, setTab] = useState('panels')
-  const [data, setData] = useState({ panels: null, inverters: null, wires: null })
+  const [data, setData] = useState({ panels: null, inverters: null, batteries: null, wires: null })
   const [catalogs, setCatalogs] = useState(null)
   const [market, setMarket] = useState(null)
   const [error, setError] = useState(null)
@@ -108,7 +130,7 @@ export default function EquipmentLibrary() {
       .catch((e) => setError(e.message))
   }
   function invalidateEquipment() {
-    setData({ panels: null, inverters: null, wires: null })
+    setData({ panels: null, inverters: null, batteries: null, wires: null })
   }
 
   useEffect(loadCatalogs, [])
@@ -196,7 +218,8 @@ export default function EquipmentLibrary() {
   }
 
   async function removeCatalog(cat) {
-    const total = cat.counts.panels + cat.counts.inverters + cat.counts.wires
+    const c = cat.counts || {}
+    const total = (c.panels || 0) + (c.inverters || 0) + (c.batteries || 0) + (c.wires || 0)
     if (!window.confirm(`¿Eliminar el catálogo «${cat.nombre}»? Se borrarán sus ${total} equipos.`)) return
     try {
       await api.catalogs.remove(cat.id)
@@ -215,11 +238,15 @@ export default function EquipmentLibrary() {
     exportRows(fmt, schema.resource, headers, out)
   }
 
-  const countsLabel = (c) => [
-    c.counts.panels ? `${c.counts.panels} paneles` : null,
-    c.counts.inverters ? `${c.counts.inverters} inversores` : null,
-    c.counts.wires ? `${c.counts.wires} cables` : null,
-  ].filter(Boolean).join(' · ') || 'Vacío'
+  const countsLabel = (cat) => {
+    const c = cat.counts || {}
+    return [
+      c.panels ? `${c.panels} paneles` : null,
+      c.inverters ? `${c.inverters} inversores` : null,
+      c.batteries ? `${c.batteries} baterías` : null,
+      c.wires ? `${c.wires} cables` : null,
+    ].filter(Boolean).join(' · ') || 'Vacío'
+  }
 
   return (
     <>

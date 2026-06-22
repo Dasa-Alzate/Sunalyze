@@ -55,8 +55,9 @@ const SECTIONS = [
 
 const ALL_FIELDS = SECTIONS.flatMap((s) => s.fields)
 
-function seed(project) {
+function seed(project, battery) {
   const p = project || {}
+  const b = battery || {}
   return {
     client_name: p.cliente || '',
     location: p.localidad || 'Alicante',
@@ -81,8 +82,16 @@ function seed(project) {
     protections_ac_diff_i: '25',
     protections_ac_transitory_surge_model: 'Citel DS50VGP-AC',
     wire_ground_length: '10',
+    battery_nombre: p.battery_nombre || b.nombre || '',
+    battery_quantity: p.battery_quantity ?? '',
+    battery_capacity_kwh: b.capacity_kwh ?? '',
+    battery_usable_kwh: b.usable_kwh ?? '',
+    battery_power_kw: b.power_kw ?? '',
+    battery_technology: b.technology || '',
   }
 }
+
+const BATTERY_KEYS = ['battery_nombre', 'battery_quantity', 'battery_capacity_kwh', 'battery_usable_kwh', 'battery_power_kw', 'battery_technology']
 
 export default function MemoriaPreview() {
   const { id } = useParams()
@@ -100,8 +109,12 @@ export default function MemoriaPreview() {
     if (!id) { setValues(seed(null)); return }
     setLoading(true)
     setError(null)
-    api.projects.get(Number(id))
-      .then((proj) => { setProject(proj); setValues(seed(proj)) })
+    Promise.all([api.projects.get(Number(id)), api.batteries.list().catch(() => [])])
+      .then(([proj, bats]) => {
+        setProject(proj)
+        const battery = proj.battery_id ? (bats || []).find((b) => b.id === proj.battery_id) : null
+        setValues(seed(proj, battery))
+      })
       .catch((e) => setError(e.message))
       .finally(() => setLoading(false))
   }, [id])
@@ -166,8 +179,10 @@ export default function MemoriaPreview() {
     }
     add('csrf_token', csrfToken())
     ALL_FIELDS.forEach((f) => add(f.key, values[f.key]))
+    BATTERY_KEYS.forEach((k) => { if (values[k] !== '' && values[k] != null) add(k, values[k]) })
     if (project?.panel_id) add('panel_id', project.panel_id)
     if (project?.inverter_id) add('inverter_id', project.inverter_id)
+    if (project?.battery_id) { add('battery_id', project.battery_id); add('battery_quantity', project.battery_quantity ?? 1) }
     document.body.appendChild(form)
     form.submit()
     setTimeout(() => form.remove(), 500)

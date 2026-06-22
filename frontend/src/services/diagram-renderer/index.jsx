@@ -10,16 +10,20 @@ export const DEFAULT_UNIFILAR_NODES = [
   { src: 'MT.svg', label: 'Magnet.' },
 ]
 
-export function UnifilarStrip({ nodes = DEFAULT_UNIFILAR_NODES, className = '' }) {
+const BATTERY_NODE = { src: 'battery.svg', label: 'Batería' }
+
+export function UnifilarStrip({ nodes, battery = false, className = '' }) {
+  const base = nodes || DEFAULT_UNIFILAR_NODES
+  const list = battery && !nodes ? [...base.slice(0, 3), BATTERY_NODE, ...base.slice(3)] : base
   return (
     <div className={`web-uni ${className}`}>
-      {nodes.map((n, i) => (
+      {list.map((n, i) => (
         <span key={n.src} style={{ display: 'contents' }}>
           <span className="web-uni__node">
             <img src={`${UNIFILAR_BASE}/${n.src}`} alt={n.label} />
             <span>{n.label}</span>
           </span>
-          {i < nodes.length - 1 && <span className="web-uni__wire" />}
+          {i < list.length - 1 && <span className="web-uni__wire" />}
         </span>
       ))}
     </div>

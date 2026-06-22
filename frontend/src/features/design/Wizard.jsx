@@ -32,11 +32,14 @@ export default function Wizard() {
   const [loadError, setLoadError] = useState(null)
   const [panels, setPanels] = useState([])
   const [inverters, setInverters] = useState([])
+  const [batteries, setBatteries] = useState([])
 
   const [projectId, setProjectId] = useState(id ? Number(id) : null)
   const [form, setForm] = useState(EMPTY_FORM)
   const [panelId, setPanelId] = useState(null)
   const [inverterId, setInverterId] = useState(null)
+  const [batteryId, setBatteryId] = useState(null)
+  const [batteryQty, setBatteryQty] = useState(1)
 
   const [step, setStep] = useState(0)
   const [results, setResults] = useState(null)
@@ -50,11 +53,12 @@ export default function Wizard() {
     let alive = true
     setLoading(true)
     setLoadError(null)
-    Promise.all([api.panels.list(), api.inverters.list(), id ? api.projects.get(Number(id)) : Promise.resolve(null)])
-      .then(([ps, invs, proj]) => {
+    Promise.all([api.panels.list(), api.inverters.list(), api.batteries.list(), id ? api.projects.get(Number(id)) : Promise.resolve(null)])
+      .then(([ps, invs, bats, proj]) => {
         if (!alive) return
         setPanels(ps)
         setInverters(invs)
+        setBatteries(bats)
         if (proj) {
           setProjectId(proj.id)
           setForm({
@@ -65,6 +69,8 @@ export default function Wizard() {
           })
           setPanelId(proj.panel_id || null)
           setInverterId(proj.inverter_id || null)
+          setBatteryId(proj.battery_id || null)
+          setBatteryQty(proj.battery_quantity ?? 1)
           if (proj.resultados) setResults(proj.resultados)
         }
       })
@@ -75,10 +81,12 @@ export default function Wizard() {
 
   const panel = useMemo(() => panels.find((p) => p.id === panelId) || null, [panels, panelId])
   const inverter = useMemo(() => inverters.find((i) => i.id === inverterId) || null, [inverters, inverterId])
+  const battery = useMemo(() => batteries.find((b) => b.id === batteryId) || null, [batteries, batteryId])
 
   function patch(p) { setForm((f) => ({ ...f, ...p })); if (results) setStale(true) }
   function pickPanel(p) { setPanelId(p.id); if (results) setStale(true) }
   function pickInverter(i) { setInverterId(i.id); if (results) setStale(true) }
+  function pickBattery(b) { setBatteryId(b.id); if (results) setStale(true) }
 
   async function analyze() {
     if (!panelId) { toast('warning', 'Selecciona un panel', 'El panel es obligatorio para dimensionar'); setStep(1); return }
@@ -97,6 +105,7 @@ export default function Wizard() {
       show_all_inverters: showAll,
     }
     if (inverterId) body.inverter_id = inverterId
+    if (batteryId) { body.battery_id = batteryId; body.battery_quantity = Number(batteryQty) || 1 }
     if (form.coplanar) { body.inclinacion = Number(form.inclinacion); body.azimut = Number(form.azimut) }
     try {
       const res = await api.analyze(body)
@@ -127,6 +136,8 @@ export default function Wizard() {
       azimut: form.azimut === '' ? null : Number(form.azimut),
       panel_id: panelId,
       inverter_id: inverterId,
+      battery_id: batteryId,
+      battery_quantity: batteryId ? (Number(batteryQty) || 1) : null,
       resultados: results,
     }
     if (estado) body.estado = estado
@@ -261,6 +272,18 @@ export default function Wizard() {
                   </span>
                   <SearchSelect labelId="ss-inverter" placeholder="Buscar inversor…" options={inverters} value={inverter} onPick={pickInverter} meta={inverterMeta} clearable onClear={() => { setInverterId(null); if (results) setStale(true) }} />
                 </div>
+                <div className="sun-field" style={{ marginTop: 'var(--space-4)' }}>
+                  <span className="sun-field__label" id="ss-battery">
+                    Batería <span style={{ color: 'var(--text-subtle)', fontWeight: 500 }}>· opcional — déjala vacía para «Sin batería»</span>
+                  </span>
+                  <SearchSelect labelId="ss-battery" placeholder="Buscar batería…" options={batteries} value={battery} onPick={pickBattery} meta={batteryMeta} clearable onClear={() => { setBatteryId(null); if (results) setStale(true) }} />
+                </div>
+                {battery && (
+                  <div style={{ marginTop: 'var(--space-4)', maxWidth: 220 }}>
+                    <Field label="Cantidad de baterías" numeric type="number" step="1" min="1" value={batteryQty}
+                      onChange={(e) => { setBatteryQty(e.target.value); if (results) setStale(true) }} hint="ud" />
+                  </div>
+                )}
                 <label className="sun-check" style={{ marginTop: 'var(--space-4)' }}>
                   <input type="checkbox" checked={showAll} onChange={(e) => setShowAll(e.target.checked)} />
                   <span className="sun-check__box"><Icon name="check" size={13} /></span>
@@ -293,6 +316,7 @@ export default function Wizard() {
                     {!inverter && results.compatible_inverters && (
                       <CompatibleInverters list={results.compatible_inverters} onPick={(inv) => { pickInverter(inv); toast('info', 'Inversor seleccionado', 'Recalcula para el dimensionamiento completo') }} />
                     )}
+                    {results.battery && <BatteryResult battery={results.battery} />}
                     <div style={{ marginTop: 'var(--space-4)', display: 'flex', gap: 'var(--space-3)', alignItems: 'center' }}>
                       <Btn variant="secondary" icon="refresh-cw" data-busy={analyzing} disabled={analyzing} onClick={analyze}>{analyzing ? 'Recalculando…' : 'Recalcular'}</Btn>
                       <span style={{ display: 'flex', gap: 8, alignItems: 'center', fontSize: 'var(--text-sm)', color: 'var(--text-muted)' }}>
@@ -353,6 +377,9 @@ function panelMeta(p) {
 }
 function inverterMeta(i) {
   return `${dec(i.power)} kW · Vmax ${int(i.vmax)} V`
+}
+function batteryMeta(b) {
+  return `${dec(b.capacity_kwh)} kWh · ${dec(b.power_kw)} kW${b.technology ? ` · ${b.technology}` : ''}`
 }
 
 function SearchSelect({ placeholder, options, value, onPick, meta, clearable, onClear, labelId }) {
@@ -425,6 +452,34 @@ function CompatibleInverters({ list, onPick }) {
             ))}
           </tbody>
         </table>
+      )}
+    </div>
+  )
+}
+
+function BatteryResult({ battery }) {
+  const cards = [
+    { label: 'Banco útil', value: dec(battery.bank_usable_kwh), unit: 'kWh' },
+    { label: 'Banco nominal', value: dec(battery.bank_capacity_kwh), unit: 'kWh' },
+    { label: 'Útil recomendado', value: dec(battery.recommended_usable_kwh), unit: 'kWh' },
+    { label: 'Autoconsumo estimado', value: dec(battery.estimated_self_consumption_pct), unit: '%' },
+    { label: 'Aporte anual batería', value: int(battery.annual_battery_contribution_kwh), unit: 'kWh' },
+  ]
+  return (
+    <div style={{ marginTop: 'var(--space-5)' }}>
+      <div className="sun-divider">Batería · {battery.nombre}{battery.quantity > 1 ? ` ×${battery.quantity}` : ''}</div>
+      <div className="sun-resultgrid">
+        {cards.map((m) => (
+          <div key={m.label} className="sun-kpi" style={{ boxShadow: 'none' }}>
+            <span className="sun-metric__label">{m.label}</span>
+            <span className="sun-metric__value">{m.value}<span className="unit">{m.unit}</span></span>
+          </div>
+        ))}
+      </div>
+      {battery.method_note && (
+        <div className="sun-inline-note" style={{ marginTop: 'var(--space-4)' }}>
+          <Icon name="info" size={14} color="var(--info)" />{battery.method_note}
+        </div>
       )}
     </div>
   )
