@@ -25,6 +25,6 @@ def verify(purpose, token, max_age_seconds):
     try:
         return _serializer(purpose).loads(token, max_age=max_age_seconds)
     except SignatureExpired:
-        raise ValidationError('El enlace ha caducado. Solicita uno nuevo.')
+        raise ValidationError('El enlace ha caducado. Solicita uno nuevo.', code='token.expired')
     except BadSignature:
-        raise ValidationError('Enlace invalido o manipulado.')
+        raise ValidationError('Enlace invalido o manipulado.', code='token.invalid')

@@ -29,7 +29,7 @@ class MembershipService:
     def _org(org_id):
         org = Organization.query.get(org_id)
         if not org:
-            raise NotFound('Workspace no encontrado.')
+            raise NotFound('Workspace no encontrado.', code='workspace.not_found')
         return org
 
     @staticmethod
@@ -70,28 +70,28 @@ class MembershipService:
     @staticmethod
     def invite(org_id, inviter, email, role):
         if role not in INVITABLE_ROLES:
-            raise ValidationError('Rol de invitación no válido.')
+            raise ValidationError('Rol de invitación no válido.', code='invitation.invalid_role')
         org = MembershipService._org(org_id)
         if org.type == 'PERSONAL':
-            raise ValidationError('Un espacio personal no admite invitaciones.')
+            raise ValidationError('Un espacio personal no admite invitaciones.', code='invitation.personal_space')
 
         inviter_membership = MembershipService._membership(org_id, inviter.id)
         if not inviter_membership:
-            raise Forbidden('No perteneces a este workspace.')
+            raise Forbidden('No perteneces a este workspace.', code='workspace.not_member')
         if _RANK[role] > _RANK[inviter_membership.role]:
-            raise Forbidden('No puedes invitar con un rol superior al tuyo.')
+            raise Forbidden('No puedes invitar con un rol superior al tuyo.', code='invitation.role_too_high')
 
         email = email.strip().lower()
 
         existing_user = User.query.filter_by(email=email).first()
         if existing_user and MembershipService._membership(org_id, existing_user.id):
-            raise Conflict('Esa persona ya es miembro del workspace.')
+            raise Conflict('Esa persona ya es miembro del workspace.', code='invitation.already_member')
 
         pending = Invitation.query.filter_by(
             org_id=org_id, email=email, status='pending',
         ).first()
         if pending and not pending.is_expired:
-            raise Conflict('Ya existe una invitación pendiente para ese correo.')
+            raise Conflict('Ya existe una invitación pendiente para ese correo.', code='invitation.already_pending')
 
         member_count = Membership.query.filter_by(org_id=org_id).count()
         pending_count = (
@@ -104,7 +104,7 @@ class MembershipService:
             .count()
         )
         if member_count + pending_count >= org.seats:
-            raise Conflict('No quedan asientos disponibles en el plan.')
+            raise Conflict('No quedan asientos disponibles en el plan.', code='workspace.no_seats')
 
         invitation = Invitation(
             org_id=org_id,
@@ -130,9 +130,9 @@ class MembershipService:
     def revoke(org_id, invitation_id):
         invitation = Invitation.query.filter_by(id=invitation_id, org_id=org_id).first()
         if not invitation:
-            raise NotFound('Invitación no encontrada.')
+            raise NotFound('Invitación no encontrada.', code='invitation.not_found')
         if invitation.status != 'pending':
-            raise Conflict('La invitación ya no está pendiente.')
+            raise Conflict('La invitación ya no está pendiente.', code='invitation.not_pending')
         invitation.status = 'revoked'
         db.session.commit()
         return invitation
@@ -141,20 +141,20 @@ class MembershipService:
     def get_by_token(token):
         invitation = Invitation.query.filter_by(token=token).first()
         if not invitation:
-            raise NotFound('Invitación no encontrada.')
+            raise NotFound('Invitación no encontrada.', code='invitation.not_found')
         return invitation
 
     @staticmethod
     def accept(token, user):
         invitation = MembershipService.get_by_token(token)
         if invitation.status == 'accepted':
-            raise Conflict('Esta invitación ya fue aceptada.')
+            raise Conflict('Esta invitación ya fue aceptada.', code='invitation.already_accepted')
         if invitation.status == 'revoked':
-            raise Conflict('Esta invitación fue revocada.')
+            raise Conflict('Esta invitación fue revocada.', code='invitation.revoked')
         if invitation.is_expired:
-            raise ValidationError('La invitación ha caducado.')
+            raise ValidationError('La invitación ha caducado.', code='invitation.expired')
         if MembershipService._membership(invitation.org_id, user.id):
-            raise Conflict('Ya eres miembro de este workspace.')
+            raise Conflict('Ya eres miembro de este workspace.', code='invitation.already_member')
 
         claimed = (
             Invitation.query
@@ -162,7 +162,7 @@ class MembershipService:
             .update({'status': 'accepted', 'accepted_user_id': user.id}, synchronize_session=False)
         )
         if not claimed:
-            raise Conflict('Esta invitación ya fue procesada.')
+            raise Conflict('Esta invitación ya fue procesada.', code='invitation.already_processed')
 
         db.session.add(Membership(
             user_id=user.id,
@@ -176,26 +176,26 @@ class MembershipService:
     @staticmethod
     def change_role(org_id, actor, target_user_id, new_role):
         if new_role not in _RANK:
-            raise ValidationError('Rol no válido.')
+            raise ValidationError('Rol no válido.', code='membership.invalid_role')
         actor_membership = MembershipService._membership(org_id, actor.id)
         if not actor_membership:
-            raise Forbidden('No perteneces a este workspace.')
+            raise Forbidden('No perteneces a este workspace.', code='workspace.not_member')
         target = MembershipService._membership(org_id, target_user_id)
         if not target:
-            raise NotFound('Miembro no encontrado.')
+            raise NotFound('Miembro no encontrado.', code='membership.not_found')
 
         if _RANK[target.role] > _RANK[actor_membership.role]:
-            raise Forbidden('No puedes gestionar a alguien con un rol superior al tuyo.')
+            raise Forbidden('No puedes gestionar a alguien con un rol superior al tuyo.', code='membership.target_role_too_high')
         if _RANK[new_role] > _RANK[actor_membership.role]:
-            raise Forbidden('No puedes conceder un rol superior al tuyo.')
+            raise Forbidden('No puedes conceder un rol superior al tuyo.', code='membership.grant_role_too_high')
         if new_role == 'owner' and actor_membership.role != 'owner':
-            raise Forbidden('Solo un propietario puede transferir la propiedad.')
+            raise Forbidden('Solo un propietario puede transferir la propiedad.', code='membership.owner_only_transfer')
 
         if target.role == new_role:
             return target
 
         if target.role == 'owner' and new_role != 'owner' and MembershipService._owner_count(org_id) <= 1:
-            raise Conflict('El workspace debe tener al menos un propietario.')
+            raise Conflict('El workspace debe tener al menos un propietario.', code='membership.last_owner')
 
         previous_role = target.role
         target.role = new_role
@@ -217,15 +217,15 @@ class MembershipService:
     def remove(org_id, actor, target_user_id):
         actor_membership = MembershipService._membership(org_id, actor.id)
         if not actor_membership:
-            raise Forbidden('No perteneces a este workspace.')
+            raise Forbidden('No perteneces a este workspace.', code='workspace.not_member')
         target = MembershipService._membership(org_id, target_user_id)
         if not target:
-            raise NotFound('Miembro no encontrado.')
+            raise NotFound('Miembro no encontrado.', code='membership.not_found')
 
         if _RANK[target.role] > _RANK[actor_membership.role]:
-            raise Forbidden('No puedes expulsar a alguien con un rol superior al tuyo.')
+            raise Forbidden('No puedes expulsar a alguien con un rol superior al tuyo.', code='membership.target_role_too_high')
         if target.role == 'owner' and MembershipService._owner_count(org_id) <= 1:
-            raise Conflict('No puedes expulsar al último propietario del workspace.')
+            raise Conflict('No puedes expulsar al último propietario del workspace.', code='membership.last_owner')
 
         AuditService.record(
             'membership.remove', actor=actor, org_id=org_id,
