@@ -1,9 +1,11 @@
 import { useState, useEffect, useId } from 'react'
 import { useSearchParams } from 'react-router-dom'
+import { useTranslation } from 'react-i18next'
 import { Btn, Icon, Field, Spinner } from '@/shared/ui'
 import { useTransition } from '@/services/transition'
 import { useAuth } from '@/services/auth'
 import { toast } from '@/services/toast'
+import { messageForError } from '@/services/i18n'
 import { api } from '@/api/client'
 
 const PATHS = { landing: '/', login: '/login', signup: '/signup', forgot: '/recuperar', app: '/app', reset: '/reset-password' }
@@ -36,18 +38,19 @@ function Shell({ go, children }) {
   )
 }
 
-function PasswordField({ label = 'Contraseña', hint, autoComplete = 'current-password', value, onChange }) {
+function PasswordField({ label, hint, autoComplete = 'current-password', value, onChange }) {
+  const { t } = useTranslation('auth')
   const [show, setShow] = useState(false)
   const fieldId = useId()
   const hintId = `${fieldId}-hint`
   return (
     <div className="sun-field">
-      <label className="sun-field__label" htmlFor={fieldId}>{label}</label>
+      <label className="sun-field__label" htmlFor={fieldId}>{label || t('password.label')}</label>
       <div className="auth-pw">
         <input id={fieldId} className="sun-input" type={show ? 'text' : 'password'} autoComplete={autoComplete}
           placeholder="••••••••" style={{ paddingRight: 38 }} value={value} onChange={onChange}
           aria-describedby={hint ? hintId : undefined} />
-        <button type="button" className="sun-iconbtn sun-iconbtn--sm auth-reveal" aria-label={show ? 'Ocultar contraseña' : 'Mostrar contraseña'}
+        <button type="button" className="sun-iconbtn sun-iconbtn--sm auth-reveal" aria-label={show ? t('password.hide') : t('password.show')}
           onClick={() => setShow((s) => !s)}><Icon name={show ? 'eye-off' : 'eye'} size={16} /></button>
       </div>
       {hint && <span id={hintId} className="sun-field__hint">{hint}</span>}
@@ -56,23 +59,21 @@ function PasswordField({ label = 'Contraseña', hint, autoComplete = 'current-pa
 }
 
 function SSO() {
+  const { t } = useTranslation('auth')
+  const onSso = () => toast('info', t('sso.unavailableTitle'), t('sso.unavailableDesc'))
   return (
     <>
-      <div className="auth-divider">o continúa con</div>
+      <div className="auth-divider">{t('sso.divider')}</div>
       <div className="auth-sso">
-        <Btn variant="secondary" size="lg" block icon="building-2" type="button" onClick={() => toast('info', 'SSO no disponible', 'Pendiente de configurar el proveedor')}>Cuenta de Microsoft</Btn>
-        <Btn variant="secondary" size="lg" block icon="mail" type="button" onClick={() => toast('info', 'SSO no disponible', 'Pendiente de configurar el proveedor')}>Google Workspace</Btn>
+        <Btn variant="secondary" size="lg" block icon="building-2" type="button" onClick={onSso}>{t('sso.microsoft')}</Btn>
+        <Btn variant="secondary" size="lg" block icon="mail" type="button" onClick={onSso}>{t('sso.google')}</Btn>
       </div>
     </>
   )
 }
 
-function authError(e) {
-  if (e?.data?.details?.length) return e.data.details.map((d) => d.msg).join(' · ')
-  return e?.message || 'Ha ocurrido un error'
-}
-
 export function Login() {
+  const { t } = useTranslation('auth')
   const go = useGo()
   const [params] = useSearchParams()
   const next = params.get('next')
@@ -87,10 +88,10 @@ export function Login() {
     setBusy(true)
     try {
       await login({ email, password, remember })
-      toast('success', 'Sesión iniciada', 'Redirigiendo a tus proyectos…')
+      toast('success', t('login.successTitle'), t('login.successDesc'))
       go(next || 'app')
     } catch (err) {
-      toast('error', 'No se pudo iniciar sesión', authError(err))
+      toast('error', t('login.errorTitle'), messageForError(err, t))
     } finally {
       setBusy(false)
     }
@@ -101,28 +102,29 @@ export function Login() {
       <div className="web-view">
         <div className="auth-card">
           <div className="auth-card__head">
-            <h1>Iniciar sesión</h1>
-            <p>Bienvenido de nuevo. Accede a tus proyectos.</p>
+            <h1>{t('login.title')}</h1>
+            <p>{t('login.subtitle')}</p>
           </div>
           <form className="auth-form" onSubmit={submit}>
-            <Field label="Correo electrónico" icon="mail" type="email" autoComplete="username" placeholder="tu@empresa.es" value={email} onChange={(e) => setEmail(e.target.value)} />
+            <Field label={t('login.email')} icon="mail" type="email" autoComplete="username" placeholder={t('login.emailPlaceholder')} value={email} onChange={(e) => setEmail(e.target.value)} />
             <PasswordField value={password} onChange={(e) => setPassword(e.target.value)} />
             <div className="auth-aux">
-              <label className="sun-check"><input type="checkbox" checked={remember} onChange={(e) => setRemember(e.target.checked)} /><span className="sun-check__box"><Icon name="check" size={13} /></span><span>Mantener sesión</span></label>
-              <a href={pathOf('forgot')} onClick={(e) => { e.preventDefault(); go('forgot') }}>¿Olvidaste tu contraseña?</a>
+              <label className="sun-check"><input type="checkbox" checked={remember} onChange={(e) => setRemember(e.target.checked)} /><span className="sun-check__box"><Icon name="check" size={13} /></span><span>{t('login.remember')}</span></label>
+              <a href={pathOf('forgot')} onClick={(e) => { e.preventDefault(); go('forgot') }}>{t('login.forgot')}</a>
             </div>
-            <Btn variant="primary" size="lg" block type="submit" iconRight="arrow-right" disabled={busy} data-busy={busy}>{busy ? 'Entrando…' : 'Iniciar sesión'}</Btn>
+            <Btn variant="primary" size="lg" block type="submit" iconRight="arrow-right" disabled={busy} data-busy={busy}>{busy ? t('login.submitting') : t('login.submit')}</Btn>
             <SSO />
           </form>
-          <div className="auth-foot">¿No tienes cuenta? <a href={pathOf('signup')} onClick={(e) => { e.preventDefault(); go('signup') }}>Crear cuenta gratis</a></div>
+          <div className="auth-foot">{t('login.noAccount')} <a href={pathOf('signup')} onClick={(e) => { e.preventDefault(); go('signup') }}>{t('login.createFree')}</a></div>
         </div>
-        <p className="auth-legal">Al continuar aceptas las <a href="/legal/terminos" onClick={(e) => { e.preventDefault(); go('/legal/terminos') }}>Condiciones</a> y la <a href="/legal/privacidad" onClick={(e) => { e.preventDefault(); go('/legal/privacidad') }}>Política de privacidad</a> de Sunalyze.</p>
+        <p className="auth-legal">{t('legal.prefix')} <a href="/legal/terminos" onClick={(e) => { e.preventDefault(); go('/legal/terminos') }}>{t('legal.terms')}</a> {t('legal.and')} <a href="/legal/privacidad" onClick={(e) => { e.preventDefault(); go('/legal/privacidad') }}>{t('legal.privacy')}</a> {t('legal.suffix')}</p>
       </div>
     </Shell>
   )
 }
 
 export function Signup() {
+  const { t } = useTranslation('auth')
   const go = useGo()
   const { register } = useAuth()
   const [form, setForm] = useState({ first_name: '', last_name: '', email: '', company: '', password: '' })
@@ -144,14 +146,14 @@ export function Signup() {
 
   async function submit(e) {
     e.preventDefault()
-    if (!accepted) { toast('warning', 'Acepta las condiciones', 'Debes aceptar las condiciones para continuar'); return }
+    if (!accepted) { toast('warning', t('signup.acceptWarnTitle'), t('signup.acceptWarnDesc')); return }
     setBusy(true)
     try {
       await register(form)
-      toast('success', 'Cuenta creada', 'Te damos la bienvenida a Sunalyze.')
+      toast('success', t('signup.successTitle'), t('signup.successDesc'))
       go('app')
     } catch (err) {
-      toast('error', 'No se pudo crear la cuenta', authError(err))
+      toast('error', t('signup.errorTitle'), messageForError(err, t))
     } finally {
       setBusy(false)
     }
@@ -162,30 +164,30 @@ export function Signup() {
       <div className="web-view">
         <div className="auth-card">
           <div className="auth-card__head">
-            <h1>Crear cuenta</h1>
-            <p>14 días gratis. Sin tarjeta de crédito.</p>
+            <h1>{t('signup.title')}</h1>
+            <p>{t('signup.subtitle')}</p>
           </div>
           <form className="auth-form" onSubmit={submit}>
             <div className="auth-form__row">
-              <Field label="Nombre" placeholder="María" autoComplete="given-name" value={form.first_name} onChange={set('first_name')} />
-              <Field label="Apellidos" placeholder="Ruiz" autoComplete="family-name" value={form.last_name} onChange={set('last_name')} />
+              <Field label={t('signup.firstName')} placeholder="María" autoComplete="given-name" value={form.first_name} onChange={set('first_name')} />
+              <Field label={t('signup.lastName')} placeholder="Ruiz" autoComplete="family-name" value={form.last_name} onChange={set('last_name')} />
             </div>
-            <Field label="Correo de trabajo" icon="mail" type="email" autoComplete="username" placeholder="maria@empresa.es" value={form.email} onChange={set('email')} />
-            <Field label="Empresa / instalador" icon="building-2" placeholder="Solar Levante S.L. (opcional)" value={form.company} onChange={set('company')} />
+            <Field label={t('signup.email')} icon="mail" type="email" autoComplete="username" placeholder={t('signup.emailPlaceholder')} value={form.email} onChange={set('email')} />
+            <Field label={t('signup.company')} icon="building-2" placeholder={t('signup.companyPlaceholder')} value={form.company} onChange={set('company')} />
             <div>
-              <PasswordField label="Contraseña" autoComplete="new-password" value={form.password} onChange={onPassword} hint="Mínimo 8 caracteres, con letras y un número." />
+              <PasswordField label={t('password.label')} autoComplete="new-password" value={form.password} onChange={onPassword} hint={t('password.hint')} />
               <div className="auth-pwhint">
                 {[0, 1, 2, 3].map((i) => <span key={i} className={`bar${i < score ? ' on' : ''}`} />)}
               </div>
             </div>
             <label className="sun-check" style={{ alignItems: 'flex-start', gap: 8 }}>
               <input type="checkbox" checked={accepted} onChange={(e) => setAccepted(e.target.checked)} /><span className="sun-check__box"><Icon name="check" size={13} /></span>
-              <span style={{ fontSize: 'var(--text-sm)', color: 'var(--text-muted)' }}>Acepto las Condiciones de uso y la Política de privacidad.</span>
+              <span style={{ fontSize: 'var(--text-sm)', color: 'var(--text-muted)' }}>{t('signup.accept')}</span>
             </label>
-            <Btn variant="primary" size="lg" block type="submit" iconRight="arrow-right" disabled={busy} data-busy={busy}>{busy ? 'Creando…' : 'Crear cuenta'}</Btn>
+            <Btn variant="primary" size="lg" block type="submit" iconRight="arrow-right" disabled={busy} data-busy={busy}>{busy ? t('signup.submitting') : t('signup.submit')}</Btn>
             <SSO />
           </form>
-          <div className="auth-foot">¿Ya tienes cuenta? <a href={pathOf('login')} onClick={(e) => { e.preventDefault(); go('login') }}>Iniciar sesión</a></div>
+          <div className="auth-foot">{t('signup.haveAccount')} <a href={pathOf('login')} onClick={(e) => { e.preventDefault(); go('login') }}>{t('login.title')}</a></div>
         </div>
       </div>
     </Shell>
@@ -193,6 +195,7 @@ export function Signup() {
 }
 
 export function ForgotPassword() {
+  const { t } = useTranslation('auth')
   const go = useGo()
   const [email, setEmail] = useState('')
   const [sent, setSent] = useState(false)
@@ -207,7 +210,7 @@ export function ForgotPassword() {
       setDevLink(r.reset_link || null)
       setSent(true)
     } catch (err) {
-      toast('error', 'No se pudo enviar', authError(err))
+      toast('error', t('forgot.errorTitle'), messageForError(err, t))
     } finally {
       setBusy(false)
     }
@@ -220,26 +223,26 @@ export function ForgotPassword() {
           {!sent ? (
             <>
               <div className="auth-card__head">
-                <h1>Recuperar contraseña</h1>
-                <p>Te enviaremos un enlace para restablecerla.</p>
+                <h1>{t('forgot.title')}</h1>
+                <p>{t('forgot.subtitle')}</p>
               </div>
               <form className="auth-form" onSubmit={submit}>
-                <Field label="Correo electrónico" icon="mail" type="email" autoComplete="username" placeholder="tu@empresa.es" value={email} onChange={(e) => setEmail(e.target.value)} />
-                <Btn variant="primary" size="lg" block type="submit" iconRight="send" disabled={busy} data-busy={busy}>{busy ? 'Enviando…' : 'Enviar enlace'}</Btn>
+                <Field label={t('login.email')} icon="mail" type="email" autoComplete="username" placeholder={t('login.emailPlaceholder')} value={email} onChange={(e) => setEmail(e.target.value)} />
+                <Btn variant="primary" size="lg" block type="submit" iconRight="send" disabled={busy} data-busy={busy}>{busy ? t('forgot.submitting') : t('forgot.submit')}</Btn>
               </form>
-              <div className="auth-foot"><a href={pathOf('login')} onClick={(e) => { e.preventDefault(); go('login') }}><Icon name="arrow-left" size={14} style={{ marginRight: 5, verticalAlign: '-2px' }} />Volver a iniciar sesión</a></div>
+              <div className="auth-foot"><a href={pathOf('login')} onClick={(e) => { e.preventDefault(); go('login') }}><Icon name="arrow-left" size={14} style={{ marginRight: 5, verticalAlign: '-2px' }} />{t('forgot.backToLogin')}</a></div>
             </>
           ) : (
             <div className="auth-success">
               <div className="auth-success__icon"><Icon name="mail-check" size={28} /></div>
-              <h1 style={{ fontFamily: 'var(--font-display)', fontSize: 'var(--text-xl)', margin: 0, color: 'var(--text-strong)' }}>Revisa tu correo</h1>
-              <p style={{ color: 'var(--text-muted)', fontSize: 'var(--text-base)', margin: 0 }}>Si existe una cuenta con ese correo, hemos enviado un enlace. Caduca en 60 minutos.</p>
+              <h1 style={{ fontFamily: 'var(--font-display)', fontSize: 'var(--text-xl)', margin: 0, color: 'var(--text-strong)' }}>{t('forgot.sentTitle')}</h1>
+              <p style={{ color: 'var(--text-muted)', fontSize: 'var(--text-base)', margin: 0 }}>{t('forgot.sentDesc')}</p>
               {devLink && (
                 <a href={devLink} className="sun-inline-note sun-inline-note--info" style={{ textDecoration: 'none', wordBreak: 'break-all' }}>
-                  <Icon name="info" size={14} /> Enlace de desarrollo (SMTP no configurado): abrir restablecimiento
+                  <Icon name="info" size={14} /> {t('forgot.devLink')}
                 </a>
               )}
-              <Btn variant="secondary" size="md" block icon="arrow-left" onClick={() => go('login')}>Volver a iniciar sesión</Btn>
+              <Btn variant="secondary" size="md" block icon="arrow-left" onClick={() => go('login')}>{t('forgot.backToLogin')}</Btn>
             </div>
           )}
         </div>
@@ -249,6 +252,7 @@ export function ForgotPassword() {
 }
 
 export function ResetPassword() {
+  const { t } = useTranslation('auth')
   const go = useGo()
   const [params] = useSearchParams()
   const token = params.get('token') || ''
@@ -260,10 +264,10 @@ export function ResetPassword() {
     setBusy(true)
     try {
       await api.auth.resetPassword({ token, password })
-      toast('success', 'Contraseña actualizada', 'Ya puedes iniciar sesión.')
+      toast('success', t('reset.successTitle'), t('reset.successDesc'))
       go('login')
     } catch (err) {
-      toast('error', 'No se pudo restablecer', authError(err))
+      toast('error', t('reset.errorTitle'), messageForError(err, t))
     } finally {
       setBusy(false)
     }
@@ -274,18 +278,18 @@ export function ResetPassword() {
       <div className="web-view">
         <div className="auth-card">
           <div className="auth-card__head">
-            <h1>Nueva contraseña</h1>
-            <p>Elige una contraseña para tu cuenta.</p>
+            <h1>{t('reset.title')}</h1>
+            <p>{t('reset.subtitle')}</p>
           </div>
           {!token ? (
-            <div className="sun-inline-note sun-inline-note--danger"><Icon name="alert-triangle" size={14} /> Falta el token del enlace. Solicita un nuevo correo de recuperación.</div>
+            <div className="sun-inline-note sun-inline-note--danger"><Icon name="alert-triangle" size={14} /> {t('reset.noToken')}</div>
           ) : (
             <form className="auth-form" onSubmit={submit}>
-              <PasswordField label="Nueva contraseña" autoComplete="new-password" value={password} onChange={(e) => setPassword(e.target.value)} hint="Mínimo 8 caracteres, con letras y un número." />
-              <Btn variant="primary" size="lg" block type="submit" iconRight="check" disabled={busy} data-busy={busy}>{busy ? 'Guardando…' : 'Guardar contraseña'}</Btn>
+              <PasswordField label={t('reset.newPassword')} autoComplete="new-password" value={password} onChange={(e) => setPassword(e.target.value)} hint={t('password.hint')} />
+              <Btn variant="primary" size="lg" block type="submit" iconRight="check" disabled={busy} data-busy={busy}>{busy ? t('reset.submitting') : t('reset.submit')}</Btn>
             </form>
           )}
-          <div className="auth-foot"><a href={pathOf('login')} onClick={(e) => { e.preventDefault(); go('login') }}>Volver a iniciar sesión</a></div>
+          <div className="auth-foot"><a href={pathOf('login')} onClick={(e) => { e.preventDefault(); go('login') }}>{t('forgot.backToLogin')}</a></div>
         </div>
       </div>
     </Shell>
@@ -293,6 +297,7 @@ export function ResetPassword() {
 }
 
 export function VerifyEmail() {
+  const { t } = useTranslation('auth')
   const go = useGo()
   const [params] = useSearchParams()
   const token = params.get('token') || ''
@@ -311,21 +316,21 @@ export function VerifyEmail() {
     <Shell go={go}>
       <div className="web-view">
         <div className="auth-card">
-          {state === 'loading' && <Spinner label="Verificando tu correo…" />}
+          {state === 'loading' && <Spinner label={t('verify.loading')} />}
           {state === 'ok' && (
             <div className="auth-success">
               <div className="auth-success__icon"><Icon name="mail-check" size={28} /></div>
-              <h1 style={{ fontFamily: 'var(--font-display)', fontSize: 'var(--text-xl)', margin: 0, color: 'var(--text-strong)' }}>Correo verificado</h1>
-              <p style={{ color: 'var(--text-muted)', fontSize: 'var(--text-base)', margin: 0 }}>Tu cuenta está confirmada.</p>
-              <Btn variant="primary" size="md" block iconRight="arrow-right" onClick={() => go('app')}>Ir a la aplicación</Btn>
+              <h1 style={{ fontFamily: 'var(--font-display)', fontSize: 'var(--text-xl)', margin: 0, color: 'var(--text-strong)' }}>{t('verify.okTitle')}</h1>
+              <p style={{ color: 'var(--text-muted)', fontSize: 'var(--text-base)', margin: 0 }}>{t('verify.okDesc')}</p>
+              <Btn variant="primary" size="md" block iconRight="arrow-right" onClick={() => go('app')}>{t('verify.goApp')}</Btn>
             </div>
           )}
           {state === 'error' && (
             <div className="auth-success">
               <div className="auth-success__icon" style={{ background: 'var(--danger-soft)', color: 'var(--danger)' }}><Icon name="alert-triangle" size={28} /></div>
-              <h1 style={{ fontFamily: 'var(--font-display)', fontSize: 'var(--text-xl)', margin: 0, color: 'var(--text-strong)' }}>Enlace no válido</h1>
-              <p style={{ color: 'var(--text-muted)', fontSize: 'var(--text-base)', margin: 0 }}>El enlace de verificación ha caducado o no es válido.</p>
-              <Btn variant="secondary" size="md" block icon="arrow-left" onClick={() => go('login')}>Volver a iniciar sesión</Btn>
+              <h1 style={{ fontFamily: 'var(--font-display)', fontSize: 'var(--text-xl)', margin: 0, color: 'var(--text-strong)' }}>{t('verify.errorTitle')}</h1>
+              <p style={{ color: 'var(--text-muted)', fontSize: 'var(--text-base)', margin: 0 }}>{t('verify.errorDesc')}</p>
+              <Btn variant="secondary" size="md" block icon="arrow-left" onClick={() => go('login')}>{t('forgot.backToLogin')}</Btn>
             </div>
           )}
         </div>

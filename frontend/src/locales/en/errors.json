@@ -1,0 +1,71 @@
+{
+  "error": {
+    "bad_request": "Invalid request.",
+    "validation": "Some data is invalid. Check the form.",
+    "not_found": "The resource was not found.",
+    "unauthorized": "Sign in to continue.",
+    "forbidden": "You don't have permission for this action.",
+    "conflict": "The operation conflicts with the current state.",
+    "internal": "Internal server error. Please try again."
+  },
+  "request": {
+    "body_required": "The request is missing data."
+  },
+  "auth": {
+    "email_taken": "An account with that email already exists.",
+    "invalid_credentials": "Incorrect email or password.",
+    "account_locked": "Account temporarily locked after failed attempts. Try again later.",
+    "user_not_found": "User not found.",
+    "login_required": "Sign in to continue.",
+    "locale_unsupported": "Unsupported language."
+  },
+  "account": {
+    "already_deleted": "The account was already deleted."
+  },
+  "project": {
+    "not_found": "The project was not found.",
+    "cliente_required": "The client is required.",
+    "invalid_estado": "Invalid project status."
+  },
+  "battery": {
+    "not_found": "The battery was not found."
+  },
+  "installation": {
+    "not_found": "The installation was not found."
+  },
+  "invitation": {
+    "not_found": "The invitation was not found.",
+    "expired": "The invitation has expired.",
+    "revoked": "The invitation was revoked.",
+    "already_accepted": "The invitation was already accepted.",
+    "already_member": "You are already a member of this workspace.",
+    "already_pending": "There is already a pending invitation for that email.",
+    "already_processed": "The invitation was already processed.",
+    "not_pending": "The invitation is not pending.",
+    "invalid_role": "Invalid invitation role.",
+    "role_too_high": "You can't invite with a role higher than yours.",
+    "personal_space": "You can't invite in a personal workspace."
+  },
+  "membership": {
+    "not_found": "The member was not found.",
+    "invalid_role": "Invalid role.",
+    "last_owner": "You can't leave the workspace without an owner.",
+    "grant_role_too_high": "You can't grant a role higher than yours.",
+    "target_role_too_high": "You can't modify a member with a higher role.",
+    "owner_only_transfer": "Only the owner can transfer ownership."
+  },
+  "workspace": {
+    "not_found": "The workspace was not found.",
+    "not_member": "You don't belong to this workspace.",
+    "no_seats": "No seats left in the plan."
+  },
+  "memoria": {
+    "hash_required": "The report hash is required."
+  },
+  "posventa": {
+    "project_id_required": "The project identifier is required."
+  },
+  "legalization": {
+    "same_estado": "The project is already in that status."
+  }
+}

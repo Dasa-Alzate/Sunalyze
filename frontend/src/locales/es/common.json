@@ -1,0 +1,31 @@
+{
+  "actions": {
+    "create": "Crear",
+    "save": "Guardar",
+    "cancel": "Cancelar",
+    "retry": "Reintentar",
+    "export": "Exportar",
+    "close": "Cerrar",
+    "back": "Volver"
+  },
+  "state": {
+    "loading": "Cargando…",
+    "saving": "Guardando…",
+    "empty": "Sin datos",
+    "errorTitle": "Algo ha fallado",
+    "errorDesc": "No se pudieron cargar los datos."
+  },
+  "validation": {
+    "required": "Campo obligatorio",
+    "invalid": "Valor no válido"
+  },
+  "export": {
+    "as": "Exportar como",
+    "copy": "Copiar al portapapeles",
+    "csv": "CSV (.csv)",
+    "xlsx": "Excel (.xlsx)",
+    "pdf": "PDF (.pdf)"
+  },
+  "dialog": "Diálogo",
+  "placeholder": "—"
+}

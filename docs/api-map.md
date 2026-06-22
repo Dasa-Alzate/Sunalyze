@@ -1,6 +1,6 @@
 # API map
 
-Mapa autogenerado por `flask api-map`. Endpoints `/api`: 110.
+Mapa autogenerado por `flask api-map`. Endpoints `/api`: 111.
 
 No editar a mano: regenerar con `flask api-map`.
 
@@ -29,6 +29,7 @@ No editar a mano: regenerar con `flask api-map`.
 | POST | `/api/auth/login` | `auth.login` |  |
 | POST | `/api/auth/logout` | `auth.logout` |  |
 | GET | `/api/auth/me` | `auth.me` |  |
+| PATCH | `/api/auth/me` | `auth.update_me` |  |
 | POST | `/api/auth/register` | `auth.register` |  |
 | POST | `/api/auth/reset-password` | `auth.reset_password` |  |
 | POST | `/api/auth/verify-email` | `auth.verify_email` |  |

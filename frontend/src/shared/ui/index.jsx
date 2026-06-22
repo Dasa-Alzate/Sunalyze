@@ -1,5 +1,6 @@
 import { useState, useRef, useEffect, useId } from 'react'
 import * as Lucide from 'lucide-react'
+import { useTranslation } from 'react-i18next'
 import { useAsyncAction } from '@/shared/useAsyncAction'
 import { useFocusTrap } from '@/shared/useFocusTrap'
 
@@ -158,7 +159,8 @@ export function Card({ className = '', children, ...rest }) {
   return <div className={`sun-card ${className}`} {...rest}>{children}</div>
 }
 
-export function Scrim({ onClose, label = 'Diálogo', children }) {
+export function Scrim({ onClose, label, children }) {
+  const { t } = useTranslation('common')
   const trapRef = useFocusTrap(true)
   useEffect(() => {
     function onKey(e) { if (e.key === 'Escape') onClose && onClose() }
@@ -166,22 +168,22 @@ export function Scrim({ onClose, label = 'Diálogo', children }) {
     return () => document.removeEventListener('keydown', onKey)
   }, [onClose])
   return (
-    <div ref={trapRef} className="sun-scrim" role="dialog" aria-modal="true" aria-label={label}>
-      <button type="button" className="sun-scrim__backdrop" aria-label="Cerrar" onClick={onClose} />
+    <div ref={trapRef} className="sun-scrim" role="dialog" aria-modal="true" aria-label={label || t('dialog')}>
+      <button type="button" className="sun-scrim__backdrop" aria-label={t('actions.close')} onClick={onClose} />
       {children}
     </div>
   )
 }
 
 const FORMATS = {
-  copy: { icon: 'clipboard', label: 'Copiar al portapapeles', kbd: '⌘C' },
-  csv: { icon: 'table', label: 'CSV (.csv)' },
-  xlsx: { icon: 'file-spreadsheet', label: 'Excel (.xlsx)' },
-  pdf: { icon: 'file-text', label: 'PDF (.pdf)' },
+  copy: { icon: 'clipboard', tkey: 'export.copy', kbd: '⌘C' },
+  csv: { icon: 'table', tkey: 'export.csv' },
+  xlsx: { icon: 'file-spreadsheet', tkey: 'export.xlsx' },
+  pdf: { icon: 'file-text', tkey: 'export.pdf' },
 }
 
 export function ExportMenu({
-  label = 'Exportar',
+  label,
   formats = ['copy', 'csv', 'xlsx', 'pdf'],
   onExport,
   align = 'right',
@@ -189,6 +191,8 @@ export function ExportMenu({
   size = 'sm',
   iconOnly = false,
 }) {
+  const { t } = useTranslation('common')
+  const menuLabel = label || t('actions.export')
   const [open, setOpen] = useState(false)
   const ref = useRef(null)
   const triggerRef = useRef(null)
@@ -260,13 +264,13 @@ export function ExportMenu({
   return (
     <div className="sun-menu-wrap" ref={ref}>
       {iconOnly ? (
-        <IconBtn icon="download" label={label} bordered size={size} {...triggerProps} />
+        <IconBtn icon="download" label={menuLabel} bordered size={size} {...triggerProps} />
       ) : (
-        <Btn variant={variant} size={size} icon="download" iconRight="chevron-down" {...triggerProps}>{label}</Btn>
+        <Btn variant={variant} size={size} icon="download" iconRight="chevron-down" {...triggerProps}>{menuLabel}</Btn>
       )}
       {open && (
-        <div id={menuId} className={`sun-menu sun-menu--${align}`} role="menu" aria-label={label} tabIndex={-1} onKeyDown={onMenuKey}>
-          <div className="sun-menu__label">Exportar como</div>
+        <div id={menuId} className={`sun-menu sun-menu--${align}`} role="menu" aria-label={menuLabel} tabIndex={-1} onKeyDown={onMenuKey}>
+          <div className="sun-menu__label">{t('export.as')}</div>
           {valid.map((f, i) => {
             const m = FORMATS[f]
             return (
@@ -278,7 +282,7 @@ export function ExportMenu({
                 tabIndex={-1}
                 onClick={() => pick(f)}
               >
-                <Icon name={m.icon} size={16} /><span>{m.label}</span>{m.kbd && <span className="kbd">{m.kbd}</span>}
+                <Icon name={m.icon} size={16} /><span>{t(m.tkey)}</span>{m.kbd && <span className="kbd">{m.kbd}</span>}
               </button>
             )
           })}
@@ -288,26 +292,28 @@ export function ExportMenu({
   )
 }
 
-export function Spinner({ label = 'Cargando…' }) {
+export function Spinner({ label }) {
+  const { t } = useTranslation('common')
   return (
     <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 10, padding: 'var(--space-12)', color: 'var(--text-muted)' }}>
       <Icon name="loader-2" size={20} style={{ animation: 'sunSpin 0.8s linear infinite' }} />
-      <span>{label}</span>
+      <span>{label || t('state.loading')}</span>
     </div>
   )
 }
 
 export function ErrorState({ message, onRetry }) {
+  const { t } = useTranslation('common')
   return (
     <div className="sun-empty">
       <div className="sun-empty__icon" style={{ background: 'var(--danger-soft)', color: 'var(--danger)' }}>
         <Icon name="alert-triangle" size={26} />
       </div>
-      <div className="sun-empty__title">Algo ha fallado</div>
-      <div className="sun-empty__desc">{message || 'No se pudieron cargar los datos.'}</div>
+      <div className="sun-empty__title">{t('state.errorTitle')}</div>
+      <div className="sun-empty__desc">{message || t('state.errorDesc')}</div>
       {onRetry && (
         <div className="sun-empty__actions">
-          <Btn variant="secondary" icon="refresh-cw" onClick={onRetry}>Reintentar</Btn>
+          <Btn variant="secondary" icon="refresh-cw" onClick={onRetry}>{t('actions.retry')}</Btn>
         </div>
       )}
     </div>

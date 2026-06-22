@@ -1,0 +1,31 @@
+{
+  "actions": {
+    "create": "Create",
+    "save": "Save",
+    "cancel": "Cancel",
+    "retry": "Retry",
+    "export": "Export",
+    "close": "Close",
+    "back": "Back"
+  },
+  "state": {
+    "loading": "Loading…",
+    "saving": "Saving…",
+    "empty": "No data",
+    "errorTitle": "Something went wrong",
+    "errorDesc": "The data could not be loaded."
+  },
+  "validation": {
+    "required": "Required field",
+    "invalid": "Invalid value"
+  },
+  "export": {
+    "as": "Export as",
+    "copy": "Copy to clipboard",
+    "csv": "CSV (.csv)",
+    "xlsx": "Excel (.xlsx)",
+    "pdf": "PDF (.pdf)"
+  },
+  "dialog": "Dialog",
+  "placeholder": "—"
+}

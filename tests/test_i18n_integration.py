@@ -169,6 +169,44 @@ class SessionPayloadTest(_Base):
         self.assertEqual(body['locale'], 'en')
 
 
+class LocaleUpdateTest(_Base):
+    def _login(self):
+        client = self.app.test_client()
+        r = client.post('/api/auth/login', json={'email': 'u@x.com', 'password': 'Secret-pass-2026'})
+        self.assertEqual(r.status_code, 200)
+        return client
+
+    def test_patch_updates_locale(self):
+        client = self._login()
+        r = client.patch('/api/auth/me', json={'locale': 'en'})
+        self.assertEqual(r.status_code, 200)
+        body = r.get_json()
+        self.assertEqual(body['locale'], 'en')
+        self.assertEqual(body['user']['locale'], 'en')
+        db.session.expire_all()
+        self.assertEqual(User.query.get(self.user.id).locale, 'en')
+
+    def test_patch_normalizes_region_locale(self):
+        client = self._login()
+        r = client.patch('/api/auth/me', json={'locale': 'en-US'})
+        self.assertEqual(r.status_code, 200)
+        self.assertEqual(r.get_json()['user']['locale'], 'en')
+
+    def test_patch_rejects_unsupported_locale(self):
+        client = self._login()
+        r = client.patch('/api/auth/me', json={'locale': 'fr'})
+        self.assertEqual(r.status_code, 422)
+        self.assertEqual(r.get_json()['code'], 'auth.locale_unsupported')
+        db.session.expire_all()
+        self.assertEqual(User.query.get(self.user.id).locale, 'es')
+
+    def test_patch_requires_authentication(self):
+        client = self.app.test_client()
+        r = client.patch('/api/auth/me', json={'locale': 'en'})
+        self.assertEqual(r.status_code, 401)
+        self.assertEqual(r.get_json()['code'], 'auth.login_required')
+
+
 class NoRegressionAuthTest(_Base):
     def test_login_success_unchanged(self):
         client = self.app.test_client()

@@ -194,6 +194,7 @@ export const api = {
   },
   auth: {
     me: () => get('/api/auth/me'),
+    updateLocale: (locale) => patch('/api/auth/me', { locale }),
     register: (b) => post('/api/auth/register', b),
     login: (b) => post('/api/auth/login', b),
     logout: () => post('/api/auth/logout', {}),

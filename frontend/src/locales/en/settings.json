@@ -1,0 +1,9 @@
+{
+  "language": {
+    "label": "Language",
+    "es": "Español",
+    "en": "English",
+    "changed": "Language updated",
+    "error": "Could not change the language"
+  }
+}

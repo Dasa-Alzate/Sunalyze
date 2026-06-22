@@ -1,0 +1,23 @@
+{
+  "brand": "Sunalyze",
+  "items": {
+    "resumen": "Resumen",
+    "proyectos": "Proyectos",
+    "diseno": "Diseño",
+    "equipos": "Equipos",
+    "modulos": "Módulos",
+    "equipo": "Equipo",
+    "memoria": "Memoria",
+    "plantillas": "Plantillas",
+    "finanzas": "Finanzas",
+    "posventa": "Posventa",
+    "flags": "Flags"
+  },
+  "commands": "Comandos",
+  "settings": "Ajustes",
+  "myWorkspace": "Mi espacio",
+  "user": "Usuario",
+  "logout": "Cerrar sesión",
+  "skipToContent": "Saltar al contenido",
+  "pageLoaded": "{{label}}, página cargada"
+}
