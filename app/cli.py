@@ -5,7 +5,10 @@
 - `flask flags seed` — asegura los feature flags por defecto.
 """
 
+import os
+
 import click
+from flask import current_app
 from flask.cli import AppGroup
 
 from app.extensions import db
@@ -104,7 +107,78 @@ def seed_flags():
     click.echo(f'Flags por defecto asegurados ({created} creados).')
 
 
+_HTTP_METHODS = ('GET', 'POST', 'PATCH', 'PUT', 'DELETE')
+
+
+def _first_docline(view):
+    doc = (view.__doc__ or '').strip()
+    return doc.splitlines()[0].strip() if doc else ''
+
+
+def _api_rows():
+    rows = []
+    for rule in current_app.url_map.iter_rules():
+        if not rule.rule.startswith('/api'):
+            continue
+        methods = sorted(
+            (rule.methods or set()) & set(_HTTP_METHODS),
+            key=_HTTP_METHODS.index,
+        )
+        view = current_app.view_functions.get(rule.endpoint)
+        blueprint = rule.endpoint.rsplit('.', 1)[0] if '.' in rule.endpoint else '(app)'
+        rows.append({
+            'blueprint': blueprint,
+            'methods': ', '.join(methods),
+            'rule': rule.rule,
+            'endpoint': rule.endpoint,
+            'summary': _first_docline(view) if view else '',
+        })
+    return rows
+
+
+def _render_api_map(rows):
+    total = len(rows)
+    by_blueprint = {}
+    for row in rows:
+        by_blueprint.setdefault(row['blueprint'], []).append(row)
+
+    lines = [
+        '# API map',
+        '',
+        f'Mapa autogenerado por `flask api-map`. Endpoints `/api`: {total}.',
+        '',
+        'No editar a mano: regenerar con `flask api-map`.',
+        '',
+    ]
+    for blueprint in sorted(by_blueprint):
+        entries = sorted(by_blueprint[blueprint], key=lambda r: (r['rule'], r['methods']))
+        lines.append(f'## {blueprint}')
+        lines.append('')
+        lines.append('| Método(s) | Ruta | Endpoint | Resumen |')
+        lines.append('| --- | --- | --- | --- |')
+        for row in entries:
+            summary = row['summary'].replace('|', '\\|')
+            lines.append(
+                f"| {row['methods']} | `{row['rule']}` | `{row['endpoint']}` | {summary} |"
+            )
+        lines.append('')
+    return '\n'.join(lines).rstrip() + '\n'
+
+
+@click.command('api-map')
+def api_map():
+    """Introspecta el url_map, filtra rutas /api y escribe docs/api-map.md."""
+    rows = _api_rows()
+    content = _render_api_map(rows)
+    root = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+    out_path = os.path.join(root, 'docs', 'api-map.md')
+    with open(out_path, 'w', encoding='utf-8') as fh:
+        fh.write(content)
+    click.echo(f'docs/api-map.md actualizado ({len(rows)} endpoints).')
+
+
 def register_cli(app):
     app.cli.add_command(superadmin_cli)
     app.cli.add_command(scrape_cli)
     app.cli.add_command(flags_cli)
+    app.cli.add_command(api_map)
