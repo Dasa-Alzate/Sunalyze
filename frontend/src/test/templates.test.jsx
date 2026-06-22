@@ -34,6 +34,15 @@ const api = {
     publish: vi.fn(() => Promise.resolve({ status: 'published' })),
     create: vi.fn(() => Promise.resolve({ id: 8 })),
     setFavorite: vi.fn(() => Promise.resolve({})),
+    setCategory: vi.fn(() => Promise.resolve({})),
+    setLabels: vi.fn(() => Promise.resolve({})),
+    createCategory: vi.fn((name) => Promise.resolve({ id: 11, name })),
+    createLabel: vi.fn((name) => Promise.resolve({ id: 21, name })),
+    generate: vi.fn(() => Promise.resolve({ id: 100 })),
+    projectDocuments: vi.fn(() => Promise.resolve([
+      { id: 100, template_name: 'Mi memoria', template_version: 3, pdf_size_bytes: 2048, generated_at: '2026-06-22T10:00:00Z' },
+    ])),
+    downloadDocument: vi.fn(() => Promise.resolve(new Blob(['pdf'], { type: 'application/pdf' }))),
   },
   projects: { list: vi.fn(() => Promise.resolve([{ id: 5, cliente: 'ACME' }])) },
 }
@@ -41,12 +50,14 @@ const api = {
 vi.mock('@/api/client', () => ({ api, csrfToken: () => 'tok' }))
 vi.mock('@/services/toast', () => ({ toast: () => {} }))
 
-let TemplatesGallery, TemplateBuilder, VariablePicker
+let TemplatesGallery, TemplateBuilder, VariablePicker, AssignTemplateDialog, ProjectDocuments
 beforeEach(async () => {
   vi.clearAllMocks()
   ;({ default: TemplatesGallery } = await import('@/features/templates/TemplatesGallery'))
   ;({ default: TemplateBuilder } = await import('@/features/templates/TemplateBuilder'))
   ;({ default: VariablePicker } = await import('@/features/templates/VariablePicker'))
+  ;({ default: AssignTemplateDialog } = await import('@/features/templates/AssignTemplateDialog'))
+  ;({ default: ProjectDocuments } = await import('@/features/templates/ProjectDocuments'))
 })
 
 async function expectNoViolations(container) {
@@ -116,5 +127,71 @@ describe('VariablePicker', () => {
     fireEvent.change(screen.getByLabelText('Decimales'), { target: { value: '1' } })
     fireEvent.click(screen.getByRole('button', { name: 'Insertar' }))
     expect(inserted).toBe('{{ project.kwp | number(1) }}')
+  })
+})
+
+describe('AssignTemplateDialog', () => {
+  const installation = {
+    id: 50,
+    template: { name: 'Mi memoria' },
+    category: { id: 10, name: 'Residencial' },
+    labels: [{ id: 20, name: 'Urgente' }],
+  }
+
+  it('renders category radios and label checkboxes with no axe violations', async () => {
+    const { container } = render(
+      <AssignTemplateDialog
+        installation={installation}
+        categories={[{ id: 10, name: 'Residencial' }]}
+        labels={[{ id: 20, name: 'Urgente' }]}
+        onClose={() => {}}
+        onSaved={() => {}}
+      />,
+    )
+    expect(screen.getByText('Organizar plantilla')).toBeInTheDocument()
+    expect(screen.getByLabelText('Residencial')).toBeChecked()
+    await expectNoViolations(container)
+  })
+
+  it('saves category and labels and creates a new label', async () => {
+    let saved = false
+    render(
+      <AssignTemplateDialog
+        installation={installation}
+        categories={[{ id: 10, name: 'Residencial' }]}
+        labels={[{ id: 20, name: 'Urgente' }]}
+        onClose={() => {}}
+        onSaved={() => { saved = true }}
+      />,
+    )
+    fireEvent.change(screen.getByLabelText('Nueva etiqueta'), { target: { value: 'Industrial' } })
+    fireEvent.click(screen.getAllByRole('button', { name: 'Crear' })[1])
+    await waitFor(() => expect(api.templates.createLabel).toHaveBeenCalledWith('Industrial'))
+    fireEvent.click(screen.getByRole('button', { name: 'Guardar' }))
+    await waitFor(() => expect(saved).toBe(true))
+    expect(api.templates.setCategory).toHaveBeenCalledWith(50, 10)
+    expect(api.templates.setLabels).toHaveBeenCalled()
+  })
+})
+
+describe('ProjectDocuments', () => {
+  it('lists documents with metadata and has no axe violations', async () => {
+    const { container } = render(<ProjectDocuments templateId={7} canManage />)
+    await waitFor(() => expect(screen.getByText('v3')).toBeInTheDocument())
+    expect(screen.getByRole('button', { name: 'Generar PDF' })).toBeInTheDocument()
+    await expectNoViolations(container)
+  })
+
+  it('hides the generate button without manage permission', async () => {
+    render(<ProjectDocuments templateId={7} canManage={false} />)
+    await waitFor(() => expect(screen.getByText('v3')).toBeInTheDocument())
+    expect(screen.queryByRole('button', { name: 'Generar PDF' })).toBeNull()
+  })
+
+  it('generates a document via the backend', async () => {
+    render(<ProjectDocuments templateId={7} canManage />)
+    await waitFor(() => expect(screen.getByText('v3')).toBeInTheDocument())
+    fireEvent.click(screen.getByRole('button', { name: 'Generar PDF' }))
+    await waitFor(() => expect(api.templates.generate).toHaveBeenCalledWith(7, 5))
   })
 })

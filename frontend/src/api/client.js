@@ -27,6 +27,17 @@ async function request(path, options = {}) {
   return data
 }
 
+async function requestBlob(path, options = {}) {
+  const res = await fetch(path, { credentials: 'include', ...options })
+  if (!res.ok) {
+    const text = await res.text()
+    const data = text ? safeJson(text) : null
+    const message = (data && (data.error || data.message)) || `Error ${res.status}`
+    throw new ApiError(message, res.status, data)
+  }
+  return res.blob()
+}
+
 function safeJson(text) {
   try {
     return JSON.parse(text)
@@ -139,6 +150,9 @@ export const api = {
     removeCategory: (id) => del(`/api/templates/categories/${id}`),
     labels: () => get('/api/templates/labels'),
     createLabel: (name) => post('/api/templates/labels', { name }),
+    generate: (id, projectId) => post(`/api/templates/${id}/generate`, { project_id: projectId }),
+    projectDocuments: (projectId) => get(`/api/projects/${projectId}/documents`),
+    downloadDocument: (docId) => requestBlob(`/api/documents/${docId}/download`),
   },
   auth: {
     me: () => get('/api/auth/me'),
