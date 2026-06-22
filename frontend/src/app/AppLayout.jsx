@@ -16,6 +16,7 @@ const NAV = [
   { to: '/app/memoria', label: 'Memoria', icon: 'file-text' },
   { to: '/app/plantillas', label: 'Plantillas', icon: 'layout-template', flag: 'templates' },
   { to: '/app/finanzas', label: 'Finanzas', icon: 'calculator', flag: 'finance' },
+  { to: '/app/posventa', label: 'Posventa', icon: 'plug-zap', flag: 'posventa' },
   { to: '/app/admin/flags', label: 'Flags', icon: 'flag', platform: true },
 ]
 

@@ -167,6 +167,31 @@ export const api = {
     updateScenario: (projectId, sid, b) => patch(`/api/projects/${projectId}/financial/scenarios/${sid}`, b),
     removeScenario: (projectId, sid) => del(`/api/projects/${projectId}/financial/scenarios/${sid}`),
   },
+  installations: {
+    list: () => get('/api/installations'),
+    create: (projectId) => post('/api/installations', { project_id: projectId }),
+    get: (id) => get(`/api/installations/${id}`),
+    update: (id, b) => patch(`/api/installations/${id}`, b),
+    performance: (id) => get(`/api/installations/${id}/performance`),
+    maintenance: {
+      list: (id) => get(`/api/installations/${id}/maintenance`),
+      create: (id, b) => post(`/api/installations/${id}/maintenance`, b),
+      update: (id, visitId, b) => patch(`/api/installations/${id}/maintenance/${visitId}`, b),
+      remove: (id, visitId) => del(`/api/installations/${id}/maintenance/${visitId}`),
+    },
+    incidents: {
+      list: (id) => get(`/api/installations/${id}/incidents`),
+      create: (id, b) => post(`/api/installations/${id}/incidents`, b),
+      update: (id, incidentId, b) => patch(`/api/installations/${id}/incidents/${incidentId}`, b),
+      remove: (id, incidentId) => del(`/api/installations/${id}/incidents/${incidentId}`),
+    },
+    readings: {
+      list: (id) => get(`/api/installations/${id}/readings`),
+      create: (id, b) => post(`/api/installations/${id}/readings`, b),
+      update: (id, readingId, b) => patch(`/api/installations/${id}/readings/${readingId}`, b),
+      remove: (id, readingId) => del(`/api/installations/${id}/readings/${readingId}`),
+    },
+  },
   auth: {
     me: () => get('/api/auth/me'),
     register: (b) => post('/api/auth/register', b),
