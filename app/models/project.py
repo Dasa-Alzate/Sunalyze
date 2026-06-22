@@ -20,7 +20,7 @@ class Project(BaseModel, SoftDeleteMixin):
     """
     __tablename__ = 'projects'
 
-    org_id = db.Column(db.Integer, db.ForeignKey('organizations.id'), index=True)
+    org_id = db.Column(db.Integer, db.ForeignKey('organizations.id', ondelete='CASCADE'), index=True)
 
     cliente = db.Column(db.String(150), nullable=False)
     direccion = db.Column(db.String(255))
@@ -56,12 +56,14 @@ class Project(BaseModel, SoftDeleteMixin):
         'MemoriaSignature',
         backref='project',
         cascade='all, delete-orphan',
+        passive_deletes=True,
         order_by='MemoriaSignature.created_at.desc()',
     )
     events = db.relationship(
         'ProjectEvent',
         backref='project',
         cascade='all, delete-orphan',
+        passive_deletes=True,
         order_by='ProjectEvent.created_at.desc()',
     )
 

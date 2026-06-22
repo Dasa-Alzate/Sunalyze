@@ -22,8 +22,8 @@ class Installation(BaseModel):
     """Instalacion fotovoltaica entregada y en seguimiento, 1:1 con un proyecto."""
     __tablename__ = 'installations'
 
-    org_id = db.Column(db.Integer, db.ForeignKey('organizations.id'), index=True, nullable=False)
-    project_id = db.Column(db.Integer, db.ForeignKey('projects.id'), index=True, nullable=False, unique=True)
+    org_id = db.Column(db.Integer, db.ForeignKey('organizations.id', ondelete='CASCADE'), index=True, nullable=False)
+    project_id = db.Column(db.Integer, db.ForeignKey('projects.id', ondelete='CASCADE'), index=True, nullable=False, unique=True)
 
     status = db.Column(db.String(20), nullable=False, default='operativa')
     commissioned_at = db.Column(db.Date)
@@ -34,15 +34,18 @@ class Installation(BaseModel):
     project = db.relationship('Project')
     maintenance_visits = db.relationship(
         'MaintenanceVisit', back_populates='installation',
-        cascade='all, delete-orphan', order_by='MaintenanceVisit.scheduled_at.desc()',
+        cascade='all, delete-orphan', passive_deletes=True,
+        order_by='MaintenanceVisit.scheduled_at.desc()',
     )
     incidents = db.relationship(
         'Incident', back_populates='installation',
-        cascade='all, delete-orphan', order_by='Incident.opened_at.desc()',
+        cascade='all, delete-orphan', passive_deletes=True,
+        order_by='Incident.opened_at.desc()',
     )
     readings = db.relationship(
         'ProductionReading', back_populates='installation',
-        cascade='all, delete-orphan', order_by='ProductionReading.period',
+        cascade='all, delete-orphan', passive_deletes=True,
+        order_by='ProductionReading.period',
     )
 
     def to_dict(self):
@@ -71,8 +74,8 @@ class MaintenanceVisit(BaseModel):
     """Visita de mantenimiento (preventivo/correctivo) sobre una instalacion."""
     __tablename__ = 'maintenance_visits'
 
-    org_id = db.Column(db.Integer, db.ForeignKey('organizations.id'), index=True, nullable=False)
-    installation_id = db.Column(db.Integer, db.ForeignKey('installations.id'), index=True, nullable=False)
+    org_id = db.Column(db.Integer, db.ForeignKey('organizations.id', ondelete='CASCADE'), index=True, nullable=False)
+    installation_id = db.Column(db.Integer, db.ForeignKey('installations.id', ondelete='CASCADE'), index=True, nullable=False)
 
     kind = db.Column(db.String(20), nullable=False, default='preventivo')
     status = db.Column(db.String(20), nullable=False, default='programada')
@@ -102,8 +105,8 @@ class Incident(BaseModel):
     """Incidencia operativa de la instalacion (no es soporte de plataforma)."""
     __tablename__ = 'installation_incidents'
 
-    org_id = db.Column(db.Integer, db.ForeignKey('organizations.id'), index=True, nullable=False)
-    installation_id = db.Column(db.Integer, db.ForeignKey('installations.id'), index=True, nullable=False)
+    org_id = db.Column(db.Integer, db.ForeignKey('organizations.id', ondelete='CASCADE'), index=True, nullable=False)
+    installation_id = db.Column(db.Integer, db.ForeignKey('installations.id', ondelete='CASCADE'), index=True, nullable=False)
 
     title = db.Column(db.String(200), nullable=False)
     description = db.Column(db.Text)
@@ -133,8 +136,8 @@ class ProductionReading(BaseModel):
     """Lectura de produccion real de la instalacion para un periodo (manual, v1)."""
     __tablename__ = 'production_readings'
 
-    org_id = db.Column(db.Integer, db.ForeignKey('organizations.id'), index=True, nullable=False)
-    installation_id = db.Column(db.Integer, db.ForeignKey('installations.id'), index=True, nullable=False)
+    org_id = db.Column(db.Integer, db.ForeignKey('organizations.id', ondelete='CASCADE'), index=True, nullable=False)
+    installation_id = db.Column(db.Integer, db.ForeignKey('installations.id', ondelete='CASCADE'), index=True, nullable=False)
 
     period = db.Column(db.String(20), nullable=False)
     actual_kwh = db.Column(db.Float, nullable=False)

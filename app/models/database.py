@@ -1,4 +1,18 @@
-"""Modelo base abstracto con campos comunes para todas las entidades."""
+"""Modelo base abstracto con campos comunes para todas las entidades.
+
+Política de borrado (ver `docs/deletion-policy-research.md`):
+
+- Las raíces de tenant/catálogo (`Organization`, `User`, `Project`, `Catalog`) usan
+  soft-delete (`SoftDeleteMixin`): el borrado normal marca `deleted_at` y nunca hard-deletea.
+  El derecho al olvido (`GdprService.erase_account`) anonimiza la PII en sitio y soft-deletea.
+- El resto de FKs llevan `ondelete` coherente para que un hard-delete sea seguro:
+  - `CASCADE` en hijos de propiedad (composición), alineado con `cascade='all, delete-orphan'`
+    y `passive_deletes=True` en el ORM.
+  - `SET NULL` en referencias a actor/autor (el registro sobrevive sin actor); su columna es
+    `nullable=True`.
+  - `RESTRICT` (default, sin `ondelete`) en referencias de lookup/catálogo, donde borrar el
+    padre referenciado no debe permitirse silenciosamente.
+"""
 
 from app import db
 from datetime import datetime

@@ -15,7 +15,7 @@ class Catalog(BaseModel, SoftDeleteMixin):
 
     nombre = db.Column(db.String(120), nullable=False)
     descripcion = db.Column(db.String(255), default='')
-    org_id = db.Column(db.Integer, db.ForeignKey('organizations.id'), index=True)
+    org_id = db.Column(db.Integer, db.ForeignKey('organizations.id', ondelete='CASCADE'), index=True)
     is_official = db.Column(db.Boolean, nullable=False, default=False)
     scraper_name = db.Column(db.String(100), index=True)
     is_active = db.Column(db.Boolean, nullable=False, default=True)
@@ -46,8 +46,8 @@ class CatalogSubscription(BaseModel):
     __tablename__ = 'catalog_subscriptions'
     __table_args__ = (db.UniqueConstraint('org_id', 'catalog_id', name='uq_sub_org_catalog'),)
 
-    org_id = db.Column(db.Integer, db.ForeignKey('organizations.id'), nullable=False, index=True)
-    catalog_id = db.Column(db.Integer, db.ForeignKey('catalogs.id'), nullable=False, index=True)
+    org_id = db.Column(db.Integer, db.ForeignKey('organizations.id', ondelete='CASCADE'), nullable=False, index=True)
+    catalog_id = db.Column(db.Integer, db.ForeignKey('catalogs.id', ondelete='CASCADE'), nullable=False, index=True)
 
     def __repr__(self):
         return f'<CatalogSubscription o{self.org_id} -> c{self.catalog_id}>'

@@ -28,10 +28,10 @@ class Notification(BaseModel):
         db.Index('ix_notifications_recipient_org', 'recipient_user_id', 'org_id'),
     )
 
-    recipient_user_id = db.Column(db.Integer, db.ForeignKey('users.id'), nullable=False, index=True)
-    org_id = db.Column(db.Integer, db.ForeignKey('organizations.id'), nullable=False, index=True)
+    recipient_user_id = db.Column(db.Integer, db.ForeignKey('users.id', ondelete='CASCADE'), nullable=False, index=True)
+    org_id = db.Column(db.Integer, db.ForeignKey('organizations.id', ondelete='CASCADE'), nullable=False, index=True)
     type = db.Column(db.String(80), nullable=False)
-    actor_user_id = db.Column(db.Integer, db.ForeignKey('users.id'), nullable=True)
+    actor_user_id = db.Column(db.Integer, db.ForeignKey('users.id', ondelete='SET NULL'), nullable=True)
     entity_type = db.Column(db.String(80), nullable=True)
     entity_id = db.Column(db.Integer, nullable=True)
     payload = db.Column(db.Text, nullable=True)
