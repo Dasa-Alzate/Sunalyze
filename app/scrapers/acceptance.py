@@ -63,6 +63,27 @@ GLOBAL = {
             },
         },
     },
+    'battery': {
+        'block': {
+            'required': list(VITAL['battery']),
+            'ranges': {
+                'capacity_kwh': [0.5, 10000],
+                'power_kw': [0.1, 5000],
+                'voltage': [12, 2000],
+                'round_trip_efficiency': [50, 100],
+            },
+        },
+        'review': {
+            'required': [],
+            'ranges': {
+                'capacity_kwh': [1, 50],
+                'power_kw': [0.5, 30],
+                'voltage': [40, 1000],
+                'round_trip_efficiency': [85, 100],
+                'dod': [50, 100],
+            },
+        },
+    },
 }
 
 BY_BRAND = {

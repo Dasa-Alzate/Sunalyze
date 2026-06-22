@@ -8,6 +8,7 @@ from app.models.organization import Organization
 from app.models.project import Project
 from app.models.panel import Panel
 from app.models.inverter import Inverter
+from app.models.battery import Battery
 from app.models.support_ticket import SupportTicket
 
 
@@ -32,7 +33,8 @@ def dashboard():
         'projects': _count(Project),
         'panels': _count(Panel),
         'inverters': _count(Inverter),
-        'review_pending': _review_count(Panel) + _review_count(Inverter),
+        'batteries': _count(Battery),
+        'review_pending': _review_count(Panel) + _review_count(Inverter) + _review_count(Battery),
         'tickets_open': by_status.get('open', 0),
         'tickets_pending': by_status.get('pending', 0),
         'tickets_total': _count(SupportTicket),

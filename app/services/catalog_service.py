@@ -44,10 +44,12 @@ class CatalogService:
     def _counts(catalog_id):
         from app.models.panel import Panel
         from app.models.inverter import Inverter
+        from app.models.battery import Battery
         from app.models.wire import Wire
         return {
             'panels': Panel.query.filter_by(catalog_id=catalog_id).count(),
             'inverters': Inverter.query.filter_by(catalog_id=catalog_id).count(),
+            'batteries': Battery.query.filter_by(catalog_id=catalog_id).count(),
             'wires': Wire.query.filter_by(catalog_id=catalog_id).count(),
         }
 
@@ -84,11 +86,12 @@ class CatalogService:
     def delete_catalog(org_id, catalog_id):
         from app.models.panel import Panel
         from app.models.inverter import Inverter
+        from app.models.battery import Battery
         from app.models.wire import Wire
         catalog = Catalog.query.get(catalog_id)
         if not catalog or catalog.org_id != org_id:
             raise NotFound('Catálogo no encontrado en tu workspace.')
-        for model in (Panel, Inverter, Wire):
+        for model in (Panel, Inverter, Battery, Wire):
             model.query.filter_by(catalog_id=catalog.id).delete()
         CatalogSubscription.query.filter_by(catalog_id=catalog.id).delete()
         db.session.delete(catalog)
