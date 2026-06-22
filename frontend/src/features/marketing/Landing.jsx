@@ -47,9 +47,9 @@ function Nav({ go }) {
       </a>
       <div className="web-nav__links">
         <a href="#features">Funciones</a>
+        <a href="#capabilities">Plataforma</a>
         <a href="#how">Cómo funciona</a>
         <a href="#showcase">Producto</a>
-        <a href="#pricing">Precios</a>
       </div>
       <div className="web-nav__spacer" />
       <div className="web-nav__actions">
@@ -148,9 +148,19 @@ const FEATURES = [
   { icon: 'sliders-horizontal', t: 'Asistente de diseño', d: 'Un flujo guiado de 4 pasos con resumen en vivo: cada cambio recalcula y avisa qué quedó desactualizado.' },
   { icon: 'shield-check', t: 'Cálculos auditables', d: 'Cada resultado se puede defender: pasa el cursor y verás la fórmula y la norma aplicada (ITC-BT-40).' },
   { icon: 'package', t: 'Biblioteca de equipos', d: 'Paneles, inversores y cables con sus fichas. Añade los tuyos y reutilízalos en cada proyecto.' },
+  { icon: 'line-chart', t: 'Estudio de ahorro', d: 'Payback, TIR, VAN, LCOE y CO₂ evitado. Compara contado vs. financiado e incluye subvenciones (IBI, IRPF, Next Gen).' },
+  { icon: 'battery-charging', t: 'Baterías y autoconsumo', d: 'Dimensiona el almacenamiento y simula el autoconsumo con batería para maximizar el aprovechamiento.' },
+  { icon: 'layout-template', t: 'Plantillas de documentos', d: 'Banco de plantillas y constructor por secciones con variables del proyecto: memorias, legales y propuestas.' },
   { icon: 'file-text', t: 'Memoria y unifilar', d: 'Documento técnico y esquema unifilar listos para firmar, generados desde los datos del proyecto.' },
   { icon: 'download', t: 'Exporta a todo', d: 'CSV, Excel, PDF o al portapapeles. Tus cálculos salen en el formato que pida cada trámite.' },
   { icon: 'folder', t: 'Proyectos persistentes', d: 'Cada cliente guarda sus diseños, cálculos y memorias. Duplica una plantilla y arranca en segundos.' },
+]
+
+const CAPABILITIES = [
+  { icon: 'lock', t: 'Cumplimiento UE', d: 'RGPD con exportación de datos y derecho al olvido, 2FA/MFA en accesos privilegiados y bitácora de auditoría.' },
+  { icon: 'blocks', t: 'Marketplace de módulos', d: 'Activa capacidades por organización con feature flags: enciende solo lo que tu equipo necesita.' },
+  { icon: 'command', t: 'Productividad power-user', d: 'Paleta de comandos (⌘K), atajos de teclado y consola para moverte por la plataforma sin levantar las manos del teclado.' },
+  { icon: 'accessibility', t: 'Accesibilidad AA', d: 'Interfaz conforme a WCAG 2.1 AA: navegación por teclado, foco visible y contraste cuidado como sello de calidad.' },
 ]
 
 function Features() {
@@ -158,10 +168,30 @@ function Features() {
     <section className="web-section" id="features">
       <div className="web-wrap">
         <span className="web-eyebrow reveal">Funciones</span>
-        <h2 className="web-h2 reveal" data-d="1" style={{ marginTop: 12 }}>Todo el tramo técnico, en una sola herramienta</h2>
-        <p className="web-lead reveal" data-d="2" style={{ marginTop: 12 }}>Pensado para el instalador que legaliza: datos reales, normativa real, documentos que pasan.</p>
+        <h2 className="web-h2 reveal" data-d="1" style={{ marginTop: 12 }}>Del diseño técnico al estudio de ahorro, en una sola herramienta</h2>
+        <p className="web-lead reveal" data-d="2" style={{ marginTop: 12 }}>Pensado para el instalador que legaliza y vende: datos reales, normativa real, documentos que pasan y números que convencen al cliente.</p>
         <div className="web-features">
           {FEATURES.map((f, i) => (
+            <div className="web-feature reveal" data-d={(i % 3) + 1} key={f.t}>
+              <div className="web-feature__icon"><Icon name={f.icon} size={22} /></div>
+              <h3>{f.t}</h3><p>{f.d}</p>
+            </div>
+          ))}
+        </div>
+      </div>
+    </section>
+  )
+}
+
+function Capabilities() {
+  return (
+    <section className="web-section" id="capabilities" style={{ background: 'var(--cream)' }}>
+      <div className="web-wrap">
+        <span className="web-eyebrow reveal">Plataforma y módulos</span>
+        <h2 className="web-h2 reveal" data-d="1" style={{ marginTop: 12 }}>Lista para equipos exigentes y para la normativa europea</h2>
+        <p className="web-lead reveal" data-d="2" style={{ marginTop: 12 }}>Capacidades de plataforma que activas por organización según tu plan. Cumplimiento, seguridad y productividad de serie.</p>
+        <div className="web-features">
+          {CAPABILITIES.map((f, i) => (
             <div className="web-feature reveal" data-d={(i % 3) + 1} key={f.t}>
               <div className="web-feature__icon"><Icon name={f.icon} size={22} /></div>
               <h3>{f.t}</h3><p>{f.d}</p>
@@ -275,11 +305,25 @@ function CTA({ go }) {
   )
 }
 
-function Footer() {
+function Footer({ go }) {
   const cols = [
-    { h: 'Producto', items: ['Funciones', 'Precios', 'Novedades', 'Estado del servicio'] },
-    { h: 'Recursos', items: ['Documentación', 'Normativa', 'Guías', 'Soporte'] },
-    { h: 'Empresa', items: ['Sobre nosotros', 'Contacto', 'Privacidad', 'Términos'] },
+    { h: 'Producto', items: [
+      { label: 'Funciones', href: '#features' },
+      { label: 'Plataforma', href: '#capabilities' },
+      { label: 'Cómo funciona', href: '#how' },
+      { label: 'Producto', href: '#showcase' },
+    ] },
+    { h: 'Capacidades', items: [
+      { label: 'Estudio de ahorro', href: '#features' },
+      { label: 'Plantillas de documentos', href: '#features' },
+      { label: 'Baterías y autoconsumo', href: '#features' },
+      { label: 'Cumplimiento UE', href: '#capabilities' },
+    ] },
+    { h: 'Legal', items: [
+      { label: 'Política de privacidad', to: '/legal/privacidad' },
+      { label: 'Términos y condiciones', to: '/legal/terminos' },
+      { label: 'Política de cookies', to: '/legal/cookies' },
+    ] },
   ]
   return (
     <footer className="web-footer">
@@ -291,7 +335,13 @@ function Footer() {
         {cols.map((c) => (
           <div key={c.h}>
             <h5>{c.h}</h5>
-            <ul>{c.items.map((i) => <li key={i}><a href="#" onClick={(e) => e.preventDefault()}>{i}</a></li>)}</ul>
+            <ul>{c.items.map((it) => (
+              <li key={it.label}>
+                {it.to
+                  ? <a href={it.to} onClick={(e) => { e.preventDefault(); go(it.to) }}>{it.label}</a>
+                  : <a href={it.href}>{it.label}</a>}
+              </li>
+            ))}</ul>
           </div>
         ))}
       </div>
@@ -317,7 +367,7 @@ function useReveal(deps) {
 
 export default function Landing() {
   const { navigate } = useTransition()
-  const go = (key) => navigate(key === 'landing' ? '/' : key === 'login' ? '/login' : '/signup')
+  const go = (key) => navigate(key.startsWith('/') ? key : key === 'landing' ? '/' : key === 'login' ? '/login' : '/signup')
   useReveal([])
   return (
     <div className="web">
@@ -328,11 +378,12 @@ export default function Landing() {
         <Stats />
         <Marquee />
         <Features />
+        <Capabilities />
         <Showcase />
         <How />
         <CTA go={go} />
       </main>
-      <Footer />
+      <Footer go={go} />
     </div>
   )
 }
