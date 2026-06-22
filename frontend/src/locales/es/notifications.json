@@ -1,0 +1,37 @@
+{
+  "bell": {
+    "label": "Notificaciones",
+    "labelWithCount": "Notificaciones, {{count}} sin leer",
+    "open": "Abrir notificaciones"
+  },
+  "center": {
+    "title": "Notificaciones",
+    "empty": "No tienes notificaciones",
+    "markAll": "Marcar todo como leído",
+    "markRead": "Marcar como leída",
+    "unread": "Sin leer",
+    "loadMore": "Cargar más",
+    "liveUnread": "{{count}} notificaciones sin leer",
+    "liveUnread_one": "{{count}} notificación sin leer",
+    "liveUnread_zero": "Sin notificaciones sin leer"
+  },
+  "types": {
+    "project.shared": "Proyecto compartido contigo",
+    "membership.added": "Te han añadido al equipo",
+    "membership.role_changed": "Tu rol ha cambiado",
+    "invitation.created": "Nueva invitación",
+    "default": "Nueva notificación"
+  },
+  "pending": {
+    "title": "Trabajo pendiente",
+    "empty": "Estás al día, no hay trabajo pendiente",
+    "go": "Ir",
+    "items": {
+      "projects.draft": "Proyectos en borrador",
+      "analysis.stale": "Proyectos sin análisis actualizado",
+      "invitations.pending": "Invitaciones pendientes",
+      "account.email_unverified": "Correo sin verificar",
+      "memoria.missing": "Memorias técnicas sin firmar"
+    }
+  }
+}

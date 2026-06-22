@@ -7,6 +7,7 @@ import { TransitionLink, useTransition } from '@/services/transition'
 import { useAuth } from '@/services/auth'
 import { useCommands, isMac, formatShortcut } from '@/services/actions'
 import { toast } from '@/services/toast'
+import NotificationBell from '@/features/notifications/NotificationBell'
 
 const NAV = [
   { to: '/app', key: 'resumen', icon: 'layout-dashboard', end: true },
@@ -60,6 +61,7 @@ function Sidebar() {
         ))}
       </nav>
       <div className="sun-sidebar__foot">
+        <NotificationBell />
         <button type="button" className="sun-nav-item" onClick={openPalette}>
           <Icon name="command" size={18} /><span>{t('commands')}</span>
           <span className="kbd" style={{ marginLeft: 'auto' }}>{formatShortcut({ mod: true, code: 'KeyK' }, isMac())}</span>
