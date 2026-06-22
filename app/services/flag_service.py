@@ -21,6 +21,10 @@ DEFAULT_FLAGS = [
      'descripcion': 'Métricas y desglose ampliado del dimensionamiento, pérdidas y protecciones.',
      'default_enabled': False, 'is_visible': True, 'help_url': '#', 'price': 9.90,
      'thumbnail_path': '/brand-logos/longi.svg', 'image_path': '/brand-logos/longi.svg'},
+    {'key': 'templates', 'nombre': 'Plantillas de documentos', 'titulo': 'Plantillas de documentos',
+     'descripcion': 'Constructor de plantillas de documentos con variables del proyecto y biblioteca de la organización.',
+     'default_enabled': False, 'is_visible': True, 'help_url': '#', 'price': 0,
+     'thumbnail_path': '/brand-logos/aiko.svg', 'image_path': '/brand-logos/aiko.svg'},
 ]
 
 

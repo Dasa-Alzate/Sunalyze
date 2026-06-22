@@ -31,7 +31,7 @@ def create_app():
         panel, inverter, wire, installation_defaults, project,
         user, organization, membership, catalog, invitation, flag,
         support_ticket, superadmin_audit, scrape_run, audit_event,
-        memoria_signature, project_event,
+        memoria_signature, project_event, report_template,
     )
 
     from app.routes.main import bp as main_bp
@@ -47,6 +47,7 @@ def create_app():
     from app.routes.legalization import legalization_bp
     from app.routes.admin import admin_bp
     from app.routes.modules import modules_bp
+    from app.routes.templates import templates_bp
 
     app.register_blueprint(main_bp)
     app.register_blueprint(crud_bp)
@@ -61,6 +62,7 @@ def create_app():
     app.register_blueprint(legalization_bp)
     app.register_blueprint(admin_bp)
     app.register_blueprint(modules_bp)
+    app.register_blueprint(templates_bp)
 
     from app.errors import register_error_handlers
     register_error_handlers(app)
