@@ -32,6 +32,10 @@ class PreviewSchema(BaseModel):
     project_id: int
 
 
+class GenerateSchema(BaseModel):
+    project_id: int
+
+
 class CategorySchema(BaseModel):
     name: str = Field(min_length=1, max_length=120)
 
