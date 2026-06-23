@@ -15,11 +15,13 @@ import logging
 import os
 import uuid
 from datetime import datetime
+from html import escape
 
 from flask import current_app
 
 from app.extensions import db
 from app.models.report_template import ReportTemplate, GeneratedDocument
+from app.models.organization import OrgBrandingProfile
 from app.models.project import Project
 from app.errors import NotFound, ValidationError, DomainError
 from app.services.template_engine import render_version
@@ -57,22 +59,49 @@ class DocumentService:
         return template.published_version or template.latest_version
 
     @staticmethod
-    def _wrap_html(title, sections_html):
-        safe_title = title or 'Documento'
+    def _branding(org_id):
+        try:
+            return OrgBrandingProfile.query.filter_by(org_id=org_id).first()
+        except Exception:
+            return None
+
+    @staticmethod
+    def _lang_from_locale(locale):
+        return (locale or 'es').split('-')[0].split('_')[0].lower()
+
+    @classmethod
+    def _wrap_html(cls, title, sections_html, presentation=None, branding=None):
+        safe_title = escape(title or 'Documento')
+        presentation = presentation or {}
+        lang = cls._lang_from_locale(presentation.get('locale'))
+        page_size = presentation.get('page_size') or 'A4'
+        color = (branding.primary_color if branding and branding.primary_color else '#1a1a1a')
+        safe_color = escape(color, quote=True)
+        header = ''
+        if branding and branding.logo_path:
+            src = escape(branding.logo_path, quote=True)
+            header = f'<img class="tpl-logo" src="{src}" alt="">'
+        footer = ''
+        if branding and branding.footer_text:
+            footer = f'<footer class="tpl-footer">{escape(branding.footer_text)}</footer>'
         return (
-            '<!DOCTYPE html><html lang="es"><head><meta charset="utf-8">'
+            f'<!DOCTYPE html><html lang="{lang}"><head><meta charset="utf-8">'
             f'<title>{safe_title}</title>'
             '<style>'
-            '@page { size: A4; margin: 2cm; }'
+            f'@page {{ size: {page_size}; margin: 2cm; }}'
             'body { font-family: "Helvetica Neue", Arial, sans-serif; font-size: 11pt; '
             'color: #1a1a1a; line-height: 1.5; }'
-            'h1.tpl-doc-title { font-size: 18pt; margin: 0 0 1.5em; }'
+            f'h1.tpl-doc-title {{ font-size: 18pt; margin: 0 0 1.5em; color: {safe_color}; }}'
+            'img.tpl-logo { max-height: 64px; margin: 0 0 1em; }'
+            f'section.tpl-section h2 {{ font-size: 13pt; margin: 0 0 0.4em; color: {safe_color}; }}'
             'section.tpl-section { margin-bottom: 1.2em; }'
-            'section.tpl-section h2 { font-size: 13pt; margin: 0 0 0.4em; }'
             '.tpl-body { white-space: normal; }'
+            'footer.tpl-footer { margin-top: 2em; font-size: 9pt; color: #666; }'
             '</style></head><body>'
+            f'{header}'
             f'<h1 class="tpl-doc-title">{safe_title}</h1>'
             f'{sections_html}'
+            f'{footer}'
             '</body></html>'
         )
 
@@ -84,8 +113,14 @@ class DocumentService:
         version = cls._pinned_version(template)
         if version is None:
             raise ValidationError('La plantilla no tiene contenido que generar.')
-        rendered = render_version(version.content, project, user=user, on_error='placeholder')
-        html = cls._wrap_html(template.name, rendered['html'])
+        presentation = template.presentation
+        rendered = render_version(
+            version.content, project, user=user, on_error='placeholder',
+            presentation=presentation,
+        )
+        branding = cls._branding(org_id)
+        html = cls._wrap_html(template.name, rendered['html'],
+                              presentation=presentation, branding=branding)
         return html, template, version, project
 
     @staticmethod

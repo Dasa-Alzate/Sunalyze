@@ -73,13 +73,15 @@ class TemplateService:
 
     @classmethod
     def create_template(cls, org_id, created_by, kind, name, description='',
-                         country=None, region=None, content=None):
+                         country=None, region=None, content=None,
+                         locale=None, currency=None, required_by=None, stage=None):
         cls._validate_kind(kind)
         if not name or not name.strip():
             raise ValidationError('El nombre es obligatorio.')
         tpl = ReportTemplate(
             org_id=org_id, scope='org', kind=kind, name=name.strip(),
             description=(description or '').strip(), country=country, region=region,
+            locale=locale, currency=currency, required_by=required_by, stage=stage,
             status='draft', is_official=False, created_by=created_by,
         )
         db.session.add(tpl)
@@ -93,7 +95,8 @@ class TemplateService:
     @classmethod
     def update_template(cls, org_id, template_id, **fields):
         tpl = cls._owned_template(org_id, template_id)
-        for attr in ('name', 'description', 'country', 'region', 'thumbnail_path'):
+        for attr in ('name', 'description', 'country', 'region', 'thumbnail_path',
+                     'locale', 'currency', 'required_by', 'stage'):
             if attr in fields and fields[attr] is not None:
                 setattr(tpl, attr, fields[attr])
         if 'status' in fields and fields['status'] is not None:

@@ -17,16 +17,75 @@ from app.extensions import db
 from .database import BaseModel
 
 
+_PROJECT_GROUP_NAMES = ('project', 'panel', 'inverter', 'battery', 'wire', 'user', 'org')
+_POSVENTA_GROUP_NAMES = ('installation', 'maintenance', 'incident')
+
+DOCUMENT_KIND_REGISTRY = [
+    {'key': 'memoria_calculo', 'label': 'Memoria de cálculo',
+     'var_groups': _PROJECT_GROUP_NAMES},
+    {'key': 'documento_legal', 'label': 'Documento legal',
+     'var_groups': _PROJECT_GROUP_NAMES + _POSVENTA_GROUP_NAMES},
+    {'key': 'propuesta_comercial', 'label': 'Propuesta comercial',
+     'var_groups': _PROJECT_GROUP_NAMES + ('finance',)},
+    {'key': 'analisis_caso', 'label': 'Análisis de caso',
+     'var_groups': _PROJECT_GROUP_NAMES},
+    {'key': 'contrato', 'label': 'Contrato',
+     'var_groups': _PROJECT_GROUP_NAMES + ('finance',) + _POSVENTA_GROUP_NAMES},
+    {'key': 'certificado', 'label': 'Certificado',
+     'var_groups': _PROJECT_GROUP_NAMES + _POSVENTA_GROUP_NAMES},
+    {'key': 'informe_mantenimiento', 'label': 'Informe de mantenimiento',
+     'var_groups': _PROJECT_GROUP_NAMES + _POSVENTA_GROUP_NAMES},
+    {'key': 'solicitud_conexion', 'label': 'Solicitud de conexión',
+     'var_groups': _PROJECT_GROUP_NAMES},
+]
+
+_DOCUMENT_KIND_BY_KEY = {entry['key']: entry for entry in DOCUMENT_KIND_REGISTRY}
+
+
 class DocumentKind:
-    """Tipos de documento soportados. Constantes, no tabla."""
+    """Registro de tipos de documento (code-as-config, no tabla).
+
+    Cada kind declara su `key`, `label` y los grupos de variables que expone (`var_groups`).
+    Añadir un kind = una entrada en `DOCUMENT_KIND_REGISTRY`. Las constantes y `ALL` se conservan
+    por compatibilidad con el código que las referencia.
+    """
 
     MEMORIA_CALCULO = 'memoria_calculo'
     DOCUMENTO_LEGAL = 'documento_legal'
     PROPUESTA_COMERCIAL = 'propuesta_comercial'
     ANALISIS_CASO = 'analisis_caso'
+    CONTRATO = 'contrato'
+    CERTIFICADO = 'certificado'
+    INFORME_MANTENIMIENTO = 'informe_mantenimiento'
+    SOLICITUD_CONEXION = 'solicitud_conexion'
 
-    ALL = (MEMORIA_CALCULO, DOCUMENTO_LEGAL, PROPUESTA_COMERCIAL, ANALISIS_CASO)
+    ALL = tuple(entry['key'] for entry in DOCUMENT_KIND_REGISTRY)
 
+    @staticmethod
+    def is_valid(key):
+        return key in _DOCUMENT_KIND_BY_KEY
+
+    @staticmethod
+    def label(key):
+        entry = _DOCUMENT_KIND_BY_KEY.get(key)
+        return entry['label'] if entry else key
+
+    @staticmethod
+    def meta(key):
+        return _DOCUMENT_KIND_BY_KEY.get(key)
+
+    @staticmethod
+    def all_meta():
+        return [dict(entry) for entry in DOCUMENT_KIND_REGISTRY]
+
+
+def document_kind_var_groups(key):
+    """Nombres de grupos de variables que expone un DocumentKind (para el catálogo)."""
+    entry = _DOCUMENT_KIND_BY_KEY.get(key)
+    return entry['var_groups'] if entry else ()
+
+
+TEMPLATE_STAGES = ('diseno', 'legalizacion', 'entrega', 'posventa')
 
 TEMPLATE_SCOPES = ('system', 'org')
 TEMPLATE_STATUSES = ('draft', 'published', 'archived')
@@ -45,6 +104,10 @@ class ReportTemplate(BaseModel):
     description = db.Column(db.String(500), default='')
     country = db.Column(db.String(80))
     region = db.Column(db.String(120))
+    locale = db.Column(db.String(10))
+    currency = db.Column(db.String(3))
+    required_by = db.Column(db.String(120))
+    stage = db.Column(db.String(20))
     thumbnail_path = db.Column(db.String(255))
     status = db.Column(db.String(20), nullable=False, default='draft')
     is_official = db.Column(db.Boolean, nullable=False, default=False)
@@ -72,6 +135,12 @@ class ReportTemplate(BaseModel):
                 return v
         return None
 
+    @property
+    def presentation(self):
+        """Jurisdicción efectiva {locale, currency, page_size}: país + overrides explícitos."""
+        from app.services.template_engine.jurisdiction import resolve_jurisdiction
+        return resolve_jurisdiction(self.country, self.locale, self.currency)
+
     def to_dict(self, with_content=False):
         latest = self.latest_version
         data = {
@@ -83,6 +152,10 @@ class ReportTemplate(BaseModel):
             'description': self.description or '',
             'country': self.country,
             'region': self.region,
+            'locale': self.locale,
+            'currency': self.currency,
+            'required_by': self.required_by,
+            'stage': self.stage,
             'thumbnail_path': self.thumbnail_path,
             'status': self.status,
             'is_official': self.is_official,
