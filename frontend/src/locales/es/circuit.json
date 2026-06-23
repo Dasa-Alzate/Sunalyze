@@ -1,0 +1,49 @@
+{
+  "title": "Diagrama unifilar",
+  "crumb": "Proyectos",
+  "intro": "Elige una plantilla y ajusta los parámetros para generar el esquema unifilar de la instalación.",
+  "template": {
+    "label": "Plantilla",
+    "hint": "Esquema base a generar"
+  },
+  "toggles": {
+    "fuses": "Con fusibles de cadena",
+    "battery": "Con baterías"
+  },
+  "sections": {
+    "dc": "Campo fotovoltaico (CC)",
+    "ac": "Salida e inversor (CA)"
+  },
+  "fields": {
+    "panel_model": "Modelo de panel",
+    "panel_voc": "Voc del panel",
+    "panel_isc": "Isc del panel",
+    "panels_per_string": "Paneles por cadena",
+    "num_strings": "Nº de cadenas",
+    "dc_fuse_i": "Fusible CC",
+    "dc_switch_v": "Tensión del seccionador CC",
+    "dc_cable_section": "Sección de cable CC",
+    "inverter_model": "Modelo de inversor",
+    "inverter_power": "Potencia del inversor",
+    "inverter_output_i": "Corriente de salida",
+    "ac_phases": "Fases",
+    "ac_mcb_i": "Magnetotérmico",
+    "ac_rcd_i": "Diferencial",
+    "ac_rcd_sensitivity": "Sensibilidad diferencial",
+    "ac_cable_section": "Sección de cable CA"
+  },
+  "phases": {
+    "mono": "Monofásico",
+    "tri": "Trifásico"
+  },
+  "preview": {
+    "title": "Vista previa en vivo",
+    "alt": "Esquema unifilar de la instalación",
+    "loading": "Generando esquema…",
+    "error": "No se pudo generar el esquema con estos parámetros."
+  },
+  "actions": {
+    "download": "Descargar SVG"
+  },
+  "open": "Diagrama unifilar"
+}

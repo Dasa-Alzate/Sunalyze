@@ -166,6 +166,11 @@ export default function Wizard() {
     if (proj) nav(`/app/memoria/${proj.id}`)
   }
 
+  async function goToDiagrama() {
+    const proj = await save({ silent: true })
+    if (proj) nav(`/app/diagrama/${proj.id}`)
+  }
+
   const summary = useMemo(() => buildSummary(results, panel, stale), [results, panel, stale])
 
   function exportSummary(fmt) {
@@ -195,6 +200,7 @@ export default function Wizard() {
         actions={
           <>
             <Btn variant="secondary" icon="save" data-busy={saving} disabled={saving} onClick={() => save()}>Guardar</Btn>
+            <Btn variant="secondary" icon="workflow" onClick={goToDiagrama}>Diagrama unifilar</Btn>
             <Btn variant="primary" icon="file-text" onClick={goToMemoria}>Ir a la memoria</Btn>
           </>
         }

@@ -351,3 +351,13 @@
 .posventa-performance__metrics { display: grid; grid-template-columns: repeat(auto-fit, minmax(120px, 1fr)); gap: var(--space-4); }
 .posventa-note { display: flex; align-items: flex-start; gap: var(--space-2); margin-top: var(--space-4); padding: var(--space-3) var(--space-4); border-radius: var(--radius-md); background: var(--surface-sunken); border: 1px solid var(--border-subtle); font-size: var(--text-sm); color: var(--text-muted); }
 .posventa-note svg { flex: none; margin-top: 2px; }
+
+/* ---------------------------------- Diagrama unifilar (circuit engine) ---------------------------------- */
+.sun-help { font-size: var(--text-sm); color: var(--text-muted); max-width: 60ch; }
+.sun-circuit { display: grid; grid-template-columns: minmax(320px, 0.9fr) 1.4fr; gap: var(--space-5); align-items: start; }
+@media (max-width: 960px) { .sun-circuit { grid-template-columns: 1fr; } }
+.sun-circuit__controls, .sun-circuit__preview { min-width: 0; padding: var(--space-5); display: flex; flex-direction: column; gap: var(--space-4); }
+.sun-circuit__toggles { display: flex; flex-wrap: wrap; gap: var(--space-4); }
+.sun-circuit__grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(160px, 1fr)); gap: var(--space-3); }
+.sun-circuit__canvas { display: flex; justify-content: center; align-items: center; min-height: 240px; padding: var(--space-4); background: var(--surface-sunken); border: 1px solid var(--border-subtle); border-radius: var(--radius-md); overflow: auto; }
+.sun-circuit__canvas svg { max-width: 100%; height: auto; }
