@@ -1,0 +1,10 @@
+# Dependencias OPCIONALES para los backends no-default de PDF.
+# NO son necesarias para arrancar: los adaptadores las importan de forma perezosa y los
+# defaults (STORAGE_BACKEND=local, JOB_QUEUE=sync) no las tocan. Instálalas solo si activas
+# el backend correspondiente.
+#
+#   STORAGE_BACKEND=s3  -> boto3   (almacenamiento S3/MinIO)
+#   JOB_QUEUE=rq        -> rq      (cola de trabajos sobre Redis; `redis` ya está en requirements.txt)
+
+boto3>=1.34
+rq>=1.16
