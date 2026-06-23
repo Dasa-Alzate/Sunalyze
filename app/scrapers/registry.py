@@ -1,9 +1,11 @@
 """Registro de scrapers por marca. Añadir una marca = registrar su adapter."""
 
 from .fronius import FroniusScraper
+from .autosolar import AutoSolarScraper
 
 SCRAPERS = {
     'fronius': FroniusScraper(),
+    'autosolar': AutoSolarScraper(),
 }
 
 
