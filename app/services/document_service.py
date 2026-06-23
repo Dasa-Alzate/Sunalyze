@@ -12,14 +12,12 @@ lo ajeno responde NotFound (indistinguible de "no existe", evitando IDOR).
 
 import hashlib
 import logging
-import os
 import uuid
 from datetime import datetime
 from html import escape
 
-from flask import current_app
-
 from app.extensions import db
+from app.gateways.storage import get_storage
 from app.models.report_template import ReportTemplate, GeneratedDocument
 from app.models.organization import OrgBrandingProfile
 from app.models.project import Project
@@ -27,8 +25,6 @@ from app.errors import NotFound, ValidationError, DomainError
 from app.services.template_engine import render_version
 
 logger = logging.getLogger(__name__)
-
-GENERATED_SUBDIR = 'generated'
 
 
 class DocumentService:
@@ -128,21 +124,10 @@ class DocumentService:
         from weasyprint import HTML
         return HTML(string=html).write_pdf()
 
-    @staticmethod
-    def _generated_dir():
-        base = os.path.join(current_app.instance_path, GENERATED_SUBDIR)
-        os.makedirs(base, exist_ok=True)
-        return base
-
     @classmethod
     def _persist_pdf(cls, org_id, pdf_bytes):
-        org_dir = os.path.join(cls._generated_dir(), str(org_id))
-        os.makedirs(org_dir, exist_ok=True)
         filename = f'{uuid.uuid4().hex}.pdf'
-        abs_path = os.path.join(org_dir, filename)
-        with open(abs_path, 'wb') as handle:
-            handle.write(pdf_bytes)
-        return os.path.relpath(abs_path, current_app.instance_path)
+        return get_storage().save(org_id, filename, pdf_bytes)
 
     @classmethod
     def generate(cls, org_id, template_id, project_id, user=None):
@@ -193,8 +178,8 @@ class DocumentService:
     def read_pdf_bytes(cls, org_id, doc_id):
         """Devuelve (document, pdf_bytes) validando propiedad por org."""
         doc = cls._owned_document(org_id, doc_id)
-        abs_path = os.path.join(current_app.instance_path, doc.pdf_path)
-        if not os.path.isfile(abs_path):
+        try:
+            pdf_bytes = get_storage().read(doc.pdf_path)
+        except FileNotFoundError:
             raise NotFound('El archivo del documento no está disponible.')
-        with open(abs_path, 'rb') as handle:
-            return doc, handle.read()
+        return doc, pdf_bytes
