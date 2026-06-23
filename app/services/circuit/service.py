@@ -1,7 +1,8 @@
 """Circuit diagram service — orchestrates DC and AC unifilar generation."""
 
-from .config import SystemConfig, DCConfig, ACConfig, DiagramStyle
+from .core.config import SystemConfig, DCConfig, ACConfig, DiagramStyle
 from .diagrams import DCStringsDiagram, GridConnectionDiagram, FullSystemDiagram
+from .diagrams.registry import TEMPLATES, list_templates, render_template
 
 
 class CircuitService:
@@ -29,6 +30,21 @@ class CircuitService:
     def generate_full_system(config: SystemConfig) -> str:
         """Full system overview — CC panel / inverter / AC panel / house panel."""
         return FullSystemDiagram(config.dc, config.ac, config.style).render()
+
+    @staticmethod
+    def list_templates() -> list[dict]:
+        """Return the named templates as [{name, label}, ...]."""
+        return list_templates()
+
+    @staticmethod
+    def generate_template(name: str, config: SystemConfig) -> str:
+        """Render any registered named template (or building block) to SVG."""
+        return render_template(name, config)
+
+    @staticmethod
+    def has_template(name: str) -> bool:
+        """Return True if a template name is registered."""
+        return name in TEMPLATES
 
     @staticmethod
     def config_from_dict(data: dict, style: DiagramStyle | None = None) -> SystemConfig:
@@ -64,6 +80,8 @@ class CircuitService:
             fuse_i=_float('dc_fuse_i'),
             switch_v=_float('dc_switch_v'),
             cable_section=data.get('dc_cable_section', ''),
+            has_fuses=str(data.get('has_fuses', 'true')).strip().lower()
+            not in ('false', '0', 'no', ''),
         )
 
         ac = ACConfig(

@@ -27,6 +27,7 @@ class DCConfig:
     fuse_i: float           # String fuse current rating (A) — typically Isc × 1.25
     switch_v: float         # DC switch voltage rating (V)
     cable_section: str      # e.g. "6 mm²"
+    has_fuses: bool = True
 
 
 @dataclass

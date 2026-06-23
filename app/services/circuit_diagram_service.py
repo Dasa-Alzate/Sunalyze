@@ -12,14 +12,14 @@ class CircuitDiagramService:
         'dc_fuse_i', 'dc_switch_v', 'dc_cable_section',
     ]
 
-    GENERATORS = {
-        'cc-strings': CircuitService.generate_cc_vertical,
-    }
+    @classmethod
+    def list_templates(cls):
+        return CircuitService.list_templates()
 
     @classmethod
     def generate(cls, diagram_type, data):
-        if diagram_type not in cls.GENERATORS:
-            valid = ', '.join(cls.GENERATORS)
+        if not CircuitService.has_template(diagram_type):
+            valid = ', '.join(t['name'] for t in CircuitService.list_templates())
             raise ValidationError(f"Tipo desconocido: '{diagram_type}'. Válidos: {valid}")
 
         missing = [f for f in cls.REQUIRED_FIELDS if not str(data.get(f, '')).strip()]
@@ -27,4 +27,4 @@ class CircuitDiagramService:
             raise ValidationError('Parámetros obligatorios ausentes', details={'fields': missing})
 
         config = CircuitService.config_from_dict(data)
-        return cls.GENERATORS[diagram_type](config)
+        return CircuitService.generate_template(diagram_type, config)

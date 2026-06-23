@@ -1,6 +1,6 @@
 """Earth / ground symbol (toma de tierra)."""
 
-from ..component import Component
+from ..core.component import Component
 
 
 class Ground(Component):
@@ -8,6 +8,8 @@ class Ground(Component):
     Earth/ground symbol (PE — Protective Earth).
     Three decreasing horizontal lines.
     """
+
+    PORTS = {"in": (60, 0)}
 
     def render(self, style, label: str = "", **kwargs) -> str:
         c = ""

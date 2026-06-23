@@ -14,8 +14,8 @@ from ..components import (
     CircuitBreaker, Differential, FVGenerator, Ground,
     GridSymbol, Meter, SurgeArrester, ZeroInjection,
 )
-from ..config import ACConfig, DiagramStyle
-from ..diagram import Diagram
+from ..core.config import ACConfig, DiagramStyle
+from ..core.diagram import Diagram
 
 # Row anchors — main bus
 R_GRID   = 0      # GridSymbol

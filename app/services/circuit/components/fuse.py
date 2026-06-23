@@ -1,6 +1,6 @@
 """Fuse (fusible) circuit symbol — IEC 60617."""
 
-from ..component import Component
+from ..core.component import Component
 
 
 class Fuse(Component):

@@ -1,6 +1,6 @@
 """DC/AC inverter circuit symbol."""
 
-from ..component import Component
+from ..core.component import Component
 
 
 class Inverter(Component):
@@ -8,6 +8,13 @@ class Inverter(Component):
     DC/AC inverter symbol.
     Rectangle with a diagonal divider; DC bars on the left half,
     """
+
+    PORTS = {
+        "in": (60, 0),
+        "out": (60, 120),
+        "dc_in": (60, 0),
+        "ac_out": (60, 120),
+    }
 
     def render(self, style, label: str = "", **kwargs) -> str:
         c = ""
