@@ -49,6 +49,7 @@
     <nav>
       <a href="{{ url_for('superadmin.index') }}" class="{{ 'active' if active_nav=='dash' }}">Dashboard</a>
       <a href="{{ url_for('superadmin.equipment_review') }}" class="{{ 'active' if active_nav=='equip' }}">Equipos</a>
+      <a href="{{ url_for('superadmin.catalogs_view') }}" class="{{ 'active' if active_nav=='catalogs' }}">Catálogos</a>
       <a href="{{ url_for('superadmin.migrations_view') }}" class="{{ 'active' if active_nav=='migr' }}">Migraciones</a>
       <a href="{{ url_for('superadmin.users_view') }}" class="{{ 'active' if active_nav=='users' }}">Usuarios</a>
       <a href="{{ url_for('superadmin.orgs_view') }}" class="{{ 'active' if active_nav=='orgs' }}">Organizaciones</a>

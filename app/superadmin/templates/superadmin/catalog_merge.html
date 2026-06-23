@@ -1,0 +1,27 @@
+{% extends 'superadmin/base.html' %}
+{% set active_nav = 'catalogs' %}
+{% block body %}
+<h1>Merge: {{ preview.src.nombre }} → {{ preview.target.nombre }}</h1>
+<form method="post" action="{{ url_for('superadmin.catalog_merge_apply', catalog_id=src_id) }}">
+  <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+  <input type="hidden" name="target" value="{{ target_id }}">
+  <h2>Se moverán ({{ preview.moves|length }})</h2>
+  <ul>{% for m in preview.moves %}<li class="muted">{{ m.kind }}: {{ m.src.nombre }}</li>{% else %}<li class="muted">Nada.</li>{% endfor %}</ul>
+  <h2>Conflictos ({{ preview.conflicts|length }})</h2>
+  <table>
+    <tr><th>Origen (B)</th><th>Destino (A)</th><th>Decisión</th></tr>
+    {% for cf in preview.conflicts %}
+    <tr>
+      <td>{{ cf.src.nombre }}</td><td>{{ cf.target.nombre }}</td>
+      <td>
+        <select name="decision:{{ cf.kind }}:{{ cf.src.id }}">
+          <option value="keep_a">Conservar A</option>
+          <option value="use_b">Usar B</option>
+        </select>
+      </td>
+    </tr>
+    {% else %}<tr><td colspan="3" class="muted">Sin conflictos.</td></tr>{% endfor %}
+  </table>
+  <p><button class="primary">Ejecutar merge</button></p>
+</form>
+{% endblock %}

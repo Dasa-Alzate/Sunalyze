@@ -15,7 +15,8 @@ from app.models.superadmin_audit import SuperadminAudit
 from app.superadmin.guards import (require_superadmin, is_superadmin, log_action,
                                    client_ip, set_pending_mfa, clear_pending_mfa,
                                    pending_mfa_user)
-from app.superadmin import metrics, migrations_ctl
+from app.superadmin import metrics, migrations_ctl, catalog_admin
+from app.services.catalog_service import CatalogService
 
 _MFA_ISSUER = 'Sunalyze Superadmin'
 
@@ -134,6 +135,106 @@ def equipment_approve(kind, item_id):
     log_action('equipment.approve', target=f'{kind}:{item_id}', detail=item.nombre)
     flash(f'«{item.nombre}» aprobado.', 'ok')
     return redirect(url_for('superadmin.equipment_review'))
+
+
+@superadmin_bp.route('/catalogs')
+@require_superadmin
+def catalogs_view():
+    return render_template('superadmin/catalogs.html', catalogs=catalog_admin.list_all())
+
+
+@superadmin_bp.route('/catalogs/<int:catalog_id>')
+@require_superadmin
+def catalog_detail(catalog_id):
+    catalog = catalog_admin.get(catalog_id)
+    if not catalog:
+        abort(404)
+    others = [c for c in catalog_admin.list_all() if c['id'] != catalog_id and c['is_active']]
+    return render_template('superadmin/catalog_detail.html', c=catalog,
+                           counts=CatalogService._counts(catalog_id), targets=others)
+
+
+@superadmin_bp.route('/catalogs', methods=['POST'])
+@require_superadmin
+def catalog_create():
+    nombre = (request.form.get('nombre') or '').strip()
+    if not nombre:
+        flash('El nombre es obligatorio.', 'error')
+        return redirect(url_for('superadmin.catalogs_view'))
+    c = catalog_admin.create(nombre, request.form.get('descripcion'),
+                             request.form.get('scraper_name'),
+                             request.form.get('is_official') == 'on')
+    log_action('catalog.create', target=f'catalog:{c.id}', detail=c.nombre)
+    flash(f'Catálogo «{c.nombre}» creado.', 'ok')
+    return redirect(url_for('superadmin.catalogs_view'))
+
+
+@superadmin_bp.route('/catalogs/<int:catalog_id>/edit', methods=['POST'])
+@require_superadmin
+def catalog_edit(catalog_id):
+    c = catalog_admin.edit(catalog_id, request.form.get('nombre') or '',
+                           request.form.get('descripcion'), request.form.get('scraper_name'))
+    if not c:
+        abort(404)
+    log_action('catalog.edit', target=f'catalog:{catalog_id}', detail=c.nombre)
+    flash('Catálogo actualizado.', 'ok')
+    return redirect(url_for('superadmin.catalog_detail', catalog_id=catalog_id))
+
+
+@superadmin_bp.route('/catalogs/<int:catalog_id>/activate', methods=['POST'])
+@require_superadmin
+def catalog_activate(catalog_id):
+    c = catalog_admin.set_active(catalog_id, True)
+    if not c:
+        abort(404)
+    log_action('catalog.activate', target=f'catalog:{catalog_id}', detail=c.nombre)
+    flash(f'«{c.nombre}» activado.', 'ok')
+    return redirect(url_for('superadmin.catalogs_view'))
+
+
+@superadmin_bp.route('/catalogs/<int:catalog_id>/deactivate', methods=['POST'])
+@require_superadmin
+def catalog_deactivate(catalog_id):
+    c = catalog_admin.set_active(catalog_id, False)
+    if not c:
+        abort(404)
+    log_action('catalog.deactivate', target=f'catalog:{catalog_id}', detail=c.nombre)
+    flash(f'«{c.nombre}» desactivado.', 'ok')
+    return redirect(url_for('superadmin.catalogs_view'))
+
+
+@superadmin_bp.route('/catalogs/<int:catalog_id>/delete', methods=['POST'])
+@require_superadmin
+def catalog_delete(catalog_id):
+    c = catalog_admin.delete(catalog_id)
+    if not c:
+        abort(404)
+    log_action('catalog.delete', target=f'catalog:{catalog_id}', detail=c.nombre)
+    flash(f'«{c.nombre}» eliminado.', 'ok')
+    return redirect(url_for('superadmin.catalogs_view'))
+
+
+@superadmin_bp.route('/catalogs/<int:catalog_id>/merge')
+@require_superadmin
+def catalog_merge_preview(catalog_id):
+    target_id = request.args.get('target', type=int)
+    if not target_id:
+        flash('Selecciona un catálogo destino.', 'error')
+        return redirect(url_for('superadmin.catalog_detail', catalog_id=catalog_id))
+    preview = catalog_admin.merge_preview(catalog_id, target_id)
+    return render_template('superadmin/catalog_merge.html', preview=preview,
+                           src_id=catalog_id, target_id=target_id)
+
+
+@superadmin_bp.route('/catalogs/<int:catalog_id>/merge', methods=['POST'])
+@require_superadmin
+def catalog_merge_apply(catalog_id):
+    target_id = request.form.get('target', type=int)
+    decisions = {k[len('decision:'):]: v for k, v in request.form.items() if k.startswith('decision:')}
+    res = catalog_admin.merge_apply(catalog_id, target_id, decisions)
+    log_action('catalog.merge', target=f'catalog:{catalog_id}->{target_id}', detail=str(res))
+    flash(f"Merge: {res['moved']} movidos, {res['dropped']} descartados, {res['replaced']} reemplazados.", 'ok')
+    return redirect(url_for('superadmin.catalog_detail', catalog_id=target_id))
 
 
 @superadmin_bp.route('/migrations')
