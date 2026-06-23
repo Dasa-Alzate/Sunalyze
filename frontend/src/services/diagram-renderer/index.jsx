@@ -30,23 +30,46 @@ export function UnifilarStrip({ nodes, battery = false, className = '' }) {
   )
 }
 
+async function readError(res) {
+  try {
+    const body = await res.json()
+    if (body?.details?.length) {
+      return body.details.map((d) => `${d.field}: ${d.msg}`).join('; ')
+    }
+    return body?.error || `HTTP ${res.status}`
+  } catch {
+    return `HTTP ${res.status}`
+  }
+}
+
 export function CircuitSvg({ type = 'cc-strings', params = {}, fallback = null }) {
   const [svg, setSvg] = useState(null)
-  const [error, setError] = useState(false)
+  const [error, setError] = useState(null)
   const qs = new URLSearchParams(params).toString()
 
   useEffect(() => {
     let alive = true
     setSvg(null)
-    setError(false)
+    setError(null)
     fetch(`/api/circuit/${type}${qs ? `?${qs}` : ''}`)
-      .then((r) => (r.ok ? r.text() : Promise.reject(new Error(`HTTP ${r.status}`))))
+      .then(async (r) => {
+        if (r.ok) return r.text()
+        const message = await readError(r)
+        throw new Error(message)
+      })
       .then((text) => alive && setSvg(text))
-      .catch(() => alive && setError(true))
+      .catch((e) => alive && setError(e.message))
     return () => { alive = false }
   }, [type, qs])
 
-  if (error) return fallback
+  if (error) {
+    return (
+      <div className="diagram-renderer__error">
+        {fallback}
+        <p className="diagram-renderer__error-detail">{error}</p>
+      </div>
+    )
+  }
   if (!svg) return <div className="diagram-renderer__loading">Generando esquema…</div>
   return <div className="diagram-renderer__svg" dangerouslySetInnerHTML={{ __html: svg }} />
 }

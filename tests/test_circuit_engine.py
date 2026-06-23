@@ -144,6 +144,63 @@ class ApiTest(unittest.TestCase):
         self.assertEqual(r.mimetype, 'image/svg+xml')
 
 
+class CircuitValidationTest(unittest.TestCase):
+    def setUp(self):
+        self.app = _make_app()
+        self.ctx = self.app.app_context()
+        self.ctx.push()
+        db.create_all()
+        self.client = self.app.test_client()
+        self.valid = {
+            'panel_model': 'PanelX', 'panel_voc': 40, 'panel_isc': 10,
+            'panels_per_string': 8, 'num_strings': 2,
+            'dc_fuse_i': 12, 'dc_switch_v': 1000, 'dc_cable_section': '6 mm2',
+        }
+
+    def tearDown(self):
+        db.session.remove()
+        db.drop_all()
+        self.ctx.pop()
+
+    def _status(self, overrides):
+        params = dict(self.valid)
+        params.update(overrides)
+        return self.client.get('/api/circuit/solar-basico', query_string=params).status_code
+
+    def test_valid_params_serve_svg(self):
+        r = self.client.get('/api/circuit/solar-basico', query_string=self.valid)
+        self.assertEqual(r.status_code, 200)
+        self.assertEqual(r.mimetype, 'image/svg+xml')
+
+    def test_non_numeric_voc_rejected(self):
+        self.assertEqual(self._status({'panel_voc': 'abc'}), 422)
+
+    def test_negative_strings_rejected(self):
+        self.assertEqual(self._status({'num_strings': -5}), 422)
+
+    def test_zero_strings_rejected(self):
+        self.assertEqual(self._status({'num_strings': 0}), 422)
+
+    def test_out_of_range_voc_rejected(self):
+        self.assertEqual(self._status({'panel_voc': 99999}), 422)
+
+    def test_invalid_phases_rejected(self):
+        self.assertEqual(self._status({'ac_phases': 2}), 422)
+
+    def test_named_templates_without_params_keep_presence_check(self):
+        for name in ('solar-basico', 'solar-con-baterias',
+                     'solar-sin-fusibles', 'solar-con-fusibles'):
+            r = self.client.get(f'/api/circuit/{name}')
+            self.assertEqual(r.status_code, 422, name)
+
+    def test_named_templates_with_valid_params_serve_svg(self):
+        for name in ('solar-basico', 'solar-con-baterias',
+                     'solar-sin-fusibles', 'solar-con-fusibles',
+                     'cc-strings', 'grid-connection', 'full-system'):
+            r = self.client.get(f'/api/circuit/{name}', query_string=self.valid)
+            self.assertEqual(r.status_code, 200, name)
+
+
 class MemoriaNoRegressionTest(unittest.TestCase):
     def test_build_circuit_svgs_returns_three(self):
         from app.services.memoria_service import MemoriaService
