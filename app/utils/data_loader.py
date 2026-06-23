@@ -55,17 +55,8 @@ def _brand_from_name(nombre):
 
 
 def _official_catalog(brand):
-    catalog = Catalog.query.filter_by(nombre=brand, org_id=None).first()
-    if not catalog:
-        catalog = Catalog(
-            nombre=brand,
-            descripcion=f'Catálogo oficial de {brand}',
-            org_id=None,
-            is_official=True,
-        )
-        db.session.add(catalog)
-        db.session.flush()
-    return catalog
+    from app.services.catalog_service import CatalogService
+    return CatalogService.official_catalog(brand, active=True)
 
 
 def load_initial_data():
