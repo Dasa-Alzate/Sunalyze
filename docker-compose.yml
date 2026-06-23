@@ -44,6 +44,12 @@ services:
       SUPERADMIN_TRUST_PROXY: ${SUPERADMIN_TRUST_PROXY:-1}
     ports:
       - "${WEB_PORT:-8000}:8000"
+    healthcheck:
+      test: ["CMD", "curl", "-fsS", "http://localhost:8000/health"]
+      interval: 30s
+      timeout: 5s
+      retries: 3
+      start_period: 120s
     restart: unless-stopped
 
 volumes:

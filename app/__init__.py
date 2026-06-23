@@ -37,6 +37,7 @@ def create_app(config_overrides=None):
         financial_scenario, installation, notification,
     )
 
+    from app.routes.health import health_bp
     from app.routes.main import bp as main_bp
     from app.routes.crud import crud_bp
     from app.routes.circuit import circuit_bp
@@ -56,6 +57,7 @@ def create_app(config_overrides=None):
     from app.routes.notifications import notifications_bp
     from app.routes.org import org_bp
 
+    app.register_blueprint(health_bp)
     app.register_blueprint(main_bp)
     app.register_blueprint(crud_bp)
     app.register_blueprint(circuit_bp)
