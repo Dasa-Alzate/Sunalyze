@@ -56,6 +56,25 @@ class Config:
     RATELIMIT_STORAGE_URI = os.environ.get('RATELIMIT_STORAGE_URI') or 'memory://'
     IS_PRODUCTION = _IS_PRODUCTION
 
+    STORAGE_BACKEND = (os.environ.get('STORAGE_BACKEND') or 'local').lower()
+    S3_BUCKET = os.environ.get('S3_BUCKET') or None
+    S3_ENDPOINT_URL = os.environ.get('S3_ENDPOINT_URL') or None
+    S3_REGION = os.environ.get('S3_REGION') or None
+    S3_PREFIX = os.environ.get('S3_PREFIX', 'generated')
+    S3_ACCESS_KEY_ID = (
+        os.environ.get('AWS_ACCESS_KEY_ID') or os.environ.get('S3_ACCESS_KEY_ID') or None
+    )
+    S3_SECRET_ACCESS_KEY = (
+        os.environ.get('AWS_SECRET_ACCESS_KEY') or os.environ.get('S3_SECRET_ACCESS_KEY') or None
+    )
+    S3_URL_EXPIRES = int(os.environ.get('S3_URL_EXPIRES', '3600'))
+
+    JOB_QUEUE = (os.environ.get('JOB_QUEUE') or 'sync').lower()
+    JOB_QUEUE_REDIS_URL = os.environ.get('JOB_QUEUE_REDIS_URL') or os.environ.get('REDIS_URL') or None
+    JOB_QUEUE_NAME = os.environ.get('JOB_QUEUE_NAME', 'pdf')
+    PDF_JOB_TIMEOUT = int(os.environ.get('PDF_JOB_TIMEOUT', '180'))
+    PDF_RATELIMIT = os.environ.get('PDF_RATELIMIT', '60 per hour')
+
     SESSION_COOKIE_HTTPONLY = True
     SESSION_COOKIE_SAMESITE = 'Lax'
     SESSION_COOKIE_SECURE = _IS_PRODUCTION
