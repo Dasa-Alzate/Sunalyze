@@ -19,10 +19,27 @@ const template = {
   content: [{ id: 's1', type: 'text', title: 'Intro', body: 'Hola {{ project.cliente }}' }],
 }
 
+const KINDS = [
+  { key: 'memoria_calculo', label: 'Memoria de cálculo' },
+  { key: 'documento_legal', label: 'Documento legal' },
+  { key: 'propuesta_comercial', label: 'Propuesta comercial' },
+  { key: 'analisis_caso', label: 'Análisis de caso' },
+  { key: 'contrato', label: 'Contrato' },
+  { key: 'certificado', label: 'Certificado' },
+  { key: 'informe_mantenimiento', label: 'Informe de mantenimiento' },
+  { key: 'solicitud_conexion', label: 'Solicitud de conexión' },
+]
+
 const api = {
+  org: {
+    getBranding: vi.fn(() => Promise.resolve({ id: null, org_id: 3, logo_path: '', primary_color: '', footer_text: '' })),
+    setBranding: vi.fn(() => Promise.resolve({})),
+  },
   templates: {
-    bank: vi.fn(() => Promise.resolve([{ id: 1, kind: 'memoria_calculo', name: 'Banco A', description: 'Oficial', status: 'published', is_system: true }])),
+    kinds: vi.fn(() => Promise.resolve(KINDS)),
+    bank: vi.fn(() => Promise.resolve([{ id: 1, kind: 'memoria_calculo', name: 'Banco A', description: 'Oficial', status: 'published', is_system: true, country: 'España', stage: 'legalizacion', required_by: 'Distribuidora' }])),
     list: vi.fn(() => Promise.resolve([{ id: 7, kind: 'memoria_calculo', name: 'Mi memoria', description: 'Demo', status: 'draft', is_system: false }])),
+    update: vi.fn(() => Promise.resolve(template)),
     library: vi.fn(() => Promise.resolve([])),
     categories: vi.fn(() => Promise.resolve([{ id: 10, name: 'Residencial' }])),
     labels: vi.fn(() => Promise.resolve([{ id: 20, name: 'Urgente' }])),
@@ -51,6 +68,7 @@ vi.mock('@/api/client', () => ({ api, csrfToken: () => 'tok' }))
 vi.mock('@/services/toast', () => ({ toast: () => {} }))
 
 let TemplatesGallery, TemplateBuilder, VariablePicker, AssignTemplateDialog, ProjectDocuments
+let CreateTemplateDialog, BrandingSettings
 beforeEach(async () => {
   vi.clearAllMocks()
   ;({ default: TemplatesGallery } = await import('@/features/templates/TemplatesGallery'))
@@ -58,6 +76,8 @@ beforeEach(async () => {
   ;({ default: VariablePicker } = await import('@/features/templates/VariablePicker'))
   ;({ default: AssignTemplateDialog } = await import('@/features/templates/AssignTemplateDialog'))
   ;({ default: ProjectDocuments } = await import('@/features/templates/ProjectDocuments'))
+  ;({ default: CreateTemplateDialog } = await import('@/features/templates/CreateTemplateDialog'))
+  ;({ default: BrandingSettings } = await import('@/features/settings/BrandingSettings'))
 })
 
 async function expectNoViolations(container) {
@@ -79,6 +99,52 @@ describe('TemplatesGallery', () => {
     fireEvent.click(screen.getByRole('tab', { name: /Biblioteca/ }))
     expect(screen.getByLabelText('Categoría')).toBeInTheDocument()
     expect(screen.getByLabelText('Etiqueta')).toBeInTheDocument()
+  })
+})
+
+describe('CreateTemplateDialog', () => {
+  it('fills the kind select from the kinds endpoint (8 options) with no axe violations', async () => {
+    const { container } = render(
+      <CreateTemplateDialog onCreated={() => {}} onClose={() => {}} />,
+    )
+    await waitFor(() => expect(api.templates.kinds).toHaveBeenCalled())
+    const select = screen.getByLabelText('Tipo de documento')
+    await waitFor(() => expect(select.querySelectorAll('option').length).toBe(8))
+    expect(screen.getByRole('option', { name: 'Solicitud de conexión' })).toBeInTheDocument()
+    await expectNoViolations(container)
+  })
+
+  it('sends jurisdiction and tag fields on create', async () => {
+    render(<CreateTemplateDialog onCreated={() => {}} onClose={() => {}} />)
+    await waitFor(() => expect(api.templates.kinds).toHaveBeenCalled())
+    fireEvent.change(screen.getByLabelText(/Nombre/), { target: { value: 'Acta' } })
+    fireEvent.change(screen.getByLabelText('País'), { target: { value: 'España' } })
+    fireEvent.change(screen.getByLabelText('Etapa'), { target: { value: 'entrega' } })
+    fireEvent.click(screen.getByRole('button', { name: 'Crear' }))
+    await waitFor(() => expect(api.templates.create).toHaveBeenCalled())
+    const payload = api.templates.create.mock.calls[0][0]
+    expect(payload.country).toBe('España')
+    expect(payload.stage).toBe('entrega')
+  })
+})
+
+describe('TemplatesGallery tag filters', () => {
+  it('shows stage and country filters and badges on cards', async () => {
+    render(<MemoryRouter><TemplatesGallery /></MemoryRouter>)
+    const title = await screen.findByText('Banco A')
+    expect(screen.getByLabelText('Etapa')).toBeInTheDocument()
+    expect(screen.getByLabelText('País')).toBeInTheDocument()
+    const card = title.closest('.module-card')
+    expect(card).toHaveTextContent('Legalización')
+    expect(card).toHaveTextContent('España')
+    expect(card).toHaveTextContent('Distribuidora')
+  })
+
+  it('filters out cards that do not match the selected stage', async () => {
+    render(<MemoryRouter><TemplatesGallery /></MemoryRouter>)
+    await waitFor(() => expect(screen.getByText('Banco A')).toBeInTheDocument())
+    fireEvent.change(screen.getByLabelText('Etapa'), { target: { value: 'entrega' } })
+    expect(screen.queryByText('Banco A')).toBeNull()
   })
 })
 
@@ -193,5 +259,25 @@ describe('ProjectDocuments', () => {
     await waitFor(() => expect(screen.getByText('v3')).toBeInTheDocument())
     fireEvent.click(screen.getByRole('button', { name: 'Generar PDF' }))
     await waitFor(() => expect(api.templates.generate).toHaveBeenCalledWith(7, 5))
+  })
+})
+
+describe('BrandingSettings', () => {
+  it('loads branding and has no axe violations', async () => {
+    const { container } = render(<MemoryRouter><BrandingSettings /></MemoryRouter>)
+    await waitFor(() => expect(api.org.getBranding).toHaveBeenCalled())
+    await waitFor(() => expect(screen.getByLabelText('Logo (URL o ruta)')).toBeInTheDocument())
+    expect(screen.getByLabelText('Color principal')).toBeInTheDocument()
+    expect(screen.getByLabelText('Texto del pie de página')).toBeInTheDocument()
+    await expectNoViolations(container)
+  })
+
+  it('saves branding via PATCH', async () => {
+    render(<MemoryRouter><BrandingSettings /></MemoryRouter>)
+    await waitFor(() => expect(screen.getByLabelText('Logo (URL o ruta)')).toBeInTheDocument())
+    fireEvent.change(screen.getByLabelText('Texto del pie de página'), { target: { value: 'Mi empresa' } })
+    fireEvent.click(screen.getByRole('button', { name: 'Guardar marca' }))
+    await waitFor(() => expect(api.org.setBranding).toHaveBeenCalled())
+    expect(api.org.setBranding.mock.calls[0][0].footer_text).toBe('Mi empresa')
   })
 })

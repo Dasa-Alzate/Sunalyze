@@ -1,6 +1,6 @@
 # API map
 
-Mapa autogenerado por `flask api-map`. Endpoints `/api`: 111.
+Mapa autogenerado por `flask api-map`. Endpoints `/api`: 114.
 
 No editar a mano: regenerar con `flask api-map`.
 
@@ -137,6 +137,13 @@ No editar a mano: regenerar con `flask api-map`.
 | GET | `/api/notifications/unread-count` | `notifications.unread_count` |  |
 | GET | `/api/pending-work` | `notifications.pending_work` |  |
 
+## org
+
+| Método(s) | Ruta | Endpoint | Resumen |
+| --- | --- | --- | --- |
+| GET | `/api/org/branding` | `org.get_branding` |  |
+| PATCH | `/api/org/branding` | `org.update_branding` |  |
+
 ## posventa
 
 | Método(s) | Ruta | Endpoint | Resumen |
@@ -191,6 +198,7 @@ No editar a mano: regenerar con `flask api-map`.
 | GET | `/api/templates/categories` | `templates.list_categories` |  |
 | POST | `/api/templates/categories` | `templates.create_category` |  |
 | DELETE | `/api/templates/categories/<int:category_id>` | `templates.delete_category` |  |
+| GET | `/api/templates/kinds` | `templates.list_kinds` |  |
 | GET | `/api/templates/labels` | `templates.list_labels` |  |
 | POST | `/api/templates/labels` | `templates.create_label` |  |
 | GET | `/api/templates/library` | `templates.list_library` |  |

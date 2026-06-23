@@ -135,7 +135,12 @@ export const api = {
     organizations: () => get('/api/admin/organizations'),
     users: () => get('/api/admin/users'),
   },
+  org: {
+    getBranding: () => get('/api/org/branding'),
+    setBranding: (b) => patch('/api/org/branding', b),
+  },
   templates: {
+    kinds: () => get('/api/templates/kinds'),
     list: (kind) => get(`/api/templates${kind ? `?kind=${encodeURIComponent(kind)}` : ''}`),
     bank: (kind) => get(`/api/templates/bank${kind ? `?kind=${encodeURIComponent(kind)}` : ''}`),
     variables: (kind) => get(`/api/templates/variables/${encodeURIComponent(kind)}`),

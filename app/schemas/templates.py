@@ -11,6 +11,10 @@ class TemplateCreateSchema(BaseModel):
     description: str = Field(default='', max_length=500)
     country: Optional[str] = Field(default=None, max_length=80)
     region: Optional[str] = Field(default=None, max_length=120)
+    required_by: Optional[str] = Field(default=None, max_length=120)
+    stage: Optional[str] = Field(default=None, max_length=20)
+    locale: Optional[str] = Field(default=None, max_length=10)
+    currency: Optional[str] = Field(default=None, max_length=3)
     content: Optional[list] = None
 
 
@@ -19,6 +23,10 @@ class TemplateUpdateSchema(BaseModel):
     description: Optional[str] = Field(default=None, max_length=500)
     country: Optional[str] = Field(default=None, max_length=80)
     region: Optional[str] = Field(default=None, max_length=120)
+    required_by: Optional[str] = Field(default=None, max_length=120)
+    stage: Optional[str] = Field(default=None, max_length=20)
+    locale: Optional[str] = Field(default=None, max_length=10)
+    currency: Optional[str] = Field(default=None, max_length=3)
     thumbnail_path: Optional[str] = Field(default=None, max_length=255)
     status: Optional[str] = Field(default=None, max_length=20)
 

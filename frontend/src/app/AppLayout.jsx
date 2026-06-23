@@ -20,6 +20,7 @@ const NAV = [
   { to: '/app/plantillas', key: 'plantillas', icon: 'layout-template', flag: 'templates' },
   { to: '/app/finanzas', key: 'finanzas', icon: 'calculator', flag: 'finance' },
   { to: '/app/posventa', key: 'posventa', icon: 'plug-zap', flag: 'posventa' },
+  { to: '/app/organizacion/marca', key: 'marca', icon: 'palette', business: true, perm: 'org:manage' },
   { to: '/app/actividad', key: 'actividad', icon: 'activity', perm: 'audit:view' },
   { to: '/app/papelera', key: 'papelera', icon: 'trash-2', perm: 'project:delete' },
   { to: '/app/admin/flags', key: 'flags', icon: 'flag', platform: true },

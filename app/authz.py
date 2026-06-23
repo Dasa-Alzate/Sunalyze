@@ -57,6 +57,7 @@ _ADMIN = _MEMBER | {
     Permission.AUDIT_VIEW,
     Permission.MODULE_MANAGE,
     Permission.TEMPLATE_MANAGE,
+    Permission.ORG_MANAGE,
 }
 
 ROLE_PERMISSIONS = {

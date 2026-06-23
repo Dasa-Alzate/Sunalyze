@@ -12,6 +12,7 @@ from app.authz import require_permission, require_flag, Permission
 from app.services.template_service import TemplateService
 from app.services.document_service import DocumentService
 from app.services.template_engine import variable_catalog
+from app.models.report_template import DocumentKind
 from app.schemas.templates import (
     TemplateCreateSchema, TemplateUpdateSchema, ContentSchema, PreviewSchema,
     GenerateSchema,
@@ -33,6 +34,16 @@ def _body():
 def list_templates():
     return jsonify(TemplateService.list_org_templates(
         current_org_id(), kind=request.args.get('kind')))
+
+
+@templates_bp.route('/api/templates/kinds', methods=['GET'])
+@require_flag(FLAG)
+@require_permission(Permission.TEMPLATE_VIEW)
+def list_kinds():
+    return jsonify([
+        {'key': meta['key'], 'label': meta['label']}
+        for meta in DocumentKind.all_meta()
+    ])
 
 
 @templates_bp.route('/api/templates/bank', methods=['GET'])
@@ -65,6 +76,8 @@ def create_template():
     tpl = TemplateService.create_template(
         current_org_id(), user.id if user else None, data.kind, data.name,
         description=data.description, country=data.country, region=data.region,
+        required_by=data.required_by, stage=data.stage,
+        locale=data.locale, currency=data.currency,
         content=data.content,
     )
     return jsonify(tpl.to_dict(with_content=True)), 201

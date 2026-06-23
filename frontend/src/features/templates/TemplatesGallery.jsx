@@ -1,9 +1,10 @@
 import { useEffect, useMemo, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
+import { useTranslation } from 'react-i18next'
 import { Topbar, Btn, IconBtn, Icon, Badge, Spinner, ErrorState } from '@/shared/ui'
 import { api } from '@/api/client'
 import { toast } from '@/services/toast'
-import { kindLabel, STATUS_TONES } from './constants'
+import { kindLabel, stageLabel, TEMPLATE_STAGES, STATUS_TONES } from './constants'
 import CreateTemplateDialog from './CreateTemplateDialog'
 import AssignTemplateDialog from './AssignTemplateDialog'
 
@@ -13,7 +14,7 @@ const TABS = [
   { key: 'library', label: 'Biblioteca', icon: 'bookmark' },
 ]
 
-function TemplateCard({ template, installation, onOpen, onInstall, onUninstall, onFavorite, onOrganize }) {
+function TemplateCard({ template, installation, kinds, onOpen, onInstall, onUninstall, onFavorite, onOrganize }) {
   const statusTone = STATUS_TONES[template.status] || STATUS_TONES.draft
   return (
     <div className="sun-card module-card">
@@ -33,8 +34,11 @@ function TemplateCard({ template, installation, onOpen, onInstall, onUninstall, 
         </div>
         <p className="module-card__desc">{template.description || 'Sin descripción.'}</p>
         <div style={{ display: 'flex', gap: 'var(--space-2)', flexWrap: 'wrap', marginBottom: 'var(--space-2)' }}>
-          <Badge tone="neutral">{kindLabel(template.kind)}</Badge>
+          <Badge tone="neutral">{kindLabel(template.kind, kinds)}</Badge>
           {template.is_system ? <Badge tone="neutral" icon="shield">Oficial</Badge> : <Badge tone={statusTone.tone}>{statusTone.label}</Badge>}
+          {template.stage && <Badge tone="info" icon="git-branch">{stageLabel(template.stage)}</Badge>}
+          {template.country && <Badge tone="neutral" icon="map-pin">{template.country}</Badge>}
+          {template.required_by && <Badge tone="neutral" icon="landmark">{template.required_by}</Badge>}
           {(installation?.labels || []).map((l) => <Badge key={l.id} tone="neutral" icon="tag">{l.name}</Badge>)}
         </div>
         <div className="module-card__foot">
@@ -57,15 +61,19 @@ function TemplateCard({ template, installation, onOpen, onInstall, onUninstall, 
 
 export default function TemplatesGallery() {
   const nav = useNavigate()
+  const { t } = useTranslation('templates')
   const [tab, setTab] = useState('bank')
   const [bank, setBank] = useState(null)
   const [orgTemplates, setOrgTemplates] = useState(null)
   const [library, setLibrary] = useState(null)
   const [categories, setCategories] = useState([])
   const [labels, setLabels] = useState([])
+  const [kinds, setKinds] = useState([])
   const [error, setError] = useState(null)
   const [categoryFilter, setCategoryFilter] = useState('')
   const [labelFilter, setLabelFilter] = useState('')
+  const [stageFilter, setStageFilter] = useState('')
+  const [countryFilter, setCountryFilter] = useState('')
   const [favoritesOnly, setFavoritesOnly] = useState(false)
   const [creating, setCreating] = useState(false)
   const [organizing, setOrganizing] = useState(null)
@@ -82,6 +90,7 @@ export default function TemplatesGallery() {
       api.templates.list().then(setOrgTemplates),
       api.templates.categories().then(setCategories),
       api.templates.labels().then(setLabels),
+      api.templates.kinds().then((rows) => setKinds((rows || []).map((r) => ({ value: r.key, label: r.label })))),
       loadLibrary(),
     ]).catch((e) => setError(e.message))
   }
@@ -134,11 +143,28 @@ export default function TemplatesGallery() {
     loadLibrary().catch((e) => setError(e.message))
   }
 
+  function matchesTags(template) {
+    if (!template) return false
+    if (stageFilter && template.stage !== stageFilter) return false
+    if (countryFilter && template.country !== countryFilter) return false
+    return true
+  }
+
+  const countryOptions = useMemo(() => {
+    const all = [...(bank || []), ...(orgTemplates || []), ...((library || []).map((i) => i.template).filter(Boolean))]
+    const set = new Set(all.map((t2) => t2.country).filter(Boolean))
+    return [...set].sort()
+  }, [bank, orgTemplates, library])
+
+  const bankFiltered = useMemo(() => (bank || []).filter(matchesTags), [bank, stageFilter, countryFilter])
+  const orgFiltered = useMemo(() => (orgTemplates || []).filter(matchesTags), [orgTemplates, stageFilter, countryFilter])
+
   const libraryFiltered = useMemo(() => {
     let rows = library || []
     if (labelFilter) rows = rows.filter((i) => (i.labels || []).some((l) => String(l.id) === labelFilter))
+    rows = rows.filter((i) => matchesTags(i.template))
     return rows
-  }, [library, labelFilter])
+  }, [library, labelFilter, stageFilter, countryFilter])
 
   function renderGrid(list, asInstallations) {
     if (list === null) return <Spinner label="Cargando plantillas…" />
@@ -162,6 +188,7 @@ export default function TemplatesGallery() {
               key={asInstallations ? `inst-${row.id}` : `tpl-${row.id}`}
               template={template}
               installation={installation}
+              kinds={kinds}
               onOpen={open}
               onInstall={install}
               onUninstall={uninstall}
@@ -201,6 +228,19 @@ export default function TemplatesGallery() {
               ))}
             </div>
 
+            <div className="sun-toolbar" style={{ marginTop: 'var(--space-4)' }}>
+              <label className="sun-field__label" htmlFor="tpl-stage">{t('filters.stage')}</label>
+              <select id="tpl-stage" className="sun-select" style={{ width: 180 }} value={stageFilter} onChange={(e) => setStageFilter(e.target.value)}>
+                <option value="">{t('filters.all')}</option>
+                {TEMPLATE_STAGES.map((s) => <option key={s.value} value={s.value}>{s.label}</option>)}
+              </select>
+              <label className="sun-field__label" htmlFor="tpl-country">{t('filters.country')}</label>
+              <select id="tpl-country" className="sun-select" style={{ width: 180 }} value={countryFilter} onChange={(e) => setCountryFilter(e.target.value)}>
+                <option value="">{t('filters.allCountries')}</option>
+                {countryOptions.map((c) => <option key={c} value={c}>{c}</option>)}
+              </select>
+            </div>
+
             {tab === 'library' && (
               <div className="sun-toolbar" style={{ marginTop: 'var(--space-4)' }}>
                 <label className="sun-field__label" htmlFor="tpl-cat">Categoría</label>
@@ -226,8 +266,8 @@ export default function TemplatesGallery() {
             )}
 
             <div style={{ marginTop: 'var(--space-4)' }}>
-              {tab === 'bank' && renderGrid(bank, false)}
-              {tab === 'org' && renderGrid(orgTemplates, false)}
+              {tab === 'bank' && renderGrid(bank === null ? null : bankFiltered, false)}
+              {tab === 'org' && renderGrid(orgTemplates === null ? null : orgFiltered, false)}
               {tab === 'library' && renderGrid(library === null ? null : libraryFiltered, true)}
             </div>
           </>

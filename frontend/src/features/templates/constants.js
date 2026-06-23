@@ -5,8 +5,20 @@ export const DOCUMENT_KINDS = [
   { value: 'analisis_caso', label: 'Análisis de caso' },
 ]
 
-export function kindLabel(kind) {
-  return DOCUMENT_KINDS.find((k) => k.value === kind)?.label || kind
+export function kindLabel(kind, kinds) {
+  const list = kinds && kinds.length ? kinds : DOCUMENT_KINDS
+  return list.find((k) => k.value === kind)?.label || kind
+}
+
+export const TEMPLATE_STAGES = [
+  { value: 'diseno', label: 'Diseño' },
+  { value: 'legalizacion', label: 'Legalización' },
+  { value: 'entrega', label: 'Entrega' },
+  { value: 'posventa', label: 'Posventa' },
+]
+
+export function stageLabel(stage) {
+  return TEMPLATE_STAGES.find((s) => s.value === stage)?.label || stage
 }
 
 export const FILTERS = [

@@ -1,0 +1,29 @@
+{
+  "fields": {
+    "name": "Name",
+    "kind": "Document type",
+    "description": "Description",
+    "country": "Country",
+    "region": "Region / state",
+    "requiredBy": "Required by",
+    "stage": "Stage",
+    "locale": "Language (override)",
+    "currency": "Currency (override)",
+    "stagePlaceholder": "No stage",
+    "localeHint": "Leave empty to use the country default.",
+    "currencyHint": "3-letter ISO code (e.g. EUR)."
+  },
+  "filters": {
+    "stage": "Stage",
+    "country": "Country",
+    "all": "All",
+    "allCountries": "All"
+  },
+  "editor": {
+    "jurisdiction": "Jurisdiction and tags"
+  },
+  "create": {
+    "title": "New template",
+    "saved": "Template created"
+  }
+}
