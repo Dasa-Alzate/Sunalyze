@@ -12,9 +12,11 @@ from flask import Flask, send_from_directory
 from app.extensions import db, cache, migrate
 
 
-def create_app():
+def create_app(config_overrides=None):
     app = Flask(__name__)
     app.config.from_object('config.Config')
+    if config_overrides:
+        app.config.update(config_overrides)
 
     db.init_app(app)
     cache.init_app(app)

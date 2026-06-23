@@ -21,7 +21,7 @@ from app.errors import Conflict
 
 
 def _make_app():
-    app = create_app()
+    app = create_app({'SQLALCHEMY_DATABASE_URI': 'sqlite://', 'TESTING': True})
     app.config.update(TESTING=True, SQLALCHEMY_DATABASE_URI='sqlite://',
                       WTF_CSRF_ENABLED=False)
     return app

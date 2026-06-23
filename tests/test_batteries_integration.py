@@ -30,7 +30,7 @@ from app.scrapers.acceptance import evaluate
 
 
 def _make_app():
-    app = create_app()
+    app = create_app({'SQLALCHEMY_DATABASE_URI': 'sqlite://', 'TESTING': True})
     app.config.update(
         TESTING=True,
         SQLALCHEMY_DATABASE_URI='sqlite://',

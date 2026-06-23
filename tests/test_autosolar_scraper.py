@@ -12,7 +12,7 @@ FIX = os.path.join(os.path.dirname(__file__), 'fixtures', 'autosolar')
 
 
 def _make_app():
-    app = create_app()
+    app = create_app({'SQLALCHEMY_DATABASE_URI': 'sqlite://', 'TESTING': True})
     app.config.update(TESTING=True, SQLALCHEMY_DATABASE_URI='sqlite://', WTF_CSRF_ENABLED=False)
     return app
 
@@ -51,27 +51,62 @@ class AutoSolarParseTest(unittest.TestCase):
         with open(os.path.join(FIX, name), encoding='utf-8') as fh:
             return fh.read()
 
-    def test_parse_inverter(self):
+    def test_parse_panel_real_fixture(self):
         from app.scrapers.autosolar import AutoSolarScraper
         s = AutoSolarScraper()
-        ref = {'external_id': 'inv1', 'url': 'http://a/inv1', 'kind': 'inverter'}
-        [p] = s.parse(ref, self._raw('inverter.html'))
-        self.assertEqual(p.kind, 'inverter')
-        self.assertEqual(p.brand, 'Huawei')
-        self.assertEqual(p.fields['power'], 5)
-        self.assertEqual(p.fields['vmax'], 1100)
-        self.assertAlmostEqual(p.fields['y'], 98.4)
-
-    def test_parse_panel(self):
-        from app.scrapers.autosolar import AutoSolarScraper
-        s = AutoSolarScraper()
-        ref = {'external_id': 'pan1', 'url': 'http://a/pan1', 'kind': 'panel'}
+        ref = {'external_id': 'pan1', 'url': 'http://a/pan1', 'kind': 'panel', 'nombre': ''}
         [p] = s.parse(ref, self._raw('panel.html'))
-        self.assertEqual(p.brand, 'JA Solar')
-        self.assertEqual(p.fields['power'], 545)
-        self.assertAlmostEqual(p.fields['voc'], 49.7)
-        self.assertAlmostEqual(p.fields['vmp'], 41.8)
-        self.assertAlmostEqual(p.fields['imp'], 13.04)
+        self.assertEqual(p.kind, 'panel')
+        self.assertEqual(p.brand, 'Tensite')
+        self.assertEqual(p.fields['power'], 500.0)
+        self.assertAlmostEqual(p.fields['voc'], 44.4)
+        self.assertAlmostEqual(p.fields['vmp'], 37.05)
+        self.assertAlmostEqual(p.fields['imp'], 13.5)
+        self.assertAlmostEqual(p.fields['isc'], 14.25)
+        self.assertIn('datasheet', p.fields)
+
+    def test_watts_from_title_prefers_wattage_marker(self):
+        from app.scrapers.autosolar import _watts_from_title
+        self.assertEqual(_watts_from_title('Placa Solar 600W Bifacial Ja Solar'), 600.0)
+        self.assertEqual(_watts_from_title('Panel Solar Flexible 240W 12V Tensite'), 240.0)
+        self.assertEqual(_watts_from_title('Panel Solar 12V 150W'), 150.0)
+        self.assertIsNone(_watts_from_title('Panel Solar Monocristalino Tensite'))
+
+    def test_parse_inverter_real_fixture(self):
+        from app.scrapers.autosolar import AutoSolarScraper
+        s = AutoSolarScraper()
+        ref = {'external_id': 'inv1', 'url': 'http://a/inv1', 'kind': 'inverter', 'nombre': ''}
+        [p] = s.parse(ref, self._raw('inverter.html'))
+        self.assertEqual(p.brand, 'Suntaic')
+        self.assertEqual(p.fields['power'], 6.0)
+        self.assertNotIn('vmax', p.fields)
+
+
+class AutoSolarDiscoverTest(unittest.TestCase):
+    def _raw(self, name):
+        with open(os.path.join(FIX, name), encoding='utf-8') as fh:
+            return fh.read()
+
+    def test_discover_extracts_product_refs(self):
+        from unittest.mock import patch, MagicMock
+        from app.scrapers.autosolar import AutoSolarScraper
+        s = AutoSolarScraper()
+        s.max_products = 5
+        html = self._raw('category_panels.html')
+
+        def fake_get(url, **kwargs):
+            resp = MagicMock()
+            resp.text = html
+            resp.raise_for_status = lambda: None
+            return resp
+
+        with patch('app.scrapers.autosolar.requests.get', side_effect=fake_get), \
+             patch('app.scrapers.autosolar.time.sleep', lambda *_: None):
+            refs = s.discover()
+        self.assertEqual(len(refs), 5)
+        self.assertTrue(all(r['kind'] == 'panel' for r in refs))
+        self.assertTrue(all(r['url'].startswith('https://autosolar.es/') for r in refs))
+        self.assertTrue(all(r['external_id'] for r in refs))
 
 
 class _FakeScraper:
