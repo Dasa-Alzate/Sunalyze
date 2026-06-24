@@ -18,6 +18,9 @@ def create_app(config_overrides=None):
     if config_overrides:
         app.config.update(config_overrides)
 
+    from app.observability import init_sentry
+    init_sentry(app)
+
     db.init_app(app)
     cache.init_app(app)
     migrate.init_app(app, db, render_as_batch=app.config['SQLALCHEMY_DATABASE_URI'].startswith('sqlite'))
