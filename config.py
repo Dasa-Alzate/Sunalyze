@@ -45,6 +45,21 @@ def _resolve_secret_key():
     return secrets.token_hex(32)
 
 
+def _resolve_mail_backend():
+    backend = (os.environ.get('MAIL_BACKEND') or 'log').lower()
+    if backend not in ('log', 'smtp'):
+        raise RuntimeError(
+            f"MAIL_BACKEND='{backend}' no es válido. Usa 'log' (solo registra, default) o 'smtp'."
+        )
+    if backend == 'smtp':
+        missing = [name for name in ('MAIL_SMTP_HOST', 'MAIL_FROM') if not os.environ.get(name)]
+        if missing:
+            raise RuntimeError(
+                'MAIL_BACKEND=smtp requiere definir: ' + ', '.join(missing) + '.'
+            )
+    return backend
+
+
 class Config:
     SECRET_KEY = _resolve_secret_key()
     BASE_DIR = os.path.abspath(os.path.dirname(__file__))
@@ -81,6 +96,15 @@ class Config:
     PERMANENT_SESSION_LIFETIME = timedelta(days=14)
 
     MFA_ENC_KEY = os.environ.get('MFA_ENC_KEY') or None
+
+    MAIL_BACKEND = _resolve_mail_backend()
+    MAIL_SMTP_HOST = os.environ.get('MAIL_SMTP_HOST') or None
+    MAIL_SMTP_PORT = int(os.environ.get('MAIL_SMTP_PORT', '587'))
+    MAIL_SMTP_USERNAME = os.environ.get('MAIL_SMTP_USERNAME') or None
+    MAIL_SMTP_PASSWORD = os.environ.get('MAIL_SMTP_PASSWORD') or None
+    MAIL_SMTP_STARTTLS = os.environ.get('MAIL_SMTP_STARTTLS', 'true').lower() in ('1', 'true', 'yes')
+    MAIL_FROM = os.environ.get('MAIL_FROM') or None
+    MAIL_TIMEOUT = int(os.environ.get('MAIL_TIMEOUT', '10'))
 
     SENTRY_DSN = os.environ.get('SENTRY_DSN') or None
     SENTRY_ENVIRONMENT = os.environ.get('SENTRY_ENVIRONMENT') or (
