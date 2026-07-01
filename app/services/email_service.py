@@ -1,15 +1,21 @@
-"""Servicio de plantillas de correo: renderiza y (en dev) registra el envio.
+"""Servicio de plantillas de correo: renderiza y delega el envio al backend activo.
 
 Locale-aware: la plantilla y el asunto se resuelven por el locale del
 destinatario, con fallback a `es` (base actual). Las plantillas viven en
 `templates/emails/<locale>/<archivo>`; hoy solo existe `es`, quedando el hueco
 para `en` sin traducir todo aun.
+
+El envio real lo hace el `MailGateway` seleccionado por `MAIL_BACKEND` (`log` por
+defecto: solo registra; `smtp`: entrega real). El contrato de `send` es blando: un
+fallo del backend nunca propaga al llamador (el registro o el reset no deben caer
+porque el SMTP este caido); se loguea como error y se devuelve `sent=False`.
 """
 
 import logging
 from jinja2 import TemplateNotFound
-from flask import render_template
+from flask import render_template, current_app
 
+from app.gateways.mail import get_mailer
 from app.i18n import DEFAULT_LOCALE, normalize_locale
 
 logger = logging.getLogger(__name__)
@@ -19,8 +25,8 @@ class EmailService:
     """Renderizador de plantillas de email transaccional.
 
     Encapsula el catalogo de plantillas (asunto por locale + fichero Jinja). El
-    envio real se delegaria a un proveedor (SMTP/SES/etc.); en desarrollo solo se
-    registra en el log para no acoplar la app a credenciales externas.
+    envio se delega al `MailGateway` activo: `log` en desarrollo (solo registra,
+    sin credenciales externas) o `smtp` en produccion.
     """
 
     TEMPLATES = {
@@ -80,11 +86,18 @@ class EmailService:
     @classmethod
     def send(cls, template_id, to, context=None, locale=None):
         rendered = cls.render(template_id, context, locale=locale)
-        logger.info(
-            "EMAIL (dev, no enviado) to=%s locale=%s subject=%s bytes=%d",
-            to, rendered['locale'], rendered['subject'], len(rendered['html']),
-        )
+        try:
+            outcome = get_mailer().send(
+                to, rendered['subject'], rendered['html'], locale=rendered['locale'],
+            )
+        except Exception:
+            logger.error(
+                "Fallo al enviar email template=%s to=%s backend=%s",
+                template_id, to, current_app.config.get('MAIL_BACKEND', 'log'),
+                exc_info=True,
+            )
+            outcome = {'sent': False, 'reason': 'Fallo del backend de correo (ver logs)'}
         return {
-            'sent': False, 'to': to, 'subject': rendered['subject'],
-            'locale': rendered['locale'], 'reason': 'SMTP no configurado (dev)',
+            'to': to, 'subject': rendered['subject'], 'locale': rendered['locale'],
+            **outcome,
         }
