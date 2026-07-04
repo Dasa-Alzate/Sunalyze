@@ -1,5 +1,6 @@
 import { createBrowserRouter } from 'react-router-dom'
 import { RootLayout } from './RootLayout'
+import { RouteError } from './RouteError'
 import { AppLayout } from './AppLayout'
 import { RequireAuth, RequirePlatformAdmin, RequireFlag } from '@/services/auth'
 import Landing from '@/features/marketing/Landing'
@@ -26,6 +27,7 @@ import { PrivacyPolicy, Terms, Cookies } from '@/features/legal/Legal'
 export const router = createBrowserRouter([
   {
     element: <RootLayout />,
+    errorElement: <RouteError />,
     children: [
       { path: '/', element: <Landing /> },
       { path: '/login', element: <Login /> },
