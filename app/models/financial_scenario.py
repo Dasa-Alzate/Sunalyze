@@ -15,11 +15,11 @@ from .database import BaseModel
 class FinancialScenario(BaseModel):
     __tablename__ = 'financial_scenarios'
 
-    org_id = db.Column(db.Integer, db.ForeignKey('organizations.id'), index=True, nullable=False)
-    project_id = db.Column(db.Integer, db.ForeignKey('projects.id'), index=True, nullable=False)
+    org_id = db.Column(db.Integer, db.ForeignKey('organizations.id', ondelete='CASCADE'), index=True, nullable=False)
+    project_id = db.Column(db.Integer, db.ForeignKey('projects.id', ondelete='CASCADE'), index=True, nullable=False)
     name = db.Column(db.String(150), nullable=False)
     is_default = db.Column(db.Boolean, nullable=False, default=False)
-    created_by = db.Column(db.Integer, db.ForeignKey('users.id'), nullable=True)
+    created_by = db.Column(db.Integer, db.ForeignKey('users.id', ondelete='SET NULL'), nullable=True)
 
     _assumptions = db.Column('assumptions', db.Text)
     _results = db.Column('results', db.Text)

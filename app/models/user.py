@@ -35,7 +35,10 @@ class User(BaseModel, SoftDeleteMixin):
     last_login_at = db.Column(db.DateTime, nullable=True)
     privacy_accepted_at = db.Column(db.DateTime, nullable=True)
 
-    memberships = db.relationship('Membership', back_populates='user', cascade='all, delete-orphan')
+    memberships = db.relationship(
+        'Membership', back_populates='user',
+        cascade='all, delete-orphan', passive_deletes=True,
+    )
 
     def set_password(self, raw):
         self.password_hash = generate_password_hash(raw)

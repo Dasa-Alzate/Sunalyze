@@ -15,13 +15,14 @@ class SupportTicket(BaseModel):
     priority = db.Column(db.String(20), nullable=False, default='normal')
 
     requester_email = db.Column(db.String(255), nullable=False)
-    requester_user_id = db.Column(db.Integer, db.ForeignKey('users.id'), index=True)
-    org_id = db.Column(db.Integer, db.ForeignKey('organizations.id'), index=True)
+    requester_user_id = db.Column(db.Integer, db.ForeignKey('users.id', ondelete='SET NULL'), index=True)
+    org_id = db.Column(db.Integer, db.ForeignKey('organizations.id', ondelete='SET NULL'), index=True)
 
     requester = db.relationship('User')
     organization = db.relationship('Organization')
     messages = db.relationship('SupportTicketMessage', back_populates='ticket',
-                               cascade='all, delete-orphan', order_by='SupportTicketMessage.created_at')
+                               cascade='all, delete-orphan', passive_deletes=True,
+                               order_by='SupportTicketMessage.created_at')
 
     def to_dict(self):
         return {
@@ -40,7 +41,7 @@ class SupportTicket(BaseModel):
 class SupportTicketMessage(BaseModel):
     __tablename__ = 'support_ticket_messages'
 
-    ticket_id = db.Column(db.Integer, db.ForeignKey('support_tickets.id'), nullable=False, index=True)
+    ticket_id = db.Column(db.Integer, db.ForeignKey('support_tickets.id', ondelete='CASCADE'), nullable=False, index=True)
     body = db.Column(db.Text, nullable=False)
     author = db.Column(db.String(120), nullable=False, default='requester')
     is_staff = db.Column(db.Boolean, nullable=False, default=False)

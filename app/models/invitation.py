@@ -19,14 +19,14 @@ class Invitation(BaseModel):
     """Invitacion pendiente de aceptacion, vinculada a un email y una org."""
     __tablename__ = 'invitations'
 
-    org_id = db.Column(db.Integer, db.ForeignKey('organizations.id'), nullable=False, index=True)
+    org_id = db.Column(db.Integer, db.ForeignKey('organizations.id', ondelete='CASCADE'), nullable=False, index=True)
     email = db.Column(db.String(255), nullable=False, index=True)
     role = db.Column(db.String(20), nullable=False, default='member')
-    invited_by_user_id = db.Column(db.Integer, db.ForeignKey('users.id'), nullable=False)
+    invited_by_user_id = db.Column(db.Integer, db.ForeignKey('users.id', ondelete='SET NULL'), nullable=True)
     token = db.Column(db.String(64), nullable=False, unique=True, default=_new_token)
     status = db.Column(db.String(20), nullable=False, default='pending')
     expires_at = db.Column(db.DateTime, nullable=False)
-    accepted_user_id = db.Column(db.Integer, db.ForeignKey('users.id'), nullable=True)
+    accepted_user_id = db.Column(db.Integer, db.ForeignKey('users.id', ondelete='SET NULL'), nullable=True)
 
     organization = db.relationship('Organization')
     invited_by = db.relationship('User', foreign_keys=[invited_by_user_id])

@@ -13,9 +13,9 @@ class MemoriaSignature(BaseModel):
     """Firma vinculada a un proyecto, con snapshot de integridad del PDF."""
     __tablename__ = 'memoria_signatures'
 
-    org_id = db.Column(db.Integer, db.ForeignKey('organizations.id'), index=True, nullable=False)
-    project_id = db.Column(db.Integer, db.ForeignKey('projects.id'), index=True, nullable=False)
-    signed_by_user_id = db.Column(db.Integer, db.ForeignKey('users.id'), nullable=False)
+    org_id = db.Column(db.Integer, db.ForeignKey('organizations.id', ondelete='CASCADE'), index=True, nullable=False)
+    project_id = db.Column(db.Integer, db.ForeignKey('projects.id', ondelete='CASCADE'), index=True, nullable=False)
+    signed_by_user_id = db.Column(db.Integer, db.ForeignKey('users.id', ondelete='SET NULL'), nullable=True)
     pdf_sha256 = db.Column(db.String(64), nullable=False)
     pdf_size_bytes = db.Column(db.Integer, nullable=False, default=0)
     is_current = db.Column(db.Boolean, nullable=False, default=True, index=True)

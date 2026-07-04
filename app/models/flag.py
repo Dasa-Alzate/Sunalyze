@@ -54,12 +54,12 @@ class FlagOverride(BaseModel):
         db.UniqueConstraint('flag_key', 'scope', 'scope_id', name='uq_override_flag_scope'),
     )
 
-    flag_key = db.Column(db.String(80), db.ForeignKey('flags.key'), nullable=False, index=True)
+    flag_key = db.Column(db.String(80), db.ForeignKey('flags.key', ondelete='CASCADE'), nullable=False, index=True)
     scope = db.Column(db.String(10), nullable=False)
     scope_id = db.Column(db.Integer, nullable=True)
     enabled = db.Column(db.Boolean, nullable=False, default=True)
     source = db.Column(db.String(20), nullable=False, default='grant')
-    created_by = db.Column(db.Integer, db.ForeignKey('users.id'), nullable=True)
+    created_by = db.Column(db.Integer, db.ForeignKey('users.id', ondelete='SET NULL'), nullable=True)
 
     def to_dict(self):
         return {

@@ -97,7 +97,7 @@ class ReportTemplate(BaseModel):
 
     __tablename__ = 'report_templates'
 
-    org_id = db.Column(db.Integer, db.ForeignKey('organizations.id'), index=True)
+    org_id = db.Column(db.Integer, db.ForeignKey('organizations.id', ondelete='CASCADE'), index=True)
     scope = db.Column(db.String(10), nullable=False, default='org')
     kind = db.Column(db.String(40), nullable=False, index=True)
     name = db.Column(db.String(150), nullable=False)
@@ -111,12 +111,13 @@ class ReportTemplate(BaseModel):
     thumbnail_path = db.Column(db.String(255))
     status = db.Column(db.String(20), nullable=False, default='draft')
     is_official = db.Column(db.Boolean, nullable=False, default=False)
-    created_by = db.Column(db.Integer, db.ForeignKey('users.id'), nullable=True)
+    created_by = db.Column(db.Integer, db.ForeignKey('users.id', ondelete='SET NULL'), nullable=True)
 
     versions = db.relationship(
         'TemplateVersion',
         backref='template',
         cascade='all, delete-orphan',
+        passive_deletes=True,
         order_by='TemplateVersion.version.desc()',
     )
 
@@ -187,7 +188,7 @@ class TemplateVersion(BaseModel):
     )
 
     template_id = db.Column(
-        db.Integer, db.ForeignKey('report_templates.id'), nullable=False, index=True
+        db.Integer, db.ForeignKey('report_templates.id', ondelete='CASCADE'), nullable=False, index=True
     )
     version = db.Column(db.Integer, nullable=False, default=1)
     _content = db.Column('content', db.Text, nullable=False, default='[]')
@@ -230,7 +231,7 @@ class TemplateCategory(BaseModel):
         db.UniqueConstraint('org_id', 'name', name='uq_template_category_org_name'),
     )
 
-    org_id = db.Column(db.Integer, db.ForeignKey('organizations.id'), nullable=False, index=True)
+    org_id = db.Column(db.Integer, db.ForeignKey('organizations.id', ondelete='CASCADE'), nullable=False, index=True)
     name = db.Column(db.String(120), nullable=False)
 
     def to_dict(self):
@@ -248,7 +249,7 @@ class Label(BaseModel):
         db.UniqueConstraint('org_id', 'name', name='uq_template_label_org_name'),
     )
 
-    org_id = db.Column(db.Integer, db.ForeignKey('organizations.id'), nullable=False, index=True)
+    org_id = db.Column(db.Integer, db.ForeignKey('organizations.id', ondelete='CASCADE'), nullable=False, index=True)
     name = db.Column(db.String(80), nullable=False)
 
     def to_dict(self):
@@ -266,13 +267,13 @@ class TemplateInstallation(BaseModel):
         db.UniqueConstraint('org_id', 'template_id', name='uq_installation_org_template'),
     )
 
-    org_id = db.Column(db.Integer, db.ForeignKey('organizations.id'), nullable=False, index=True)
+    org_id = db.Column(db.Integer, db.ForeignKey('organizations.id', ondelete='CASCADE'), nullable=False, index=True)
     template_id = db.Column(
-        db.Integer, db.ForeignKey('report_templates.id'), nullable=False, index=True
+        db.Integer, db.ForeignKey('report_templates.id', ondelete='CASCADE'), nullable=False, index=True
     )
     is_favorite = db.Column(db.Boolean, nullable=False, default=False)
     category_id = db.Column(
-        db.Integer, db.ForeignKey('template_categories.id'), nullable=True, index=True
+        db.Integer, db.ForeignKey('template_categories.id', ondelete='SET NULL'), nullable=True, index=True
     )
     added_at = db.Column(db.DateTime, nullable=True)
 
@@ -311,10 +312,10 @@ class InstallationLabel(BaseModel):
     )
 
     installation_id = db.Column(
-        db.Integer, db.ForeignKey('template_installations.id'), nullable=False, index=True
+        db.Integer, db.ForeignKey('template_installations.id', ondelete='CASCADE'), nullable=False, index=True
     )
     label_id = db.Column(
-        db.Integer, db.ForeignKey('template_labels.id'), nullable=False, index=True
+        db.Integer, db.ForeignKey('template_labels.id', ondelete='CASCADE'), nullable=False, index=True
     )
 
 
@@ -328,22 +329,22 @@ class GeneratedDocument(BaseModel):
 
     __tablename__ = 'generated_documents'
 
-    org_id = db.Column(db.Integer, db.ForeignKey('organizations.id'), nullable=False, index=True)
+    org_id = db.Column(db.Integer, db.ForeignKey('organizations.id', ondelete='CASCADE'), nullable=False, index=True)
     project_id = db.Column(
-        db.Integer, db.ForeignKey('projects.id'), nullable=False, index=True
+        db.Integer, db.ForeignKey('projects.id', ondelete='CASCADE'), nullable=False, index=True
     )
     template_id = db.Column(
-        db.Integer, db.ForeignKey('report_templates.id'), nullable=False, index=True
+        db.Integer, db.ForeignKey('report_templates.id', ondelete='CASCADE'), nullable=False, index=True
     )
     template_version_id = db.Column(
-        db.Integer, db.ForeignKey('template_versions.id'), nullable=False, index=True
+        db.Integer, db.ForeignKey('template_versions.id', ondelete='CASCADE'), nullable=False, index=True
     )
     kind = db.Column(db.String(40), nullable=False, index=True)
     pdf_path = db.Column(db.String(500), nullable=False)
     pdf_sha256 = db.Column(db.String(64), nullable=False)
     pdf_size_bytes = db.Column(db.Integer, nullable=False, default=0)
     status = db.Column(db.String(20), nullable=False, default='generated')
-    generated_by = db.Column(db.Integer, db.ForeignKey('users.id'), nullable=True)
+    generated_by = db.Column(db.Integer, db.ForeignKey('users.id', ondelete='SET NULL'), nullable=True)
     generated_at = db.Column(db.DateTime, nullable=True)
 
     project = db.relationship('Project')

@@ -23,9 +23,9 @@ class AuditEvent(BaseModel):
         db.Index('ix_audit_events_org_created', 'org_id', 'created_at'),
     )
 
-    actor_user_id = db.Column(db.Integer, db.ForeignKey('users.id'), nullable=True)
+    actor_user_id = db.Column(db.Integer, db.ForeignKey('users.id', ondelete='SET NULL'), nullable=True)
     actor_email = db.Column(db.String(255), nullable=True)
-    org_id = db.Column(db.Integer, db.ForeignKey('organizations.id'), nullable=True, index=True)
+    org_id = db.Column(db.Integer, db.ForeignKey('organizations.id', ondelete='SET NULL'), nullable=True, index=True)
     action = db.Column(db.String(80), nullable=False)
     entity_type = db.Column(db.String(80), nullable=True)
     entity_id = db.Column(db.Integer, nullable=True)

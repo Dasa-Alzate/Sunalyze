@@ -10,8 +10,8 @@ class Membership(BaseModel):
     __tablename__ = 'memberships'
     __table_args__ = (db.UniqueConstraint('user_id', 'org_id', name='uq_member_user_org'),)
 
-    user_id = db.Column(db.Integer, db.ForeignKey('users.id'), nullable=False)
-    org_id = db.Column(db.Integer, db.ForeignKey('organizations.id'), nullable=False, index=True)
+    user_id = db.Column(db.Integer, db.ForeignKey('users.id', ondelete='CASCADE'), nullable=False)
+    org_id = db.Column(db.Integer, db.ForeignKey('organizations.id', ondelete='CASCADE'), nullable=False, index=True)
     role = db.Column(db.String(20), nullable=False, default='member')
 
     user = db.relationship('User', back_populates='memberships')

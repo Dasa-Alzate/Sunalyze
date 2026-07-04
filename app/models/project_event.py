@@ -12,9 +12,9 @@ class ProjectEvent(BaseModel):
     """Evento de transicion de estado del expediente de legalizacion."""
     __tablename__ = 'project_events'
 
-    org_id = db.Column(db.Integer, db.ForeignKey('organizations.id'), index=True, nullable=False)
-    project_id = db.Column(db.Integer, db.ForeignKey('projects.id'), index=True, nullable=False)
-    actor_user_id = db.Column(db.Integer, db.ForeignKey('users.id'), nullable=True)
+    org_id = db.Column(db.Integer, db.ForeignKey('organizations.id', ondelete='CASCADE'), index=True, nullable=False)
+    project_id = db.Column(db.Integer, db.ForeignKey('projects.id', ondelete='CASCADE'), index=True, nullable=False)
+    actor_user_id = db.Column(db.Integer, db.ForeignKey('users.id', ondelete='SET NULL'), nullable=True)
     from_estado = db.Column(db.String(20), nullable=True)
     to_estado = db.Column(db.String(20), nullable=False)
     note = db.Column(db.String(500), nullable=True)

@@ -20,7 +20,10 @@ class Organization(BaseModel, SoftDeleteMixin):
     plan = db.Column(db.String(20), nullable=False, default='free')
     seats = db.Column(db.Integer, nullable=False, default=1)
 
-    memberships = db.relationship('Membership', back_populates='organization', cascade='all, delete-orphan')
+    memberships = db.relationship(
+        'Membership', back_populates='organization',
+        cascade='all, delete-orphan', passive_deletes=True,
+    )
 
     def to_dict(self):
         return {
@@ -50,7 +53,8 @@ class OrgBrandingProfile(BaseModel):
     )
 
     org_id = db.Column(
-        db.Integer, db.ForeignKey('organizations.id'), nullable=False, index=True
+        db.Integer, db.ForeignKey('organizations.id', ondelete='CASCADE'),
+        nullable=False, index=True,
     )
     logo_path = db.Column(db.String(500))
     primary_color = db.Column(db.String(20))

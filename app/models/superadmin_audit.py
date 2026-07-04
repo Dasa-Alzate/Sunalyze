@@ -11,7 +11,7 @@ from .database import BaseModel
 class SuperadminAudit(BaseModel):
     __tablename__ = 'superadmin_audit'
 
-    actor_user_id = db.Column(db.Integer, db.ForeignKey('users.id'), index=True)
+    actor_user_id = db.Column(db.Integer, db.ForeignKey('users.id', ondelete='SET NULL'), index=True)
     actor_email = db.Column(db.String(255))
     ip = db.Column(db.String(64))
     action = db.Column(db.String(80), nullable=False, index=True)
