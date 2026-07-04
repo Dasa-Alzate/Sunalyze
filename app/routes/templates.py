@@ -5,13 +5,15 @@ lectura exige TEMPLATE_VIEW; la escritura, TEMPLATE_MANAGE (owner+admin). El alc
 org_id se aplica en TemplateService (sin IDOR).
 """
 
-from flask import Blueprint, request, jsonify, Response
+from flask import Blueprint, request, jsonify, Response, current_app
 
+from app.extensions import limiter
 from app.security import current_org_id, current_user
 from app.authz import require_permission, require_flag, Permission
 from app.services.template_service import TemplateService
 from app.services.document_service import DocumentService
 from app.services.template_engine import variable_catalog
+from app.gateways.queue import get_queue, STATUS_FINISHED
 from app.models.report_template import DocumentKind
 from app.schemas.templates import (
     TemplateCreateSchema, TemplateUpdateSchema, ContentSchema, PreviewSchema,
@@ -22,6 +24,10 @@ from app.schemas.templates import (
 templates_bp = Blueprint('templates', __name__)
 
 FLAG = 'templates'
+
+
+def _pdf_ratelimit():
+    return current_app.config.get('PDF_RATELIMIT', '60 per hour')
 
 
 def _body():
@@ -132,11 +138,33 @@ def preview_template(template_id):
 @templates_bp.route('/api/templates/<int:template_id>/generate', methods=['POST'])
 @require_flag(FLAG)
 @require_permission(Permission.TEMPLATE_MANAGE)
+@limiter.limit(_pdf_ratelimit)
 def generate_document(template_id):
     data = GenerateSchema(**_body())
-    document = DocumentService.generate(
-        current_org_id(), template_id, data.project_id, user=current_user())
-    return jsonify(document.to_dict()), 201
+    user = current_user()
+    queue = get_queue()
+    job_id = queue.enqueue(
+        'generate_document', org_id=current_org_id(), template_id=template_id,
+        project_id=data.project_id, user_id=user.id if user else None)
+    if queue.is_async:
+        return jsonify({'job_id': job_id, 'status': queue.get_status(job_id)}), 202
+    return jsonify(queue.get_result(job_id)), 201
+
+
+@templates_bp.route('/api/documents/jobs/<job_id>', methods=['GET'])
+@require_flag(FLAG)
+@require_permission(Permission.TEMPLATE_MANAGE)
+def document_job_status(job_id):
+    queue = get_queue()
+    status = queue.get_status(job_id)
+    payload = {'job_id': job_id, 'status': status, 'document': None}
+    if status == STATUS_FINISHED:
+        result = queue.get_result(job_id)
+        if result and result.get('org_id') != current_org_id():
+            from app.errors import NotFound
+            raise NotFound('Trabajo no encontrado.')
+        payload['document'] = result
+    return jsonify(payload)
 
 
 @templates_bp.route('/api/projects/<int:project_id>/documents', methods=['GET'])

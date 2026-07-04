@@ -1,6 +1,6 @@
 # API map
 
-Mapa autogenerado por `flask api-map`. Endpoints `/api`: 115.
+Mapa autogenerado por `flask api-map`. Endpoints `/api`: 116.
 
 No editar a mano: regenerar con `flask api-map`.
 
@@ -184,6 +184,7 @@ No editar a mano: regenerar con `flask api-map`.
 | Método(s) | Ruta | Endpoint | Resumen |
 | --- | --- | --- | --- |
 | GET | `/api/documents/<int:doc_id>/download` | `templates.download_document` |  |
+| GET | `/api/documents/jobs/<job_id>` | `templates.document_job_status` |  |
 | GET | `/api/projects/<int:project_id>/documents` | `templates.list_project_documents` |  |
 | GET | `/api/templates` | `templates.list_templates` |  |
 | POST | `/api/templates` | `templates.create_template` |  |
