@@ -12,6 +12,7 @@ evaluación aritmética usa un algoritmo shunting-yard propio: nunca se evalúa 
 
 import math
 import re
+from functools import lru_cache
 
 from .errors import TemplateError
 from .tokenizer import tokenize, Token
@@ -79,8 +80,15 @@ def _is_arithmetic(atoms):
     return False
 
 
+@lru_cache(maxsize=1024)
 def parse_expression(source):
-    """Parsea el interior de un `{{ ... }}` a un ParsedExpression."""
+    """Parsea el interior de un `{{ ... }}` a un ParsedExpression.
+
+    Cacheado: una expresión es puramente sintáctica (no depende de datos de tenant) y el
+    `ParsedExpression` resultante es de solo lectura durante `evaluate`, así que reusarlo entre
+    renders es seguro y evita re-tokenizar cada `{{ ... }}` en cada documento. `lru_cache` no
+    cachea excepciones, de modo que una expresión inválida vuelve a lanzar `TemplateError`.
+    """
     tokens = tokenize(source)
     if not tokens:
         raise TemplateError('Expresión vacía.')

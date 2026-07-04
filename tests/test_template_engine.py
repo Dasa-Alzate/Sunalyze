@@ -299,6 +299,25 @@ class ErrorContextTest(unittest.TestCase):
                          '[panel.precio]')
 
 
+class ParseCacheTest(unittest.TestCase):
+    def test_same_source_returns_cached_object(self):
+        a = parse_expression('panel.power | number(2)')
+        b = parse_expression('panel.power | number(2)')
+        self.assertIs(a, b)
+
+    def test_invalid_expression_not_cached_still_raises(self):
+        for _ in range(3):
+            with self.assertRaises(TemplateError):
+                parse_expression('panel.__class__')
+
+    def test_cached_expression_still_evaluates_per_context(self):
+        parse_expression('panel.power')
+        r1 = ContextResolver({'panel': _Box(power=100.0)})
+        r2 = ContextResolver({'panel': _Box(power=200.0)})
+        self.assertEqual(evaluate(parse_expression('panel.power'), r1), 100.0)
+        self.assertEqual(evaluate(parse_expression('panel.power'), r2), 200.0)
+
+
 class NewFiltersTest(unittest.TestCase):
     def test_capitalize(self):
         self.assertEqual(filter_capitalize('hola MUNDO'), 'Hola MUNDO')
