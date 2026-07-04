@@ -17,7 +17,20 @@ def upgrade():
     op.add_column('catalogs', sa.Column('scraper_name', sa.String(length=100), nullable=True))
     op.add_column('catalogs', sa.Column('is_active', sa.Boolean(), nullable=False, server_default=sa.true()))
     op.create_index('ix_catalogs_scraper_name', 'catalogs', ['scraper_name'])
-    op.execute("UPDATE catalogs SET scraper_name = lower(nombre) WHERE org_id IS NULL AND is_official = 1 AND scraper_name IS NULL")
+    catalogs = sa.table(
+        'catalogs',
+        sa.column('scraper_name', sa.String),
+        sa.column('nombre', sa.String),
+        sa.column('org_id', sa.Integer),
+        sa.column('is_official', sa.Boolean),
+    )
+    op.execute(
+        catalogs.update()
+        .where(catalogs.c.org_id.is_(None))
+        .where(catalogs.c.is_official == sa.true())
+        .where(catalogs.c.scraper_name.is_(None))
+        .values(scraper_name=sa.func.lower(catalogs.c.nombre))
+    )
 
 
 def downgrade():
