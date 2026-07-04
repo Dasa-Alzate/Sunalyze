@@ -29,7 +29,7 @@ export default function CreateTemplateDialog({ onCreated, onClose }) {
         setKindOptions(opts)
         setKind(opts[0].value)
       })
-      .catch(() => {})
+      .catch((e) => toast('error', tc('state.errorTitle'), e.message))
     return () => { alive = false }
   }, [])
 
