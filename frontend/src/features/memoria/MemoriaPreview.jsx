@@ -159,7 +159,7 @@ export default function MemoriaPreview() {
     }
   }
 
-  function generarPDF() {
+  async function generarPDF() {
     const missing = ALL_FIELDS.filter((f) => f.required && String(values[f.key] ?? '').trim() === '')
     if (missing.length) {
       toast('warning', 'Faltan campos obligatorios', missing.map((f) => f.label).slice(0, 3).join(', ') + (missing.length > 3 ? '…' : ''))
@@ -168,25 +168,36 @@ export default function MemoriaPreview() {
       return
     }
     if (id) saveToProject('memoria')
-    const form = document.createElement('form')
-    form.method = 'POST'
-    form.action = '/imprimir/memoria-pdf'
-    form.target = '_blank'
-    const add = (name, value) => {
-      const i = document.createElement('input')
-      i.type = 'hidden'; i.name = name; i.value = value ?? ''
-      form.appendChild(i)
-    }
-    add('csrf_token', csrfToken())
-    ALL_FIELDS.forEach((f) => add(f.key, values[f.key]))
-    BATTERY_KEYS.forEach((k) => { if (values[k] !== '' && values[k] != null) add(k, values[k]) })
-    if (project?.panel_id) add('panel_id', project.panel_id)
-    if (project?.inverter_id) add('inverter_id', project.inverter_id)
-    if (project?.battery_id) { add('battery_id', project.battery_id); add('battery_quantity', project.battery_quantity ?? 1) }
-    document.body.appendChild(form)
-    form.submit()
-    setTimeout(() => form.remove(), 500)
+    const fd = new FormData()
+    fd.append('csrf_token', csrfToken())
+    ALL_FIELDS.forEach((f) => fd.append(f.key, values[f.key] ?? ''))
+    BATTERY_KEYS.forEach((k) => { if (values[k] !== '' && values[k] != null) fd.append(k, values[k]) })
+    if (project?.panel_id) fd.append('panel_id', project.panel_id)
+    if (project?.inverter_id) fd.append('inverter_id', project.inverter_id)
+    if (project?.battery_id) { fd.append('battery_id', project.battery_id); fd.append('battery_quantity', project.battery_quantity ?? 1) }
     toast('info', 'Generando memoria…', 'Se abrirá el PDF en una pestaña nueva')
+    try {
+      const res = await fetch('/imprimir/memoria-pdf', {
+        method: 'POST',
+        credentials: 'include',
+        headers: { 'X-CSRFToken': csrfToken() },
+        body: fd,
+      })
+      if (!res.ok) {
+        const body = await res.json().catch(() => null)
+        const detail = body?.details?.length
+          ? body.details.map((d) => `${d.field}: ${d.msg}`).join('; ')
+          : (body?.error || `Error ${res.status}`)
+        toast('error', 'No se pudo generar la memoria', detail)
+        return
+      }
+      const blob = await res.blob()
+      const url = URL.createObjectURL(blob)
+      window.open(url, '_blank')
+      setTimeout(() => URL.revokeObjectURL(url), 60000)
+    } catch (e) {
+      toast('error', 'No se pudo generar la memoria', e.message)
+    }
   }
 
   if (loading) return (<><Topbar title="Memoria" crumb="Proyectos" /><div className="sun-content"><Spinner label="Cargando…" /></div></>)

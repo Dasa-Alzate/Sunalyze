@@ -6,6 +6,7 @@ from app.services.analysis_service import AnalysisService
 from app.services.diagrama_service import DiagramaService
 from app.services.memoria_service import MemoriaService
 from app.services.catalog_service import CatalogService
+from app.schemas.memoria import MemoriaFormSchema
 from app.security import current_org_id
 from app.authz import require_permission, Permission
 
@@ -30,6 +31,8 @@ def diagrama_completo():
 @bp.route('/imprimir/memoria-pdf', methods=['GET', 'POST'])
 @require_permission(Permission.MEMORIA_SIGN)
 def generar_memoria_pdf():
+    if request.method == 'POST':
+        MemoriaFormSchema(**request.form.to_dict())
     pdf = MemoriaService.generar_pdf(request.form if request.method == 'POST' else {})
     return Response(
         pdf,
