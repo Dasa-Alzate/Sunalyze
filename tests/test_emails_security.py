@@ -78,5 +78,25 @@ class SendEmailAuthTest(_Base):
         self.assertFalse(resp.get_json()['sent'])
 
 
+class ErrorContractTest(_Base):
+    def test_preview_unknown_template_is_404_with_code(self):
+        client = self._client(self.user)
+        resp = client.get('/api/emails/no-existe/preview')
+        self.assertEqual(resp.status_code, 404)
+        self.assertEqual(resp.get_json()['code'], 'email.template_not_found')
+
+    def test_send_without_to_is_422_with_code(self):
+        client = self._client(self.admin)
+        resp = client.post('/api/emails/welcome/send', json={})
+        self.assertEqual(resp.status_code, 422)
+        self.assertEqual(resp.get_json()['code'], 'email.to_required')
+
+    def test_panel_analysis_without_body_is_422_with_code(self):
+        client = self._client(self.user)
+        resp = client.post('/api/panel-analysis')
+        self.assertEqual(resp.status_code, 422)
+        self.assertEqual(resp.get_json()['code'], 'request.body_required')
+
+
 if __name__ == '__main__':
     unittest.main()
