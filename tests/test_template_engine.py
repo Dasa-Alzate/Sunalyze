@@ -231,5 +231,49 @@ class SecuritySSTITest(unittest.TestCase):
             render_text('{{ ' + expr + ' }}', r, on_error='placeholder')
 
 
+class FilterRobustnessTest(unittest.TestCase):
+    """Filtros None-safe, argumentos malformados -> TemplateError (no 500), y no finitos."""
+
+    def test_numeric_filters_none_safe(self):
+        for expr in ('number(2)', 'thousands(0)', 'money', 'currency'):
+            self.assertEqual(filter_number(None), '')
+        self.assertEqual(filter_thousands(None), '')
+        self.assertEqual(filter_money(None), '')
+        self.assertEqual(filter_number(''), '')
+        self.assertEqual(filter_money('   '), '')
+
+    def test_none_numeric_in_render_yields_empty_not_placeholder(self):
+        context = {'finance': _Box(net_capex=None), 'project': _Box(necesidad=None)}
+        r = ContextResolver(context, presentation={'locale': 'es', 'currency': 'EUR'})
+        self.assertEqual(render_text('{{ finance.net_capex | money }}', r), '')
+        self.assertEqual(render_text('{{ project.necesidad | number(2) }}', r), '')
+
+    def test_zero_is_not_treated_as_empty(self):
+        self.assertEqual(filter_number(0, 2), '0,00')
+        self.assertEqual(filter_money(0, 2, presentation={'currency': 'EUR', 'locale': 'es'}),
+                         '0,00 €')
+
+    def test_bad_filter_arg_is_template_error_not_500(self):
+        r = _resolver()
+        for expr in ("panel.power | number('abc')", "panel.power | ellipsis('xx')"):
+            with self.subTest(expr=expr):
+                with self.assertRaises(TemplateError):
+                    evaluate(parse_expression(expr), r)
+
+    def test_bad_filter_arg_in_safe_mode_is_placeholder_not_crash(self):
+        r = _resolver()
+        out = render_text("x={{ panel.power | number('abc') }}", r, on_error='placeholder')
+        self.assertEqual(out, "x=[panel.power | number('abc')]")
+
+    def test_non_finite_rejected(self):
+        r = _resolver()
+        for expr in ("'1e999' * 1", "'inf' + 1", "'nan' * 2"):
+            with self.subTest(expr=expr):
+                with self.assertRaises(TemplateError):
+                    evaluate(parse_expression(expr), r)
+        with self.assertRaises(TemplateError):
+            filter_number('1e999')
+
+
 if __name__ == '__main__':
     unittest.main()

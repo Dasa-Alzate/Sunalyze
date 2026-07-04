@@ -7,6 +7,7 @@ nombre no registrado produce TemplateError, nunca una llamada arbitraria. Format
 stdlib (sin babel).
 """
 
+import math
 from datetime import date, datetime
 
 from .errors import TemplateError
@@ -30,17 +31,26 @@ def _separators(locale):
     return _LOCALE_SEPARATORS.get(locale.split('-')[0].split('_')[0].lower(), _DEFAULT_SEPARATORS)
 
 
+def _is_empty(value):
+    """True para valores ausentes: None o cadena en blanco (una entidad opcional sin dato)."""
+    return value is None or (isinstance(value, str) and value.strip() == '')
+
+
 def _coerce_number(value):
     if isinstance(value, bool):
         raise TemplateError('Se esperaba un número.')
     if isinstance(value, (int, float)):
-        return float(value)
-    if isinstance(value, str):
+        number = float(value)
+    elif isinstance(value, str):
         try:
-            return float(value.replace(',', '.'))
+            number = float(value.replace(',', '.'))
         except ValueError:
             raise TemplateError(f"Valor no numérico: '{value}'.")
-    raise TemplateError('Se esperaba un número.')
+    else:
+        raise TemplateError('Se esperaba un número.')
+    if not math.isfinite(number):
+        raise TemplateError('Valor numérico no finito.')
+    return number
 
 
 def _format_plain(number, decimals, decimal_sep):
@@ -60,19 +70,29 @@ def _format_grouped(number, decimals, decimal_sep, thousands_sep):
 
 
 def filter_number(value, decimals=2, presentation=None):
-    """Formatea con N decimales y la coma decimal del locale (sin separador de miles)."""
+    """Formatea con N decimales y la coma decimal del locale (sin separador de miles).
+
+    None-safe: un valor ausente (None o cadena en blanco) devuelve '' en vez de romper, igual
+    que el resto de filtros; así una entidad opcional sin dato no ensucia el documento.
+    """
+    if _is_empty(value):
+        return ''
     decimal_sep, _ = _separators((presentation or {}).get('locale'))
     return _format_plain(_coerce_number(value), int(decimals), decimal_sep)
 
 
 def filter_thousands(value, decimals=2, presentation=None):
-    """Formatea con separador de miles y decimal del locale."""
+    """Formatea con separador de miles y decimal del locale. None-safe (ausente -> '')."""
+    if _is_empty(value):
+        return ''
     decimal_sep, thousands_sep = _separators((presentation or {}).get('locale'))
     return _format_grouped(_coerce_number(value), int(decimals), decimal_sep, thousands_sep)
 
 
 def filter_money(value, decimals=2, presentation=None):
-    """Formatea un importe según la moneda y el locale de la plantilla."""
+    """Formatea un importe según la moneda y el locale de la plantilla. None-safe (ausente -> '')."""
+    if _is_empty(value):
+        return ''
     presentation = presentation or {}
     currency = (presentation.get('currency') or 'EUR').upper()
     decimal_sep, thousands_sep = _separators(presentation.get('locale'))
@@ -146,5 +166,7 @@ def apply_filter(name, value, args, presentation=None):
         raise TemplateError(f"Filtro desconocido: '{name}'.")
     try:
         return fn(value, *args, presentation=presentation)
-    except TypeError:
+    except TemplateError:
+        raise
+    except (TypeError, ValueError):
         raise TemplateError(f"Argumentos inválidos para el filtro '{name}'.")
