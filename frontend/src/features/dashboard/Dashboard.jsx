@@ -67,7 +67,15 @@ export default function Dashboard() {
                       {projects.slice(0, 5).map((p) => {
                         const e = estadoMeta(p.estado)
                         return (
-                          <tr key={p.id} className="is-clickable" onClick={() => nav(`/app/diseno/${p.id}`)}>
+                          <tr
+                            key={p.id}
+                            className="is-clickable"
+                            role="button"
+                            tabIndex={0}
+                            aria-label={`Abrir diseño de ${p.cliente}`}
+                            onClick={() => nav(`/app/diseno/${p.id}`)}
+                            onKeyDown={(ev) => { if (ev.key === 'Enter' || ev.key === ' ') { ev.preventDefault(); nav(`/app/diseno/${p.id}`) } }}
+                          >
                             <td><div className="sun-cell-client"><strong>{p.cliente}</strong><span>{p.direccion || '—'}</span></div></td>
                             <td className="num" style={{ textAlign: 'right' }}>{p.kwp != null ? dec(p.kwp) : '—'}</td>
                             <td><span className="sun-cell-status"><Dot state={e.dot} /><Badge tone={e.tone}>{e.label}</Badge></span></td>
