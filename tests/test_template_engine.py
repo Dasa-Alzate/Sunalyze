@@ -13,7 +13,7 @@ from app.services.template_engine.context import ContextResolver
 from app.services.template_engine.errors import TemplateError
 from app.services.template_engine.filters import (
     filter_number, filter_thousands, filter_ellipsis, filter_upper, filter_lower,
-    filter_money,
+    filter_money, filter_capitalize, filter_title, filter_default,
 )
 from app.services.template_engine.jurisdiction import resolve_jurisdiction
 from app.models.report_template import DocumentKind, document_kind_var_groups
@@ -273,6 +273,38 @@ class FilterRobustnessTest(unittest.TestCase):
                     evaluate(parse_expression(expr), r)
         with self.assertRaises(TemplateError):
             filter_number('1e999')
+
+
+class NewFiltersTest(unittest.TestCase):
+    def test_capitalize(self):
+        self.assertEqual(filter_capitalize('hola MUNDO'), 'Hola MUNDO')
+        self.assertEqual(filter_capitalize(''), '')
+        self.assertEqual(filter_capitalize(None), '')
+
+    def test_title(self):
+        self.assertEqual(filter_title('memoria de calculo'), 'Memoria De Calculo')
+        self.assertEqual(filter_title(None), '')
+
+    def test_default(self):
+        self.assertEqual(filter_default(None, 'N/D'), 'N/D')
+        self.assertEqual(filter_default('   ', 'N/D'), 'N/D')
+        self.assertEqual(filter_default('valor', 'N/D'), 'valor')
+        self.assertEqual(filter_default(0, 'N/D'), 0)
+
+    def test_new_filters_in_pipeline(self):
+        r = _resolver()
+        self.assertEqual(
+            evaluate(parse_expression("project.cliente | lower | capitalize"), r),
+            'Acme solar')
+        context = {'finance': _Box(net_capex=None)}
+        r2 = ContextResolver(context, presentation={'locale': 'es', 'currency': 'EUR'})
+        self.assertEqual(
+            render_text("{{ finance.net_capex | money | default('N/D') }}", r2), 'N/D')
+
+    def test_new_filters_registered(self):
+        from app.services.template_engine.filters import FILTERS
+        for name in ('capitalize', 'title', 'default'):
+            self.assertIn(name, FILTERS)
 
 
 if __name__ == '__main__':
