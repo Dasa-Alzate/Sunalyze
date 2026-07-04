@@ -24,9 +24,9 @@ def _render_body(body, resolver, on_error):
             parsed = parse_expression(expr)
             value = evaluate(parsed, resolver)
             out.append(escape(_stringify(value)))
-        except TemplateError:
+        except TemplateError as exc:
             if on_error == 'raise':
-                raise
+                raise TemplateError(f"en «{{{{ {expr} }}}}»: {exc}") from exc
             out.append(escape(f'[{expr}]'))
         last = match.end()
     out.append(escape(body[last:]))
