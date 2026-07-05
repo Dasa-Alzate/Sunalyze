@@ -89,7 +89,7 @@ def upgrade():
     op.create_table('template_versions',
     sa.Column('template_id', sa.Integer(), nullable=False),
     sa.Column('version', sa.Integer(), nullable=False, server_default=sa.text('1')),
-    sa.Column('content', sa.Text(), nullable=False, server_default='[]'),
+    sa.Column('content', sa.Text(), nullable=False),
     sa.Column('changelog', sa.String(length=500), nullable=True),
     sa.Column('published_at', sa.DateTime(), nullable=True),
     sa.Column('id', sa.Integer(), nullable=False),
