@@ -11,3 +11,7 @@ class InviteSchema(BaseModel):
 
 class ChangeRoleSchema(BaseModel):
     role: Literal['owner', 'admin', 'member']
+
+
+class SwitchWorkspaceSchema(BaseModel):
+    org_id: int

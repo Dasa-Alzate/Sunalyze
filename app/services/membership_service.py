@@ -41,6 +41,38 @@ class MembershipService:
         return Membership.query.filter_by(org_id=org_id, role='owner').count()
 
     @staticmethod
+    def workspaces(user, active_org_id=None):
+        items = []
+        for m in user.memberships:
+            org = m.organization
+            if not org or org.is_deleted:
+                continue
+            items.append({
+                'org_id': org.id,
+                'nombre': org.nombre,
+                'type': org.type,
+                'role': m.role,
+                'active': org.id == active_org_id,
+            })
+        items.sort(key=lambda x: (not x['active'], x['nombre'] or ''))
+        return items
+
+    @staticmethod
+    def switch_workspace(user, org_id):
+        membership = MembershipService._membership(org_id, user.id)
+        org = membership.organization if membership else None
+        if not membership or not org or org.is_deleted:
+            raise NotFound('Workspace no encontrado.', code='workspace.not_found')
+        AuditService.record(
+            'workspace.switch', actor=user, org_id=org_id,
+            entity_type='organization', entity_id=org_id,
+            payload={'org_nombre': org.nombre, 'role': membership.role},
+        )
+        db.session.commit()
+        logger.info('Workspace cambiado u%s -> org %s', user.id, org_id)
+        return membership
+
+    @staticmethod
     def team(org_id):
         org = MembershipService._org(org_id)
         memberships = Membership.query.filter_by(org_id=org_id).all()

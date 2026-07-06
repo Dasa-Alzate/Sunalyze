@@ -1,6 +1,6 @@
 # API map
 
-Mapa autogenerado por `flask api-map`. Endpoints `/api`: 116.
+Mapa autogenerado por `flask api-map`. Endpoints `/api`: 118.
 
 No editar a mano: regenerar con `flask api-map`.
 
@@ -209,3 +209,10 @@ No editar a mano: regenerar con `flask api-map`.
 | POST | `/api/templates/library/<int:installation_id>/favorite` | `templates.favorite_installation` |  |
 | POST | `/api/templates/library/<int:installation_id>/labels` | `templates.label_installation` |  |
 | GET | `/api/templates/variables/<kind>` | `templates.list_variables` |  |
+
+## workspace
+
+| Método(s) | Ruta | Endpoint | Resumen |
+| --- | --- | --- | --- |
+| GET | `/api/workspace` | `workspace.list_workspaces` |  |
+| POST | `/api/workspace/switch` | `workspace.switch_workspace` |  |

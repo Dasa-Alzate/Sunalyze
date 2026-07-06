@@ -153,6 +153,10 @@ export const api = {
     getBranding: () => get('/api/org/branding'),
     setBranding: (b) => patch('/api/org/branding', b),
   },
+  workspace: {
+    list: () => get('/api/workspace'),
+    switch: (orgId) => post('/api/workspace/switch', { org_id: orgId }),
+  },
   templates: {
     kinds: () => get('/api/templates/kinds'),
     list: (kind) => get(`/api/templates${kind ? `?kind=${encodeURIComponent(kind)}` : ''}`),
