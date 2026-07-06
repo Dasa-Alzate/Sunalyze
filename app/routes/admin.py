@@ -1,4 +1,9 @@
-"""Consola de plataforma: gestión de feature flags. Solo super-admin."""
+"""Consola de plataforma: gestión de feature flags. Solo super-admin.
+
+Defensa en profundidad: ademas de `require_superadmin`, todo el blueprint pasa
+por la misma allowlist de IP que el portal superadmin (`app/ip_allowlist.py`).
+Allowlist vacia = sin filtro; IP fuera de la lista = 403 JSON (DomainError).
+"""
 
 from flask import Blueprint, request, jsonify
 
@@ -8,8 +13,16 @@ from app.models.organization import Organization
 from app.models.user import User
 from app.superadmin.guards import require_superadmin
 from app.security import current_user
+from app.ip_allowlist import ip_allowed
+from app.errors import Forbidden
 
 admin_bp = Blueprint('admin', __name__)
+
+
+@admin_bp.before_request
+def enforce_admin_ip():
+    if not ip_allowed():
+        raise Forbidden('Acceso restringido por IP.', code='admin.ip_not_allowed')
 
 
 @admin_bp.route('/api/admin/flags', methods=['GET'])
