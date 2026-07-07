@@ -1,30 +1,38 @@
-"""Adaptador de PVGIS (irradiancia horaria) con cache en proceso.
+"""Adaptador de PVGIS (irradiancia horaria) con cache compartida via Flask-Caching.
 
 Unica frontera con la API externa: detras de esta interfaz el dominio es
-mockeable en tests y el cache puede migrar a Redis sin tocar los services.
+mockeable en tests. La cache usa la extension `cache` (SimpleCache en dev,
+Redis en produccion), con TTL largo porque la serie historica de irradiancia
+es inmutable para unos parametros dados. Un fallo de red no cachea nada y
+propaga la excepcion, igual que antes.
 """
 
 import logging
-import threading
+
 import pvlib
 
+from app.extensions import cache
+
 logger = logging.getLogger(__name__)
+
+CACHE_TTL_SECONDS = 60 * 60 * 24 * 30
+_KEY_PREFIX = 'pvgis:hourly:'
 
 
 class PvgisClient:
 
-    _CACHE = {}
-    _CACHE_MAX_SIZE = 50
-    _LOCK = threading.Lock()
+    @staticmethod
+    def _cache_key(lat, lon, start_year, end_year):
+        return f'{_KEY_PREFIX}{lat:.4f}_{lon:.4f}_{start_year}_{end_year}'
 
     @classmethod
     def get_hourly(cls, lat, lon, start_year, end_year):
-        cache_key = f'{lat:.4f}_{lon:.4f}_{start_year}_{end_year}'
+        cache_key = cls._cache_key(lat, lon, start_year, end_year)
 
-        with cls._LOCK:
-            if cache_key in cls._CACHE:
-                logger.debug('Cache hit para: %s', cache_key)
-                return cls._CACHE[cache_key]
+        hit = cache.get(cache_key)
+        if hit is not None:
+            logger.debug('Cache hit para: %s', cache_key)
+            return hit
 
         logger.debug('Cache miss, llamando a PVGIS para: %s', cache_key)
 
@@ -41,13 +49,13 @@ class PvgisClient:
             outputformat='json',
         )
 
-        with cls._LOCK:
-            if len(cls._CACHE) >= cls._CACHE_MAX_SIZE and cache_key not in cls._CACHE:
-                cls._CACHE.pop(next(iter(cls._CACHE)), None)
-            cls._CACHE[cache_key] = (df, meta)
-            logger.debug('Datos guardados en cache. Tamaño actual: %s', len(cls._CACHE))
+        cache.set(cache_key, (df, meta), timeout=CACHE_TTL_SECONDS)
+        logger.debug('Datos PVGIS guardados en cache para: %s', cache_key)
         return df, meta
 
     @classmethod
     def cache_size(cls):
-        return len(cls._CACHE)
+        entries = getattr(cache.cache, '_cache', None)
+        if entries is None:
+            return 0
+        return sum(1 for key in entries if _KEY_PREFIX in key)
