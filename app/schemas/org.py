@@ -1,10 +1,13 @@
 """Esquemas de validación de la organización."""
 
 import os
+import re
 from typing import Optional
 from urllib.parse import urlparse
 
 from pydantic import BaseModel, Field, field_validator
+
+_HEX_COLOR = re.compile(r'^#[0-9a-fA-F]{3,8}$')
 
 
 class OrgBrandingSchema(BaseModel):
@@ -35,4 +38,17 @@ class OrgBrandingSchema(BaseModel):
         parts = candidate.split('/')
         if any(part == '..' for part in parts):
             raise ValueError('El logo no puede contener «..».')
+        return candidate
+
+    @field_validator('primary_color')
+    @classmethod
+    def primary_color_is_hex(cls, v):
+        """Acepta solo un color hexadecimal CSS (`#RGB`..`#RRGGBBAA`)."""
+        if v is None:
+            return v
+        candidate = v.strip()
+        if not candidate:
+            return None
+        if not _HEX_COLOR.match(candidate):
+            raise ValueError('El color debe ser hexadecimal, p. ej. #1a1a1a.')
         return candidate
