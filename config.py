@@ -60,6 +60,23 @@ def _resolve_mail_backend():
     return backend
 
 
+def _resolve_mfa_enc_key():
+    """En producción exige una `MFA_ENC_KEY` propia; fuera de prod, `None`.
+
+    Con `None`, `mfa._fernet` deriva la clave de `SECRET_KEY` (fallback solo apto para
+    desarrollo). En producción esa derivación acopla el cifrado de los secretos TOTP a
+    la rotación de `SECRET_KEY`, por lo que se exige una clave dedicada.
+    """
+    key = os.environ.get('MFA_ENC_KEY') or None
+    if _IS_PRODUCTION and not key:
+        raise RuntimeError(
+            "MFA_ENC_KEY debe estar definida en producción (FLASK_ENV=production). "
+            "Genera una con: python -c \"from cryptography.fernet import Fernet; "
+            "print(Fernet.generate_key().decode())\""
+        )
+    return key
+
+
 class Config:
     SECRET_KEY = _resolve_secret_key()
     BASE_DIR = os.path.abspath(os.path.dirname(__file__))
@@ -98,7 +115,7 @@ class Config:
     SESSION_COOKIE_SECURE = _IS_PRODUCTION
     PERMANENT_SESSION_LIFETIME = timedelta(days=14)
 
-    MFA_ENC_KEY = os.environ.get('MFA_ENC_KEY') or None
+    MFA_ENC_KEY = _resolve_mfa_enc_key()
 
     MAIL_BACKEND = _resolve_mail_backend()
     MAIL_SMTP_HOST = os.environ.get('MAIL_SMTP_HOST') or None
