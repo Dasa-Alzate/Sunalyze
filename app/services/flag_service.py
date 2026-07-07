@@ -2,15 +2,24 @@
 
 Resolución por especificidad: user > org > global > default del flag.
 Flag inexistente -> False (default-safe: una feature desconocida está apagada).
+
+La resolución de `is_enabled` se cachea con TTL corto usando claves versionadas:
+cada escritura de Flag/FlagOverride rota la versión almacenada en la propia
+cache, con lo que todas las entradas previas quedan huérfanas al instante sin
+necesidad de borrado por patrón (funciona igual con SimpleCache y RedisCache).
 """
 
 import logging
+from uuid import uuid4
 
-from app.extensions import db
+from app.extensions import db, cache
 from app.models.flag import Flag, FlagOverride, SCOPES
 from app.errors import NotFound, ValidationError
 
 logger = logging.getLogger(__name__)
+
+FLAG_CACHE_TTL = 30
+_CACHE_VERSION_KEY = 'flags:cache-version'
 
 DEFAULT_FLAGS = [
     {'key': 'geo_map', 'nombre': 'Mapa geoespacial', 'titulo': 'Mapa geoespacial',
@@ -39,7 +48,30 @@ DEFAULT_FLAGS = [
 class FlagService:
 
     @staticmethod
-    def is_enabled(key, org_id=None, user_id=None):
+    def _cache_version():
+        version = cache.get(_CACHE_VERSION_KEY)
+        if version is None:
+            version = uuid4().hex
+            cache.set(_CACHE_VERSION_KEY, version, timeout=0)
+        return version
+
+    @staticmethod
+    def invalidate_cache():
+        """Rota la versión de cache: invalida toda resolución cacheada al instante."""
+        cache.set(_CACHE_VERSION_KEY, uuid4().hex, timeout=0)
+
+    @classmethod
+    def is_enabled(cls, key, org_id=None, user_id=None):
+        cache_key = f'flags:{cls._cache_version()}:{key}:{org_id}:{user_id}'
+        cached = cache.get(cache_key)
+        if cached is not None:
+            return cached
+        value = cls._resolve(key, org_id, user_id)
+        cache.set(cache_key, value, timeout=FLAG_CACHE_TTL)
+        return value
+
+    @staticmethod
+    def _resolve(key, org_id=None, user_id=None):
         flag = Flag.query.filter_by(key=key, status='active').first()
         if not flag:
             return False
@@ -99,6 +131,7 @@ class FlagService:
             if f in fields and fields[f] is not None:
                 setattr(flag, f, fields[f])
         db.session.commit()
+        cls.invalidate_cache()
         return flag
 
     @staticmethod
@@ -126,8 +159,8 @@ class FlagService:
         cls._visible_flag(key)
         return cls.set_override(key, 'org', org_id, False, created_by=created_by, source='grant')
 
-    @staticmethod
-    def set_override(key, scope, scope_id, enabled, created_by=None, source='grant'):
+    @classmethod
+    def set_override(cls, key, scope, scope_id, enabled, created_by=None, source='grant'):
         if scope not in SCOPES:
             raise ValidationError(f"Ámbito inválido. Válidos: {', '.join(SCOPES)}")
         if scope == 'global':
@@ -146,21 +179,25 @@ class FlagService:
                                     enabled=enabled, source=source, created_by=created_by)
             db.session.add(override)
         db.session.commit()
+        cls.invalidate_cache()
         return override
 
-    @staticmethod
-    def clear_override(key, scope, scope_id):
+    @classmethod
+    def clear_override(cls, key, scope, scope_id):
         if scope == 'global':
             scope_id = None
         FlagOverride.query.filter_by(flag_key=key, scope=scope, scope_id=scope_id).delete()
         db.session.commit()
+        cls.invalidate_cache()
 
-    @staticmethod
-    def ensure_defaults():
+    @classmethod
+    def ensure_defaults(cls):
         created = 0
         for spec in DEFAULT_FLAGS:
             if not Flag.query.filter_by(key=spec['key']).first():
                 db.session.add(Flag(**spec))
                 created += 1
         db.session.commit()
+        if created:
+            cls.invalidate_cache()
         return created
