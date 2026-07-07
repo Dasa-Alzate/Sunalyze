@@ -5,13 +5,14 @@ tokens) del transporte HTTP. Devuelve modelos/tokens y lanza DomainError;
 no toca request/response.
 """
 
+import hashlib
 import logging
 
 from app.extensions import db
 from app.models.user import User
 from app.models.organization import Organization
 from app.models.membership import Membership
-from app.errors import Conflict, Unauthorized, NotFound, Forbidden
+from app.errors import Conflict, Unauthorized, NotFound, Forbidden, ValidationError
 from app.db_helpers import commit_or_conflict
 from app.gateways import tokens
 from app.services.audit_service import AuditService
@@ -83,11 +84,23 @@ class AuthService:
         return User.active().filter_by(email=email.strip().lower()).first()
 
     @staticmethod
+    def _password_fingerprint(user):
+        """Huella corta y estable del `password_hash` actual.
+
+        Incluida en el token de reset, ata el token a la contraseña vigente: al
+        cambiarla la huella cambia, de modo que el token muere tras usarse una vez y
+        no puede reutilizarse."""
+        return hashlib.sha256((user.password_hash or '').encode('utf-8')).hexdigest()[:16]
+
+    @staticmethod
     def request_password_reset(email):
         user = AuthService.find_active_by_email(email)
         if not user:
             return None
-        return tokens.issue(tokens.RESET_PASSWORD, {'uid': user.id})
+        return tokens.issue(
+            tokens.RESET_PASSWORD,
+            {'uid': user.id, 'pwd': AuthService._password_fingerprint(user)},
+        )
 
     @staticmethod
     def reset_password(token, new_password):
@@ -95,6 +108,8 @@ class AuthService:
         user = User.active().filter_by(id=data.get('uid')).first()
         if not user:
             raise NotFound('Usuario no encontrado.', code='auth.user_not_found')
+        if data.get('pwd') != AuthService._password_fingerprint(user):
+            raise ValidationError('Enlace invalido o manipulado.', code='token.invalid')
         user.set_password(new_password)
         user.revoke_sessions()
         db.session.commit()
