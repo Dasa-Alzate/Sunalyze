@@ -8,7 +8,7 @@ from functools import wraps
 from flask import session, g
 
 from app.models.user import User
-from app.errors import Unauthorized, Forbidden
+from app.errors import Unauthorized
 
 
 def login_user(user, org_id=None, remember=True):
@@ -47,11 +47,3 @@ def login_required(fn):
             raise Unauthorized('Inicia sesión para continuar.', code='auth.login_required')
         return fn(*args, **kwargs)
     return wrapper
-
-
-def require_membership(org_id):
-    user = current_user()
-    if user is None:
-        raise Unauthorized('Inicia sesión para continuar.', code='auth.login_required')
-    if not any(m.org_id == org_id for m in user.memberships):
-        raise Forbidden('No tienes acceso a este workspace.', code='auth.no_workspace_access')

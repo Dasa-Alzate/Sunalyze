@@ -8,6 +8,7 @@ import { useAuth } from '@/services/auth'
 import { useCommands, isMac, formatShortcut } from '@/services/actions'
 import { toast } from '@/services/toast'
 import NotificationBell from '@/features/notifications/NotificationBell'
+import WorkspaceSwitcher from '@/app/WorkspaceSwitcher'
 
 const NAV = [
   { to: '/app', key: 'resumen', icon: 'layout-dashboard', end: true },
@@ -71,6 +72,7 @@ function Sidebar() {
           <span className="kbd" style={{ marginLeft: 'auto' }}>{formatShortcut({ mod: true, code: 'KeyK' }, isMac())}</span>
         </button>
         <LanguageSwitcher />
+        <WorkspaceSwitcher />
         <div className="sun-userchip">
           <span className="sun-avatar">{initials(user?.full_name)}</span>
           <div className="sun-userchip__meta">

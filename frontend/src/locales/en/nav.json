@@ -20,6 +20,7 @@
   "commands": "Commands",
   "settings": "Settings",
   "myWorkspace": "My workspace",
+  "workspace": "Workspace",
   "user": "User",
   "logout": "Sign out",
   "skipToContent": "Skip to content",

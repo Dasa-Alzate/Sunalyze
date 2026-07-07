@@ -59,6 +59,7 @@ def create_app(config_overrides=None):
     from app.routes.posventa import posventa_bp
     from app.routes.notifications import notifications_bp
     from app.routes.org import org_bp
+    from app.routes.workspace import workspace_bp
 
     app.register_blueprint(health_bp)
     app.register_blueprint(main_bp)
@@ -79,6 +80,7 @@ def create_app(config_overrides=None):
     app.register_blueprint(posventa_bp)
     app.register_blueprint(notifications_bp)
     app.register_blueprint(org_bp)
+    app.register_blueprint(workspace_bp)
 
     from app.errors import register_error_handlers
     register_error_handlers(app)
