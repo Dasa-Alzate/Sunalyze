@@ -8,6 +8,7 @@ Reglas de propiedad:
 
 import logging
 
+from sqlalchemy import func
 from sqlalchemy.exc import IntegrityError
 
 from app.extensions import db
@@ -49,25 +50,48 @@ class CatalogService:
         return sorted(set(cls.own_catalog_ids(org_id)) | set(cls.subscribed_catalog_ids(org_id)))
 
     @staticmethod
-    def _counts(catalog_id):
+    def counts_map(catalog_ids):
+        """Conteos de equipos por catálogo en una query agregada por tipo.
+
+        Devuelve {catalog_id: {'panels': n, 'inverters': n, 'batteries': n,
+        'wires': n}} para todo el conjunto pedido, con ceros para catálogos
+        sin equipos.
+        """
         from app.models.panel import Panel
         from app.models.inverter import Inverter
         from app.models.battery import Battery
         from app.models.wire import Wire
-        return {
-            'panels': Panel.query.filter_by(catalog_id=catalog_id).count(),
-            'inverters': Inverter.query.filter_by(catalog_id=catalog_id).count(),
-            'batteries': Battery.query.filter_by(catalog_id=catalog_id).count(),
-            'wires': Wire.query.filter_by(catalog_id=catalog_id).count(),
+        catalog_ids = list(catalog_ids)
+        counts = {
+            cid: {'panels': 0, 'inverters': 0, 'batteries': 0, 'wires': 0}
+            for cid in catalog_ids
         }
+        if not catalog_ids:
+            return counts
+        models = (('panels', Panel), ('inverters', Inverter),
+                  ('batteries', Battery), ('wires', Wire))
+        for field, model in models:
+            rows = (
+                db.session.query(model.catalog_id, func.count(model.id))
+                .filter(model.catalog_id.in_(catalog_ids))
+                .group_by(model.catalog_id)
+                .all()
+            )
+            for catalog_id, total in rows:
+                counts[catalog_id][field] = total
+        return counts
 
     @classmethod
-    def _serialize(cls, catalog, org_id, subscribed_ids):
+    def _counts(cls, catalog_id):
+        return cls.counts_map([catalog_id])[catalog_id]
+
+    @classmethod
+    def _serialize(cls, catalog, org_id, subscribed_ids, counts):
         return {
             **catalog.to_dict(),
             'own': catalog.org_id == org_id,
             'subscribed': catalog.id in subscribed_ids,
-            'counts': cls._counts(catalog.id),
+            'counts': counts,
         }
 
     @classmethod
@@ -79,7 +103,9 @@ class CatalogService:
         subs = Catalog.query.filter(
             Catalog.id.in_(subscribed), Catalog.deleted_at.is_(None), Catalog.is_active.is_(True)
         ).order_by(Catalog.nombre).all() if subscribed else []
-        return [cls._serialize(c, org_id, subscribed) for c in own + subs]
+        catalogs = own + subs
+        counts = cls.counts_map([c.id for c in catalogs])
+        return [cls._serialize(c, org_id, subscribed, counts[c.id]) for c in catalogs]
 
     @classmethod
     def deleted_library(cls, org_id):
@@ -101,7 +127,8 @@ class CatalogService:
         public = Catalog.query.filter(
             Catalog.org_id.is_(None), Catalog.deleted_at.is_(None), Catalog.is_active.is_(True)
         ).order_by(Catalog.nombre).all()
-        return [cls._serialize(c, org_id, subscribed) for c in public]
+        counts = cls.counts_map([c.id for c in public])
+        return [cls._serialize(c, org_id, subscribed, counts[c.id]) for c in public]
 
     @staticmethod
     def official_catalog(display_name, *, active=True):
