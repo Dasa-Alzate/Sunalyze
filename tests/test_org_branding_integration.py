@@ -98,7 +98,7 @@ class BrandingEndpointTest(_Base):
     def test_patch_persists_branding(self):
         client = self._login(self.owner_a, self.org_a)
         resp = client.patch('/api/org/branding', json={
-            'logo_path': 'https://cdn.example.com/logo.png',
+            'logo_path': 'branding/logo.png',
             'primary_color': '#16a34a',
             'footer_text': 'Org A S.L.',
         })
@@ -107,7 +107,7 @@ class BrandingEndpointTest(_Base):
 
         again = client.get('/api/org/branding')
         body = again.get_json()
-        self.assertEqual(body['logo_path'], 'https://cdn.example.com/logo.png')
+        self.assertEqual(body['logo_path'], 'branding/logo.png')
         self.assertEqual(body['footer_text'], 'Org A S.L.')
         self.assertEqual(OrgBrandingProfile.query.filter_by(org_id=self.org_a.id).count(), 1)
 
