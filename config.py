@@ -91,6 +91,8 @@ class Config:
     PDF_RATELIMIT = os.environ.get('PDF_RATELIMIT', '60 per hour')
     ANALYSIS_RATELIMIT = os.environ.get('ANALYSIS_RATELIMIT', '120 per hour')
 
+    MAX_CONTENT_LENGTH = int(os.environ.get('MAX_CONTENT_LENGTH', str(16 * 1024 * 1024)))
+
     SESSION_COOKIE_HTTPONLY = True
     SESSION_COOKIE_SAMESITE = 'Lax'
     SESSION_COOKIE_SECURE = _IS_PRODUCTION
