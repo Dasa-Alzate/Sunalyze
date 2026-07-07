@@ -6,50 +6,17 @@ Capas (de fuera hacia dentro):
 3. `log_action` — deja rastro auditado (actor, IP, acción) de todo efecto.
 """
 
-import ipaddress
 from functools import wraps
 
-from flask import current_app, request, redirect, url_for, abort, render_template, session
+from flask import request, redirect, url_for, abort, render_template, session
 
 from app.extensions import db
+from app.ip_allowlist import client_ip, ip_allowed
 from app.security import current_user
 from app.models.user import User
 from app.models.superadmin_audit import SuperadminAudit
 
 _PENDING_MFA_KEY = 'pending_mfa_user_id'
-
-
-def client_ip():
-    if current_app.config.get('SUPERADMIN_TRUST_PROXY'):
-        forwarded = request.headers.get('X-Forwarded-For', '')
-        if forwarded:
-            return forwarded.split(',')[0].strip()
-    return request.remote_addr or ''
-
-
-def _allowlist():
-    raw = current_app.config.get('SUPERADMIN_IP_ALLOWLIST') or ''
-    networks = []
-    for token in raw.replace(';', ',').split(','):
-        token = token.strip()
-        if not token:
-            continue
-        try:
-            networks.append(ipaddress.ip_network(token, strict=False))
-        except ValueError:
-            current_app.logger.warning('SUPERADMIN_IP_ALLOWLIST: entrada inválida «%s»', token)
-    return networks
-
-
-def ip_allowed():
-    networks = _allowlist()
-    if not networks:
-        return True
-    try:
-        addr = ipaddress.ip_address(client_ip())
-    except ValueError:
-        return False
-    return any(addr in net for net in networks)
 
 
 def enforce_ip():
