@@ -96,6 +96,7 @@ class AuthService:
         if not user:
             raise NotFound('Usuario no encontrado.', code='auth.user_not_found')
         user.set_password(new_password)
+        user.revoke_sessions()
         db.session.commit()
         return user
 
