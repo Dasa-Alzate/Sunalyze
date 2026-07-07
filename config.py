@@ -82,6 +82,12 @@ class Config:
 
     MFA_ENC_KEY = os.environ.get('MFA_ENC_KEY') or None
 
+    SENTRY_DSN = os.environ.get('SENTRY_DSN') or None
+    SENTRY_ENVIRONMENT = os.environ.get('SENTRY_ENVIRONMENT') or (
+        'production' if _IS_PRODUCTION else 'development'
+    )
+    SENTRY_TRACES_SAMPLE_RATE = float(os.environ.get('SENTRY_TRACES_SAMPLE_RATE', '0.0'))
+
     SERVER_NAME = os.environ.get('SERVER_NAME') or None
     SUPERADMIN_SUBDOMAIN = os.environ.get('SUPERADMIN_SUBDOMAIN') or None
     SUPERADMIN_IP_ALLOWLIST = os.environ.get('SUPERADMIN_IP_ALLOWLIST', '')

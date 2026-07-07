@@ -1,10 +1,11 @@
-"""Tests del endpoint /health.
+"""Tests del endpoint /health y de la integración opcional de Sentry.
 
 Cubre: 200 con BD sana y shape del JSON; 503 con BD caída (mock de la sesión);
-prioridad de /health sobre el catch-all de la SPA; y exención del rate
-limiting default.
+prioridad de /health sobre el catch-all de la SPA; exención del rate limiting
+default; y que sin SENTRY_DSN la app arranca sin importar sentry_sdk.
 """
 
+import sys
 import unittest
 from unittest import mock
 
@@ -81,6 +82,21 @@ class HealthEndpointTests(unittest.TestCase):
             self.assertIn(429, spa_codes)
         finally:
             limiter.limit_manager.set_default_limits([])
+
+
+class SentryOptionalTests(unittest.TestCase):
+
+    def test_sin_dsn_la_app_arranca_sin_importar_sentry(self):
+        ya_importado = 'sentry_sdk' in sys.modules
+        app = _make_app()
+        self.assertIsNone(app.config['SENTRY_DSN'])
+        if not ya_importado:
+            self.assertNotIn('sentry_sdk', sys.modules)
+
+    def test_defaults_de_config_sentry(self):
+        app = _make_app()
+        self.assertEqual(app.config['SENTRY_TRACES_SAMPLE_RATE'], 0.0)
+        self.assertIn(app.config['SENTRY_ENVIRONMENT'], ('development', 'production'))
 
 
 if __name__ == '__main__':
