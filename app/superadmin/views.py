@@ -34,11 +34,20 @@ def login():
         email = (request.form.get('email') or '').strip().lower()
         password = request.form.get('password') or ''
         user = User.query.filter_by(email=email).first()
-        if user and user.check_password(password) and user.is_superadmin:
-            set_pending_mfa(user)
-            if user.mfa_enabled:
-                return redirect(url_for('superadmin.mfa_challenge'))
-            return redirect(url_for('superadmin.mfa_setup'))
+        if user and user.is_locked_out():
+            flash('Cuenta bloqueada temporalmente por intentos fallidos. Intenta más tarde.', 'error')
+            return render_template('superadmin/login.html')
+        if user and user.check_password(password):
+            if user.is_superadmin:
+                user.register_successful_login()
+                db.session.commit()
+                set_pending_mfa(user)
+                if user.mfa_enabled:
+                    return redirect(url_for('superadmin.mfa_challenge'))
+                return redirect(url_for('superadmin.mfa_setup'))
+        elif user:
+            user.register_failed_login()
+            db.session.commit()
         flash('Credenciales inválidas o sin acceso de superadmin.', 'error')
     return render_template('superadmin/login.html')
 
