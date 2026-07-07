@@ -19,8 +19,13 @@ def _pdf_ratelimit():
     return current_app.config.get('PDF_RATELIMIT', '60 per hour')
 
 
+def _analysis_ratelimit():
+    return current_app.config.get('ANALYSIS_RATELIMIT', '120 per hour')
+
+
 @bp.route('/api/panel-analysis', methods=['POST'])
 @require_permission(Permission.PROJECT_VIEW)
+@limiter.limit(_analysis_ratelimit)
 def panel_analysis():
     data = request.get_json(silent=True)
     if data is None:
@@ -32,6 +37,7 @@ def panel_analysis():
 
 @bp.route('/api/diagrama-completo', methods=['POST'])
 @require_permission(Permission.PROJECT_VIEW)
+@limiter.limit(_analysis_ratelimit)
 def diagrama_completo():
     data = request.get_json(silent=True)
     if data is None:

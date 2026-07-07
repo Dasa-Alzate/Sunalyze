@@ -103,6 +103,7 @@ def forgot_password():
 
 
 @auth_bp.route('/api/auth/reset-password', methods=['POST'])
+@limiter.limit('10 per hour')
 def reset_password():
     data = ResetSchema(**(request.get_json(silent=True) or {}))
     AuthService.reset_password(data.token, data.password)
@@ -110,6 +111,7 @@ def reset_password():
 
 
 @auth_bp.route('/api/auth/verify-email', methods=['POST'])
+@limiter.limit('10 per hour')
 def verify_email():
     data = VerifySchema(**(request.get_json(silent=True) or {}))
     user = AuthService.verify_email(data.token)

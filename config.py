@@ -89,6 +89,7 @@ class Config:
     JOB_QUEUE_NAME = os.environ.get('JOB_QUEUE_NAME', 'pdf')
     PDF_JOB_TIMEOUT = int(os.environ.get('PDF_JOB_TIMEOUT', '180'))
     PDF_RATELIMIT = os.environ.get('PDF_RATELIMIT', '60 per hour')
+    ANALYSIS_RATELIMIT = os.environ.get('ANALYSIS_RATELIMIT', '120 per hour')
 
     SESSION_COOKIE_HTTPONLY = True
     SESSION_COOKIE_SAMESITE = 'Lax'
