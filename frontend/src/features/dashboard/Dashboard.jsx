@@ -32,6 +32,8 @@ export default function Dashboard() {
           <ErrorState message={error} onRetry={load} />
         ) : !projects ? (
           <Spinner label="Cargando proyectos…" />
+        ) : projects.length === 0 ? (
+          <WelcomeCard onCreate={() => nav('/app/diseno')} />
         ) : (
           <>
             <div className="sun-kpis">
@@ -113,6 +115,39 @@ export default function Dashboard() {
         )}
       </div>
     </>
+  )
+}
+
+const pasosOnboarding = [
+  { titulo: 'Crea un proyecto', desc: 'Ubicación, cubierta y consumo del cliente' },
+  { titulo: 'Elige los equipos', desc: 'Paneles, inversor y baterías del catálogo' },
+  { titulo: 'Revisa el análisis', desc: 'Producción, pérdidas y rentabilidad' },
+  { titulo: 'Genera la memoria', desc: 'Memoria técnica firmable en PDF' },
+]
+
+function WelcomeCard({ onCreate }) {
+  return (
+    <Card className="sun-card--pad" style={{ maxWidth: 560, margin: '0 auto' }}>
+      <div className="sun-empty">
+        <div className="sun-empty__icon"><Icon name="sun" size={26} /></div>
+        <div className="sun-empty__title">Bienvenido a Sunalyze</div>
+        <div className="sun-empty__desc">De coordenadas a memoria técnica firmable en 10 minutos. Así funciona:</div>
+        <ol style={{ listStyle: 'none', margin: 'var(--space-2) 0 0', padding: 0, display: 'flex', flexDirection: 'column', gap: 'var(--space-3)', textAlign: 'left', width: '100%', maxWidth: 380 }}>
+          {pasosOnboarding.map((paso, i) => (
+            <li key={paso.titulo} style={{ display: 'flex', gap: 'var(--space-3)', alignItems: 'flex-start' }}>
+              <span aria-hidden="true" style={{ flex: 'none', width: 26, height: 26, borderRadius: '50%', background: 'var(--surface-brand-soft)', color: 'var(--green-700)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 'var(--text-sm)', fontWeight: 'var(--fw-bold)' }}>{i + 1}</span>
+              <span>
+                <strong style={{ display: 'block', color: 'var(--text-strong)', fontSize: 'var(--text-base)' }}>{paso.titulo}</strong>
+                <span style={{ fontSize: 'var(--text-sm)', color: 'var(--text-muted)' }}>{paso.desc}</span>
+              </span>
+            </li>
+          ))}
+        </ol>
+        <div className="sun-empty__actions">
+          <Btn variant="primary" icon="plus" onClick={onCreate}>Crear tu primer proyecto</Btn>
+        </div>
+      </div>
+    </Card>
   )
 }
 

@@ -94,7 +94,7 @@ export default function ProjectList() {
                 : 'Ningún proyecto coincide con el filtro. Prueba a limpiar la búsqueda o crea uno nuevo.'}
             </div>
             <div className="sun-empty__actions">
-              <Btn variant="primary" icon="plus" onClick={() => nav('/app/diseno')}>Crear proyecto</Btn>
+              <Btn variant="primary" icon="plus" onClick={() => nav('/app/diseno')}>{all.length === 0 ? 'Crear tu primer proyecto' : 'Crear proyecto'}</Btn>
               {all.length > 0 && <Btn variant="secondary" onClick={() => { setQ(''); setEstado('todos') }}>Limpiar filtros</Btn>}
             </div>
           </div>
