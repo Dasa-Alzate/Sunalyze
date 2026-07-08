@@ -22,7 +22,8 @@ _TOL = 0.02
 def list_all():
     rows = Catalog.query.filter(Catalog.deleted_at.is_(None)).order_by(
         Catalog.is_active, Catalog.nombre).all()
-    return [{**c.to_dict(), 'counts': CatalogService._counts(c.id)} for c in rows]
+    counts = CatalogService.counts_map([c.id for c in rows])
+    return [{**c.to_dict(), 'counts': counts[c.id]} for c in rows]
 
 
 def get(catalog_id):
