@@ -29,6 +29,7 @@ class User(BaseModel, SoftDeleteMixin):
     mfa_secret = db.Column(db.Text)
     mfa_enabled = db.Column(db.Boolean, nullable=False, default=False)
     mfa_recovery_codes = db.Column(db.Text)
+    session_gen = db.Column(db.Integer, nullable=False, default=0, server_default='0')
     failed_login_count = db.Column(db.Integer, nullable=False, default=0)
     last_failed_login_at = db.Column(db.DateTime, nullable=True)
     lockout_until = db.Column(db.DateTime, nullable=True)
@@ -42,6 +43,16 @@ class User(BaseModel, SoftDeleteMixin):
 
     def set_password(self, raw):
         self.password_hash = generate_password_hash(raw)
+
+    def revoke_sessions(self):
+        """Rota `session_gen`, invalidando todas las sesiones emitidas hasta ahora.
+
+        Las sesiones son stateless (cookie firmada que transporta `session_gen`).
+        `current_user()` exige que el valor de la cookie coincida con el del usuario;
+        al incrementarlo, cualquier cookie previa deja de validar. Se llama al cambiar
+        o resetear la contraseña y al anonimizar la cuenta.
+        """
+        self.session_gen = (self.session_gen or 0) + 1
 
     def check_password(self, raw):
         return check_password_hash(self.password_hash, raw)
@@ -124,6 +135,7 @@ class User(BaseModel, SoftDeleteMixin):
         self.last_name = 'anonimizado'
         self.email_verified = False
         self.password_hash = generate_password_hash(secrets.token_urlsafe(32))
+        self.revoke_sessions()
 
     @property
     def full_name(self):

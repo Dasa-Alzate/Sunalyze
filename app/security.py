@@ -14,6 +14,7 @@ from app.errors import Unauthorized
 def login_user(user, org_id=None, remember=True):
     session['user_id'] = user.id
     session['org_id'] = org_id or (user.personal_org.id if user.personal_org else None)
+    session['session_gen'] = user.session_gen or 0
     session.permanent = remember
     g.pop('_current_user', None)
 
@@ -28,7 +29,12 @@ def current_user():
         return None
     if '_current_user' not in g:
         user = User.query.get(session['user_id'])
-        g._current_user = user if user and not user.is_deleted else None
+        valid = (
+            user is not None
+            and not user.is_deleted
+            and session.get('session_gen', 0) == (user.session_gen or 0)
+        )
+        g._current_user = user if valid else None
     return g._current_user
 
 
