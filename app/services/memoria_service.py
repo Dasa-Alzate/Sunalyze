@@ -40,6 +40,8 @@ class MemoriaService:
     @staticmethod
     def generar_pdf(form_data):
         from weasyprint import HTML
+        from flask import current_app
+        from app.services.pdf_url_fetcher import restricted_url_fetcher
 
         template_vars = {}
         panel = inverter = None
@@ -68,7 +70,11 @@ class MemoriaService:
             template_vars.update(MemoriaService._build_graph_svgs(form_data))
 
         html_string = render_template('memoria_tecnica_pdf.html', **template_vars)
-        memoria_pdf = HTML(string=html_string).write_pdf()
+        memoria_pdf = HTML(
+            string=html_string,
+            base_url=current_app.instance_path,
+            url_fetcher=restricted_url_fetcher,
+        ).write_pdf()
 
         datasheets = MemoriaService._collect_datasheets(panel, inverter) if form_data else []
         return MemoriaService._merge_pdfs(memoria_pdf, datasheets)

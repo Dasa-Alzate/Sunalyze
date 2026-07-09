@@ -122,7 +122,13 @@ class DocumentService:
     @staticmethod
     def _render_pdf(html):
         from weasyprint import HTML
-        return HTML(string=html).write_pdf()
+        from flask import current_app
+        from app.services.pdf_url_fetcher import restricted_url_fetcher
+        return HTML(
+            string=html,
+            base_url=current_app.instance_path,
+            url_fetcher=restricted_url_fetcher,
+        ).write_pdf()
 
     @classmethod
     def _persist_pdf(cls, org_id, pdf_bytes):
