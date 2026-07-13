@@ -16,8 +16,11 @@ def generate_document_job(org_id, template_id, project_id, user_id=None):
     return document.to_dict()
 
 
-def memoria_pdf_job(form_data):
-    """Genera la memoria técnica y devuelve los bytes del PDF."""
+def memoria_pdf_job(form_data, org_id=None, user_id=None):
+    """Genera la memoria técnica y devuelve `{'org_id', 'pdf'}`.
+
+    El `org_id` queda ligado al resultado en el encolado para que la ruta de estado
+    pueda rechazar el sondeo de un job ajeno (evita IDOR entre organizaciones)."""
     from app.services.memoria_service import MemoriaService
 
-    return MemoriaService.generar_pdf(form_data)
+    return {'org_id': org_id, 'pdf': MemoriaService.generar_pdf(form_data)}

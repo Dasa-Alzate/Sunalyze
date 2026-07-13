@@ -7,7 +7,7 @@ from app.services.analysis_service import AnalysisService
 from app.services.diagrama_service import DiagramaService
 from app.services.catalog_service import CatalogService
 from app.schemas.memoria import MemoriaFormSchema
-from app.security import current_org_id
+from app.security import current_org_id, current_user
 from app.authz import require_permission, Permission
 from app.errors import ValidationError, NotFound
 from app.gateways.queue import get_queue, STATUS_FINISHED, STATUS_FAILED
@@ -56,10 +56,14 @@ def generar_memoria_pdf():
     if request.method == 'POST':
         MemoriaFormSchema(**form_data)
     queue = get_queue()
-    job_id = queue.enqueue('memoria_pdf', form_data=form_data)
+    user = current_user()
+    job_id = queue.enqueue(
+        'memoria_pdf', form_data=form_data,
+        org_id=current_org_id(), user_id=user.id if user else None,
+    )
     if queue.is_async:
         return jsonify({'job_id': job_id, 'status': queue.get_status(job_id)}), 202
-    return _memoria_pdf_response(queue.get_result(job_id))
+    return _memoria_pdf_response(queue.get_result(job_id)['pdf'])
 
 
 @bp.route('/imprimir/memoria-pdf/jobs/<job_id>', methods=['GET'])
@@ -68,10 +72,12 @@ def memoria_pdf_job_status(job_id):
     queue = get_queue()
     status = queue.get_status(job_id)
     if status == STATUS_FINISHED:
-        pdf = queue.get_result(job_id)
-        if pdf is None:
+        result = queue.get_result(job_id)
+        if not result or result.get('pdf') is None:
             raise NotFound('Resultado del trabajo no disponible.')
-        return _memoria_pdf_response(pdf)
+        if result.get('org_id') != current_org_id():
+            raise NotFound('Trabajo no encontrado.')
+        return _memoria_pdf_response(result['pdf'])
     if status == STATUS_FAILED:
         return jsonify({'job_id': job_id, 'status': status}), 500
     return jsonify({'job_id': job_id, 'status': status}), 202
