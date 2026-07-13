@@ -24,6 +24,21 @@ logger = logging.getLogger(__name__)
 DATASHEETS_DIR = os.path.join(os.path.dirname(__file__), '../../data/datasheets')
 
 
+def _safe_datasheet_path(name):
+    """Resuelve `name` dentro de `DATASHEETS_DIR` o devuelve `None` si es inseguro.
+
+    Rechaza separadores de ruta y componentes `..`, y exige que el `realpath`
+    quede bajo `DATASHEETS_DIR` (cierra el path traversal en los datasheets).
+    """
+    if not name or os.path.sep in name or (os.path.altsep and os.path.altsep in name) or '..' in name:
+        return None
+    root = os.path.realpath(DATASHEETS_DIR)
+    real = os.path.realpath(os.path.join(root, name))
+    if real == root or not real.startswith(root + os.sep):
+        return None
+    return real
+
+
 class MemoriaService:
 
     REQUIRED_FIELDS = [
@@ -278,8 +293,10 @@ class MemoriaService:
         paths = []
         for device in (panel, inverter):
             if device.datasheet:
-                path = os.path.join(DATASHEETS_DIR, device.datasheet)
-                if os.path.isfile(path):
+                path = _safe_datasheet_path(device.datasheet)
+                if path is None:
+                    logger.warning('Datasheet con ruta insegura, ignorado: %s', device.datasheet)
+                elif os.path.isfile(path):
                     paths.append(path)
                 else:
                     logger.warning('Datasheet no encontrado: %s', path)
@@ -296,9 +313,14 @@ class MemoriaService:
         memoria = pikepdf.Pdf.open(io.BytesIO(memoria_bytes))
         output.pages.extend(memoria.pages)
 
+        root = os.path.realpath(DATASHEETS_DIR)
         for path in datasheet_paths:
+            real = os.path.realpath(path)
+            if not real.startswith(root + os.sep):
+                logger.warning('Datasheet fuera del arbol permitido, ignorado: %s', path)
+                continue
             try:
-                ds = pikepdf.Pdf.open(path)
+                ds = pikepdf.Pdf.open(real)
                 output.pages.extend(ds.pages)
             except Exception:
                 logger.exception('Error adjuntando datasheet: %s', path)
