@@ -17,8 +17,8 @@ Comportamientos REALES documentados (no asumidos):
 - El registro inicia sesion inmediatamente, antes de verificar el correo.
 - `email_verified` no gatea ningun endpoint: una cuenta sin verificar puede
   iniciar sesion y operar con normalidad.
-- Los tokens de reset son stateless (itsdangerous) y por tanto reutilizables
-  durante su hora de vida: ver `test_reset_token_is_reusable_while_valid`.
+- Los tokens de reset son de un solo uso: el payload lleva una huella del
+  password_hash y muere al cambiar la contraseña: ver `test_reset_token_is_single_use`.
 """
 
 import time
@@ -342,12 +342,12 @@ class PasswordResetTest(AuthFlowTestBase):
         self.assertEqual(self._login(self.app.test_client(), 'segura@example.com',
                                      VALID_PASSWORD).status_code, 200)
 
-    def test_reset_token_is_reusable_while_valid(self):
-        """HALLAZGO documentado: los tokens de reset son stateless (itsdangerous,
-        payload {'uid'}) y no se invalidan al usarse ni al cambiar la contraseña.
-        Un mismo token permite resetear la contraseña varias veces durante su hora
-        de vida. Este test fija el comportamiento REAL observado; si algun dia se
-        implementa un-solo-uso, debe actualizarse para exigir el rechazo."""
+    def test_reset_token_is_single_use(self):
+        """Auditoria #7: el token de reset incluye una huella del password_hash actual.
+        Al cambiar la contraseña la huella cambia y el token muere: un segundo uso del
+        MISMO token se rechaza con 422/token.invalid. (Antes, con payload {'uid'}, el
+        token era reutilizable durante su hora de vida; esta asercion se actualizo al
+        implementar el un-solo-uso.)"""
         self._fresh_user('reusada@example.com')
         token = self._reset_token_for('reusada@example.com')
         first = self.app.test_client().post('/api/auth/reset-password',
@@ -355,9 +355,12 @@ class PasswordResetTest(AuthFlowTestBase):
         self.assertEqual(first.status_code, 200)
         second = self.app.test_client().post('/api/auth/reset-password',
                                              json={'token': token, 'password': 'Otra9Clave#Distinta'})
-        self.assertEqual(second.status_code, 200)
-        relogin = self._login(self.app.test_client(), 'reusada@example.com', 'Otra9Clave#Distinta')
+        self.assertEqual(second.status_code, 422)
+        self.assertEqual(second.get_json()['code'], 'token.invalid')
+        relogin = self._login(self.app.test_client(), 'reusada@example.com', NEW_PASSWORD)
         self.assertEqual(relogin.status_code, 200)
+        rejected = self._login(self.app.test_client(), 'reusada@example.com', 'Otra9Clave#Distinta')
+        self.assertEqual(rejected.status_code, 401)
 
 
 class CsrfContractTest(AuthFlowTestBase):
