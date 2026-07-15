@@ -5,5 +5,9 @@
     "en": "English",
     "changed": "Idioma actualizado",
     "error": "No se pudo cambiar el idioma"
+  },
+  "theme": {
+    "toDark": "Cambiar a modo oscuro",
+    "toLight": "Cambiar a modo claro"
   }
 }
