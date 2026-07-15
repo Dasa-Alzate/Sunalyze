@@ -3,6 +3,7 @@ import { NavLink, Outlet, useLocation } from 'react-router-dom'
 import { useTranslation } from 'react-i18next'
 import { Icon, IconBtn } from '@/shared/ui'
 import { LanguageSwitcher } from '@/shared/LanguageSwitcher'
+import { ThemeToggle } from '@/shared/ThemeToggle'
 import { TransitionLink, useTransition } from '@/services/transition'
 import { useAuth } from '@/services/auth'
 import { useCommands, isMac, formatShortcut } from '@/services/actions'
@@ -71,7 +72,10 @@ function Sidebar() {
           <Icon name="command" size={18} /><span>{t('commands')}</span>
           <span className="kbd" style={{ marginLeft: 'auto' }}>{formatShortcut({ mod: true, code: 'KeyK' }, isMac())}</span>
         </button>
-        <LanguageSwitcher />
+        <div style={{ display: 'flex', alignItems: 'center', gap: 'var(--space-2)' }}>
+          <LanguageSwitcher />
+          <ThemeToggle />
+        </div>
         <WorkspaceSwitcher />
         <div className="sun-userchip">
           <span className="sun-avatar">{initials(user?.full_name)}</span>
