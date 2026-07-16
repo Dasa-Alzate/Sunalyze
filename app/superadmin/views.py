@@ -1,5 +1,7 @@
 """Vistas server-rendered del portal de superadmin."""
 
+from urllib.parse import urlparse
+
 from flask import (Blueprint, render_template, request, redirect, url_for,
                    flash, abort, session)
 
@@ -52,10 +54,22 @@ def login():
     return render_template('superadmin/login.html')
 
 
+def _is_safe_next(target):
+    """Solo acepta rutas internas: sin host (netloc) y que empiecen por '/'.
+
+    Rechaza URLs absolutas y `//host` (open redirect)."""
+    if not target or '\\' in target:
+        return False
+    parsed = urlparse(target)
+    return parsed.netloc == '' and parsed.scheme == '' and target.startswith('/') and not target.startswith('//')
+
+
 def _finish_login(user):
     clear_pending_mfa()
     login_user(user)
-    target = request.args.get('next') or url_for('superadmin.index')
+    target = request.args.get('next')
+    if not _is_safe_next(target):
+        target = url_for('superadmin.index')
     return redirect(target)
 
 
