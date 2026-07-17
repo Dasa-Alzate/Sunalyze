@@ -58,9 +58,8 @@ class SolarDiagram:
                 label=label, label_pos=lpos, **kw,
             )
 
-        keys = [c[0] for c in chain]
-        for a, b in zip(keys, keys[1:]):
-            d.connect(placements[a], "out", placements[b], "in")
+        for i in range(len(chain) - 1):
+            d.wire(BUS, i * step + 1.0, BUS, (i + 1) * step)
 
         if self.has_battery:
             inv = placements["inv"]
