@@ -67,9 +67,13 @@ export default function ProjectList() {
           </div>
           <select className="sun-select" style={{ width: 180 }} value={estado} onChange={(e) => setEstado(e.target.value)}>
             <option value="todos">Todos los estados</option>
-            <option value="memoria">Memoria</option>
-            <option value="diseno">Diseño</option>
             <option value="borrador">Borrador</option>
+            <option value="diseno">Diseño</option>
+            <option value="memoria">Memoria</option>
+            <option value="en_revision">En revisión</option>
+            <option value="presentado">Presentado</option>
+            <option value="aprobado">Aprobado</option>
+            <option value="rechazado">Rechazado</option>
           </select>
           <div style={{ marginLeft: 'auto' }}>
             <ExportMenu
