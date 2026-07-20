@@ -1,19 +1,5 @@
-@import url('https://fonts.googleapis.com/css2?family=Public+Sans:ital,wght@0,400;0,500;0,600;0,700;1,400&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Roboto:ital,wght@0,200..700;1,200..700&family=Share+Tech+Mono&display=swap');
 
-@font-face {
-  font-family: 'Segoe UI Variable Text';
-  src: local('Segoe UI Variable Text'), local('Segoe UI Variable'), local('Segoe UI');
-  font-weight: 400 700;
-  font-style: normal;
-  font-display: swap;
-}
-@font-face {
-  font-family: 'Segoe UI Variable Display';
-  src: local('Segoe UI Variable Display'), local('Segoe UI Variable'), local('Segoe UI');
-  font-weight: 400 700;
-  font-style: normal;
-  font-display: swap;
-}
 @font-face {
   font-family: 'Cascadia Code';
   src: local('Cascadia Code'), local('Cascadia Mono'), local('Consolas');
@@ -124,11 +110,11 @@
 
   --focus-ring: var(--primary-ring);
 
-  --font-sans: 'Segoe UI Variable Text', 'Segoe UI', 'Public Sans', system-ui, -apple-system, 'Helvetica Neue', Arial, sans-serif;
-  --font-display: 'Segoe UI Variable Display', 'Segoe UI Variable Text', 'Segoe UI', 'Public Sans', system-ui, sans-serif;
-  --font-mono: 'Cascadia Code', 'Cascadia Mono', Consolas, ui-monospace, 'SFMono-Regular', Menlo, monospace;
+  --font-sans: 'Roboto', system-ui, -apple-system, 'Helvetica Neue', Arial, sans-serif;
+  --font-display: 'Roboto', system-ui, sans-serif;
+  --font-mono: 'Share Tech Mono', 'Cascadia Code', Consolas, ui-monospace, 'SFMono-Regular', Menlo, monospace;
 
-  --fw-regular: 400;
+  --fw-regular: 200;
   --fw-medium: 500;
   --fw-semibold: 600;
   --fw-bold: 700;
@@ -276,6 +262,7 @@ html { -webkit-text-size-adjust: 100%; }
 body {
   margin: 0;
   font-family: var(--font-sans);
+  font-weight: var(--fw-regular);
   font-size: var(--text-base);
   line-height: var(--leading-normal);
   color: var(--text-body);
@@ -296,6 +283,7 @@ a { color: var(--text-link); text-decoration: none; }
 a:hover { text-decoration: underline; }
 
 .num, .mono, [data-numeric] {
+  font-family: var(--font-mono);
   font-variant-numeric: var(--numeric-tabular);
   letter-spacing: 0;
 }
