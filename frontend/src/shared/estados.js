@@ -2,6 +2,10 @@ export const ESTADOS = {
   memoria: { label: 'Memoria', tone: 'success', dot: 'valid' },
   diseno: { label: 'Diseño', tone: 'warning', dot: 'warn' },
   borrador: { label: 'Borrador', tone: 'neutral', dot: 'pending' },
+  en_revision: { label: 'En revisión', tone: 'info', dot: 'warn' },
+  presentado: { label: 'Presentado', tone: 'warning', dot: 'warn' },
+  aprobado: { label: 'Aprobado', tone: 'success', dot: 'valid' },
+  rechazado: { label: 'Rechazado', tone: 'danger', dot: 'error' },
 }
 
 export function estadoMeta(estado) {

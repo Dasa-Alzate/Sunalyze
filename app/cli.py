@@ -21,6 +21,22 @@ superadmin_cli = AppGroup('superadmin', help='Gestión del portal de superadmin.
 scrape_cli = AppGroup('scrape', help='Scrapers de catálogos de marcas.')
 flags_cli = AppGroup('flags', help='Gestión de feature flags.')
 docs_cli = AppGroup('docs', help='Banco oficial de tipos de documento.')
+seed_cli = AppGroup('seed', help='Datos de prueba para desarrollo local.')
+
+
+@seed_cli.command('demo')
+def seed_demo():
+    """Crea la cuenta de prueba (superadmin) y un dataset de demo completo. Idempotente."""
+    from app.services.demo_seed import DemoSeeder, DEMO_EMAIL, DEMO_PASSWORD
+    if current_app.config.get('IS_PRODUCTION') and os.environ.get('ALLOW_SEED_DEMO') != '1':
+        click.echo('Aviso: entorno marcado como producción. Si es un despliegue real NO sigas; '
+                   'para un entorno local con Docker, reintenta con ALLOW_SEED_DEMO=1.')
+        raise click.Abort()
+    report = DemoSeeder.seed()
+    click.echo(f"Dataset: {report['dataset']}")
+    click.echo(f"Plantillas oficiales: {report['documentos']['created']} creadas, "
+               f"{report['documentos']['skipped']} ya existían.")
+    click.echo(f'Cuenta de prueba lista: {DEMO_EMAIL} / {DEMO_PASSWORD} (superadmin).')
 
 
 def _find(email):
@@ -195,4 +211,5 @@ def register_cli(app):
     app.cli.add_command(scrape_cli)
     app.cli.add_command(flags_cli)
     app.cli.add_command(docs_cli)
+    app.cli.add_command(seed_cli)
     app.cli.add_command(api_map)

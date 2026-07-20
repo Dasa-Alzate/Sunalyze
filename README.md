@@ -24,29 +24,83 @@ Plataforma SaaS para el **diseño y la legalización de instalaciones solares fo
 - **Cumplimiento UE**: RGPD (export + derecho al olvido), endurecimiento de cuentas (lockout, política de contraseñas) y bitácora de auditoría.
 - **Productividad**: paleta de comandos (⌘K/Ctrl+K), atajos y consola CLI in-app. **Accesibilidad AA**.
 
-## Requisitos
+## Arranque rápido con Docker (recomendado — Windows, macOS y Linux)
+
+La forma más simple y segura de tener Sunalyze corriendo: no instala nada en tu
+máquina (ni Python, ni Node, ni MySQL), todo vive en contenedores.
+
+**Único requisito:** [Docker Desktop](https://www.docker.com/products/docker-desktop/)
+(Windows/macOS; en Windows acepta la opción WSL2 que propone el instalador) o
+Docker Engine + Compose (Linux).
+
+```bash
+git clone <repository-url>
+cd Sunalyze
+cp .env.docker.example .env.docker
+docker compose --env-file .env.docker up -d --build
+docker compose --env-file .env.docker exec web flask seed demo
+```
+
+> En Windows (cmd) el segundo paso es `copy .env.docker.example .env.docker`;
+> en PowerShell, `cp` funciona tal cual.
+
+Abre **http://localhost:8000** e inicia sesión con la [cuenta de prueba](#cuenta-de-prueba).
+El stack levanta MySQL + Redis + la app, y aplica las migraciones al arrancar.
+
+- Apagar: `docker compose --env-file .env.docker down` (añade `-v` para borrar también los datos).
+- Si prefieres usar una base de datos de tu máquina en lugar de la del compose, define `DATABASE_URL` en `.env.docker` (hay un ejemplo comentado).
+- Detalle de despliegue en [`docs/docker-deploy.md`](docs/docker-deploy.md).
+
+## Cuenta de prueba
+
+```bash
+flask seed demo                                              # instalación nativa
+docker compose --env-file .env.docker exec web flask seed demo   # con Docker
+```
+
+Crea (idempotente) un entorno de demo completo: la cuenta de desarrollo, los
+catálogos de equipos, las plantillas oficiales, los feature flags activados
+para la org, y tres proyectos en distintos puntos del flujo — uno **aprobado**
+con memoria firmada, instalación de posventa (lecturas, mantenimiento,
+incidencias) y escenario financiero; uno **en revisión**; y uno en **borrador**:
+
+| Campo | Valor |
+|---|---|
+| Email | `sunalize_test@sunalize.com` |
+| Contraseña | `test123` |
+| Rol | superadmin + owner de su organización |
+
+Solo para entornos locales: el comando se niega a correr en producción salvo
+que se fuerce con `ALLOW_SEED_DEMO=1`.
+
+## Instalación nativa (sin Docker)
+
+Para trabajar en el código con recarga en caliente. Requisitos:
 
 - **Python 3.12+**
 - **Node 18+** (para compilar la SPA)
-- **MySQL 8** (o SQLite para desarrollo)
+- **MySQL 8 / MariaDB** — o **SQLite** si no quieres instalar nada: usa `DATABASE_URL=sqlite:///.../dev.db`
 - **Librerías de sistema nativas:**
-  - WeasyPrint (PDF): Pango/HarfBuzz + fuentes. macOS `brew install pango`; Debian/Ubuntu `libpango-1.0-0 libpangoft2-1.0-0 libharfbuzz0b fonts-dejavu-core`.
+  - WeasyPrint (PDF): Pango/HarfBuzz + fuentes. macOS `brew install pango`; Debian/Ubuntu `libpango-1.0-0 libpangoft2-1.0-0 libharfbuzz0b fonts-dejavu-core`. **Windows:** WeasyPrint necesita GTK y suele dar guerra — usa la ruta Docker o trabaja dentro de WSL2 (Ubuntu) siguiendo los pasos de Linux.
   - `mysqlclient` (se compila): `build-essential pkg-config default-libmysqlclient-dev` (Debian/Ubuntu). El runtime usa `PyMySQL`, así que SQLite y MySQL funcionan sin compilar si no instalas `mysqlclient`.
 
-## Instalación
-
 ```bash
-git clone <repository-url> && cd Sunalyze
+git clone <repository-url>
+cd Sunalyze
 
-# 1) Backend
-python -m venv .venv && source .venv/bin/activate   # Windows: .venv\Scripts\activate
+# 1) Backend — macOS / Linux / WSL2
+python -m venv .venv && source .venv/bin/activate
+# 1) Backend — Windows PowerShell
+#    python -m venv .venv
+#    .venv\Scripts\Activate.ps1
+
 pip install -r requirements.txt
 
 # 2) Frontend (genera frontend/dist/, gitignored; lo sirve Flask)
 cd frontend && npm install && npm run build && cd ..
 
 # 3) Entorno
-cp .env.example .env        # edita los valores (ver abajo)
+cp .env.example .env        # Windows (cmd): copy .env.example .env — edita los valores (ver abajo)
 ```
 
 > `frontend/dist/` **no se versiona**: recompílalo con `npm run build` cada vez que cambie el frontend, y como paso de build en el despliegue. Si falta, la raíz muestra un aviso en vez de fallar.
@@ -66,8 +120,9 @@ cp .env.example .env        # edita los valores (ver abajo)
 ## Base de datos (migraciones)
 
 ```bash
-export FLASK_APP=run
-flask db upgrade        # aplica todas las migraciones (Flask-Migrate/Alembic)
+export FLASK_APP=run     # Windows PowerShell: $env:FLASK_APP = "run"
+flask db upgrade         # aplica todas las migraciones (Flask-Migrate/Alembic)
+flask seed demo          # cuenta de prueba + flags por defecto (opcional)
 ```
 
 ## Ejecución
@@ -79,22 +134,20 @@ cd frontend && npm run dev               # SPA con HMR en :5173 (proxy /api → 
 ```
 Abre `http://localhost:5173`.
 
+> **macOS:** el puerto 5000 lo ocupa el receptor de AirPlay (responde 403 en
+> `localhost`). Desactívalo en Ajustes del Sistema → General → AirDrop y Handoff,
+> o corre la API en otro puerto: `flask run -p 5001` y
+> `FLASK_URL=http://127.0.0.1:5001 npm run dev`.
+
 **Producción (un proceso sirve SPA + API):**
 ```bash
 gunicorn -c docker/gunicorn.conf.py wsgi:app
 ```
 
-## Docker
-
-```bash
-cp .env.docker.example .env.docker        # rellena SECRET_KEY y contraseñas
-docker compose --env-file .env.docker up -d --build
-```
-Levanta MySQL + Redis + la app (migra al arrancar y sirve en `:8000`). Detalle en [`docs/docker-deploy.md`](docs/docker-deploy.md).
-
 ## Comandos CLI (`export FLASK_APP=run`)
 
 ```bash
+flask seed demo                     # cuenta de prueba local (superadmin) + flags
 flask superadmin grant <email>      # conceder acceso de superadmin (bootstrap)
 flask superadmin mfa-reset <email>  # reiniciar el MFA de un superadmin
 flask superadmin revoke|list
