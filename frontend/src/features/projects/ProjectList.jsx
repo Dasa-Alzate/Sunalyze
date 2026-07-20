@@ -8,6 +8,8 @@ import { dec } from '@/shared/format'
 import { exportRows } from '@/services/export'
 import { toast } from '@/services/toast'
 import { useAuth } from '@/services/auth'
+import { isMac } from '@/services/actions'
+import { pushUndo } from '@/services/actions/undo'
 
 export default function ProjectList() {
   const nav = useNavigate()
@@ -16,6 +18,7 @@ export default function ProjectList() {
   const [error, setError] = useState(null)
   const [q, setQ] = useState('')
   const [estado, setEstado] = useState('todos')
+  const [activeRowId, setActiveRowId] = useState(null)
 
   function load() {
     setError(null)
@@ -41,15 +44,35 @@ export default function ProjectList() {
   }
 
   async function remove(id, cliente) {
-    if (!window.confirm(`¿Eliminar el proyecto de ${cliente}? Esta acción no se puede deshacer.`)) return
+    if (!window.confirm(`¿Enviar a la papelera el proyecto de ${cliente}?`)) return
     try {
       await api.projects.remove(id)
-      toast('success', 'Proyecto eliminado')
+      pushUndo({
+        label: `Proyecto de ${cliente} restaurado`,
+        undo: async () => {
+          await api.projects.restore(id)
+          load()
+        },
+      })
+      toast('success', 'Proyecto enviado a la papelera', `Deshacer: ${isMac() ? '⌘' : 'Ctrl'}+Z`)
       load()
     } catch (e) {
       toast('error', 'No se pudo eliminar', e.message)
     }
   }
+
+  useEffect(() => {
+    function onKey(e) {
+      if (e.code !== 'KeyD') return
+      const mod = isMac() ? e.metaKey : e.ctrlKey
+      if (!mod || e.shiftKey || e.altKey || !activeRowId) return
+      if (!can('project:create')) return
+      e.preventDefault()
+      duplicate(activeRowId)
+    }
+    window.addEventListener('keydown', onKey)
+    return () => window.removeEventListener('keydown', onKey)
+  })
 
   return (
     <>
@@ -127,6 +150,9 @@ export default function ProjectList() {
                       aria-label={`Abrir diseño de ${p.cliente}`}
                       onClick={() => nav(`/app/diseno/${p.id}`)}
                       onKeyDown={(ev) => { if (ev.key === 'Enter' || ev.key === ' ') { ev.preventDefault(); nav(`/app/diseno/${p.id}`) } }}
+                      onMouseEnter={() => setActiveRowId(p.id)}
+                      onMouseLeave={() => setActiveRowId((id) => (id === p.id ? null : id))}
+                      onFocus={() => setActiveRowId(p.id)}
                     >
                       <td><div className="sun-cell-client"><strong>{p.cliente}</strong><span>{p.direccion || '—'}</span></div></td>
                       <td style={{ color: 'var(--text-muted)' }}>

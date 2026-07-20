@@ -8,6 +8,7 @@ import { exportRows } from '@/services/export'
 import { toast } from '@/services/toast'
 import { GeoMap } from '@/services/geo-map'
 import { useAuth } from '@/services/auth'
+import { isMac } from '@/services/actions'
 
 const STEPS = [
   { title: 'Datos del lugar', icon: 'map-pin' },
@@ -148,6 +149,21 @@ export default function Wizard() {
     }
     setStep(target)
   }
+
+  useEffect(() => {
+    function onKey(e) {
+      if (e.code !== 'ArrowRight' && e.code !== 'ArrowLeft') return
+      const mod = isMac() ? e.metaKey : e.ctrlKey
+      if (!mod || !e.shiftKey) return
+      const tag = e.target?.tagName
+      if (tag === 'INPUT' || tag === 'TEXTAREA' || tag === 'SELECT' || e.target?.isContentEditable) return
+      e.preventDefault()
+      if (e.code === 'ArrowLeft') setStep((s) => Math.max(0, s - 1))
+      else goToStep(Math.min(STEPS.length - 1, step + 1))
+    }
+    window.addEventListener('keydown', onKey)
+    return () => window.removeEventListener('keydown', onKey)
+  })
 
   async function analyze() {
     for (const i of [0, 1]) {

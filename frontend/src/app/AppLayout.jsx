@@ -74,7 +74,7 @@ function Sidebar() {
         </button>
         <div style={{ display: 'flex', alignItems: 'center', gap: 'var(--space-2)' }}>
           <LanguageSwitcher />
-          <ThemeToggle />
+          <ThemeToggle style={{ marginLeft: 'auto' }} />
         </div>
         <WorkspaceSwitcher />
         <div className="sun-userchip">

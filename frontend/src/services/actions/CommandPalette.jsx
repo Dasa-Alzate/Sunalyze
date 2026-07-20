@@ -25,6 +25,17 @@ export function CommandPalette({ onClose, onRun, mac }) {
   }, [])
 
   useEffect(() => {
+    function onDocKeyDown(e) {
+      if (e.key === 'Escape') {
+        e.preventDefault()
+        onClose()
+      }
+    }
+    document.addEventListener('keydown', onDocKeyDown)
+    return () => document.removeEventListener('keydown', onDocKeyDown)
+  }, [onClose])
+
+  useEffect(() => {
     const el = document.getElementById(`${baseId}-opt-${active}`)
     if (el && typeof el.scrollIntoView === 'function') el.scrollIntoView({ block: 'nearest' })
   }, [active, baseId])
@@ -36,10 +47,7 @@ export function CommandPalette({ onClose, onRun, mac }) {
   }
 
   function onKeyDown(e) {
-    if (e.key === 'Escape') {
-      e.preventDefault()
-      onClose()
-    } else if (e.key === 'ArrowDown') {
+    if (e.key === 'ArrowDown') {
       e.preventDefault()
       setActive((i) => (results.length ? (i + 1) % results.length : 0))
     } else if (e.key === 'ArrowUp') {

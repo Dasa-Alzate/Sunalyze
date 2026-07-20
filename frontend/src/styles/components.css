@@ -269,7 +269,7 @@
 .kbd { display: inline-flex; align-items: center; gap: 2px; font-family: var(--font-mono); font-size: var(--text-2xs); color: var(--text-subtle);
   background: var(--surface-sunken); border: 1px solid var(--border-subtle); border-radius: var(--radius-sm); padding: 1px 6px; white-space: nowrap; }
 
-.sun-scrim--center { display: flex; align-items: flex-start; justify-content: center; }
+.sun-scrim.sun-scrim--center { display: flex; align-items: flex-start; justify-content: center; }
 
 .sun-cmdk { position: relative; z-index: 1; margin-top: 12vh; width: 560px; max-width: 92vw; background: var(--surface-card);
   border: 1px solid var(--border-subtle); border-radius: var(--radius-2xl); box-shadow: var(--shadow-overlay); overflow: hidden; display: flex; flex-direction: column; }

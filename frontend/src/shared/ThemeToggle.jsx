@@ -1,11 +1,12 @@
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
 import { useTranslation } from 'react-i18next'
 import { IconBtn } from '@/shared/ui'
-import { currentTheme, toggleTheme } from '@/services/theme'
+import { currentTheme, toggleTheme, subscribeTheme } from '@/services/theme'
 
-export function ThemeToggle() {
+export function ThemeToggle(props) {
   const { t } = useTranslation('settings')
   const [theme, setThemeState] = useState(currentTheme)
+  useEffect(() => subscribeTheme(setThemeState), [])
   const dark = theme === 'dark'
   return (
     <IconBtn
@@ -13,6 +14,7 @@ export function ThemeToggle() {
       label={t(dark ? 'theme.toLight' : 'theme.toDark')}
       size="sm"
       onClick={() => setThemeState(toggleTheme())}
+      {...props}
     />
   )
 }

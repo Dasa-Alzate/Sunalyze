@@ -1,3 +1,7 @@
+import { toggleTheme } from '@/services/theme'
+import { toast } from '@/services/toast'
+import { popUndo } from './undo'
+
 let macCache = null
 
 export function isMac() {
@@ -77,12 +81,81 @@ const ACTIONS = [
     run: (ctx) => ctx.navigate('/app/memoria'),
   },
   {
+    id: 'nav.diagrama',
+    label: 'Ir al diagrama unifilar',
+    keywords: ['diagrama', 'unifilar', 'circuito', 'esquema'],
+    group: 'Navegación',
+    shortcut: { alt: true, code: 'KeyG' },
+    run: (ctx) => ctx.navigate('/app/diagrama'),
+  },
+  {
+    id: 'nav.finance',
+    label: 'Ir a finanzas',
+    keywords: ['finanzas', 'finance', 'payback', 'tir', 'van', 'ahorro'],
+    group: 'Navegación',
+    shortcut: { alt: true, code: 'KeyF' },
+    run: (ctx) => ctx.navigate('/app/finanzas'),
+  },
+  {
+    id: 'nav.posventa',
+    label: 'Ir a posventa',
+    keywords: ['posventa', 'instalaciones', 'mantenimiento', 'incidencias'],
+    group: 'Navegación',
+    shortcut: { alt: true, code: 'KeyV' },
+    run: (ctx) => ctx.navigate('/app/posventa'),
+  },
+  {
+    id: 'nav.templates',
+    label: 'Ir a plantillas',
+    keywords: ['plantillas', 'templates', 'documentos'],
+    group: 'Navegación',
+    shortcut: { alt: true, code: 'KeyL' },
+    run: (ctx) => ctx.navigate('/app/plantillas'),
+  },
+  {
+    id: 'nav.activity',
+    label: 'Ir a actividad',
+    keywords: ['actividad', 'activity', 'auditoria', 'historial', 'feed'],
+    group: 'Navegación',
+    shortcut: { alt: true, code: 'KeyA' },
+    run: (ctx) => ctx.navigate('/app/actividad'),
+  },
+  {
     id: 'action.newProject',
     label: 'Crear proyecto',
     keywords: ['nuevo', 'new', 'crear', 'proyecto', 'project', 'diseño', 'wizard'],
     group: 'Acciones',
     shortcut: { alt: true, code: 'KeyN' },
     run: (ctx) => ctx.navigate('/app/diseno'),
+  },
+  {
+    id: 'action.toggleTheme',
+    label: 'Cambiar tema claro/oscuro',
+    keywords: ['tema', 'theme', 'oscuro', 'dark', 'claro', 'light', 'modo', 'apariencia'],
+    group: 'Acciones',
+    shortcut: { mod: true, shift: true, code: 'KeyL' },
+    run: () => toggleTheme(),
+  },
+  {
+    id: 'action.undo',
+    label: 'Deshacer última acción',
+    keywords: ['undo', 'deshacer', 'restaurar', 'recuperar'],
+    group: 'Acciones',
+    shortcut: { mod: true, code: 'KeyZ' },
+    skipWhenTyping: true,
+    run: async () => {
+      const entry = popUndo()
+      if (!entry) {
+        toast('info', 'Nada que deshacer')
+        return
+      }
+      try {
+        await entry.undo()
+        toast('success', entry.label)
+      } catch (e) {
+        toast('error', 'No se pudo deshacer', e.message)
+      }
+    },
   },
 ]
 
