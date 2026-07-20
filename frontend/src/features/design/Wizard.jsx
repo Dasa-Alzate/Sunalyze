@@ -42,6 +42,8 @@ export default function Wizard() {
   const [batteryQty, setBatteryQty] = useState(1)
 
   const [step, setStep] = useState(0)
+  const [errors, setErrors] = useState({})
+  const [shake, setShake] = useState(0)
   const [results, setResults] = useState(null)
   const [stale, setStale] = useState(false)
   const [analyzing, setAnalyzing] = useState(false)
@@ -83,15 +85,77 @@ export default function Wizard() {
   const inverter = useMemo(() => inverters.find((i) => i.id === inverterId) || null, [inverters, inverterId])
   const battery = useMemo(() => batteries.find((b) => b.id === batteryId) || null, [batteries, batteryId])
 
-  function patch(p) { setForm((f) => ({ ...f, ...p })); if (results) setStale(true) }
-  function pickPanel(p) { setPanelId(p.id); if (results) setStale(true) }
+  function patch(p) {
+    setForm((f) => ({ ...f, ...p }))
+    setErrors((e) => {
+      const next = { ...e }
+      Object.keys(p).forEach((k) => delete next[k])
+      return next
+    })
+    if (results) setStale(true)
+  }
+  function pickPanel(p) {
+    setPanelId(p.id)
+    setErrors((e) => { const next = { ...e }; delete next.panel; return next })
+    if (results) setStale(true)
+  }
   function pickInverter(i) { setInverterId(i.id); if (results) setStale(true) }
   function pickBattery(b) { setBatteryId(b.id); if (results) setStale(true) }
 
+  function numberError(raw, { min, max, positive, rangeMsg } = {}) {
+    if (raw === '' || raw == null) return 'Campo obligatorio'
+    const n = Number(raw)
+    if (!Number.isFinite(n)) return 'Debe ser un número'
+    if (positive && n <= 0) return 'Debe ser mayor que 0'
+    if ((min != null && n < min) || (max != null && n > max)) return rangeMsg
+    return null
+  }
+
+  function validateStep(i) {
+    const errs = {}
+    if (i === 0) {
+      if (!form.cliente.trim()) errs.cliente = 'Campo obligatorio'
+      const necesidad = numberError(form.necesidad, { positive: true })
+      if (necesidad) errs.necesidad = necesidad
+      const latitud = numberError(form.latitud, { min: -90, max: 90, rangeMsg: 'Fuera de rango (−90 a 90)' })
+      if (latitud) errs.latitud = latitud
+      const longitud = numberError(form.longitud, { min: -180, max: 180, rangeMsg: 'Fuera de rango (−180 a 180)' })
+      if (longitud) errs.longitud = longitud
+      if (form.coplanar) {
+        const inclinacion = numberError(form.inclinacion, { min: 0, max: 90, rangeMsg: 'Fuera de rango (0 a 90)' })
+        if (inclinacion) errs.inclinacion = inclinacion
+        const azimut = numberError(form.azimut, { min: 0, max: 360, rangeMsg: 'Fuera de rango (0 a 360)' })
+        if (azimut) errs.azimut = azimut
+      }
+    }
+    if (i === 1 && !panelId) errs.panel = 'Selecciona un panel — es obligatorio para dimensionar'
+    return errs
+  }
+
+  function tryAdvance(from) {
+    const errs = validateStep(from)
+    if (Object.keys(errs).length) {
+      setErrors(errs)
+      setShake((s) => s + 1)
+      return false
+    }
+    return true
+  }
+
+  function goToStep(target) {
+    for (let i = step; i < target; i++) {
+      if (!tryAdvance(i)) { setStep(i); return }
+    }
+    setStep(target)
+  }
+
   async function analyze() {
-    if (!panelId) { toast('warning', 'Selecciona un panel', 'El panel es obligatorio para dimensionar'); setStep(1); return }
-    if (!form.latitud || !form.longitud || !form.necesidad) {
-      toast('warning', 'Faltan datos del lugar', 'Latitud, longitud y necesidad anual son obligatorias'); setStep(0); return
+    for (const i of [0, 1]) {
+      if (!tryAdvance(i)) {
+        setStep(i)
+        toast('warning', 'Faltan datos', i === 0 ? 'Revisa los campos marcados en «Datos del lugar»' : 'El panel es obligatorio para dimensionar')
+        return
+      }
     }
     setAnalyzing(true)
     setAnalysisError(null)
@@ -121,7 +185,13 @@ export default function Wizard() {
   }
 
   async function save({ estado, silent } = {}) {
-    if (!form.cliente.trim()) { toast('warning', 'Pon un nombre de cliente', 'Identifica el proyecto en el paso «Datos del lugar»'); setStep(0); return null }
+    if (!form.cliente.trim()) {
+      setErrors((e) => ({ ...e, cliente: 'Campo obligatorio' }))
+      setShake((s) => s + 1)
+      setStep(0)
+      toast('warning', 'Pon un nombre de cliente', 'Identifica el proyecto en el paso «Datos del lugar»')
+      return null
+    }
     setSaving(true)
     const body = {
       cliente: form.cliente.trim(),
@@ -211,7 +281,7 @@ export default function Wizard() {
             {STEPS.map((s, i) => {
               const st = stepState(i)
               return (
-                <button key={i} className={`sun-step sun-step--${st}`} onClick={() => setStep(i)}>
+                <button key={i} className={`sun-step sun-step--${st}`} onClick={() => (i > step ? goToStep(i) : setStep(i))}>
                   <span className="sun-step__marker">
                     {st === 'done' ? <Icon name="check" size={15} /> : st === 'stale' ? <Icon name="alert-triangle" size={15} /> : (i + 1)}
                   </span>
@@ -229,18 +299,18 @@ export default function Wizard() {
               <>
                 <div className="sun-divider">Cliente</div>
                 <div className="sun-wizard__formgrid">
-                  <Field label="Cliente / proyecto" required value={form.cliente} onChange={(e) => patch({ cliente: e.target.value })} placeholder="Ej: J. García" />
+                  <Field key={`cliente-${shake}`} label="Cliente / proyecto" required error={errors.cliente} value={form.cliente} onChange={(e) => patch({ cliente: e.target.value })} placeholder="Ej: J. García" />
                   <Field label="Localidad" value={form.localidad} onChange={(e) => patch({ localidad: e.target.value })} placeholder="Alicante" />
                 </div>
                 <Field label="Dirección" value={form.direccion} onChange={(e) => patch({ direccion: e.target.value })} placeholder="C/ Mayor 4, 2ºA" />
 
                 <div className="sun-divider">Emplazamiento y consumo</div>
                 <div className="sun-wizard__formgrid">
-                  <Field label="Necesidad anual" numeric type="number" step="any" value={form.necesidad} onChange={(e) => patch({ necesidad: e.target.value })} hint="kWh/año" required />
+                  <Field key={`necesidad-${shake}`} label="Necesidad anual" numeric type="number" step="any" error={errors.necesidad} value={form.necesidad} onChange={(e) => patch({ necesidad: e.target.value })} hint="kWh/año" required />
                   <SelectField label="Autoconsumo" value={form.autoconsumo} onChange={(e) => patch({ autoconsumo: e.target.value })}
                     options={[{ value: 70, label: '70 %' }, { value: 80, label: '80 %' }, { value: 90, label: '90 %' }, { value: 100, label: '100 %' }]} />
-                  <Field label="Latitud" numeric type="number" step="any" value={form.latitud} onChange={(e) => patch({ latitud: e.target.value })} placeholder="38.352" required />
-                  <Field label="Longitud" numeric type="number" step="any" value={form.longitud} onChange={(e) => patch({ longitud: e.target.value })} placeholder="-0.493" required />
+                  <Field key={`latitud-${shake}`} label="Latitud" numeric type="number" step="any" error={errors.latitud} value={form.latitud} onChange={(e) => patch({ latitud: e.target.value })} placeholder="38.352" required />
+                  <Field key={`longitud-${shake}`} label="Longitud" numeric type="number" step="any" error={errors.longitud} value={form.longitud} onChange={(e) => patch({ longitud: e.target.value })} placeholder="-0.493" required />
                 </div>
                 {flag('geo_map') && (
                   <div style={{ marginTop: 'var(--space-4)' }}>
@@ -258,8 +328,8 @@ export default function Wizard() {
                 </label>
                 {form.coplanar && (
                   <div className="sun-wizard__formgrid" style={{ marginTop: 'var(--space-4)' }}>
-                    <Field label="Inclinación (°)" numeric type="number" step="any" value={form.inclinacion} onChange={(e) => patch({ inclinacion: e.target.value })} />
-                    <Field label="Azimut (°)" numeric type="number" step="any" value={form.azimut} onChange={(e) => patch({ azimut: e.target.value })} hint="180 = sur" />
+                    <Field key={`inclinacion-${shake}`} label="Inclinación (°)" numeric type="number" step="any" required error={errors.inclinacion} value={form.inclinacion} onChange={(e) => patch({ inclinacion: e.target.value })} />
+                    <Field key={`azimut-${shake}`} label="Azimut (°)" numeric type="number" step="any" required error={errors.azimut} value={form.azimut} onChange={(e) => patch({ azimut: e.target.value })} hint="180 = sur" />
                   </div>
                 )}
               </>
@@ -268,9 +338,10 @@ export default function Wizard() {
             {step === 1 && (
               <>
                 <div className="sun-divider">Selección de equipos</div>
-                <div className="sun-field" style={{ marginBottom: 'var(--space-4)' }}>
+                <div className="sun-field" style={{ marginBottom: 'var(--space-4)' }} key={`panel-${shake}`}>
                   <span className="sun-field__label" id="ss-panel">Panel solar <span className="req">*</span></span>
-                  <SearchSelect labelId="ss-panel" placeholder="Buscar panel (nombre, potencia…)" options={panels} value={panel} onPick={pickPanel} meta={panelMeta} />
+                  <SearchSelect labelId="ss-panel" placeholder="Buscar panel (nombre, potencia…)" options={panels} value={panel} onPick={pickPanel} meta={panelMeta} error={errors.panel} />
+                  {errors.panel && <span className="sun-field__error"><Icon name="alert-circle" size={13} />{errors.panel}</span>}
                 </div>
                 <div className="sun-field">
                   <span className="sun-field__label" id="ss-inverter">
@@ -346,9 +417,9 @@ export default function Wizard() {
             <div className="sun-wizard__nav">
               <Btn variant="secondary" icon="arrow-left" disabled={step === 0} onClick={() => setStep(Math.max(0, step - 1))}>Atrás</Btn>
               {step === 1 ? (
-                <Btn variant="primary" iconRight="arrow-right" data-busy={analyzing} disabled={analyzing} onClick={() => { setStep(2); if (!results || stale) analyze() }}>{analyzing ? 'Calculando…' : 'Calcular y continuar'}</Btn>
+                <Btn variant="primary" iconRight="arrow-right" data-busy={analyzing} disabled={analyzing} onClick={() => { if (!tryAdvance(1)) return; setStep(2); if (!results || stale) analyze() }}>{analyzing ? 'Calculando…' : 'Calcular y continuar'}</Btn>
               ) : (
-                <Btn variant="primary" iconRight="arrow-right" onClick={() => (step < 3 ? setStep(step + 1) : goToMemoria())}>{step < 3 ? 'Continuar' : 'Generar memoria'}</Btn>
+                <Btn variant="primary" iconRight="arrow-right" onClick={() => { if (step >= 3) { goToMemoria(); return } if (tryAdvance(step)) setStep(step + 1) }}>{step < 3 ? 'Continuar' : 'Generar memoria'}</Btn>
               )}
             </div>
           </div>
@@ -388,13 +459,13 @@ function batteryMeta(b) {
   return `${dec(b.capacity_kwh)} kWh · ${dec(b.power_kw)} kW${b.technology ? ` · ${b.technology}` : ''}`
 }
 
-function SearchSelect({ placeholder, options, value, onPick, meta, clearable, onClear, labelId }) {
+function SearchSelect({ placeholder, options, value, onPick, meta, clearable, onClear, labelId, error }) {
   const [open, setOpen] = useState(false)
   const [q, setQ] = useState('')
   const listId = useId()
   const list = q ? options.filter((o) => o.nombre.toLowerCase().includes(q.toLowerCase())) : options
   return (
-    <div className="sun-search" onMouseLeave={() => setOpen(false)}>
+    <div className={`sun-search${error ? ' sun-search--error' : ''}`} onMouseLeave={() => setOpen(false)}>
       <div className="sun-search__control">
         <Icon name="search" size={16} />
         <input
@@ -403,6 +474,7 @@ function SearchSelect({ placeholder, options, value, onPick, meta, clearable, on
           aria-expanded={open}
           aria-controls={listId}
           aria-labelledby={labelId}
+          aria-invalid={error ? 'true' : undefined}
           placeholder={value ? value.nombre : placeholder}
           value={q}
           onFocus={() => setOpen(true)}

@@ -76,6 +76,16 @@
 .sun-input[disabled], .sun-select[disabled] { background: var(--ink-100); color: var(--text-subtle); cursor: not-allowed; }
 .sun-input[aria-invalid="true"] { border-color: var(--danger); }
 .sun-input[aria-invalid="true"]:focus { box-shadow: 0 0 0 3px color-mix(in oklab, var(--danger) 30%, transparent); }
+@keyframes sun-shake {
+  10%, 90% { transform: translateX(-1px); }
+  20%, 80% { transform: translateX(2px); }
+  30%, 50%, 70% { transform: translateX(-3px); }
+  40%, 60% { transform: translateX(3px); }
+}
+.sun-input[aria-invalid="true"],
+.sun-search--error .sun-search__control { animation: sun-shake 320ms var(--ease-out); }
+.sun-search--error .sun-search__control { border-color: var(--danger); }
+.sun-search--error .sun-search__control:focus-within { box-shadow: 0 0 0 3px color-mix(in oklab, var(--danger) 30%, transparent); }
 
 .sun-select { appearance: none; padding-right: var(--space-8);
   background-image: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='16' height='16' viewBox='0 0 24 24' fill='none' stroke='%238a8378' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'><polyline points='6 9 12 15 18 9'/></svg>");
