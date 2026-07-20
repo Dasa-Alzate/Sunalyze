@@ -65,54 +65,57 @@ def load_initial_data():
     json_path = os.path.join(os.path.dirname(__file__), '../../data/database.json')
 
     try:
-        if Panel.query.first() or Inverter.query.first():
-            logger.info("Datos iniciales ya presentes, se omite la carga.")
-            return
-
         with open(json_path, 'r', encoding='utf-8') as f:
             data = json.load(f)
 
-        for panel_data in data.get('placas', []):
-            catalog = _official_catalog(_brand_from_name(panel_data['nombre']))
-            panel = Panel(
-                catalog_id=catalog.id,
-                nombre=panel_data['nombre'],
-                y=panel_data['y'],
-                tcp=panel_data['tcp'],
-                tcv=panel_data['tcv'],
-                voc=panel_data['voc'],
-                vmp=panel_data['vmp'],
-                imp=panel_data['imp'],
-                isc=panel_data['isc'],
-                power=panel_data['power'],
-                t_noct=panel_data['t_noct'],
-                height=panel_data['height'],
-                width=panel_data['width'],
-                datasheet=panel_data.get('datasheet')
-            )
-            db.session.add(panel)
+        if Panel.query.first() is None:
+            for panel_data in data.get('placas', []):
+                catalog = _official_catalog(_brand_from_name(panel_data['nombre']))
+                panel = Panel(
+                    catalog_id=catalog.id,
+                    nombre=panel_data['nombre'],
+                    y=panel_data['y'],
+                    tcp=panel_data['tcp'],
+                    tcv=panel_data['tcv'],
+                    voc=panel_data['voc'],
+                    vmp=panel_data['vmp'],
+                    imp=panel_data['imp'],
+                    isc=panel_data['isc'],
+                    power=panel_data['power'],
+                    t_noct=panel_data['t_noct'],
+                    height=panel_data['height'],
+                    width=panel_data['width'],
+                    datasheet=panel_data.get('datasheet')
+                )
+                db.session.add(panel)
 
-        for inverter_data in data.get('inversores', []):
-            catalog = _official_catalog(_brand_from_name(inverter_data['nombre']))
-            inverter = Inverter(
-                catalog_id=catalog.id,
-                nombre=inverter_data['nombre'],
-                y=inverter_data['y'],
-                power_max=inverter_data.get('power_max', inverter_data.get('power', 0)),
-                power=inverter_data['power'],
-                vmax=inverter_data['vmax'],
-                I_max_input=inverter_data['I_max_input'],
-                I_max_output=inverter_data['I_max_output'],
-                datasheet=inverter_data.get('datasheet')
-            )
-            db.session.add(inverter)
+        if Inverter.query.first() is None:
+            for inverter_data in data.get('inversores', []):
+                catalog = _official_catalog(_brand_from_name(inverter_data['nombre']))
+                inverter = Inverter(
+                    catalog_id=catalog.id,
+                    nombre=inverter_data['nombre'],
+                    y=inverter_data['y'],
+                    power_max=inverter_data.get('power_max', inverter_data.get('power', 0)),
+                    power=inverter_data['power'],
+                    vmax=inverter_data['vmax'],
+                    I_max_input=inverter_data['I_max_input'],
+                    I_max_output=inverter_data['I_max_output'],
+                    datasheet=inverter_data.get('datasheet')
+                )
+                db.session.add(inverter)
 
-        for battery_data in SEED_BATTERIES:
-            catalog = _official_catalog(_brand_from_name(battery_data['nombre']))
-            battery = Battery(catalog_id=catalog.id, **battery_data)
-            db.session.add(battery)
+        if Battery.query.first() is None:
+            for battery_data in SEED_BATTERIES:
+                catalog = _official_catalog(_brand_from_name(battery_data['nombre']))
+                battery = Battery(catalog_id=catalog.id, **battery_data)
+                db.session.add(battery)
 
-        InstallationDefaults.query.delete()
+        if InstallationDefaults.query.first() is not None:
+            db.session.commit()
+            logger.info("Datos iniciales asegurados (carga parcial completada).")
+            return
+
         defaults = InstallationDefaults(
             dc_material='cobre/unipolar',
             dc_modelo='H1Z2Z2-K',

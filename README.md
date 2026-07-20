@@ -58,7 +58,11 @@ flask seed demo                                              # instalación nati
 docker compose --env-file .env.docker exec web flask seed demo   # con Docker
 ```
 
-Crea (idempotente) la cuenta de desarrollo y los feature flags por defecto:
+Crea (idempotente) un entorno de demo completo: la cuenta de desarrollo, los
+catálogos de equipos, las plantillas oficiales, los feature flags activados
+para la org, y tres proyectos en distintos puntos del flujo — uno **aprobado**
+con memoria firmada, instalación de posventa (lecturas, mantenimiento,
+incidencias) y escenario financiero; uno **en revisión**; y uno en **borrador**:
 
 | Campo | Valor |
 |---|---|

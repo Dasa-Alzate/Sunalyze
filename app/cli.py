@@ -23,26 +23,19 @@ flags_cli = AppGroup('flags', help='Gestión de feature flags.')
 docs_cli = AppGroup('docs', help='Banco oficial de tipos de documento.')
 seed_cli = AppGroup('seed', help='Datos de prueba para desarrollo local.')
 
-DEMO_EMAIL = 'sunalize_test@sunalize.com'
-DEMO_PASSWORD = 'test123'
-
 
 @seed_cli.command('demo')
 def seed_demo():
-    """Crea la cuenta de prueba local (superadmin) y los flags por defecto. Idempotente."""
-    from app.services.auth_service import AuthService
-    from app.services.flag_service import FlagService
+    """Crea la cuenta de prueba (superadmin) y un dataset de demo completo. Idempotente."""
+    from app.services.demo_seed import DemoSeeder, DEMO_EMAIL, DEMO_PASSWORD
     if current_app.config.get('IS_PRODUCTION') and os.environ.get('ALLOW_SEED_DEMO') != '1':
         click.echo('Aviso: entorno marcado como producción. Si es un despliegue real NO sigas; '
                    'para un entorno local con Docker, reintenta con ALLOW_SEED_DEMO=1.')
         raise click.Abort()
-    user = User.query.filter_by(email=DEMO_EMAIL).first()
-    if not user:
-        user, _ = AuthService.register(DEMO_EMAIL, DEMO_PASSWORD, 'Sunalize', 'Test', 'Sunalize Test')
-    user.is_superadmin = True
-    user.email_verified = True
-    db.session.commit()
-    FlagService.ensure_defaults()
+    report = DemoSeeder.seed()
+    click.echo(f"Dataset: {report['dataset']}")
+    click.echo(f"Plantillas oficiales: {report['documentos']['created']} creadas, "
+               f"{report['documentos']['skipped']} ya existían.")
     click.echo(f'Cuenta de prueba lista: {DEMO_EMAIL} / {DEMO_PASSWORD} (superadmin).')
 
 
