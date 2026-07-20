@@ -40,7 +40,15 @@ class DemoSeeder:
         from app.services.document_bank import DocumentBankSeeder
         from app.services.flag_service import FlagService
 
+        from app.models.catalog import Catalog
+
         report = {}
+        activated = (Catalog.query
+                     .filter(Catalog.org_id.is_(None), Catalog.is_official.is_(True),
+                             Catalog.is_active.is_(False))
+                     .update({'is_active': True}, synchronize_session=False))
+        db.session.commit()
+        report['catalogos_activados'] = activated
         load_initial_data()
         ensure_marketplace()
         report['documentos'] = DocumentBankSeeder.seed()
