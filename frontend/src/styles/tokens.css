@@ -114,9 +114,9 @@
   --font-display: 'Roboto', system-ui, sans-serif;
   --font-mono: 'Share Tech Mono', 'Cascadia Code', Consolas, ui-monospace, 'SFMono-Regular', Menlo, monospace;
 
-  --fw-regular: 200;
-  --fw-medium: 500;
-  --fw-semibold: 600;
+  --fw-regular: 300;
+  --fw-medium: 400;
+  --fw-semibold: 400;
   --fw-bold: 700;
   --fw-extrabold: 800;
 
