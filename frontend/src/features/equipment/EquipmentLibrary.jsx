@@ -143,7 +143,10 @@ export default function EquipmentLibrary() {
     }
   }, [tab])
 
-  const counts = TAB_ORDER.reduce((acc, t) => { acc[t] = (data[t] || []).length; return acc }, {})
+  const counts = TAB_ORDER.reduce((acc, t) => {
+    acc[t] = (catalogs || []).reduce((sum, c) => sum + ((c.counts && c.counts[t]) || 0), 0)
+    return acc
+  }, {})
   const visibleRows = (rows || []).filter((r) => filter === 'todos' || String(r.catalog_id) === String(filter))
 
   async function save(values) {
