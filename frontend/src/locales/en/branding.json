@@ -1,13 +1,27 @@
 {
-  "title": "Organization branding",
-  "crumb": "Organization",
   "intro": "Customize the logo, color and footer applied to generated documents.",
+  "groups": {
+    "logo": "Logo",
+    "color": "Color",
+    "footer": "Footer",
+    "serial": "Serial number"
+  },
   "fields": {
-    "logoPath": "Logo (URL or path)",
-    "logoHint": "Public URL or path to the logo. No file is uploaded.",
+    "logo": "Organization logo",
+    "logoHint": "PNG, JPEG, WebP or SVG. Max 2 MB. Uploaded to the server, replacing the previous one.",
     "primaryColor": "Primary color",
     "colorText": "Color value",
-    "footerText": "Footer text"
+    "footerText": "Footer text",
+    "projectPrefix": "Serial number prefix",
+    "prefixHint": "Will be used as PREFIX-0001 in your projects."
+  },
+  "logo": {
+    "current": "Current logo",
+    "empty": "No logo",
+    "upload": "Upload logo",
+    "replace": "Replace logo",
+    "uploaded": "Logo updated",
+    "uploadError": "Could not upload the logo"
   },
   "preview": "Preview",
   "save": "Save branding",

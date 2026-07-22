@@ -32,8 +32,10 @@ const KINDS = [
 
 const api = {
   org: {
-    getBranding: vi.fn(() => Promise.resolve({ id: null, org_id: 3, logo_path: '', primary_color: '', footer_text: '' })),
+    getBranding: vi.fn(() => Promise.resolve({ id: null, org_id: 3, logo_path: '', primary_color: '', footer_text: '', project_prefix: '' })),
     setBranding: vi.fn(() => Promise.resolve({})),
+    logoUrl: vi.fn(() => '/api/org/branding/logo'),
+    uploadLogo: vi.fn(() => Promise.resolve({ logo_path: 'cfiles/3/logo.png' })),
   },
   templates: {
     kinds: vi.fn(() => Promise.resolve(KINDS)),
@@ -266,7 +268,7 @@ describe('BrandingSettings', () => {
   it('loads branding and has no axe violations', async () => {
     const { container } = render(<MemoryRouter><BrandingSettings /></MemoryRouter>)
     await waitFor(() => expect(api.org.getBranding).toHaveBeenCalled())
-    await waitFor(() => expect(screen.getByLabelText('Logo (URL o ruta)')).toBeInTheDocument())
+    await waitFor(() => expect(screen.getByLabelText('Logo de la organización')).toBeInTheDocument())
     expect(screen.getByLabelText('Color principal')).toBeInTheDocument()
     expect(screen.getByLabelText('Texto del pie de página')).toBeInTheDocument()
     await expectNoViolations(container)
@@ -274,7 +276,7 @@ describe('BrandingSettings', () => {
 
   it('saves branding via PATCH', async () => {
     render(<MemoryRouter><BrandingSettings /></MemoryRouter>)
-    await waitFor(() => expect(screen.getByLabelText('Logo (URL o ruta)')).toBeInTheDocument())
+    await waitFor(() => expect(screen.getByLabelText('Logo de la organización')).toBeInTheDocument())
     fireEvent.change(screen.getByLabelText('Texto del pie de página'), { target: { value: 'Mi empresa' } })
     fireEvent.click(screen.getByRole('button', { name: 'Guardar marca' }))
     await waitFor(() => expect(api.org.setBranding).toHaveBeenCalled())

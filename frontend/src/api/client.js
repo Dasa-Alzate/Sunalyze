@@ -52,6 +52,23 @@ async function requestBlob(path, options = {}) {
   return res.blob()
 }
 
+async function requestForm(path, formData, method = 'POST') {
+  const res = await fetch(path, {
+    method,
+    credentials: 'include',
+    headers: { 'X-CSRFToken': getCookie('csrf_token') },
+    body: formData,
+  })
+  const text = await res.text()
+  const data = text ? safeJson(text) : null
+  if (!res.ok) {
+    notifyUnauthorized(path, res.status)
+    const message = (data && (data.error || data.message)) || `Error ${res.status}`
+    throw new ApiError(message, res.status, data)
+  }
+  return data
+}
+
 function safeJson(text) {
   try {
     return JSON.parse(text)
@@ -152,6 +169,12 @@ export const api = {
   org: {
     getBranding: () => get('/api/org/branding'),
     setBranding: (b) => patch('/api/org/branding', b),
+    logoUrl: () => '/api/org/branding/logo',
+    uploadLogo: (file) => {
+      const fd = new FormData()
+      fd.append('logo', file)
+      return requestForm('/api/org/branding/logo', fd)
+    },
   },
   workspace: {
     list: () => get('/api/workspace'),

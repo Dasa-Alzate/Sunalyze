@@ -1,13 +1,27 @@
 {
-  "title": "Marca de la organización",
-  "crumb": "Organización",
   "intro": "Personaliza el logo, el color y el pie de página que se aplican a los documentos generados.",
+  "groups": {
+    "logo": "Logo",
+    "color": "Color",
+    "footer": "Pie de página",
+    "serial": "Nº de serie"
+  },
   "fields": {
-    "logoPath": "Logo (URL o ruta)",
-    "logoHint": "URL pública o ruta del logo. No se sube ningún archivo.",
+    "logo": "Logo de la organización",
+    "logoHint": "PNG, JPEG, WebP o SVG. Máximo 2 MB. Se sube al servidor y reemplaza al anterior.",
     "primaryColor": "Color principal",
     "colorText": "Valor del color",
-    "footerText": "Texto del pie de página"
+    "footerText": "Texto del pie de página",
+    "projectPrefix": "Prefijo de nº de serie",
+    "prefixHint": "Se usará como PREFIJO-0001 en tus proyectos."
+  },
+  "logo": {
+    "current": "Logo actual",
+    "empty": "Sin logo",
+    "upload": "Subir logo",
+    "replace": "Reemplazar logo",
+    "uploaded": "Logo actualizado",
+    "uploadError": "No se pudo subir el logo"
   },
   "preview": "Vista previa",
   "save": "Guardar marca",
