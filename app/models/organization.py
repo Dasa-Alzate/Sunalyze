@@ -59,6 +59,7 @@ class OrgBrandingProfile(BaseModel):
     logo_path = db.Column(db.String(500))
     primary_color = db.Column(db.String(20))
     footer_text = db.Column(db.String(300))
+    project_prefix = db.Column(db.String(8))
 
     organization = db.relationship('Organization')
 
@@ -69,6 +70,7 @@ class OrgBrandingProfile(BaseModel):
             'logo_path': self.logo_path,
             'primary_color': self.primary_color,
             'footer_text': self.footer_text,
+            'project_prefix': self.project_prefix,
         }
 
     def __repr__(self):
