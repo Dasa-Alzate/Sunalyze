@@ -124,7 +124,15 @@ export default function ProjectList() {
                       onClick={() => nav(`/app/diseno/${p.id}`)}
                       onKeyDown={(ev) => { if (ev.key === 'Enter' || ev.key === ' ') { ev.preventDefault(); nav(`/app/diseno/${p.id}`) } }}
                     >
-                      <td><div className="sun-cell-client"><strong>{p.cliente}</strong><span>{p.direccion || '—'}</span></div></td>
+                      <td>
+                        <div className="sun-cell-client">
+                          <strong style={{ display: 'inline-flex', alignItems: 'center', gap: 8 }}>
+                            {p.serial && <Badge tone="neutral"><span className="mono">{p.serial}</span></Badge>}
+                            {p.cliente}
+                          </strong>
+                          <span>{p.direccion || '—'}</span>
+                        </div>
+                      </td>
                       <td style={{ color: 'var(--text-muted)' }}>
                         {p.panel_nombre ? <>{p.panel_nombre}{p.n_paneles ? <> · <span className="num">{p.n_paneles}</span> ud</> : null}</> : '—'}
                       </td>

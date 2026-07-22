@@ -9,6 +9,7 @@ from app.authz import require_permission, Permission
 from app.errors import NotFound, ValidationError
 from app.services.audit_service import AuditService
 from app.services.catalog_service import CatalogService
+from app.services.org_service import OrgService
 from app.models.battery import Battery
 from app.schemas.project import ProjectCreateSchema, ProjectUpdateSchema
 
@@ -74,7 +75,8 @@ def list_projects():
     if estado and estado != 'todos':
         query = query.filter(Project.estado == estado)
     projects = query.order_by(Project.updated_at.desc()).all()
-    return jsonify([p.to_dict() for p in projects])
+    prefix = OrgService.get_branding(current_org_id()).get('project_prefix')
+    return jsonify([p.to_dict(prefix=prefix) for p in projects])
 
 
 @require_permission(Permission.PROJECT_DELETE)
@@ -87,7 +89,8 @@ def list_deleted_projects():
         .order_by(Project.deleted_at.desc())
         .all()
     )
-    return jsonify([p.to_dict() for p in projects])
+    prefix = OrgService.get_branding(current_org_id()).get('project_prefix')
+    return jsonify([p.to_dict(prefix=prefix) for p in projects])
 
 
 @projects_bp.route('/api/projects/<int:project_id>', methods=['GET'])
@@ -108,6 +111,7 @@ def create_project():
     clean = ProjectCreateSchema(**data).model_dump(exclude_unset=True)
     _validate_battery(clean, current_org_id())
     project = Project(cliente=clean['cliente'], org_id=current_org_id())
+    project.serial_seq = Project.next_serial_seq(current_org_id())
     _apply(project, clean)
     db.session.add(project)
     db.session.flush()
@@ -178,6 +182,7 @@ def restore_project(project_id):
 def duplicate_project(project_id):
     source = _owned_or_404(project_id)
     clone = Project(cliente=f'{source.cliente} (copia)', org_id=current_org_id())
+    clone.serial_seq = Project.next_serial_seq(current_org_id())
     copied = {f: getattr(source, f) for f in _EDITABLE_FIELDS if f not in ('cliente', 'estado')}
     _apply(clone, copied)
     clone.resultados = source.resultados

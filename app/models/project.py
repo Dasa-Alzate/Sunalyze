@@ -7,6 +7,8 @@ from .database import BaseModel, SoftDeleteMixin
 
 ESTADOS = ('borrador', 'en_revision', 'presentado', 'aprobado', 'rechazado')
 
+_UNSET = object()
+
 
 class Project(BaseModel, SoftDeleteMixin):
     """
@@ -21,6 +23,8 @@ class Project(BaseModel, SoftDeleteMixin):
     __tablename__ = 'projects'
 
     org_id = db.Column(db.Integer, db.ForeignKey('organizations.id', ondelete='CASCADE'), index=True)
+
+    serial_seq = db.Column(db.Integer, nullable=True)
 
     cliente = db.Column(db.String(150), nullable=False)
     direccion = db.Column(db.String(255))
@@ -67,6 +71,35 @@ class Project(BaseModel, SoftDeleteMixin):
         order_by='ProjectEvent.created_at.desc()',
     )
 
+    @classmethod
+    def next_serial_seq(cls, org_id):
+        """Devuelve el siguiente correlativo de serie para una organizacion.
+
+        Toma el maximo `serial_seq` de los proyectos de esa org **incluyendo los borrados
+        logicamente** (`with_deleted`) y le suma 1, de modo que un numero nunca se reutiliza.
+        En alta muy concurrente dos creaciones simultaneas podrian leer el mismo maximo y
+        colisionar (carrera); el volumen de creacion es bajo y se considera aceptable.
+        """
+        current = (
+            db.session.query(db.func.max(cls.serial_seq))
+            .filter(cls.org_id == org_id)
+            .scalar()
+        )
+        return (current or 0) + 1
+
+    def formatted_serial(self, prefix):
+        """Formatea el serial como `{prefijo}-{seq:04d}`, o `{seq:04d}` sin prefijo.
+
+        Devuelve `None` si el proyecto aun no tiene `serial_seq` asignado.
+        """
+        if self.serial_seq is None:
+            return None
+        padded = f'{self.serial_seq:04d}'
+        clean_prefix = (prefix or '').strip()
+        if clean_prefix:
+            return f'{clean_prefix}-{padded}'
+        return padded
+
     @property
     def current_signature(self):
         """Devuelve la firma de memoria vigente, o None si no hay ninguna."""
@@ -103,10 +136,21 @@ class Project(BaseModel, SoftDeleteMixin):
             return math.ceil(float(data['cell_amount']))
         return None
 
-    def to_dict(self):
+    def to_dict(self, prefix=_UNSET):
+        """Serializa el proyecto.
+
+        `prefix` es el prefijo de serie de la org (branding). Si no se pasa, se lee
+        perezosamente del branding de la org del proyecto; los listados deben resolverlo una
+        sola vez por org y pasarlo para evitar N+1.
+        """
+        if prefix is _UNSET:
+            from app.services.org_service import OrgService
+            prefix = OrgService.get_branding(self.org_id).get('project_prefix')
         return {
             'id': self.id,
             'org_id': self.org_id,
+            'serial_seq': self.serial_seq,
+            'serial': self.formatted_serial(prefix),
             'cliente': self.cliente,
             'direccion': self.direccion,
             'localidad': self.localidad,

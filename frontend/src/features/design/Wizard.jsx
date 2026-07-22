@@ -1,7 +1,7 @@
 import { useEffect, useId, useMemo, useState } from 'react'
 import { useNavigate, useParams } from 'react-router-dom'
 import { Topbar } from '@/shared/ui'
-import { Btn, Icon, Field, SelectField, ExportMenu, Spinner, ErrorState } from '@/shared/ui'
+import { Btn, Badge, Icon, Field, SelectField, ExportMenu, Spinner, ErrorState } from '@/shared/ui'
 import { api } from '@/api/client'
 import { dec, int, num } from '@/shared/format'
 import { exportRows } from '@/services/export'
@@ -37,6 +37,7 @@ export default function Wizard() {
   const [batteries, setBatteries] = useState([])
 
   const [projectId, setProjectId] = useState(id ? Number(id) : null)
+  const [serial, setSerial] = useState(null)
   const [form, setForm] = useState(EMPTY_FORM)
   const [panelId, setPanelId] = useState(null)
   const [inverterId, setInverterId] = useState(null)
@@ -63,6 +64,7 @@ export default function Wizard() {
         setBatteries(bats)
         if (proj) {
           setProjectId(proj.id)
+          setSerial(proj.serial || null)
           setForm({
             cliente: proj.cliente || '', localidad: proj.localidad || '', direccion: proj.direccion || '',
             necesidad: proj.necesidad ?? '', autoconsumo: proj.autoconsumo ?? 90,
@@ -150,6 +152,7 @@ export default function Wizard() {
       } else {
         proj = await api.projects.create(body)
         setProjectId(proj.id)
+        setSerial(proj.serial || null)
         window.history.replaceState(null, '', `/app/diseno/${proj.id}`)
       }
       if (!silent) toast('success', 'Proyecto guardado')
@@ -195,6 +198,7 @@ export default function Wizard() {
         crumb="Proyectos"
         actions={
           <>
+            {serial && <Badge tone="neutral"><span className="mono">{serial}</span></Badge>}
             <Btn variant="secondary" icon="save" data-busy={saving} disabled={saving} onClick={() => save()}>Guardar</Btn>
             <Btn variant="secondary" icon="workflow" onClick={() => setStep(3)}>Diagrama unifilar</Btn>
             <Btn variant="primary" icon="file-text" onClick={goToMemoria}>Ir a la memoria</Btn>
