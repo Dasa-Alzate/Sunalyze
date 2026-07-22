@@ -72,6 +72,7 @@ export default function TemplatesGallery() {
   const [error, setError] = useState(null)
   const [categoryFilter, setCategoryFilter] = useState('')
   const [labelFilter, setLabelFilter] = useState('')
+  const [kindFilter, setKindFilter] = useState([])
   const [stageFilter, setStageFilter] = useState('')
   const [countryFilter, setCountryFilter] = useState('')
   const [favoritesOnly, setFavoritesOnly] = useState(false)
@@ -143,8 +144,13 @@ export default function TemplatesGallery() {
     loadLibrary().catch((e) => setError(e.message))
   }
 
+  function toggleKind(value) {
+    setKindFilter((prev) => (prev.includes(value) ? prev.filter((k) => k !== value) : [...prev, value]))
+  }
+
   function matchesTags(template) {
     if (!template) return false
+    if (kindFilter.length && !kindFilter.includes(template.kind)) return false
     if (stageFilter && template.stage !== stageFilter) return false
     if (countryFilter && template.country !== countryFilter) return false
     return true
@@ -156,15 +162,15 @@ export default function TemplatesGallery() {
     return [...set].sort()
   }, [bank, orgTemplates, library])
 
-  const bankFiltered = useMemo(() => (bank || []).filter(matchesTags), [bank, stageFilter, countryFilter])
-  const orgFiltered = useMemo(() => (orgTemplates || []).filter(matchesTags), [orgTemplates, stageFilter, countryFilter])
+  const bankFiltered = useMemo(() => (bank || []).filter(matchesTags), [bank, kindFilter, stageFilter, countryFilter])
+  const orgFiltered = useMemo(() => (orgTemplates || []).filter(matchesTags), [orgTemplates, kindFilter, stageFilter, countryFilter])
 
   const libraryFiltered = useMemo(() => {
     let rows = library || []
     if (labelFilter) rows = rows.filter((i) => (i.labels || []).some((l) => String(l.id) === labelFilter))
     rows = rows.filter((i) => matchesTags(i.template))
     return rows
-  }, [library, labelFilter, stageFilter, countryFilter])
+  }, [library, labelFilter, kindFilter, stageFilter, countryFilter])
 
   function renderGrid(list, asInstallations) {
     if (list === null) return <Spinner label="Cargando plantillas…" />
@@ -240,6 +246,28 @@ export default function TemplatesGallery() {
                 {countryOptions.map((c) => <option key={c} value={c}>{c}</option>)}
               </select>
             </div>
+
+            {kinds.length > 0 && (
+              <div className="sun-toolbar tpl-kind-filter" style={{ marginTop: 'var(--space-4)' }}>
+                <span className="sun-field__label">Tipo de documento</span>
+                <div className="tpl-kind-filter__chips" role="group" aria-label="Filtrar por tipo de documento">
+                  {kinds.map((k) => (
+                    <Btn
+                      key={k.value}
+                      variant={kindFilter.includes(k.value) ? 'primary' : 'secondary'}
+                      size="sm"
+                      aria-pressed={kindFilter.includes(k.value)}
+                      onClick={() => toggleKind(k.value)}
+                    >
+                      {k.label}
+                    </Btn>
+                  ))}
+                  {kindFilter.length > 0 && (
+                    <Btn variant="ghost" size="sm" icon="x" onClick={() => setKindFilter([])}>Limpiar</Btn>
+                  )}
+                </div>
+              </div>
+            )}
 
             {tab === 'library' && (
               <div className="sun-toolbar" style={{ marginTop: 'var(--space-4)' }}>
