@@ -17,7 +17,7 @@
 .sun-langswitch { padding: 0 var(--space-1); }
 .sun-select--sm { height: 30px; font-size: var(--text-sm); }
 .sun-nav-item { position: relative; display: flex; align-items: center; gap: var(--space-3); padding: var(--space-2) var(--space-3); border: 0; background: transparent; color: var(--text-muted); font-family: var(--font-sans); font-size: var(--text-base); font-weight: var(--fw-medium); border-radius: var(--radius-sm); cursor: pointer; text-align: left; transition: background var(--dur-fast) var(--ease-out), color var(--dur-fast) var(--ease-out); }
-.sun-nav-item:hover { background: var(--ink-100); color: var(--text-strong); }
+.sun-nav-item:hover { background: var(--hover-surface); color: var(--text-strong); }
 .sun-nav-item--active { background: var(--green-50); color: var(--green-700); font-weight: var(--fw-semibold); }
 .sun-nav-item--active::before { content: ""; position: absolute; left: 0; top: 50%; transform: translateY(-50%); width: 3px; height: 18px; border-radius: var(--radius-pill); background: var(--primary); }
 .sun-nav-item--active [data-lucide], .sun-nav-item--active svg { color: var(--green-600); }
@@ -109,7 +109,7 @@
 .sun-notif-center__more { display: flex; justify-content: center; padding-top: var(--space-2); }
 .sun-notif-list { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: var(--space-1); }
 .sun-notif-item { display: flex; align-items: center; gap: var(--space-2); border-radius: var(--radius-sm); }
-.sun-notif-item:hover { background: var(--ink-100); }
+.sun-notif-item:hover { background: var(--hover-surface); }
 .sun-notif-item__main { flex: 1; display: flex; align-items: center; gap: var(--space-2); padding: var(--space-2) var(--space-3); border: 0; background: transparent; color: var(--text-muted); font-family: var(--font-sans); font-size: var(--text-sm); text-align: left; cursor: pointer; }
 .sun-notif-item--unread .sun-notif-item__main { color: var(--text-strong); font-weight: var(--fw-medium); }
 .sun-notif-item__dot { width: 7px; height: 7px; flex: none; border-radius: var(--radius-pill); background: var(--primary); }
@@ -124,7 +124,7 @@
 .sun-activity-list { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; }
 .sun-activity-item { position: relative; z-index: 0; display: flex; align-items: flex-start; gap: var(--space-3); padding: var(--space-3) 0; border-bottom: 1px solid var(--border-subtle); }
 .sun-activity-item:last-child { border-bottom: 0; }
-.sun-activity-item__icon { position: static; width: 30px; height: 30px; flex: none; display: inline-flex; align-items: center; justify-content: center; border-radius: var(--radius-pill); background: var(--ink-100); color: var(--text-muted); }
+.sun-activity-item__icon { position: static; width: 30px; height: 30px; flex: none; display: inline-flex; align-items: center; justify-content: center; border-radius: var(--radius-pill); background: var(--soft-chip); color: var(--text-muted); }
 .sun-activity-item__icon::before { content: ''; position: absolute; left: 15px; top: calc(var(--space-3) + 15px); width: 2px; height: 100%; transform: translateX(-50%); background: var(--border-subtle); z-index: -1; }
 .sun-activity-item:last-child .sun-activity-item__icon::before { content: none; }
 .sun-activity-item__body { flex: 1; min-width: 0; }
@@ -132,7 +132,7 @@
 .sun-activity-item__name { color: var(--text-strong); font-weight: 400; }
 .sun-activity-item__meta { margin: 2px 0 0; font-size: var(--text-xs); color: var(--text-subtle); }
 .sun-activity-item__link { display: inline-flex; align-items: center; justify-content: center; width: 30px; height: 30px; flex: none; border-radius: var(--radius-sm); color: var(--text-muted); }
-.sun-activity-item__link:hover { background: var(--ink-100); color: var(--text-strong); }
+.sun-activity-item__link:hover { background: var(--hover-surface); color: var(--text-strong); }
 .sun-activity__footer { display: flex; align-items: center; justify-content: space-between; gap: var(--space-3); margin-top: var(--space-4); }
 .sun-activity__count { font-size: var(--text-xs); color: var(--text-subtle); }
 .sun-trash-section { margin-bottom: var(--space-6); }

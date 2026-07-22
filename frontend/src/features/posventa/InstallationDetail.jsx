@@ -53,13 +53,13 @@ export default function InstallationDetail({ installationId, onBack }) {
     }
   }
 
-  if (error) return <ErrorState message={error} onRetry={reload} />
-  if (!data) return <Spinner label="Cargando instalación…" />
+  if (error) return <div className="sun-content"><ErrorState message={error} onRetry={reload} /></div>
+  if (!data) return <div className="sun-content"><Spinner label="Cargando instalación…" /></div>
 
   const s = meta(INSTALLATION_STATUS, data.status)
 
   return (
-    <>
+    <div className="sun-content">
       <div className="posventa-detail__head">
         <Btn variant="ghost" size="sm" icon="arrow-left" onClick={onBack}>Volver</Btn>
         <h2 className="posventa-detail__title">
@@ -82,7 +82,7 @@ export default function InstallationDetail({ installationId, onBack }) {
         <span><Icon name="folder" size={14} /> Proyecto #{data.project_id}</span>
       </Card>
 
-      <div className="sun-tabs" role="tablist" aria-label="Secciones de la instalación">
+      <div className="sun-tabs" role="tablist" aria-label="Secciones de la instalación" style={{ marginBottom: 'var(--space-5)' }}>
         {TABS.map((t) => (
           <button
             key={t.key}
@@ -120,6 +120,6 @@ export default function InstallationDetail({ installationId, onBack }) {
           />
         )}
       </Card>
-    </>
+    </div>
   )
 }

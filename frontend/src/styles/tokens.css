@@ -80,6 +80,10 @@
   --surface-accent-soft: var(--amber-50);
   --surface-overlay:    color-mix(in srgb, #000 40%, transparent);
 
+  --hover-surface:        var(--ink-100);
+  --hover-surface-strong: var(--ink-100);
+  --soft-chip:            var(--ink-100);
+
   --text-strong:   var(--ink-900);
   --text-body:     var(--ink-700);
   --text-muted:    var(--ink-600);
@@ -206,6 +210,10 @@
   --surface-brand-soft: color-mix(in srgb, var(--green-500) 16%, #1c1b1a);
   --surface-accent-soft: color-mix(in srgb, var(--amber-500) 14%, #1c1b1a);
   --surface-overlay:    color-mix(in srgb, #000 60%, transparent);
+
+  --hover-surface:        rgba(255, 255, 255, 0.06);
+  --hover-surface-strong: rgba(255, 255, 255, 0.10);
+  --soft-chip:            rgba(255, 255, 255, 0.08);
 
   --text-strong:   #f5f4f2;
   --text-body:     var(--ink-300);

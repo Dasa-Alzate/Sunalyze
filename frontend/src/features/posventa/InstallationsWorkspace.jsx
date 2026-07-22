@@ -75,28 +75,30 @@ export default function InstallationsWorkspace() {
         actions={<Btn variant="primary" icon="plug-zap" onClick={() => setConvert(true)}>Convertir en instalación</Btn>}
       />
 
-      {error ? (
-        <ErrorState message={error} onRetry={load} />
-      ) : installations === null ? (
-        <Spinner label="Cargando instalaciones…" />
-      ) : installations.length === 0 ? (
-        <Card className="sun-card--pad">
-          <div className="sun-empty">
-            <div className="sun-empty__icon"><Icon name="plug-zap" size={26} /></div>
-            <div className="sun-empty__title">Aún no hay instalaciones</div>
-            <div className="sun-empty__desc">Convierte un proyecto aprobado en una instalación para empezar el seguimiento de posventa.</div>
-            <div className="sun-empty__actions">
-              <Btn variant="primary" icon="plug-zap" onClick={() => setConvert(true)}>Convertir en instalación</Btn>
+      <div className="sun-content">
+        {error ? (
+          <ErrorState message={error} onRetry={load} />
+        ) : installations === null ? (
+          <Spinner label="Cargando instalaciones…" />
+        ) : installations.length === 0 ? (
+          <Card className="sun-card--pad">
+            <div className="sun-empty">
+              <div className="sun-empty__icon"><Icon name="plug-zap" size={26} /></div>
+              <div className="sun-empty__title">Aún no hay instalaciones</div>
+              <div className="sun-empty__desc">Convierte un proyecto aprobado en una instalación para empezar el seguimiento de posventa.</div>
+              <div className="sun-empty__actions">
+                <Btn variant="primary" icon="plug-zap" onClick={() => setConvert(true)}>Convertir en instalación</Btn>
+              </div>
             </div>
+          </Card>
+        ) : (
+          <div className="posventa-grid">
+            {installations.map((i) => (
+              <InstallationCard key={i.id} installation={i} onOpen={setSelected} />
+            ))}
           </div>
-        </Card>
-      ) : (
-        <div className="posventa-grid">
-          {installations.map((i) => (
-            <InstallationCard key={i.id} installation={i} onOpen={setSelected} />
-          ))}
-        </div>
-      )}
+        )}
+      </div>
 
       {convert && (
         <ConvertProjectDialog

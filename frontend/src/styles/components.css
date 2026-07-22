@@ -24,10 +24,10 @@
 .sun-btn--primary:active { background: var(--primary-active); }
 
 .sun-btn--secondary { background: var(--surface-card); color: var(--text-strong); border-color: var(--border-strong); }
-.sun-btn--secondary:hover { background: var(--ink-100); border-color: var(--ink-500); }
+.sun-btn--secondary:hover { background: var(--hover-surface); border-color: var(--border-strong); }
 
 .sun-btn--ghost { background: transparent; color: var(--text-body); }
-.sun-btn--ghost:hover { background: var(--ink-100); }
+.sun-btn--ghost:hover { background: var(--hover-surface); }
 
 .sun-btn--danger { background: var(--danger); color: #fff; }
 .sun-btn--danger:hover { background: var(--red-700); }
@@ -47,7 +47,7 @@
   border: 1px solid transparent; background: transparent; color: var(--text-muted);
   cursor: pointer; transition: background var(--dur-fast) var(--ease-out), color var(--dur-fast) var(--ease-out), border-color var(--dur-fast) var(--ease-out);
 }
-.sun-iconbtn:hover { background: var(--ink-100); color: var(--text-strong); }
+.sun-iconbtn:hover { background: var(--hover-surface); color: var(--text-strong); }
 .sun-iconbtn:focus-visible { outline: none; box-shadow: var(--shadow-focus); }
 .sun-iconbtn[disabled] { opacity: 0.4; cursor: not-allowed; }
 .sun-iconbtn svg, .sun-iconbtn [data-lucide] { width: 18px; height: 18px; stroke-width: 1.9; }
@@ -73,7 +73,7 @@
 .sun-input:hover, .sun-select:hover { border-color: var(--ink-500); }
 .sun-input:focus, .sun-select:focus { outline: none; border-color: var(--primary); box-shadow: var(--shadow-focus); }
 .sun-input[data-numeric], .sun-input.mono { font-variant-numeric: tabular-nums; }
-.sun-input[disabled], .sun-select[disabled] { background: var(--ink-100); color: var(--text-subtle); cursor: not-allowed; }
+.sun-input[disabled], .sun-select[disabled] { background: var(--hover-surface); color: var(--text-subtle); cursor: not-allowed; }
 .sun-input[aria-invalid="true"] { border-color: var(--danger); }
 .sun-input[aria-invalid="true"]:focus { box-shadow: 0 0 0 3px color-mix(in oklab, var(--danger) 30%, transparent); }
 
@@ -120,7 +120,7 @@
 .sun-badge { display: inline-flex; align-items: center; gap: 5px; font-size: var(--text-xs); font-weight: var(--fw-semibold);
   padding: 3px 9px; border-radius: var(--radius-pill); line-height: 1.4; white-space: nowrap; }
 .sun-badge svg, .sun-badge [data-lucide] { width: 12px; height: 12px; stroke-width: 2.2; }
-.sun-badge--neutral { background: var(--ink-100); color: var(--text-muted); }
+.sun-badge--neutral { background: var(--soft-chip); color: var(--text-muted); }
 .sun-badge--brand { background: var(--green-100); color: var(--green-800); }
 .sun-badge--accent { background: var(--amber-100); color: var(--amber-700); }
 .sun-badge--info { background: var(--info-soft); color: var(--info-fg); }
@@ -136,7 +136,7 @@
 .sun-statusdot--pending { background: var(--state-pending); }
 
 .sun-tag { display: inline-flex; align-items: center; gap: 6px; font-size: var(--text-sm); font-weight: var(--fw-medium);
-  background: var(--ink-100); color: var(--text-body); padding: 4px 8px 4px 10px; border-radius: var(--radius-sm); border: 1px solid var(--border-subtle); }
+  background: var(--soft-chip); color: var(--text-body); padding: 4px 8px 4px 10px; border-radius: var(--radius-sm); border: 1px solid var(--border-subtle); }
 .sun-tag button { display: inline-flex; align-items: center; justify-content: center; min-width: 24px; min-height: 24px; border: 0; background: transparent; color: var(--text-subtle); cursor: pointer; padding: 0; border-radius: var(--radius-xs); }
 .sun-tag button:hover { color: var(--text-strong); }
 .sun-tag button svg, .sun-tag button [data-lucide] { width: 13px; height: 13px; }
@@ -153,7 +153,7 @@
 .sun-stepper { display: flex; flex-direction: column; gap: var(--space-1); }
 .sun-step { display: flex; align-items: center; gap: var(--space-3); padding: var(--space-3); border-radius: var(--radius-md); border: 1px solid transparent;
   cursor: pointer; text-align: left; background: transparent; font-family: var(--font-sans); width: 100%; transition: background var(--dur-fast) var(--ease-out), border-color var(--dur-fast) var(--ease-out); }
-.sun-step:hover { background: var(--ink-100); }
+.sun-step:hover { background: var(--hover-surface); }
 .sun-step__marker { width: 26px; height: 26px; border-radius: 50%; flex: none; display: flex; align-items: center; justify-content: center;
   font-family: var(--font-mono); font-size: var(--text-sm); font-weight: var(--fw-semibold); border: 1.5px solid var(--border-strong); color: var(--text-muted); background: var(--surface-card); }
 .sun-step__marker svg, .sun-step__marker [data-lucide] { width: 15px; height: 15px; stroke-width: 2.5; }
@@ -176,7 +176,7 @@
 .sun-tab svg, .sun-tab [data-lucide] { width: 16px; height: 16px; }
 .sun-tab:hover { color: var(--text-strong); }
 .sun-tab--active { color: var(--text-brand); border-bottom-color: var(--primary); }
-.sun-tab__count { font-family: var(--font-mono); font-size: var(--text-2xs); background: var(--ink-100); color: var(--text-muted); padding: 1px 6px; border-radius: var(--radius-pill); }
+.sun-tab__count { font-family: var(--font-mono); font-size: var(--text-2xs); background: var(--soft-chip); color: var(--text-muted); padding: 1px 6px; border-radius: var(--radius-pill); }
 
 /* ---------------------------------- SearchSelect ---------------------------------- */
 .sun-search { position: relative; }
@@ -198,7 +198,7 @@
 .sun-table { width: 100%; border-collapse: collapse; font-size: var(--text-sm); }
 .sun-table thead th { text-align: left; font-size: var(--text-2xs); font-weight: var(--fw-bold); letter-spacing: var(--tracking-wide); text-transform: uppercase; color: var(--text-subtle); padding: var(--space-3) var(--space-4); border-bottom: 1px solid var(--border); background: var(--surface-sunken); }
 .sun-table tbody td { padding: var(--space-3) var(--space-4); border-bottom: 1px solid var(--border-subtle); color: var(--text-body); }
-.sun-table tbody tr:hover { background: var(--ink-100); }
+.sun-table tbody tr:hover { background: var(--hover-surface); }
 .sun-table tbody tr:last-child td { border-bottom: 0; }
 .sun-table .num { font-variant-numeric: tabular-nums; color: var(--text-strong); }
 .sun-table__name { font-weight: var(--fw-semibold); color: var(--text-strong); }
@@ -239,7 +239,7 @@
 .sun-menu--left { left: 0; }
 .sun-menu__label { font-size: var(--text-2xs); font-weight: var(--fw-semibold); letter-spacing: var(--tracking-wider); text-transform: uppercase; color: var(--text-subtle); padding: var(--space-2) var(--space-3) var(--space-1); }
 .sun-menu__item { display: flex; align-items: center; gap: var(--space-3); width: 100%; padding: var(--space-2) var(--space-3); border: 0; background: transparent; border-radius: var(--radius-sm); cursor: pointer; font-family: var(--font-sans); font-size: var(--text-base); color: var(--text-body); text-align: left; transition: background var(--dur-fast) var(--ease-out); }
-.sun-menu__item:hover, .sun-menu__item:focus-visible { background: var(--ink-100); color: var(--text-strong); outline: none; }
+.sun-menu__item:hover, .sun-menu__item:focus-visible { background: var(--hover-surface-strong); color: var(--text-strong); outline: none; }
 .sun-menu__item:focus-visible { box-shadow: var(--shadow-focus); }
 .sun-menu__item svg, .sun-menu__item [data-lucide] { width: 16px; height: 16px; color: var(--text-muted); flex: none; }
 .sun-menu__item:hover svg, .sun-menu__item:focus-visible svg, .sun-menu__item:hover [data-lucide], .sun-menu__item:focus-visible [data-lucide] { color: var(--text-brand); }
@@ -325,7 +325,7 @@
 .posventa-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap: var(--space-4); }
 .posventa-card { padding: 0; }
 .posventa-card__btn { width: 100%; text-align: left; background: transparent; border: 0; cursor: pointer; padding: var(--space-5); display: flex; flex-direction: column; gap: var(--space-3); border-radius: inherit; }
-.posventa-card__btn:hover { background: var(--ink-100); }
+.posventa-card__btn:hover { background: var(--hover-surface); }
 .posventa-card__head { display: flex; align-items: center; justify-content: space-between; gap: var(--space-3); }
 .posventa-card__head strong { font-size: var(--text-md); color: var(--text-strong); }
 .posventa-card__meta { display: flex; flex-wrap: wrap; gap: var(--space-3); font-size: var(--text-sm); color: var(--text-muted); }
