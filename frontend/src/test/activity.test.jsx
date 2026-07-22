@@ -59,8 +59,8 @@ describe('activity feed', () => {
   it('renders feed entries with translated actions and a link, no axe violations', async () => {
     const { container } = render(withRouter(<ActivityFeed />))
     await waitFor(() => expect(api.audit.feed).toHaveBeenCalled())
-    expect(await screen.findByText('creó un proyecto')).toBeInTheDocument()
-    expect(screen.getByText('restauró un catálogo')).toBeInTheDocument()
+    expect(await screen.findByText('creó el proyecto')).toBeInTheDocument()
+    expect(screen.getByText('restauró el catálogo')).toBeInTheDocument()
     const links = screen.getAllByRole('link', { name: /abrir objeto relacionado|open related/i })
     expect(links[0]).toHaveAttribute('href', '/app/proyectos/7')
     const results = await axe(container, { rules: { 'color-contrast': { enabled: false } } })

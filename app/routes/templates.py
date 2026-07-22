@@ -12,6 +12,8 @@ from app.security import current_org_id, current_user
 from app.authz import require_permission, require_flag, Permission
 from app.services.template_service import TemplateService
 from app.services.document_service import DocumentService
+from app.services.audit_service import AuditService
+from app.extensions import db
 from app.services.template_engine import variable_catalog
 from app.gateways.queue import get_queue, STATUS_FINISHED
 from app.models.report_template import DocumentKind
@@ -86,6 +88,12 @@ def create_template():
         locale=data.locale, currency=data.currency,
         content=data.content,
     )
+    AuditService.record(
+        'template.create', actor=user, org_id=current_org_id(),
+        entity_type='report_template', entity_id=tpl.id,
+        payload={'nombre': tpl.name, 'kind': tpl.kind},
+    )
+    db.session.commit()
     return jsonify(tpl.to_dict(with_content=True)), 201
 
 
@@ -96,6 +104,12 @@ def update_template(template_id):
     data = TemplateUpdateSchema(**_body())
     tpl = TemplateService.update_template(
         current_org_id(), template_id, **data.model_dump(exclude_none=True))
+    AuditService.record(
+        'template.update', actor=current_user(), org_id=current_org_id(),
+        entity_type='report_template', entity_id=tpl.id,
+        payload={'nombre': tpl.name},
+    )
+    db.session.commit()
     return jsonify(tpl.to_dict())
 
 
@@ -103,7 +117,14 @@ def update_template(template_id):
 @require_flag(FLAG)
 @require_permission(Permission.TEMPLATE_MANAGE)
 def delete_template(template_id):
+    existing = TemplateService.get_template(current_org_id(), template_id)
     TemplateService.delete_template(current_org_id(), template_id)
+    AuditService.record(
+        'template.delete', actor=current_user(), org_id=current_org_id(),
+        entity_type='report_template', entity_id=template_id,
+        payload={'nombre': existing.get('name')},
+    )
+    db.session.commit()
     return jsonify({'ok': True})
 
 

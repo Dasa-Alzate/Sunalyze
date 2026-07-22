@@ -29,6 +29,7 @@ function ActivityRow({ item }) {
       <div className="sun-activity-item__body">
         <p className="sun-activity-item__text">
           <strong>{actor}</strong> <span>{actionLabel(t, item.action)}</span>
+          {item.entity_label && <span className="sun-activity-item__name"> «{item.entity_label}»</span>}
         </p>
         <p className="sun-activity-item__meta">
           <time dateTime={item.created_at}>{dateTime(item.created_at)}</time>

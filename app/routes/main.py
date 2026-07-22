@@ -2,7 +2,7 @@
 
 from flask import Blueprint, request, jsonify, render_template, Response, current_app
 
-from app.extensions import limiter
+from app.extensions import limiter, db
 from app.services.analysis_service import AnalysisService
 from app.services.diagrama_service import DiagramaService
 from app.services.catalog_service import CatalogService
@@ -11,6 +11,7 @@ from app.security import current_org_id, current_user
 from app.authz import require_permission, Permission
 from app.errors import ValidationError, NotFound
 from app.gateways.queue import get_queue, STATUS_FINISHED, STATUS_FAILED
+from app.services.audit_service import AuditService
 
 bp = Blueprint('main', __name__)
 
@@ -67,6 +68,11 @@ def generar_memoria_pdf():
         'memoria_pdf', form_data=form_data,
         org_id=current_org_id(), user_id=user.id if user else None,
     )
+    AuditService.record(
+        'memoria.generate', actor=user, org_id=current_org_id(),
+        entity_type='memoria', entity_id=None,
+    )
+    db.session.commit()
     if queue.is_async:
         return jsonify({'job_id': job_id, 'status': queue.get_status(job_id)}), 202
     return _memoria_pdf_response(queue.get_result(job_id)['pdf'])

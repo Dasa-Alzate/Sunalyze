@@ -261,7 +261,7 @@ def import_equipment(resource):
         resource, cfg, org_id, uploaded.filename, content, catalog_id=catalog_id)
     AuditService.record(
         'equipment.import', actor=current_user(), org_id=org_id,
-        entity_type=resource, entity_id=summary.get('catalog_id'),
+        entity_type='catalog', entity_id=summary.get('catalog_id'),
         payload={'resource': resource, 'created': summary['created'],
                  'updated': summary['updated'], 'errors': len(summary['errors'])},
     )
@@ -298,6 +298,12 @@ def update_equipment(resource, item_id):
         row.is_locked = True
         row.source = 'manual'
         row.needs_review = False
+    AuditService.record(
+        'equipment.update', actor=current_user(), org_id=org_id,
+        entity_type=resource, entity_id=row.id,
+        payload={'resource': resource, 'nombre': getattr(row, 'nombre', None),
+                 'catalog_id': row.catalog_id},
+    )
     db.session.commit()
     return jsonify(_serialize(row, set(CatalogService.own_catalog_ids(org_id)), _official_catalog_ids()))
 

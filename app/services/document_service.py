@@ -165,6 +165,14 @@ class DocumentService:
             generated_at=datetime.utcnow(),
         )
         db.session.add(document)
+        db.session.flush()
+        from app.services.audit_service import AuditService
+        AuditService.record(
+            'document.generate', actor=user, org_id=org_id,
+            entity_type='document', entity_id=document.id,
+            payload={'nombre': template.name, 'cliente': project.cliente,
+                     'kind': template.kind, 'project_id': project.id},
+        )
         db.session.commit()
         return document
 
