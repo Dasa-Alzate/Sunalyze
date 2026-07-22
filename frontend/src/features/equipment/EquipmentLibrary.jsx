@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import { Topbar } from '@/shared/ui'
 import { Btn, IconBtn, Icon, Badge, Field, SelectField, ExportMenu, Spinner, ErrorState, Scrim } from '@/shared/ui'
 import { api } from '@/api/client'
@@ -108,6 +108,7 @@ export default function EquipmentLibrary() {
   const [market, setMarket] = useState(null)
   const [error, setError] = useState(null)
   const [editing, setEditing] = useState(null)
+  const [importing, setImporting] = useState(false)
   const [newCatalog, setNewCatalog] = useState(false)
   const [filter, setFilter] = useState('todos')
 
@@ -268,6 +269,7 @@ export default function EquipmentLibrary() {
           </button>
           {!isMarket && (
             <div style={{ marginLeft: 'auto', alignSelf: 'center', display: 'flex', gap: 'var(--space-3)' }}>
+              {canEdit && <Btn variant="secondary" icon="upload" onClick={() => setImporting(true)}>Importar</Btn>}
               <ExportMenu onExport={exportCurrent} />
               {canEdit && <Btn variant="primary" icon="plus" onClick={() => setEditing({})}>Añadir {schema.singular}</Btn>}
             </div>
@@ -372,6 +374,15 @@ export default function EquipmentLibrary() {
             ownCatalogs={ownCatalogs}
             onClose={() => setEditing(null)}
             onSave={save}
+          />
+        )}
+
+        {importing && schema && (
+          <ImportDrawer
+            schema={schema}
+            ownCatalogs={ownCatalogs}
+            onClose={() => setImporting(false)}
+            onDone={() => { loadEquipment(); loadCatalogs() }}
           />
         )}
 
@@ -488,6 +499,117 @@ function EditDrawer({ schema, initial, ownCatalogs, onClose, onSave }) {
         <div className="sun-drawer__foot">
           <Btn variant="secondary" onClick={onClose}>Cancelar</Btn>
           <Btn variant="primary" icon="check" onClick={() => onSave(values)}>Guardar</Btn>
+        </div>
+      </div>
+    </Scrim>
+  )
+}
+
+function ImportDrawer({ schema, ownCatalogs, onClose, onDone }) {
+  const inputRef = useRef(null)
+  const [catalogId, setCatalogId] = useState(ownCatalogs[0]?.id ?? '')
+  const [busy, setBusy] = useState(false)
+  const [dragOver, setDragOver] = useState(false)
+  const [summary, setSummary] = useState(null)
+
+  function downloadTemplate() {
+    const headers = schema.fields.map((f) => f.key)
+    const blob = new Blob([headers.join('\t') + '\n'], { type: 'text/tab-separated-values;charset=utf-8' })
+    const url = URL.createObjectURL(blob)
+    const a = document.createElement('a')
+    a.href = url
+    a.download = `plantilla-${schema.resource}.tsv`
+    document.body.appendChild(a)
+    a.click()
+    setTimeout(() => { a.remove(); URL.revokeObjectURL(url) }, 100)
+  }
+
+  async function send(file) {
+    if (!file || busy) return
+    setBusy(true)
+    setSummary(null)
+    try {
+      const res = await api[schema.resource].importFile(file, catalogId || undefined)
+      setSummary(res)
+      const parts = [`${res.created} creados`, `${res.updated} actualizados`]
+      if (res.errors.length) parts.push(`${res.errors.length} con error`)
+      toast(res.errors.length ? 'info' : 'success', 'Importación completada', parts.join(' · '))
+      onDone()
+    } catch (e) {
+      const code = e.data && e.data.code
+      toast('error', 'No se pudo importar', code ? `${e.message} (${code})` : e.message)
+    } finally {
+      setBusy(false)
+    }
+  }
+
+  function onDrop(e) {
+    e.preventDefault()
+    setDragOver(false)
+    const file = e.dataTransfer.files && e.dataTransfer.files[0]
+    if (file) send(file)
+  }
+
+  return (
+    <Scrim onClose={onClose} label={`Importar ${schema.label.toLowerCase()}`}>
+      <div className="sun-drawer">
+        <div className="sun-drawer__head">
+          <h3>Importar {schema.label.toLowerCase()}</h3>
+          <IconBtn icon="x" label="Cerrar" onClick={onClose} />
+        </div>
+        <div className="sun-drawer__body">
+          <ol className="eq-import-steps">
+            <li>Descarga la plantilla TSV con las columnas esperadas.</li>
+            <li>Rellena una fila por equipo respetando las cabeceras.</li>
+            <li>Arrastra el archivo o haz clic para elegirlo (TSV, CSV o Excel).</li>
+          </ol>
+          {ownCatalogs.length > 0 ? (
+            <SelectField label="Catálogo destino" value={catalogId} onChange={(e) => setCatalogId(e.target.value)}
+              options={ownCatalogs.map((c) => ({ value: c.id, label: c.nombre }))} />
+          ) : (
+            <div className="sun-inline-note sun-inline-note--info">
+              <Icon name="info" size={14} /> Se importará a tu catálogo «Mis equipos» (se creará automáticamente).
+            </div>
+          )}
+          <Btn variant="secondary" icon="download" onClick={downloadTemplate}>Descargar plantilla TSV</Btn>
+          <div
+            className={`eq-import-drop${dragOver ? ' eq-import-drop--over' : ''}`}
+            role="button"
+            tabIndex={0}
+            onClick={() => inputRef.current && inputRef.current.click()}
+            onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); inputRef.current && inputRef.current.click() } }}
+            onDragOver={(e) => { e.preventDefault(); setDragOver(true) }}
+            onDragLeave={() => setDragOver(false)}
+            onDrop={onDrop}
+          >
+            <Icon name={busy ? 'loader' : 'upload-cloud'} size={26} />
+            <div className="eq-import-drop__title">{busy ? 'Procesando…' : 'Arrastra o haz clic para subir'}</div>
+            <div className="eq-import-drop__hint">TSV, CSV o Excel · máx. 2 MB</div>
+          </div>
+          <input
+            ref={inputRef}
+            type="file"
+            accept=".tsv,.csv,.xlsx,.xls"
+            style={{ display: 'none' }}
+            onChange={(e) => { const f = e.target.files && e.target.files[0]; e.target.value = ''; if (f) send(f) }}
+          />
+          {summary && (
+            <div className="eq-import-result">
+              <div className="eq-import-result__badges">
+                <Badge tone="brand" icon="plus">{summary.created} creados</Badge>
+                <Badge tone="info" icon="refresh-cw">{summary.updated} actualizados</Badge>
+                {summary.errors.length > 0 && <Badge tone="warning" icon="alert-triangle">{summary.errors.length} con error</Badge>}
+              </div>
+              {summary.errors.length > 0 && (
+                <ul className="eq-import-errors">
+                  {summary.errors.map((er, i) => <li key={i}>Fila {er.row}: {er.msg}</li>)}
+                </ul>
+              )}
+            </div>
+          )}
+        </div>
+        <div className="sun-drawer__foot">
+          <Btn variant="secondary" onClick={onClose}>Cerrar</Btn>
         </div>
       </div>
     </Scrim>

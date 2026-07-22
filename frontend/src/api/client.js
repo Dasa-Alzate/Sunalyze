@@ -88,6 +88,12 @@ export class ApiError extends Error {
 
 const get = (p) => request(p)
 const post = (p, body) => request(p, { method: 'POST', body: JSON.stringify(body) })
+const importFile = (resource) => (file, catalogId) => {
+  const fd = new FormData()
+  fd.append('file', file)
+  if (catalogId != null) fd.append('catalog_id', String(catalogId))
+  return requestForm(`/api/${resource}/import`, fd)
+}
 const patch = (p, body) => request(p, { method: 'PATCH', body: JSON.stringify(body) })
 const del = (p, body) => request(p, body !== undefined ? { method: 'DELETE', body: JSON.stringify(body) } : { method: 'DELETE' })
 
@@ -97,24 +103,28 @@ export const api = {
     create: (b) => post('/api/panels', b),
     update: (id, b) => patch(`/api/panels/${id}`, b),
     remove: (id) => del(`/api/panels/${id}`),
+    importFile: importFile('panels'),
   },
   inverters: {
     list: () => get('/api/inverters'),
     create: (b) => post('/api/inverters', b),
     update: (id, b) => patch(`/api/inverters/${id}`, b),
     remove: (id) => del(`/api/inverters/${id}`),
+    importFile: importFile('inverters'),
   },
   batteries: {
     list: () => get('/api/batteries'),
     create: (b) => post('/api/batteries', b),
     update: (id, b) => patch(`/api/batteries/${id}`, b),
     remove: (id) => del(`/api/batteries/${id}`),
+    importFile: importFile('batteries'),
   },
   wires: {
     list: () => get('/api/wires'),
     create: (b) => post('/api/wires', b),
     update: (id, b) => patch(`/api/wires/${id}`, b),
     remove: (id) => del(`/api/wires/${id}`),
+    importFile: importFile('wires'),
   },
   projects: {
     list: (estado) => get(`/api/projects${estado && estado !== 'todos' ? `?estado=${estado}` : ''}`),

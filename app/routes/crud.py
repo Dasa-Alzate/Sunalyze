@@ -22,6 +22,7 @@ from app.schemas.catalog import PanelSchema
 from app.security import current_org_id
 from app.authz import require_permission, Permission
 from app.services.catalog_service import CatalogService
+from app.services.equipment_import import EquipmentImportService
 from app.services.audit_service import AuditService
 from app.security import current_user
 from app.db_helpers import commit_or_conflict
@@ -72,8 +73,28 @@ RESOURCES = {
 }
 
 
+IMPORT_MAX_BYTES = 2 * 1024 * 1024
+
+IMPORT_ALLOWED_EXTENSIONS = {'.csv', '.tsv', '.xlsx', '.xls'}
+
+IMPORT_ALLOWED_MIMES = {
+    'text/csv',
+    'text/tab-separated-values',
+    'application/vnd.ms-excel',
+    'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
+}
+
+IMPORT_GENERIC_MIMES = {'application/octet-stream', 'text/plain', ''}
+
+
 def _cfg(resource):
     return RESOURCES[resource]
+
+
+def _import_extension(filename):
+    name = (filename or '').lower()
+    dot = name.rfind('.')
+    return name[dot:] if dot != -1 else ''
 
 
 def _validate_ranges(resource, values):
@@ -202,6 +223,50 @@ def create_equipment(resource):
     )
     commit_or_conflict('Ya existe un equipo con ese nombre.')
     return jsonify(_serialize(row, {catalog.id})), 201
+
+
+@crud_bp.route('/api/<any(panels,inverters,batteries,wires):resource>/import', methods=['POST'])
+@require_permission(Permission.EQUIPMENT_EDIT)
+def import_equipment(resource):
+    """Importa equipos desde un fichero TSV/CSV/Excel al catálogo propio de la org.
+
+    Valida MIME/extensión y tamaño antes de parsear; delega el parseo y el upsert
+    por fila en `EquipmentImportService`. Devuelve un resumen
+    `{created, updated, errors:[{row, msg}]}` sin abortar por filas malas.
+    """
+    cfg = _cfg(resource)
+    org_id = current_org_id()
+    uploaded = request.files.get('file')
+    if uploaded is None or not uploaded.filename:
+        raise ValidationError('Adjunta un archivo en el campo «file».', code='import.no_file')
+
+    extension = _import_extension(uploaded.filename)
+    if extension not in IMPORT_ALLOWED_EXTENSIONS:
+        raise ValidationError(
+            'Formato no admitido. Usa TSV, CSV o Excel.', code='import.bad_extension')
+    mimetype = (uploaded.mimetype or '').lower()
+    if mimetype not in IMPORT_ALLOWED_MIMES and mimetype not in IMPORT_GENERIC_MIMES:
+        raise ValidationError(
+            'Tipo de contenido no admitido.', code='import.bad_mime')
+
+    content = uploaded.read()
+    if not content:
+        raise ValidationError('El archivo está vacío.', code='import.empty')
+    if len(content) > IMPORT_MAX_BYTES:
+        raise ValidationError(
+            'El archivo supera el límite de 2 MB.', code='import.too_large')
+
+    catalog_id = request.form.get('catalog_id', type=int)
+    summary = EquipmentImportService.run(
+        resource, cfg, org_id, uploaded.filename, content, catalog_id=catalog_id)
+    AuditService.record(
+        'equipment.import', actor=current_user(), org_id=org_id,
+        entity_type=resource, entity_id=summary.get('catalog_id'),
+        payload={'resource': resource, 'created': summary['created'],
+                 'updated': summary['updated'], 'errors': len(summary['errors'])},
+    )
+    db.session.commit()
+    return jsonify(summary)
 
 
 @crud_bp.route('/api/<any(panels,inverters,batteries,wires):resource>/<int:item_id>', methods=['PATCH'])

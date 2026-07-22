@@ -1,6 +1,6 @@
 # API map
 
-Mapa autogenerado por `flask api-map`. Endpoints `/api`: 120.
+Mapa autogenerado por `flask api-map`. Endpoints `/api`: 121.
 
 No editar a mano: regenerar con `flask api-map`.
 
@@ -62,6 +62,7 @@ No editar a mano: regenerar con `flask api-map`.
 | DELETE | `/api/<any(panels,inverters,batteries,wires):resource>/<int:item_id>` | `crud.delete_equipment` |  |
 | GET | `/api/<any(panels,inverters,batteries,wires):resource>/<int:item_id>` | `crud.get_equipment` |  |
 | PATCH | `/api/<any(panels,inverters,batteries,wires):resource>/<int:item_id>` | `crud.update_equipment` | Edita un equipo propio o del catálogo OFICIAL (curación in situ). |
+| POST | `/api/<any(panels,inverters,batteries,wires):resource>/import` | `crud.import_equipment` | Importa equipos desde un fichero TSV/CSV/Excel al catálogo propio de la org. |
 | POST | `/api/wires/calculate-section` | `crud.calculate_section` |  |
 | GET | `/api/wires/search` | `crud.search_wires` |  |
 

@@ -24,6 +24,7 @@ markdown2==2.5.5
 MarkupSafe==3.0.3
 mysqlclient==2.2.7
 numpy==2.3.3
+openpyxl==3.1.5
 packaging==25.0
 pandas==2.3.3
 pikepdf==10.5.1

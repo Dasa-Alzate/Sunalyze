@@ -31,6 +31,17 @@
 .module-card__desc { font-size: var(--text-sm); color: var(--text-muted); flex: 1; }
 .module-card__foot { display: flex; align-items: center; gap: var(--space-3); padding-top: var(--space-2); }
 
+.eq-import-steps { margin: 0; padding-left: 1.15em; display: flex; flex-direction: column; gap: var(--space-2); font-size: var(--text-sm); color: var(--text-muted); }
+.eq-import-steps li { line-height: 1.4; }
+.eq-import-drop { display: flex; flex-direction: column; align-items: center; justify-content: center; gap: var(--space-2); padding: var(--space-6) var(--space-5); border: 2px dashed var(--border-strong); border-radius: var(--radius-md); background: var(--surface-sunken); color: var(--text-muted); cursor: pointer; text-align: center; transition: border-color 0.15s, background 0.15s; }
+.eq-import-drop:hover, .eq-import-drop:focus-visible { border-color: var(--primary); color: var(--text-strong); outline: none; }
+.eq-import-drop--over { border-color: var(--primary); background: var(--info-soft); color: var(--text-strong); }
+.eq-import-drop__title { font-weight: var(--fw-semibold); }
+.eq-import-drop__hint { font-size: var(--text-xs); color: var(--text-subtle); }
+.eq-import-result { display: flex; flex-direction: column; gap: var(--space-3); }
+.eq-import-result__badges { display: flex; flex-wrap: wrap; gap: var(--space-2); }
+.eq-import-errors { margin: 0; padding-left: 1.15em; display: flex; flex-direction: column; gap: 4px; font-size: var(--text-xs); color: var(--danger-fg); max-height: 180px; overflow-y: auto; }
+
 @media (max-width: 1100px) {
   .sun-wizard { grid-template-columns: 1fr; }
   .sun-memoria { grid-template-columns: 1fr; }
