@@ -1,18 +1,24 @@
 """CRUD de equipos (paneles, inversores, cables) scoped a los catalogos visibles.
 
 Visibilidad = catalogos propios del workspace + suscritos del marketplace.
-Solo los equipos de catalogos propios admiten escritura; los del marketplace
-son de solo lectura.
+Los equipos de catalogos propios admiten CRUD completo. Los del catalogo
+OFICIAL (marketplace, org_id NULL, is_official=True) son editables in situ por
+quien tenga EQUIPMENT_EDIT: es curacion de catalogo compartido, no borrado.
+Los del marketplace no oficial siguen siendo de solo lectura.
 """
 
 import logging
 from flask import Blueprint, request, jsonify
+from pydantic import ValidationError as PydanticValidationError
 
 from app.extensions import db
 from app.models.panel import Panel
 from app.models.inverter import Inverter
 from app.models.battery import Battery
 from app.models.wire import Wire
+from app.models.catalog import Catalog
+from app.models.provenance import ProvenanceMixin
+from app.schemas.catalog import PanelSchema
 from app.security import current_org_id
 from app.authz import require_permission, Permission
 from app.services.catalog_service import CatalogService
@@ -70,6 +76,24 @@ def _cfg(resource):
     return RESOURCES[resource]
 
 
+def _validate_ranges(resource, values):
+    """Valida rangos físicos con el schema pydantic cuando existe uno.
+
+    Solo paneles tienen schema hoy (`PanelSchema`); se aplica a los campos
+    presentes para admitir ediciones parciales.
+    """
+    if resource != 'panels':
+        return
+    payload = {k: v for k, v in values.items() if k in PanelSchema.model_fields}
+    if not payload:
+        return
+    try:
+        PanelSchema(**payload)
+    except PydanticValidationError as exc:
+        field = exc.errors()[0]['loc'][0] if exc.errors() else 'desconocido'
+        raise ValidationError(f'Valor fuera de rango para el campo: {field}')
+
+
 def _coerce(cfg, data):
     values = {}
     for field in cfg['fields']:
@@ -87,8 +111,24 @@ def _coerce(cfg, data):
     return values
 
 
-def _serialize(row, own_ids):
-    return {**row.to_dict(), 'editable': row.catalog_id in own_ids}
+def _official_catalog_ids():
+    rows = db.session.query(Catalog.id).filter(
+        Catalog.org_id.is_(None), Catalog.is_official.is_(True)
+    ).all()
+    return {r[0] for r in rows}
+
+
+def _serialize(row, own_ids, official_ids=frozenset()):
+    """Serializa un equipo marcando qué operaciones permite al workspace.
+
+    `editable` (PATCH) cubre catálogos propios y el oficial; `deletable`
+    (DELETE) solo los propios, porque borrar un oficial afecta a todas las orgs.
+    """
+    return {
+        **row.to_dict(),
+        'editable': row.catalog_id in own_ids or row.catalog_id in official_ids,
+        'deletable': row.catalog_id in own_ids,
+    }
 
 
 def _visible_row(cfg, item_id, visible):
@@ -98,12 +138,14 @@ def _visible_row(cfg, item_id, visible):
     return row
 
 
-def _editable_row(cfg, item_id, org_id):
+def _editable_row(cfg, item_id, org_id, allow_official=False):
     visible = set(CatalogService.visible_catalog_ids(org_id))
     row = _visible_row(cfg, item_id, visible)
-    if row.catalog_id not in set(CatalogService.own_catalog_ids(org_id)):
-        raise Forbidden('Los equipos del marketplace no se pueden modificar. Crea una copia en tu catálogo.')
-    return row
+    if row.catalog_id in set(CatalogService.own_catalog_ids(org_id)):
+        return row
+    if allow_official and row.catalog_id in _official_catalog_ids():
+        return row
+    raise Forbidden('Los equipos del marketplace no se pueden modificar. Crea una copia en tu catálogo.')
 
 
 @crud_bp.route('/api/<any(panels,inverters,batteries,wires):resource>', methods=['GET'])
@@ -113,11 +155,12 @@ def list_equipment(resource):
     org_id = current_org_id()
     visible = CatalogService.visible_catalog_ids(org_id)
     own_ids = set(CatalogService.own_catalog_ids(org_id))
+    official_ids = _official_catalog_ids()
     query = cfg['model'].query.filter(cfg['model'].catalog_id.in_(visible))
     catalog_id = request.args.get('catalog_id', type=int)
     if catalog_id:
         query = query.filter(cfg['model'].catalog_id == catalog_id)
-    return jsonify([_serialize(r, own_ids) for r in query.all()])
+    return jsonify([_serialize(r, own_ids, official_ids) for r in query.all()])
 
 
 @crud_bp.route('/api/<any(panels,inverters,batteries,wires):resource>/<int:item_id>', methods=['GET'])
@@ -127,7 +170,7 @@ def get_equipment(resource, item_id):
     org_id = current_org_id()
     visible = set(CatalogService.visible_catalog_ids(org_id))
     row = _visible_row(cfg, item_id, visible)
-    return jsonify(_serialize(row, set(CatalogService.own_catalog_ids(org_id))))
+    return jsonify(_serialize(row, set(CatalogService.own_catalog_ids(org_id)), _official_catalog_ids()))
 
 
 @crud_bp.route('/api/<any(panels,inverters,batteries,wires):resource>', methods=['POST'])
@@ -143,7 +186,9 @@ def create_equipment(resource):
         raise ValidationError('Campos requeridos: ' + ', '.join(missing))
 
     catalog = CatalogService.resolve_target_catalog(org_id, data.get('catalog_id'))
-    values = {**cfg['defaults'], **_coerce(cfg, data)}
+    coerced = _coerce(cfg, data)
+    _validate_ranges(resource, coerced)
+    values = {**cfg['defaults'], **coerced}
     row = cfg['model'](**values, catalog_id=catalog.id)
     if resource == 'inverters' and row.power_max is None:
         row.power_max = row.power
@@ -162,19 +207,34 @@ def create_equipment(resource):
 @crud_bp.route('/api/<any(panels,inverters,batteries,wires):resource>/<int:item_id>', methods=['PATCH'])
 @require_permission(Permission.EQUIPMENT_EDIT)
 def update_equipment(resource, item_id):
+    """Edita un equipo propio o del catálogo OFICIAL (curación in situ).
+
+    Implicación multi-tenant: el catálogo oficial es compartido (org_id NULL),
+    así que corregir aquí un panel scrapeado corrige el dato para todas las orgs
+    suscritas. Al guardar se sella la procedencia (`is_locked=True`,
+    `source='manual'`, `needs_review=False`): el scraper ya no lo sobrescribe y
+    el badge «Scraped» desaparece. Borrar un oficial no está permitido por esta
+    vía (ver `deletable`).
+    """
     cfg = _cfg(resource)
     org_id = current_org_id()
-    row = _editable_row(cfg, item_id, org_id)
+    row = _editable_row(cfg, item_id, org_id, allow_official=True)
     data = request.get_json(silent=True)
     if not data:
         raise ValidationError('Cuerpo JSON requerido.')
-    for field, value in _coerce(cfg, data).items():
+    coerced = _coerce(cfg, data)
+    _validate_ranges(resource, coerced)
+    for field, value in coerced.items():
         setattr(row, field, value)
     if data.get('catalog_id') and data['catalog_id'] != row.catalog_id:
         target = CatalogService.resolve_target_catalog(org_id, data['catalog_id'])
         row.catalog_id = target.id
+    if isinstance(row, ProvenanceMixin):
+        row.is_locked = True
+        row.source = 'manual'
+        row.needs_review = False
     db.session.commit()
-    return jsonify(_serialize(row, set(CatalogService.own_catalog_ids(org_id))))
+    return jsonify(_serialize(row, set(CatalogService.own_catalog_ids(org_id)), _official_catalog_ids()))
 
 
 @crud_bp.route('/api/<any(panels,inverters,batteries,wires):resource>/<int:item_id>', methods=['DELETE'])
