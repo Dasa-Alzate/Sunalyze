@@ -141,7 +141,6 @@ export default function Wizard() {
       resultados: results,
     }
     if (estado) body.estado = estado
-    else if (results) body.estado = 'diseno'
     try {
       let proj
       if (projectId) {
