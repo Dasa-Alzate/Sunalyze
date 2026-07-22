@@ -11,10 +11,9 @@
     "plantillas": "Templates",
     "finanzas": "Finance",
     "posventa": "After-sales",
-    "marca": "Branding",
     "actividad": "Activity",
     "papelera": "Trash",
-    "flags": "Flags"
+    "configuracion": "Settings"
   },
   "commands": "Commands",
   "settings": "Settings",

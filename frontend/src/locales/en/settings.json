@@ -5,5 +5,14 @@
     "en": "English",
     "changed": "Language updated",
     "error": "Could not change the language"
+  },
+  "config": {
+    "title": "Settings",
+    "crumb": "Organization",
+    "nav": "Settings sections",
+    "tabs": {
+      "marca": "Branding",
+      "flags": "Flags"
+    }
   }
 }

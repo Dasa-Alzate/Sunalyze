@@ -5,5 +5,14 @@
     "en": "English",
     "changed": "Idioma actualizado",
     "error": "No se pudo cambiar el idioma"
+  },
+  "config": {
+    "title": "Configuración",
+    "crumb": "Organización",
+    "nav": "Secciones de configuración",
+    "tabs": {
+      "marca": "Marca",
+      "flags": "Flags"
+    }
   }
 }

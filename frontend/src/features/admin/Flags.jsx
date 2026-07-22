@@ -1,5 +1,4 @@
 import { useEffect, useState } from 'react'
-import { Topbar } from '@/shared/ui'
 import { Btn, IconBtn, Icon, Badge, Field, SelectField, Spinner, ErrorState, Scrim } from '@/shared/ui'
 import { api } from '@/api/client'
 import { toast } from '@/services/toast'
@@ -62,13 +61,15 @@ export default function Flags() {
   }
 
   return (
-    <>
-      <Topbar
-        title="Feature flags"
-        crumb="Plataforma"
-        actions={<Btn variant="primary" icon="plus" onClick={() => setCreating(true)}>Nuevo flag</Btn>}
-      />
-      <div className="sun-content">
+    <div className="sun-cfg-panel">
+      <div className="sun-cfg-panel__head">
+        <div>
+          <h2 className="sun-cfg-panel__title">Feature flags</h2>
+          <p className="sun-cfg-panel__sub">Gatea funcionalidad por defecto, global o por org/usuario.</p>
+        </div>
+        <Btn variant="primary" icon="plus" onClick={() => setCreating(true)}>Nuevo flag</Btn>
+      </div>
+      <div>
         {error ? (
           <ErrorState message={error} onRetry={load} />
         ) : flags === null ? (
@@ -131,7 +132,7 @@ export default function Flags() {
         {creating && <CreateFlagDrawer onClose={() => setCreating(false)} onSave={createFlag} />}
         {target && <OverridesDrawer flag={target} onClose={() => setTarget(null)} onChanged={load} />}
       </div>
-    </>
+    </div>
   )
 }
 

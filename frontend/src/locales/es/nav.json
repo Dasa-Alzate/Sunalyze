@@ -11,10 +11,9 @@
     "plantillas": "Plantillas",
     "finanzas": "Finanzas",
     "posventa": "Posventa",
-    "marca": "Marca",
     "actividad": "Actividad",
     "papelera": "Papelera",
-    "flags": "Flags"
+    "configuracion": "Configuración"
   },
   "commands": "Comandos",
   "settings": "Ajustes",
