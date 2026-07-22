@@ -1,7 +1,6 @@
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest'
 import { render, screen, waitFor, fireEvent } from '@testing-library/react'
 import { axe } from 'vitest-axe'
-import { MemoryRouter, Routes, Route } from 'react-router-dom'
 
 const templates = [
   { name: 'solar-basico', label: 'Solar básico' },
@@ -14,7 +13,6 @@ const templates = [
 ]
 const panels = [{ id: 11, nombre: 'LONGi 550', power: 550, voc: 49.5, isc: 13.9 }]
 const inverters = [{ id: 21, nombre: 'Fronius 5.0', power: 5, vmax: 1000, I_max_output: 24 }]
-const project = { id: 5, cliente: 'ACME', panel_id: 11, inverter_id: 21, battery_id: 3 }
 
 const api = {
   circuit: {
@@ -24,9 +22,6 @@ const api = {
       return `/api/circuit/${template}${qs ? `?${qs}` : ''}`
     },
   },
-  panels: { list: vi.fn(() => Promise.resolve(panels)) },
-  inverters: { list: vi.fn(() => Promise.resolve(inverters)) },
-  projects: { get: vi.fn(() => Promise.resolve(project)) },
 }
 
 vi.mock('@/api/client', () => ({ api, csrfToken: () => 'tok' }))
@@ -46,15 +41,8 @@ afterEach(() => {
   vi.restoreAllMocks()
 })
 
-function renderAt(path) {
-  return render(
-    <MemoryRouter initialEntries={[path]}>
-      <Routes>
-        <Route path="/app/diagrama" element={<CircuitDiagram />} />
-        <Route path="/app/diagrama/:id" element={<CircuitDiagram />} />
-      </Routes>
-    </MemoryRouter>,
-  )
+function renderAt(props = {}) {
+  return render(<CircuitDiagram {...props} />)
 }
 
 function fetchedTemplates() {
@@ -68,14 +56,14 @@ async function expectNoViolations(container) {
 
 describe('CircuitDiagram · diagrama unifilar', () => {
   it('renders the view with no axe violations', async () => {
-    const { container } = renderAt('/app/diagrama')
+    const { container } = renderAt()
     await waitFor(() => expect(screen.getByLabelText('Plantilla')).toBeInTheDocument())
     await waitFor(() => expect(fetchMock).toHaveBeenCalled())
     await expectNoViolations(container)
   })
 
   it('fills the template selector from templates() with 7 options', async () => {
-    renderAt('/app/diagrama')
+    renderAt()
     const select = await screen.findByLabelText('Plantilla')
     expect(api.circuit.templates).toHaveBeenCalledTimes(1)
     expect(select.querySelectorAll('option')).toHaveLength(7)
@@ -83,12 +71,12 @@ describe('CircuitDiagram · diagrama unifilar', () => {
   })
 
   it('exposes the preview as an accessible image', async () => {
-    renderAt('/app/diagrama')
+    renderAt()
     expect(await screen.findByRole('img', { name: /esquema unifilar/i })).toBeInTheDocument()
   })
 
   it('changing the template changes the previewed template fetched', async () => {
-    renderAt('/app/diagrama')
+    renderAt()
     const select = await screen.findByLabelText('Plantilla')
     await waitFor(() => expect(fetchedTemplates()).toContain('/api/circuit/solar-con-fusibles'))
     fireEvent.change(select, { target: { value: 'full-system' } })
@@ -96,7 +84,7 @@ describe('CircuitDiagram · diagrama unifilar', () => {
   })
 
   it('battery toggle selects the solar-con-baterias template', async () => {
-    renderAt('/app/diagrama')
+    renderAt()
     const select = await screen.findByLabelText('Plantilla')
     const batteryToggle = screen.getByLabelText(/baterías/i)
     fireEvent.click(batteryToggle)
@@ -105,7 +93,7 @@ describe('CircuitDiagram · diagrama unifilar', () => {
   })
 
   it('fuses toggle off (no battery) selects solar-sin-fusibles', async () => {
-    renderAt('/app/diagrama')
+    renderAt()
     const select = await screen.findByLabelText('Plantilla')
     const fusesToggle = screen.getByLabelText(/fusibles/i)
     fireEvent.click(fusesToggle)
@@ -121,15 +109,14 @@ describe('CircuitDiagram · diagrama unifilar', () => {
         details: [{ field: 'num_strings', msg: 'Input should be greater than or equal to 1' }],
       }),
     }))
-    renderAt('/app/diagrama')
+    renderAt()
     await screen.findByLabelText('Plantilla')
     await waitFor(() => expect(screen.getByText(/num_strings/)).toBeInTheDocument())
   })
 
   it('seeds params from the project panel/inverter and pre-selects battery', async () => {
-    renderAt('/app/diagrama/5')
+    renderAt({ panel: panels[0], inverter: inverters[0], hasBattery: true })
     const select = await screen.findByLabelText('Plantilla')
-    await waitFor(() => expect(api.projects.get).toHaveBeenCalledWith(5))
     expect(select.value).toBe('solar-con-baterias')
     await waitFor(() => {
       const urls = fetchMock.mock.calls.map(([url]) => url)

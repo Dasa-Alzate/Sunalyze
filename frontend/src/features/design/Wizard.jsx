@@ -8,11 +8,13 @@ import { exportRows } from '@/services/export'
 import { toast } from '@/services/toast'
 import { GeoMap } from '@/services/geo-map'
 import { useAuth } from '@/services/auth'
+import CircuitDiagram from './CircuitDiagram'
 
 const STEPS = [
   { title: 'Datos del lugar', icon: 'map-pin' },
   { title: 'Equipos', icon: 'package' },
   { title: 'Análisis', icon: 'bar-chart-3' },
+  { title: 'Diagrama', icon: 'workflow' },
   { title: 'Memoria', icon: 'file-text' },
 ]
 
@@ -165,11 +167,6 @@ export default function Wizard() {
     if (proj) nav(`/app/memoria/${proj.id}`)
   }
 
-  async function goToDiagrama() {
-    const proj = await save({ silent: true })
-    if (proj) nav(`/app/diagrama/${proj.id}`)
-  }
-
   const summary = useMemo(() => buildSummary(results, panel, stale), [results, panel, stale])
 
   function exportSummary(fmt) {
@@ -199,7 +196,7 @@ export default function Wizard() {
         actions={
           <>
             <Btn variant="secondary" icon="save" data-busy={saving} disabled={saving} onClick={() => save()}>Guardar</Btn>
-            <Btn variant="secondary" icon="workflow" onClick={goToDiagrama}>Diagrama unifilar</Btn>
+            <Btn variant="secondary" icon="workflow" onClick={() => setStep(3)}>Diagrama unifilar</Btn>
             <Btn variant="primary" icon="file-text" onClick={goToMemoria}>Ir a la memoria</Btn>
           </>
         }
@@ -334,6 +331,22 @@ export default function Wizard() {
             )}
 
             {step === 3 && (
+              !results ? (
+                <div className="sun-empty" style={{ border: 0, padding: 'var(--space-8) 0' }}>
+                  <div className="sun-empty__icon"><Icon name="workflow" size={26} /></div>
+                  <div className="sun-empty__title">Calcula el dimensionamiento primero</div>
+                  <div className="sun-empty__desc">El diagrama unifilar parte de los equipos y el cálculo del proyecto. Vuelve al análisis para dimensionar la instalación.</div>
+                  <div className="sun-empty__actions"><Btn variant="primary" icon="bar-chart-3" onClick={() => setStep(2)}>Ir al análisis</Btn></div>
+                </div>
+              ) : (
+                <>
+                  <div className="sun-divider">Diagrama unifilar</div>
+                  <CircuitDiagram panel={panel} inverter={inverter} hasBattery={!!battery} />
+                </>
+              )
+            )}
+
+            {step === 4 && (
               <div className="sun-empty" style={{ border: 0, padding: 'var(--space-8) 0' }}>
                 <div className="sun-empty__icon"><Icon name="file-text" size={26} /></div>
                 <div className="sun-empty__title">Listo para la memoria técnica</div>
@@ -347,7 +360,7 @@ export default function Wizard() {
               {step === 1 ? (
                 <Btn variant="primary" iconRight="arrow-right" data-busy={analyzing} disabled={analyzing} onClick={() => { setStep(2); if (!results || stale) analyze() }}>{analyzing ? 'Calculando…' : 'Calcular y continuar'}</Btn>
               ) : (
-                <Btn variant="primary" iconRight="arrow-right" onClick={() => (step < 3 ? setStep(step + 1) : goToMemoria())}>{step < 3 ? 'Continuar' : 'Generar memoria'}</Btn>
+                <Btn variant="primary" iconRight="arrow-right" onClick={() => (step < STEPS.length - 1 ? setStep(step + 1) : goToMemoria())}>{step < STEPS.length - 1 ? 'Continuar' : 'Generar memoria'}</Btn>
               )}
             </div>
           </div>

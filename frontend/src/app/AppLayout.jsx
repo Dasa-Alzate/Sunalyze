@@ -14,7 +14,6 @@ const NAV = [
   { to: '/app', key: 'resumen', icon: 'layout-dashboard', end: true },
   { to: '/app/proyectos', key: 'proyectos', icon: 'folder' },
   { to: '/app/diseno', key: 'diseno', icon: 'sliders-horizontal' },
-  { to: '/app/diagrama', key: 'diagrama', icon: 'workflow' },
   { to: '/app/equipos', key: 'equipos', icon: 'package' },
   { to: '/app/modulos', key: 'modulos', icon: 'store' },
   { to: '/app/equipo', key: 'equipo', icon: 'users', business: true },
