@@ -31,6 +31,7 @@ const SCHEMAS = {
       { key: 't_noct', label: 'NOCT (°C)', num: true },
       { key: 'width', label: 'Ancho (mm)', num: true },
       { key: 'height', label: 'Alto (mm)', num: true },
+      { key: 'datasheet', label: 'Ficha técnica (URL)', placeholder: 'https://…' },
     ],
   },
   inverters: {
@@ -152,7 +153,8 @@ export default function EquipmentLibrary() {
       if (f.num && v !== '' && v != null) v = Number(v)
       if (v !== '' && v != null) body[f.key] = v
     })
-    if (values.catalog_id) body.catalog_id = Number(values.catalog_id)
+    const movable = !editing.id || editing.deletable
+    if (movable && values.catalog_id) body.catalog_id = Number(values.catalog_id)
     const missing = schema.fields.filter((f) => f.required && (body[f.key] === undefined || body[f.key] === ''))
     if (missing.length) {
       toast('error', 'Faltan campos', missing.map((f) => f.label).join(', '))
@@ -332,15 +334,18 @@ export default function EquipmentLibrary() {
                           </td>
                         ))}
                         <td>
-                          <Badge tone={r.editable ? 'brand' : 'neutral'} icon={r.editable ? 'user' : 'store'}>
-                            {r.catalog_nombre || '—'}
-                          </Badge>
+                          <span style={{ display: 'inline-flex', gap: 6, alignItems: 'center', flexWrap: 'wrap' }}>
+                            <Badge tone={r.deletable ? 'brand' : 'neutral'} icon={r.deletable ? 'user' : 'store'}>
+                              {r.catalog_nombre || '—'}
+                            </Badge>
+                            {r.scraped && <Badge tone="accent" icon="bot">Scraped</Badge>}
+                          </span>
                         </td>
                         <td>
                           {r.editable && canEdit ? (
                             <span style={{ display: 'inline-flex', gap: 4 }}>
                               <IconBtn icon="pencil" label="Editar" size="sm" onClick={() => setEditing(r)} />
-                              <IconBtn icon="trash-2" label="Eliminar" size="sm" onClick={() => remove(r)} />
+                              {r.deletable && <IconBtn icon="trash-2" label="Eliminar" size="sm" onClick={() => remove(r)} />}
                             </span>
                           ) : (
                             <span title="Equipo del marketplace (solo lectura)" style={{ color: 'var(--text-subtle)', display: 'inline-flex' }}>
@@ -426,6 +431,7 @@ function MarketplaceView({ market, ownCatalogs, countsLabel, canManage, canSubsc
 }
 
 function EditDrawer({ schema, initial, ownCatalogs, onClose, onSave }) {
+  const movable = !initial.id || initial.deletable
   const [values, setValues] = useState(() => {
     const v = {}
     schema.fields.forEach((f) => {
@@ -444,7 +450,11 @@ function EditDrawer({ schema, initial, ownCatalogs, onClose, onSave }) {
           <IconBtn icon="x" label="Cerrar" onClick={onClose} />
         </div>
         <div className="sun-drawer__body">
-          {ownCatalogs.length > 0 ? (
+          {!movable ? (
+            <div className="sun-inline-note sun-inline-note--info">
+              <Icon name="info" size={14} /> Editas el catálogo oficial «{initial.catalog_nombre}». Los cambios afectan a todas las organizaciones y quitan la marca «Scraped».
+            </div>
+          ) : ownCatalogs.length > 0 ? (
             <SelectField label="Catálogo" value={values.catalog_id} onChange={set('catalog_id')}
               options={ownCatalogs.map((c) => ({ value: c.id, label: c.nombre }))} />
           ) : (
