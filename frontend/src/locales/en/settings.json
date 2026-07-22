@@ -14,5 +14,9 @@
       "marca": "Branding",
       "flags": "Flags"
     }
+  },
+  "theme": {
+    "toDark": "Switch to dark mode",
+    "toLight": "Switch to light mode"
   }
 }
