@@ -27,9 +27,9 @@ export function setApiErrorHandler(fn) {
   apiErrorHandler = fn
 }
 
-function notifyApiError(path, status, message) {
+function notifyApiError(path, status, message, code) {
   if (apiErrorHandler) {
-    try { apiErrorHandler(path, status, message) } catch { void 0 }
+    try { apiErrorHandler(path, status, message, code) } catch { void 0 }
   }
 }
 
@@ -47,7 +47,7 @@ async function request(path, options = {}) {
   if (!res.ok) {
     notifyUnauthorized(path, res.status)
     const message = (data && (data.error || data.message)) || `Error ${res.status}`
-    notifyApiError(path, res.status, message)
+    notifyApiError(path, res.status, message, data && data.code)
     throw new ApiError(message, res.status, data)
   }
   return data
