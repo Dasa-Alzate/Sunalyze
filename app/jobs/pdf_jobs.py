@@ -12,4 +12,4 @@ def generate_document_job(org_id, template_id, project_id, user_id=None):
 def memoria_pdf_job(form_data, org_id=None, user_id=None):
     from app.services.memoria_service import MemoriaService
 
-    return {'org_id': org_id, 'pdf': MemoriaService.generar_pdf(form_data)}
+    return {'org_id': org_id, 'pdf': MemoriaService.generar_pdf(form_data, org_id=org_id)}

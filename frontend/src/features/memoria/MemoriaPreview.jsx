@@ -5,6 +5,7 @@ import { Btn, IconBtn, Icon, Dot, Field, SelectField, Spinner, ErrorState } from
 import { api, csrfToken } from '@/api/client'
 import { toast } from '@/services/toast'
 import { useAuth } from '@/services/auth'
+import BudgetEditor from './BudgetEditor'
 
 const SECTIONS = [
   {
@@ -114,12 +115,14 @@ export default function MemoriaPreview() {
   const [saving, setSaving] = useState(false)
   const [previewHtml, setPreviewHtml] = useState('')
   const [previewBusy, setPreviewBusy] = useState(false)
+  const [previewNonce, setPreviewNonce] = useState(0)
   const debouncedValues = useDebounced(values, 600)
 
   useEffect(() => {
     let alive = true
     setPreviewBusy(true)
     const payload = { ...debouncedValues }
+    if (project?.id) payload.project_id = project.id
     if (project?.panel_id) payload.panel_id = project.panel_id
     if (project?.inverter_id) payload.inverter_id = project.inverter_id
     if (project?.battery_id) { payload.battery_id = project.battery_id; payload.battery_quantity = project.battery_quantity ?? 1 }
@@ -128,7 +131,7 @@ export default function MemoriaPreview() {
       .catch(() => { if (alive) setPreviewHtml('') })
       .finally(() => { if (alive) setPreviewBusy(false) })
     return () => { alive = false }
-  }, [debouncedValues, project])
+  }, [debouncedValues, project, previewNonce])
 
   useEffect(() => {
     if (!id) { setValues(seed(null)); return }
@@ -197,6 +200,7 @@ export default function MemoriaPreview() {
     fd.append('csrf_token', csrfToken())
     ALL_FIELDS.forEach((f) => fd.append(f.key, values[f.key] ?? ''))
     BATTERY_KEYS.forEach((k) => { if (values[k] !== '' && values[k] != null) fd.append(k, values[k]) })
+    if (project?.id) fd.append('project_id', project.id)
     if (project?.panel_id) fd.append('panel_id', project.panel_id)
     if (project?.inverter_id) fd.append('inverter_id', project.inverter_id)
     if (project?.battery_id) { fd.append('battery_id', project.battery_id); fd.append('battery_quantity', project.battery_quantity ?? 1) }
@@ -274,6 +278,9 @@ export default function MemoriaPreview() {
                 )
               })}
             </div>
+            {id && project && (
+              <BudgetEditor projectId={project.id} canEdit={can('project:edit')} onSaved={() => setPreviewNonce((n) => n + 1)} />
+            )}
             <div style={{ marginTop: 'var(--space-5)', display: 'flex', gap: 'var(--space-3)' }}>
               <Btn variant="primary" icon="file-text" onClick={generarPDF} disabled={!canSign} title={canSign ? undefined : "Tu rol no permite firmar/generar la memoria"}>Generar PDF</Btn>
               {!id && <span style={{ alignSelf: 'center', fontSize: 'var(--text-sm)', color: 'var(--text-muted)' }}>Abre la memoria desde un proyecto para guardar los datos.</span>}

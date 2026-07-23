@@ -42,7 +42,22 @@ class MemoriaService:
     ]
 
     @staticmethod
-    def generar_pdf(form_data):
+    def _build_budget_vars(form_data, org_id=None):
+        from app.models.project import Project
+        from app.services.budget_service import BudgetService
+        try:
+            pid = int(form_data.get('project_id') or 0)
+        except (TypeError, ValueError):
+            return {}
+        if not pid:
+            return {}
+        project = Project.query.get(pid)
+        if not project or (org_id and project.org_id != org_id):
+            return {}
+        return BudgetService.memoria_vars(project)
+
+    @staticmethod
+    def generar_pdf(form_data, org_id=None):
         from weasyprint import HTML
         from flask import current_app
         from app.services.pdf_url_fetcher import restricted_url_fetcher
@@ -72,6 +87,7 @@ class MemoriaService:
             template_vars.update(MemoriaService._build_battery_vars(form_data, battery))
             template_vars.update(MemoriaService._build_circuit_svgs(form_data, panel, inverter, battery))
             template_vars.update(MemoriaService._build_graph_svgs(form_data))
+            template_vars.update(MemoriaService._build_budget_vars(form_data, org_id))
 
         html_string = render_template('memoria_tecnica_pdf.html', **template_vars)
         memoria_pdf = HTML(
@@ -118,6 +134,7 @@ class MemoriaService:
                 template_vars.update(MemoriaService._build_battery_vars(form_data, battery))
                 template_vars.update(MemoriaService._build_circuit_svgs(form_data, panel, inverter, battery))
                 template_vars.update(MemoriaService._build_graph_svgs(form_data))
+            template_vars.update(MemoriaService._build_budget_vars(form_data, org_id))
         return render_template('memoria_tecnica_pdf.html', **template_vars)
 
     @staticmethod

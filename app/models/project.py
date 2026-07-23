@@ -40,6 +40,8 @@ class Project(BaseModel, SoftDeleteMixin):
     potencia_contratada = db.Column(db.Float)
     tipo_voltaje = db.Column(db.String(20))
 
+    budget_iva_pct = db.Column(db.Float, nullable=False, default=21)
+
     _resultados = db.Column('resultados', db.Text)
 
     panel = db.relationship('Panel', foreign_keys=[panel_id])

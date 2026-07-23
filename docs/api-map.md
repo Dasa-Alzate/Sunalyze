@@ -1,6 +1,6 @@
 # API map
 
-Mapa autogenerado por `flask api-map`. Endpoints `/api`: 122.
+Mapa autogenerado por `flask api-map`. Endpoints `/api`: 125.
 
 No editar a mano: regenerar con `flask api-map`.
 
@@ -33,6 +33,14 @@ No editar a mano: regenerar con `flask api-map`.
 | POST | `/api/auth/register` | `auth.register` |  |
 | POST | `/api/auth/reset-password` | `auth.reset_password` |  |
 | POST | `/api/auth/verify-email` | `auth.verify_email` |  |
+
+## budget
+
+| Método(s) | Ruta | Endpoint | Resumen |
+| --- | --- | --- | --- |
+| GET | `/api/projects/<int:project_id>/budget` | `budget.get_budget` |  |
+| PUT | `/api/projects/<int:project_id>/budget` | `budget.update_budget` |  |
+| POST | `/api/projects/<int:project_id>/budget/seed` | `budget.seed_budget` |  |
 
 ## catalogs
 

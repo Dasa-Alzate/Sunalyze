@@ -195,6 +195,12 @@
 
         th { background-color: #f2f2f2; }
 
+        td.num, th.num { text-align: right; font-variant-numeric: tabular-nums; }
+        .budget-chapter td { background-color: #e8eef4; }
+        .budget-subtotal td { background-color: #f7f9fb; }
+        .budget-summary { width: 55%; margin-left: 45%; }
+        .budget-total td { background-color: #e8eef4; }
+
         /* ===== Imagenes ===== */
         .image-container {
             text-align: center;
@@ -725,35 +731,51 @@
     {# ===== PRESUPUESTO ===== #}
     <section>
         <h3 class="underline" id="presupuesto">PRESUPUESTO</h3>
-        {% if budget_items %}
-        <table>
+        {% if budget_chapters %}
+        <table class="budget">
             <thead>
                 <tr>
-                    <th>Concepto</th>
-                    <th>Cantidad</th>
-                    <th>Precio unitario</th>
-                    <th>Precio total</th>
+                    <th style="width: 10%;">Cód.</th>
+                    <th>Descripción</th>
+                    <th style="width: 8%;">Ud</th>
+                    <th style="width: 10%;" class="num">Cant.</th>
+                    <th style="width: 14%;" class="num">Precio (€)</th>
+                    <th style="width: 14%;" class="num">Importe (€)</th>
                 </tr>
             </thead>
             <tbody>
-                {% for item in budget_items %}
+                {% for ch in budget_chapters %}
+                <tr class="budget-chapter">
+                    <td>{{ ch.num }}</td>
+                    <td colspan="5"><strong>{{ ch.titulo | upper }}</strong></td>
+                </tr>
+                {% for item in ch.partidas %}
                 <tr>
-                    <td>{{ item.concept }}</td>
-                    <td>{{ item.quantity }}</td>
-                    <td>{{ item.unit_price }}</td>
-                    <td>{{ item.total_price }}</td>
+                    <td>{{ ch.num }}.{{ loop.index }}</td>
+                    <td>{{ item.descripcion }}</td>
+                    <td>{{ item.unidad }}</td>
+                    <td class="num">{{ item.cantidad_fmt }}</td>
+                    <td class="num">{{ item.precio_fmt }}</td>
+                    <td class="num">{{ item.importe_fmt }}</td>
                 </tr>
                 {% endfor %}
-                <tr>
-                    <td><strong>TOTAL</strong></td>
-                    <td></td>
-                    <td></td>
-                    <td><strong>{{ v(budget_total) }}</strong></td>
+                <tr class="budget-subtotal">
+                    <td colspan="5">Subtotal capítulo {{ ch.num }} — {{ ch.titulo }}</td>
+                    <td class="num"><strong>{{ ch.subtotal_fmt }}</strong></td>
                 </tr>
+                {% endfor %}
             </tbody>
         </table>
+        <table class="budget-summary">
+            <tbody>
+                <tr><td>Base imponible</td><td class="num">{{ budget_base }} €</td></tr>
+                <tr><td>IVA ({{ budget_iva_pct }} %)</td><td class="num">{{ budget_iva }} €</td></tr>
+                <tr class="budget-total"><td><strong>TOTAL PRESUPUESTO</strong></td><td class="num"><strong>{{ budget_total }} €</strong></td></tr>
+            </tbody>
+        </table>
+        <p>El presente presupuesto asciende a la cantidad de {{ budget_total }} € (IVA incluido).</p>
         {% else %}
-        <p>[Presupuesto pendiente de definir]</p>
+        <p>{{ v(budget_total, '[Presupuesto pendiente de definir]') }}</p>
         {% endif %}
 
         <div class="signature">
