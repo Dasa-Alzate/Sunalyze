@@ -1,0 +1,41 @@
+{
+  "tab": "Do you need help?",
+  "title": "Help",
+  "close": "Close help",
+  "youAreIn": "You are in:",
+  "loading": "Loading guide…",
+  "recentError": "We detected a recent error:",
+  "agentSoon": "Coming soon: a smart assistant that knows your context.",
+  "views": {
+    "resumen": "Dashboard",
+    "proyectos": "Projects",
+    "diseno": "Design",
+    "equipos": "Equipment",
+    "equipo": "Team",
+    "memoria": "Report",
+    "modulos": "Modules",
+    "plantillas": "Templates",
+    "finanzas": "Finance",
+    "posventa": "Aftersales",
+    "actividad": "Activity",
+    "papelera": "Trash",
+    "configuracion": "Settings",
+    "app": "Sunalyze"
+  },
+  "subviews": {
+    "diseno": {
+      "lugar": "Site data",
+      "equipos": "Equipment",
+      "analisis": "Analysis",
+      "diagrama": "Diagram",
+      "memoria": "Report"
+    },
+    "equipos": {
+      "panels": "Panels",
+      "inverters": "Inverters",
+      "batteries": "Batteries",
+      "wires": "Wires",
+      "marketplace": "Marketplace"
+    }
+  }
+}

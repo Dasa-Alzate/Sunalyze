@@ -1,0 +1,41 @@
+{
+  "tab": "¿Necesitas ayuda?",
+  "title": "Ayuda",
+  "close": "Cerrar ayuda",
+  "youAreIn": "Estás en:",
+  "loading": "Cargando guía…",
+  "recentError": "Detectamos un error reciente:",
+  "agentSoon": "Pronto: asistente inteligente que conoce tu contexto.",
+  "views": {
+    "resumen": "Resumen",
+    "proyectos": "Proyectos",
+    "diseno": "Diseño",
+    "equipos": "Equipos",
+    "equipo": "Equipo",
+    "memoria": "Memoria",
+    "modulos": "Módulos",
+    "plantillas": "Plantillas",
+    "finanzas": "Finanzas",
+    "posventa": "Posventa",
+    "actividad": "Actividad",
+    "papelera": "Papelera",
+    "configuracion": "Configuración",
+    "app": "Sunalyze"
+  },
+  "subviews": {
+    "diseno": {
+      "lugar": "Datos del lugar",
+      "equipos": "Equipos",
+      "analisis": "Análisis",
+      "diagrama": "Diagrama",
+      "memoria": "Memoria"
+    },
+    "equipos": {
+      "panels": "Paneles",
+      "inverters": "Inversores",
+      "batteries": "Baterías",
+      "wires": "Cables",
+      "marketplace": "Marketplace"
+    }
+  }
+}

@@ -8,7 +8,10 @@ import { exportRows } from '@/services/export'
 import { toast } from '@/services/toast'
 import { GeoMap } from '@/services/geo-map'
 import { useAuth } from '@/services/auth'
+import { emitSubview } from '@/services/assist'
 import CircuitDiagram from './CircuitDiagram'
+
+const STEP_KEYS = ['lugar', 'equipos', 'analisis', 'diagrama', 'memoria']
 
 const STEPS = [
   { title: 'Datos del lugar', icon: 'map-pin' },
@@ -45,6 +48,8 @@ export default function Wizard() {
   const [batteryQty, setBatteryQty] = useState(1)
 
   const [step, setStep] = useState(0)
+
+  useEffect(() => { emitSubview('diseno', STEP_KEYS[step]) }, [step])
   const [results, setResults] = useState(null)
   const [stale, setStale] = useState(false)
   const [analyzing, setAnalyzing] = useState(false)

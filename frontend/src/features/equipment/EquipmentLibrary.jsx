@@ -6,6 +6,7 @@ import { dec } from '@/shared/format'
 import { exportRows } from '@/services/export'
 import { toast } from '@/services/toast'
 import { useAuth } from '@/services/auth'
+import { emitSubview } from '@/services/assist'
 
 const SCHEMAS = {
   panels: {
@@ -103,6 +104,8 @@ export default function EquipmentLibrary() {
   const canManage = can('catalog:manage')
   const canSubscribe = can('catalog:subscribe')
   const [tab, setTab] = useState('panels')
+
+  useEffect(() => { emitSubview('equipos', tab) }, [tab])
   const [data, setData] = useState({ panels: null, inverters: null, batteries: null, wires: null })
   const [catalogs, setCatalogs] = useState(null)
   const [market, setMarket] = useState(null)

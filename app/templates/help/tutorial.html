@@ -1,0 +1,18 @@
+<article class="assist-tutorial">
+    <h3>{{ tutorial.title }}</h3>
+    <p class="assist-tutorial__intro">{{ tutorial.intro }}</p>
+    {% if tutorial.steps %}
+    <ol class="assist-tutorial__steps">
+        {% for strong, text in tutorial.steps %}
+        <li><strong>{{ strong }}.</strong> {{ text }}</li>
+        {% endfor %}
+    </ol>
+    {% endif %}
+    {% if tutorial.tips %}
+    <div class="assist-tutorial__tips">
+        {% for tip in tutorial.tips %}
+        <p>💡 {{ tip }}</p>
+        {% endfor %}
+    </div>
+    {% endif %}
+</article>
