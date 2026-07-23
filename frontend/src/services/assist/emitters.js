@@ -35,6 +35,7 @@ export function attachJsErrorEmitter(bus) {
 }
 
 export function attachApiErrorEmitter(bus) {
+  if (typeof setApiErrorHandler !== 'function') return () => {}
   setApiErrorHandler((path, status, message) => {
     bus.emit('api.error', { path, status, message: String(message || '').slice(0, 200) })
   })

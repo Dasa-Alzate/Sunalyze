@@ -9,8 +9,8 @@ export function createBus() {
 
   function emit(type, data = {}) {
     const event = { type, t: Date.now(), data }
-    listeners.get(type)?.forEach((fn) => { try { fn(event) } catch { void 0 } })
     listeners.get('*')?.forEach((fn) => { try { fn(event) } catch { void 0 } })
+    listeners.get(type)?.forEach((fn) => { try { fn(event) } catch { void 0 } })
     return event
   }
 

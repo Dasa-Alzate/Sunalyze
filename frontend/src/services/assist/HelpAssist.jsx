@@ -20,6 +20,7 @@ export function HelpAssist() {
   useEffect(() => { wireAssist() }, [])
   useEffect(() => { emitView(location.pathname) }, [location.pathname])
   useEffect(() => {
+    setCtx({ ...getSnapshot().context })
     const offs = ['nav.view', 'nav.subview'].map((type) =>
       assistBus.on(type, () => setCtx({ ...getSnapshot().context })),
     )

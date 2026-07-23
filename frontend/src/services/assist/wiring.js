@@ -26,6 +26,7 @@ export function unwireAssist() {
 }
 
 export function emitView(pathname) {
+  wireAssist()
   const view = resolveView(pathname)
   const snap = getSnapshot()
   if (snap.context.view === view && snap.context.path === pathname) return
@@ -33,6 +34,9 @@ export function emitView(pathname) {
 }
 
 export function emitSubview(view, subview) {
+  wireAssist()
+  const snap = getSnapshot()
+  if (snap.context.view === view && snap.context.subview === subview) return
   assistBus.emit('nav.subview', { view, subview })
 }
 

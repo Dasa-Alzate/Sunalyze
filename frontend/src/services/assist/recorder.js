@@ -40,11 +40,15 @@ export function attachRecorder(bus) {
     if (state.trail.length > TRAIL_MAX) state.trail.splice(0, state.trail.length - TRAIL_MAX)
 
     if (event.type === 'nav.view') {
-      state.context = { ...state.context, view: event.data.view, subview: null, path: event.data.path, since: event.t }
-    } else if (event.type === 'nav.subview') {
-      if (event.data.view === state.context.view) {
-        state.context = { ...state.context, subview: event.data.subview, since: event.t }
+      const same = state.context.view === event.data.view
+      state.context = {
+        view: event.data.view,
+        subview: same ? state.context.subview : null,
+        path: event.data.path,
+        since: same ? state.context.since : event.t,
       }
+    } else if (event.type === 'nav.subview') {
+      state.context = { ...state.context, view: event.data.view, subview: event.data.subview, since: event.t }
     } else if (event.type === 'dom.click') {
       const k = event.data.target
       state.clicks[k] = (state.clicks[k] || 0) + 1
