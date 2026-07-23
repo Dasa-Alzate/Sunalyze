@@ -19,7 +19,7 @@
 .sun-reveal { animation: sunReveal var(--dur-base, 200ms) var(--ease-out); }
 
 @media (prefers-reduced-motion: reduce) {
-  .sun-btn__ic-right, .sun-reveal { transition: none; animation: none; }
+  .sun-btn__ic-right, .sun-reveal, .sun-msection__chev { transition: none; animation: none; }
 }
 
 .sun-btn--primary { background: var(--primary); color: var(--primary-fg); }

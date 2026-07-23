@@ -4,7 +4,6 @@ import { Topbar } from '@/shared/ui'
 import { Btn, IconBtn, Icon, Dot, Field, SelectField, Spinner, ErrorState } from '@/shared/ui'
 import { api, csrfToken } from '@/api/client'
 import { toast } from '@/services/toast'
-import { MemoriaDocument } from '@/services/template-renderer'
 import { useAuth } from '@/services/auth'
 
 const SECTIONS = [
@@ -93,6 +92,15 @@ function seed(project, battery) {
 
 const BATTERY_KEYS = ['battery_nombre', 'battery_quantity', 'battery_capacity_kwh', 'battery_usable_kwh', 'battery_power_kw', 'battery_technology']
 
+function useDebounced(value, delay) {
+  const [debounced, setDebounced] = useState(value)
+  useEffect(() => {
+    const handle = setTimeout(() => setDebounced(value), delay)
+    return () => clearTimeout(handle)
+  }, [value, delay])
+  return debounced
+}
+
 export default function MemoriaPreview() {
   const { id } = useParams()
   const nav = useNavigate()
@@ -104,6 +112,23 @@ export default function MemoriaPreview() {
   const [values, setValues] = useState(() => seed(null))
   const [open, setOpen] = useState('cliente')
   const [saving, setSaving] = useState(false)
+  const [previewHtml, setPreviewHtml] = useState('')
+  const [previewBusy, setPreviewBusy] = useState(false)
+  const debouncedValues = useDebounced(values, 600)
+
+  useEffect(() => {
+    let alive = true
+    setPreviewBusy(true)
+    const payload = { ...debouncedValues }
+    if (project?.panel_id) payload.panel_id = project.panel_id
+    if (project?.inverter_id) payload.inverter_id = project.inverter_id
+    if (project?.battery_id) { payload.battery_id = project.battery_id; payload.battery_quantity = project.battery_quantity ?? 1 }
+    api.memoria.preview(payload)
+      .then((h) => { if (alive) setPreviewHtml(h) })
+      .catch(() => { if (alive) setPreviewHtml('') })
+      .finally(() => { if (alive) setPreviewBusy(false) })
+    return () => { alive = false }
+  }, [debouncedValues, project])
 
   useEffect(() => {
     if (!id) { setValues(seed(null)); return }
@@ -228,10 +253,10 @@ export default function MemoriaPreview() {
                       <Dot state={st} />
                       <span className="sun-msection__title">{s.title}</span>
                       {note && <span className="sun-badge sun-badge--warning"><Icon name="alert-triangle" size={12} />{note}</span>}
-                      <Icon name={open === s.id ? 'chevron-down' : 'chevron-right'} size={16} style={{ color: 'var(--text-subtle)' }} />
+                      <Icon name="chevron-right" size={16} className={`sun-msection__chev${open === s.id ? ' sun-msection__chev--open' : ''}`} style={{ color: 'var(--text-subtle)' }} />
                     </button>
                     {open === s.id && (
-                      <div className="sun-msection__body">
+                      <div className="sun-msection__body sun-reveal">
                         <div className="sun-speclist" style={{ marginTop: 'var(--space-4)' }}>
                           {s.fields.map((f) => (
                             f.select ? (
@@ -255,11 +280,20 @@ export default function MemoriaPreview() {
             </div>
           </div>
 
-          <div className="sun-preview">
-            <MemoriaDocument values={values} />
-            <div style={{ textAlign: 'center', marginTop: 'var(--space-3)', fontSize: 'var(--text-xs)', color: 'var(--text-subtle)' }}>
-              Vista previa en vivo — nadie genera a ciegas
+          <div className="sun-preview sun-preview--doc">
+            <div className="sun-preview__bar">
+              <Icon name="eye" size={13} />
+              <span>Vista previa del documento</span>
+              {previewBusy && <span className="sun-preview__busy">Actualizando…</span>}
             </div>
+            {previewHtml ? (
+              <iframe title="Vista previa de la memoria" className="sun-preview__frame" sandbox="" srcDoc={previewHtml} />
+            ) : (
+              <div className="sun-preview__empty">
+                <Icon name="file-text" size={22} />
+                <span>La vista previa aparecerá al completar los datos.</span>
+              </div>
+            )}
           </div>
         </div>
       </div>

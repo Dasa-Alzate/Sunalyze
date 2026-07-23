@@ -54,6 +54,16 @@ def _memoria_pdf_response(pdf):
     )
 
 
+@bp.route('/imprimir/memoria-preview', methods=['POST'])
+@require_permission(Permission.EQUIPMENT_VIEW)
+def memoria_preview():
+    from app.services.memoria_service import MemoriaService
+    raw = request.get_json(silent=True) or {}
+    form_data = {str(k): str(v) for k, v in raw.items() if v is not None}
+    html = MemoriaService.preview_html(form_data, org_id=current_org_id())
+    return Response(html, mimetype='text/html')
+
+
 @bp.route('/imprimir/memoria-pdf', methods=['GET', 'POST'])
 @require_permission(Permission.MEMORIA_SIGN)
 @limiter.limit(_pdf_ratelimit)

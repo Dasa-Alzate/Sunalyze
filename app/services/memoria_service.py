@@ -83,6 +83,43 @@ class MemoriaService:
         datasheets = MemoriaService._collect_datasheets(panel, inverter) if form_data else []
         return MemoriaService._merge_pdfs(memoria_pdf, datasheets)
 
+    _PREVIEW_RESERVED = {'config', 'request', 'session', 'g', 'url_for', 'get_flashed_messages'}
+
+    @staticmethod
+    def preview_html(form_data, org_id=None):
+        import re
+        from app.services.catalog_service import CatalogService
+
+        template_vars = {}
+        if form_data:
+            template_vars = {
+                k: v for k, v in form_data.items()
+                if re.fullmatch(r'[a-z0-9_]{1,64}', k) and k not in MemoriaService._PREVIEW_RESERVED
+            }
+            visible = set(CatalogService.visible_catalog_ids(org_id)) if org_id else set()
+
+            def _visible(model, key):
+                pk = form_data.get(key)
+                if not pk:
+                    return None
+                row = model.query.get(pk)
+                if row is None:
+                    return None
+                if org_id and row.catalog_id and row.catalog_id not in visible:
+                    return None
+                return row
+
+            panel = _visible(Panel, 'panel_id')
+            inverter = _visible(Inverter, 'inverter_id')
+            battery = _visible(Battery, 'battery_id')
+            defaults = InstallationDefaults.get()
+            if panel and inverter and defaults:
+                template_vars.update(MemoriaService._build_template_vars(form_data, panel, inverter, defaults))
+                template_vars.update(MemoriaService._build_battery_vars(form_data, battery))
+                template_vars.update(MemoriaService._build_circuit_svgs(form_data, panel, inverter, battery))
+                template_vars.update(MemoriaService._build_graph_svgs(form_data))
+        return render_template('memoria_tecnica_pdf.html', **template_vars)
+
     @staticmethod
     def _build_template_vars(data, panel, inverter, defaults):
         return {

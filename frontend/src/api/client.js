@@ -40,6 +40,18 @@ async function request(path, options = {}) {
   return data
 }
 
+async function requestText(path, options = {}) {
+  const method = (options.method || 'GET').toUpperCase()
+  const headers = { ...(options.headers || {}) }
+  if (MUTATING.has(method)) {
+    headers['Content-Type'] = 'application/json'
+    headers['X-CSRFToken'] = getCookie('csrf_token')
+  }
+  const res = await fetch(path, { credentials: 'include', ...options, headers })
+  if (!res.ok) throw new ApiError(`Error ${res.status}`, res.status, null)
+  return res.text()
+}
+
 async function requestBlob(path, options = {}) {
   const res = await fetch(path, { credentials: 'include', ...options })
   if (!res.ok) {
@@ -151,6 +163,9 @@ export const api = {
   },
   marketplace: {
     list: () => get('/api/marketplace'),
+  },
+  memoria: {
+    preview: (b) => requestText('/imprimir/memoria-preview', { method: 'POST', body: JSON.stringify(b) }),
   },
   analyze: (b) => post('/api/panel-analysis', b),
   members: {
