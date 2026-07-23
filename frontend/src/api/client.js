@@ -146,6 +146,11 @@ export const api = {
     update: (id, b) => patch(`/api/projects/${id}`, b),
     remove: (id) => del(`/api/projects/${id}`),
     restore: (id) => post(`/api/projects/${id}/restore`, {}),
+    budget: {
+      get: (id) => get(`/api/projects/${id}/budget`),
+      save: (id, b) => request(`/api/projects/${id}/budget`, { method: 'PUT', body: JSON.stringify(b) }),
+      seed: (id) => post(`/api/projects/${id}/budget/seed`, {}),
+    },
     duplicate: (id) => post(`/api/projects/${id}/duplicate`),
   },
   catalogs: {

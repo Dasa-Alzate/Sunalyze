@@ -31,7 +31,7 @@ def create_app(config_overrides=None):
         user, organization, membership, catalog, invitation, flag,
         support_ticket, superadmin_audit, scrape_run, audit_event,
         memoria_signature, project_event, report_template,
-        financial_scenario, installation, notification,
+        financial_scenario, installation, notification, budget_item,
     )
 
     from app.routes.health import health_bp
@@ -54,6 +54,7 @@ def create_app(config_overrides=None):
     from app.routes.notifications import notifications_bp
     from app.routes.org import org_bp
     from app.routes.workspace import workspace_bp
+    from app.routes.budget import budget_bp
 
     app.register_blueprint(health_bp)
     app.register_blueprint(main_bp)
@@ -75,6 +76,7 @@ def create_app(config_overrides=None):
     app.register_blueprint(notifications_bp)
     app.register_blueprint(org_bp)
     app.register_blueprint(workspace_bp)
+    app.register_blueprint(budget_bp)
 
     from app.errors import register_error_handlers
     register_error_handlers(app)
