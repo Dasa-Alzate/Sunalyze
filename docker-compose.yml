@@ -37,6 +37,7 @@ services:
     environment:
       FLASK_ENV: production
       SECRET_KEY: ${SECRET_KEY:?define SECRET_KEY}
+      MFA_ENC_KEY: ${MFA_ENC_KEY:?define MFA_ENC_KEY}
       DATABASE_URL: mysql+pymysql://${MYSQL_USER:-sunalyze}:${MYSQL_PASSWORD}@db:3306/${MYSQL_DATABASE:-sunalyze}
       WEB_CONCURRENCY: ${WEB_CONCURRENCY:-3}
       CACHE_TYPE: RedisCache
