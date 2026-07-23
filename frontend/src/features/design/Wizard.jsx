@@ -4,6 +4,7 @@ import { Topbar } from '@/shared/ui'
 import { Btn, Badge, Icon, Field, SelectField, ExportMenu, Spinner, ErrorState } from '@/shared/ui'
 import { api } from '@/api/client'
 import { dec, int, num } from '@/shared/format'
+import { relativo } from '@/shared/estados'
 import { exportRows } from '@/services/export'
 import { toast } from '@/services/toast'
 import { GeoMap } from '@/services/geo-map'
@@ -71,6 +72,7 @@ export default function Wizard() {
         if (proj) {
           setProjectId(proj.id)
           setSerial(proj.serial || null)
+          setLastSaved(proj.updated_at || null)
           setForm({
             cliente: proj.cliente || '', localidad: proj.localidad || '', direccion: proj.direccion || '',
             necesidad: proj.necesidad ?? '', autoconsumo: proj.autoconsumo ?? 90,
@@ -95,7 +97,9 @@ export default function Wizard() {
 
   const dirtyRef = useRef(false)
   const saveRef = useRef(null)
-  function touch() { dirtyRef.current = true; if (results) setStale(true) }
+  const [dirty, setDirty] = useState(false)
+  const [lastSaved, setLastSaved] = useState(null)
+  function touch() { dirtyRef.current = true; setDirty(true); if (results) setStale(true) }
 
   useEffect(() => registerUnsavedGuard({
     isDirty: () => dirtyRef.current,
@@ -131,6 +135,7 @@ export default function Wizard() {
       setResults(res)
       setStale(false)
       dirtyRef.current = true
+      setDirty(true)
       toast('success', 'Dimensionamiento calculado')
     } catch (e) {
       setAnalysisError(e.message)
@@ -172,6 +177,8 @@ export default function Wizard() {
         window.history.replaceState(null, '', `/app/diseno/${proj.id}`)
       }
       dirtyRef.current = false
+      setDirty(false)
+      setLastSaved(new Date().toISOString())
       if (!silent) toast('success', 'Proyecto guardado')
       return proj
     } catch (e) {
@@ -228,6 +235,10 @@ export default function Wizard() {
         actions={
           <>
             {serial && <Badge tone="neutral"><span className="mono">{serial}</span></Badge>}
+            <span className={`sun-savestate${dirty ? ' sun-savestate--dirty' : ''}`}>
+              <Icon name={dirty ? 'circle-dashed' : 'check'} size={13} />
+              {dirty ? 'Cambios sin guardar' : lastSaved ? `Guardado ${relativo(lastSaved)}` : ''}
+            </span>
             <Btn variant="secondary" icon="save" data-busy={saving} disabled={saving} onClick={() => save()}>Guardar</Btn>
             <Btn variant="secondary" icon="workflow" onClick={() => setStep(3)}>Diagrama unifilar</Btn>
             <Btn variant="primary" icon="file-text" onClick={goToMemoria}>Ir a la memoria</Btn>

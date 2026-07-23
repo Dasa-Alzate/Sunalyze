@@ -4,8 +4,8 @@ import { Icon } from '@/shared/ui'
 let listeners = []
 let seq = 0
 
-export function toast(tone, title, message) {
-  const item = { id: ++seq, tone, title, message }
+export function toast(tone, title, message, opts = {}) {
+  const item = { id: ++seq, tone, title, message, action: opts.action || null, duration: opts.duration || (opts.action ? 6000 : 2800) }
   listeners.forEach((fn) => fn(item))
   return item.id
 }
@@ -29,11 +29,15 @@ export function ToastHost() {
   const [items, setItems] = useState([])
   const [polite, setPolite] = useState('')
   const [assertive, setAssertive] = useState('')
+  function dismiss(id) {
+    setItems((prev) => prev.filter((i) => i.id !== id))
+  }
+
   useEffect(() => subscribe((item) => {
     setItems((prev) => [...prev, item])
     if (ASSERTIVE.has(item.tone)) setAssertive(announcement(item))
     else setPolite(announcement(item))
-    setTimeout(() => setItems((prev) => prev.filter((i) => i.id !== item.id)), 2800)
+    setTimeout(() => dismiss(item.id), item.duration)
   }), [])
   return (
     <>
@@ -45,6 +49,15 @@ export function ToastHost() {
               <div className="sun-toast__title">{it.title}</div>
               {it.message && <div className="sun-toast__msg">{it.message}</div>}
             </div>
+            {it.action && (
+              <button
+                type="button"
+                className="sun-toast__action"
+                onClick={() => { dismiss(it.id); it.action.onClick() }}
+              >
+                {it.action.label}
+              </button>
+            )}
           </div>
         ))}
       </div>

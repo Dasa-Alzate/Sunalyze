@@ -1,5 +1,5 @@
 import { createBus } from './bus'
-import { attachClickEmitter, attachJsErrorEmitter, attachApiErrorEmitter } from './emitters'
+import { attachClickEmitter, attachJsErrorEmitter, attachApiErrorEmitter, attachRageDetector } from './emitters'
 import { attachRecorder, getSnapshot } from './recorder'
 import { resolveView } from './context'
 
@@ -16,6 +16,7 @@ export function wireAssist() {
     attachClickEmitter(assistBus),
     attachJsErrorEmitter(assistBus),
     attachApiErrorEmitter(assistBus),
+    attachRageDetector(assistBus),
   ]
 }
 

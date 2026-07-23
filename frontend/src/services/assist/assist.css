@@ -50,6 +50,15 @@
 .assist-link { color: var(--text-link); font-weight: var(--fw-semibold); text-decoration: underline; text-underline-offset: 2px; }
 .assist-link:hover { color: var(--blue-600); }
 
+.sun-assist__fix { display: inline-flex; align-items: center; gap: 4px; margin-top: var(--space-2); padding: 2px 8px; border: 1px solid color-mix(in srgb, var(--amber-500) 50%, transparent); border-radius: var(--radius-pill); background: transparent; color: var(--amber-700); font-family: var(--font-sans); font-size: var(--text-2xs); font-weight: var(--fw-semibold); cursor: pointer; }
+.sun-assist__fix:hover { background: color-mix(in srgb, var(--amber-500) 12%, transparent); }
+
+@keyframes sunAssistPulse {
+  0%, 100% { box-shadow: var(--shadow-md); }
+  50% { box-shadow: 0 0 0 6px color-mix(in srgb, var(--green-500) 35%, transparent); }
+}
+.sun-assist-tab--pulse { animation: sunAssistPulse 1.2s ease-in-out 3; color: var(--green-700); border-color: var(--green-500); }
+
 @media (prefers-reduced-motion: reduce) {
   .sun-assist, .sun-assist-tab { transition: none; }
 }

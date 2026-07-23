@@ -5,6 +5,7 @@ import { Icon, IconBtn, Spinner, ConfirmDialog } from '@/shared/ui'
 import { api } from '@/api/client'
 import { getUnsavedGuard } from '@/shared/unsavedGuard'
 import { wireAssist, emitView, assistBus, getSnapshot } from './wiring'
+import { solutionFor } from './solutions'
 import './assist.css'
 
 const RECENT_ERROR_MS = 2 * 60 * 1000
@@ -19,10 +20,18 @@ export function HelpAssist() {
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState(null)
   const [pendingHref, setPendingHref] = useState(null)
+  const [pulse, setPulse] = useState(false)
 
   function go(href) {
     setPendingHref(null)
     navigate(href)
+  }
+
+  function navigateSafe(href) {
+    assistBus.emit('help.link', { href, view: ctx.view, subview: ctx.subview })
+    const guard = getUnsavedGuard()
+    if (guard && guard.isDirty()) setPendingHref(href)
+    else go(href)
   }
 
   function onBodyClick(e) {
@@ -30,11 +39,7 @@ export function HelpAssist() {
     if (!a) return
     if (e.metaKey || e.ctrlKey || e.shiftKey || e.altKey || e.button !== 0) return
     e.preventDefault()
-    const href = a.getAttribute('href')
-    assistBus.emit('help.link', { href, view: ctx.view, subview: ctx.subview })
-    const guard = getUnsavedGuard()
-    if (guard && guard.isDirty()) setPendingHref(href)
-    else go(href)
+    navigateSafe(a.getAttribute('href'))
   }
 
   async function saveAndGo() {
@@ -74,6 +79,17 @@ export function HelpAssist() {
     return () => document.removeEventListener('keydown', onKey)
   }, [open])
 
+  useEffect(() => assistBus.on('assist.frustration', () => {
+    setPulse(true)
+  }), [])
+
+  useEffect(() => {
+    if (!pulse) return undefined
+    if (open) { setPulse(false); return undefined }
+    const timer = setTimeout(() => setPulse(false), 6000)
+    return () => clearTimeout(timer)
+  }, [pulse, open])
+
   function toggle() {
     const next = !open
     setOpen(next)
@@ -85,6 +101,7 @@ export function HelpAssist() {
     ? snap.errors[snap.errors.length - 1]
     : null
   const showError = recentError && Date.now() - recentError.t < RECENT_ERROR_MS
+  const fix = showError ? solutionFor(recentError) : null
 
   const viewLabel = ctx.view ? t(`views.${ctx.view}`, { defaultValue: ctx.view }) : ''
   const subviewLabel = ctx.subview
@@ -95,7 +112,7 @@ export function HelpAssist() {
     <>
       <button
         type="button"
-        className={`sun-assist-tab${open ? ' sun-assist-tab--open' : ''}`}
+        className={`sun-assist-tab${open ? ' sun-assist-tab--open' : ''}${pulse ? ' sun-assist-tab--pulse' : ''}`}
         aria-expanded={open}
         aria-controls="assist-panel"
         data-assist="assist:tab"
@@ -126,7 +143,15 @@ export function HelpAssist() {
         {showError && (
           <div className="sun-assist__alert">
             <Icon name="alert-triangle" size={14} />
-            <span>{t('recentError')} <code>{recentError.message}</code></span>
+            <span>
+              {t('recentError')} <code>{recentError.message}</code>
+              {fix && (
+                <button type="button" className="sun-assist__fix" onClick={() => navigateSafe(fix.href)}>
+                  <Icon name="arrow-right" size={12} />
+                  {t('fixIn', { view: t(`views.${fix.view}`) })}
+                </button>
+              )}
+            </span>
           </div>
         )}
         <div className="sun-assist__body">

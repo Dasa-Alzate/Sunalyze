@@ -44,5 +44,6 @@
     "saveAndGo": "Save and continue",
     "discard": "Leave without saving",
     "cancel": "Cancel"
-  }
+  },
+  "fixIn": "Fix it in {{view}}"
 }

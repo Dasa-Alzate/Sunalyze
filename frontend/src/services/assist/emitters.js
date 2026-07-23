@@ -36,8 +36,31 @@ export function attachJsErrorEmitter(bus) {
 
 export function attachApiErrorEmitter(bus) {
   if (typeof setApiErrorHandler !== 'function') return () => {}
-  setApiErrorHandler((path, status, message) => {
-    bus.emit('api.error', { path, status, message: String(message || '').slice(0, 200) })
+  setApiErrorHandler((path, status, message, code) => {
+    bus.emit('api.error', { path, status, code: code || null, message: String(message || '').slice(0, 200) })
   })
   return () => setApiErrorHandler(null)
+}
+
+const RAGE_THRESHOLD = 4
+const RAGE_WINDOW_MS = 5000
+const RAGE_COOLDOWN_MS = 30000
+
+export function attachRageDetector(bus) {
+  const hits = new Map()
+  const muted = new Map()
+  return bus.on('dom.click', (event) => {
+    const target = event.data.target
+    const now = event.t
+    const mutedUntil = muted.get(target) || 0
+    if (now < mutedUntil) return
+    const times = (hits.get(target) || []).filter((t) => now - t < RAGE_WINDOW_MS)
+    times.push(now)
+    hits.set(target, times)
+    if (times.length >= RAGE_THRESHOLD) {
+      hits.delete(target)
+      muted.set(target, now + RAGE_COOLDOWN_MS)
+      bus.emit('assist.frustration', { target, count: times.length })
+    }
+  })
 }
