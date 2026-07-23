@@ -1,9 +1,3 @@
-"""Generacion de la memoria tecnica en PDF: dominio, sin HTTP.
-
-Devuelve los bytes del PDF; el route decide cabeceras y Response. Usa el
-renderizado Jinja de Flask como motor de plantillas (no toca request).
-WeasyPrint/pikepdf se importan de forma diferida: solo se exigen al generar.
-"""
 
 import io
 import json
@@ -25,11 +19,6 @@ DATASHEETS_DIR = os.path.join(os.path.dirname(__file__), '../../data/datasheets'
 
 
 def _safe_datasheet_path(name):
-    """Resuelve `name` dentro de `DATASHEETS_DIR` o devuelve `None` si es inseguro.
-
-    Rechaza separadores de ruta y componentes `..`, y exige que el `realpath`
-    quede bajo `DATASHEETS_DIR` (cierra el path traversal en los datasheets).
-    """
     if not name or os.path.sep in name or (os.path.altsep and os.path.altsep in name) or '..' in name:
         return None
     root = os.path.realpath(DATASHEETS_DIR)

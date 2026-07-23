@@ -1,4 +1,3 @@
-"""Tests de catálogos por marca: columnas, visibilidad, panel superadmin y merge."""
 
 import unittest
 

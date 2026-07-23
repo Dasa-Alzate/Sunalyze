@@ -1,15 +1,3 @@
-"""Servicio de plantillas de correo: renderiza y delega el envio al backend activo.
-
-Locale-aware: la plantilla y el asunto se resuelven por el locale del
-destinatario, con fallback a `es` (base actual). Las plantillas viven en
-`templates/emails/<locale>/<archivo>`; hoy solo existe `es`, quedando el hueco
-para `en` sin traducir todo aun.
-
-El envio real lo hace el `MailGateway` seleccionado por `MAIL_BACKEND` (`log` por
-defecto: solo registra; `smtp`: entrega real). El contrato de `send` es blando: un
-fallo del backend nunca propaga al llamador (el registro o el reset no deben caer
-porque el SMTP este caido); se loguea como error y se devuelve `sent=False`.
-"""
 
 import logging
 from jinja2 import TemplateNotFound
@@ -22,12 +10,6 @@ logger = logging.getLogger(__name__)
 
 
 class EmailService:
-    """Renderizador de plantillas de email transaccional.
-
-    Encapsula el catalogo de plantillas (asunto por locale + fichero Jinja). El
-    envio se delega al `MailGateway` activo: `log` en desarrollo (solo registra,
-    sin credenciales externas) o `smtp` en produccion.
-    """
 
     TEMPLATES = {
         'welcome': {'file': 'welcome.html'},

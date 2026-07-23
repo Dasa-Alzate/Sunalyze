@@ -1,4 +1,3 @@
-"""Auditoría de una ejecución de scraping (trazabilidad y monitoreo)."""
 
 from app.extensions import db
 from .database import BaseModel

@@ -1,15 +1,3 @@
-"""Catálogo de variables: declaración de qué entidades/atributos son resolubles.
-
-Es la única fuente de verdad de la whitelist (la usa el resolver para autorizar accesos) y a
-la vez el metadato que el editor consume para ofrecer inserción de variables. No ejecuta nada;
-es declarativo.
-
-Los grupos de variables se nombran (`GROUPS`) y cada `DocumentKind` declara qué grupos expone
-(`var_groups` en el registro de `DocumentKind`): así el catálogo por kind se deriva del registro
-y añadir un kind es una sola entrada. Las labels de `finance.*` son neutras (la moneda la pone
-el filtro `money` según la jurisdicción). Las entidades opcionales (`battery`, `wire`,
-`installation`, `maintenance`, `incident`) resuelven a vacío cuando no existen.
-"""
 
 
 def _var(path, label, tipo):
@@ -129,7 +117,6 @@ INCIDENT_VARS = [
     _var('incident.resolved_at', 'Fecha de resolución', 'date'),
 ]
 
-
 GROUPS = {
     'project': {'entity': 'project', 'label': 'Proyecto', 'vars': PROJECT_VARS},
     'panel': {'entity': 'panel', 'label': 'Panel', 'vars': PANEL_VARS},
@@ -151,18 +138,15 @@ def _kind_var_groups(kind):
 
 
 def variable_catalog(kind):
-    """Grupos de variables disponibles para un DocumentKind, según su registro."""
     return [GROUPS[name] for name in _kind_var_groups(kind) if name in GROUPS]
 
 
 def variable_catalog_all():
-    """Catálogo completo por kind (entidad -> grupos), derivado del registro de DocumentKind."""
     from app.models.report_template import DocumentKind
     return {key: variable_catalog(key) for key in DocumentKind.ALL}
 
 
 def whitelist():
-    """Mapa entidad -> set de atributos resolubles, derivado de todos los grupos."""
     allowed = {}
     for group in GROUPS.values():
         attrs = set()

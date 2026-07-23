@@ -1,8 +1,3 @@
-"""Endpoint de lectura de la bitacora de auditoria del workspace activo.
-
-Capa HTTP fina sobre AuditService. Scoped al `org_id` activo y protegido por el
-permiso `audit:view`.
-"""
 
 from flask import Blueprint, request, jsonify
 

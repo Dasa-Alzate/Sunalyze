@@ -1,4 +1,3 @@
-"""Esquemas de validacion de catalogos y equipos."""
 
 from typing import Optional
 
@@ -11,12 +10,6 @@ class CatalogSchema(BaseModel):
 
 
 class PanelSchema(BaseModel):
-    """Rangos físicos de un panel para altas y ediciones.
-
-    Todos los campos son opcionales para admitir ediciones parciales (PATCH):
-    solo se valida lo que llega. tcp y tcv no acotan el signo porque los
-    coeficientes de temperatura suelen ser negativos (%/°C).
-    """
     power: Optional[float] = Field(default=None, gt=0, le=2000)
     voc: Optional[float] = Field(default=None, ge=0, le=2000)
     vmp: Optional[float] = Field(default=None, ge=0, le=2000)
@@ -31,7 +24,6 @@ class PanelSchema(BaseModel):
 
 
 class InverterSchema(BaseModel):
-    """Rangos físicos de un inversor para altas, ediciones e importación."""
     power: Optional[float] = Field(default=None, gt=0, le=100000)
     power_max: Optional[float] = Field(default=None, gt=0, le=100000)
     vmax: Optional[float] = Field(default=None, ge=0, le=2000)
@@ -41,7 +33,6 @@ class InverterSchema(BaseModel):
 
 
 class BatterySchema(BaseModel):
-    """Rangos físicos de una batería para altas, ediciones e importación."""
     capacity_kwh: Optional[float] = Field(default=None, gt=0, le=100000)
     usable_kwh: Optional[float] = Field(default=None, ge=0, le=100000)
     dod: Optional[float] = Field(default=None, ge=0, le=100)
@@ -55,7 +46,6 @@ class BatterySchema(BaseModel):
 
 
 class WireSchema(BaseModel):
-    """Rangos físicos de un cable para altas, ediciones e importación."""
     seccion: Optional[float] = Field(default=None, gt=0, le=10000)
     corriente: Optional[float] = Field(default=None, gt=0, le=100000)
     no_conductores: Optional[int] = Field(default=None, ge=1, le=1000)

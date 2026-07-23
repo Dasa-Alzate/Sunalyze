@@ -1,15 +1,6 @@
-"""posventa instalaciones
-
-Revision ID: 827266176ee7
-Revises: 67ad717ad9a4
-Create Date: 2026-06-22 15:05:56.958314
-
-"""
 from alembic import op
 import sqlalchemy as sa
 
-
-# revision identifiers, used by Alembic.
 revision = '827266176ee7'
 down_revision = '67ad717ad9a4'
 branch_labels = None

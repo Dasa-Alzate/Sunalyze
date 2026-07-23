@@ -1,22 +1,9 @@
-"""Evento de auditoria append-only y org-scoped.
-
-Fundacion general de auditoria de la app. Las filas solo se insertan, nunca se
-actualizan ni se borran desde la aplicacion. `org_id` es nullable para admitir
-eventos de plataforma (sin org) y permitir unificar en el futuro la bitacora de
-superadmin con esta tabla.
-"""
 
 from app.extensions import db
 from .database import BaseModel
 
 
 class AuditEvent(BaseModel):
-    """Registro inmutable de una accion sobre una entidad.
-
-    `actor_email` se desnormaliza para que el evento sobreviva al borrado del
-    usuario. `action`/`entity_type` siguen la convencion `dominio.verbo` y
-    `dominio` respectivamente. `payload` guarda JSON (diff/contexto) como Text.
-    """
 
     __tablename__ = 'audit_events'
     __table_args__ = (

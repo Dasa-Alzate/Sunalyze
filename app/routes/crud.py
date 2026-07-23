@@ -1,11 +1,3 @@
-"""CRUD de equipos (paneles, inversores, cables) scoped a los catalogos visibles.
-
-Visibilidad = catalogos propios del workspace + suscritos del marketplace.
-Los equipos de catalogos propios admiten CRUD completo. Los del catalogo
-OFICIAL (marketplace, org_id NULL, is_official=True) son editables in situ por
-quien tenga EQUIPMENT_EDIT: es curacion de catalogo compartido, no borrado.
-Los del marketplace no oficial siguen siendo de solo lectura.
-"""
 
 import logging
 from flask import Blueprint, request, jsonify
@@ -72,7 +64,6 @@ RESOURCES = {
     },
 }
 
-
 IMPORT_MAX_BYTES = 2 * 1024 * 1024
 
 IMPORT_ALLOWED_EXTENSIONS = {'.csv', '.tsv', '.xlsx', '.xls'}
@@ -98,11 +89,6 @@ def _import_extension(filename):
 
 
 def _validate_ranges(resource, values):
-    """Valida rangos físicos con el schema pydantic cuando existe uno.
-
-    Solo paneles tienen schema hoy (`PanelSchema`); se aplica a los campos
-    presentes para admitir ediciones parciales.
-    """
     if resource != 'panels':
         return
     payload = {k: v for k, v in values.items() if k in PanelSchema.model_fields}
@@ -140,11 +126,6 @@ def _official_catalog_ids():
 
 
 def _serialize(row, own_ids, official_ids=frozenset()):
-    """Serializa un equipo marcando qué operaciones permite al workspace.
-
-    `editable` (PATCH) cubre catálogos propios y el oficial; `deletable`
-    (DELETE) solo los propios, porque borrar un oficial afecta a todas las orgs.
-    """
     return {
         **row.to_dict(),
         'editable': row.catalog_id in own_ids or row.catalog_id in official_ids,
@@ -228,12 +209,6 @@ def create_equipment(resource):
 @crud_bp.route('/api/<any(panels,inverters,batteries,wires):resource>/import', methods=['POST'])
 @require_permission(Permission.EQUIPMENT_EDIT)
 def import_equipment(resource):
-    """Importa equipos desde un fichero TSV/CSV/Excel al catálogo propio de la org.
-
-    Valida MIME/extensión y tamaño antes de parsear; delega el parseo y el upsert
-    por fila en `EquipmentImportService`. Devuelve un resumen
-    `{created, updated, errors:[{row, msg}]}` sin abortar por filas malas.
-    """
     cfg = _cfg(resource)
     org_id = current_org_id()
     uploaded = request.files.get('file')
@@ -272,15 +247,6 @@ def import_equipment(resource):
 @crud_bp.route('/api/<any(panels,inverters,batteries,wires):resource>/<int:item_id>', methods=['PATCH'])
 @require_permission(Permission.EQUIPMENT_EDIT)
 def update_equipment(resource, item_id):
-    """Edita un equipo propio o del catálogo OFICIAL (curación in situ).
-
-    Implicación multi-tenant: el catálogo oficial es compartido (org_id NULL),
-    así que corregir aquí un panel scrapeado corrige el dato para todas las orgs
-    suscritas. Al guardar se sella la procedencia (`is_locked=True`,
-    `source='manual'`, `needs_review=False`): el scraper ya no lo sobrescribe y
-    el badge «Scraped» desaparece. Borrar un oficial no está permitido por esta
-    vía (ver `deletable`).
-    """
     cfg = _cfg(resource)
     org_id = current_org_id()
     row = _editable_row(cfg, item_id, org_id, allow_official=True)

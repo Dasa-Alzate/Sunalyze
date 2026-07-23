@@ -1,14 +1,3 @@
-"""Dominio de generación de documentos PDF desde plantillas. Sin HTTP.
-
-Toma una plantilla (su versión publicada, o la última como respaldo) y un proyecto, construye
-el contexto, renderiza las secciones a HTML con `render_version`, las envuelve en una página
-imprimible y produce el PDF con WeasyPrint (import diferido, igual que `MemoriaService`). Los
-bytes se persisten bajo `instance/generated/` y se registra un `GeneratedDocument` con la
-versión fijada y el hash SHA-256 del PDF.
-
-Multi-tenant estricto: plantilla, proyecto y documento se comprueban contra la org activa;
-lo ajeno responde NotFound (indistinguible de "no existe", evitando IDOR).
-"""
 
 import hashlib
 import logging
@@ -103,7 +92,6 @@ class DocumentService:
 
     @classmethod
     def build_document_html(cls, org_id, template_id, project_id, user=None):
-        """Ensambla el HTML imprimible completo y devuelve (html, template, version, project)."""
         template = cls._accessible_template(org_id, template_id)
         project = cls._owned_project(org_id, project_id)
         version = cls._pinned_version(template)
@@ -137,7 +125,6 @@ class DocumentService:
 
     @classmethod
     def generate(cls, org_id, template_id, project_id, user=None):
-        """Genera y persiste un PDF; crea y devuelve el `GeneratedDocument`."""
         html, template, version, project = cls.build_document_html(
             org_id, template_id, project_id, user=user
         )
@@ -190,7 +177,6 @@ class DocumentService:
 
     @classmethod
     def read_pdf_bytes(cls, org_id, doc_id):
-        """Devuelve (document, pdf_bytes) validando propiedad por org."""
         doc = cls._owned_document(org_id, doc_id)
         try:
             pdf_bytes = get_storage().read(doc.pdf_path)

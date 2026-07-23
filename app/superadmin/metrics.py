@@ -1,4 +1,3 @@
-"""Agregados para el dashboard de métricas del superadmin."""
 
 from sqlalchemy import func
 

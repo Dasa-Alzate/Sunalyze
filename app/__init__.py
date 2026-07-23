@@ -1,9 +1,3 @@
-"""
-Sunalyze - Aplicacion web para el analisis y dimensionamiento de instalaciones fotovoltaicas.
-
-Calcula requisitos de paneles solares, compatibilidad de inversores y genera
-documentacion tecnica utilizando datos de irradiancia de PVGIS.
-"""
 
 import logging
 import os
@@ -100,12 +94,6 @@ def create_app(config_overrides=None):
 
 
 def _register_spa(app):
-    """Sirve la SPA de React compilada (frontend/dist).
-
-    Las rutas explicitas de la API y /static tienen prioridad en el mapa de
-    URLs de Werkzeug; este catch-all solo atiende lo que no coincida, de modo
-    que el enrutado del lado cliente (React Router) recae siempre en index.html.
-    """
     dist_dir = os.path.join(
         os.path.dirname(os.path.dirname(os.path.abspath(__file__))),
         'frontend', 'dist',

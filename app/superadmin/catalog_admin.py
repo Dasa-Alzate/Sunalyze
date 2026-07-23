@@ -1,10 +1,3 @@
-"""Operaciones de superadmin sobre catálogos: listado completo, CRUD, activación y merge.
-
-A diferencia de CatalogService (que filtra por visibilidad de usuario), aquí se ven
-TODOS los catálogos, incluidos los inactivos en cuarentena. El merge reasigna los
-equipos del catálogo origen al destino; los duplicados semánticos (mismo equipo con
-nombre distinto) se resuelven uno a uno según la decisión del superusuario.
-"""
 
 from app.extensions import db
 from app.models.catalog import Catalog, CatalogSubscription

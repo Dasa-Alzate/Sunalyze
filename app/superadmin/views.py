@@ -1,4 +1,3 @@
-"""Vistas server-rendered del portal de superadmin."""
 
 from urllib.parse import urlparse
 
@@ -55,9 +54,6 @@ def login():
 
 
 def _is_safe_next(target):
-    """Solo acepta rutas internas: sin host (netloc) y que empiecen por '/'.
-
-    Rechaza URLs absolutas y `//host` (open redirect)."""
     if not target or '\\' in target:
         return False
     parsed = urlparse(target)
@@ -76,7 +72,6 @@ def _finish_login(user):
 @superadmin_bp.route('/mfa/setup', methods=['GET', 'POST'])
 @limiter.limit('10 per minute', methods=['POST'])
 def mfa_setup():
-    """Enrolamiento forzado: genera secreto, lo muestra y exige confirmar un código."""
     user = pending_mfa_user()
     if user is None:
         return redirect(url_for('superadmin.login'))
@@ -103,7 +98,6 @@ def mfa_setup():
 @superadmin_bp.route('/mfa/challenge', methods=['GET', 'POST'])
 @limiter.limit('10 per minute', methods=['POST'])
 def mfa_challenge():
-    """Segundo factor en el login: TOTP de 6 dígitos o un código de recuperación."""
     user = pending_mfa_user()
     if user is None:
         return redirect(url_for('superadmin.login'))

@@ -1,4 +1,3 @@
-"""Modelo de proyecto de instalacion fotovoltaica."""
 
 import json
 
@@ -11,15 +10,6 @@ _UNSET = object()
 
 
 class Project(BaseModel, SoftDeleteMixin):
-    """
-    Representa un proyecto persistente de diseno fotovoltaico.
-
-    Agrupa los datos del cliente, el emplazamiento, los equipos elegidos,
-    los parametros de la memoria tecnica y los resultados del ultimo
-    dimensionamiento. El estado refleja el avance en el flujo de
-    legalizacion borrador -> en_revision -> presentado -> aprobado,
-    con rechazado como salida alternativa.
-    """
     __tablename__ = 'projects'
 
     org_id = db.Column(db.Integer, db.ForeignKey('organizations.id', ondelete='CASCADE'), index=True)
@@ -73,13 +63,6 @@ class Project(BaseModel, SoftDeleteMixin):
 
     @classmethod
     def next_serial_seq(cls, org_id):
-        """Devuelve el siguiente correlativo de serie para una organizacion.
-
-        Toma el maximo `serial_seq` de los proyectos de esa org **incluyendo los borrados
-        logicamente** (`with_deleted`) y le suma 1, de modo que un numero nunca se reutiliza.
-        En alta muy concurrente dos creaciones simultaneas podrian leer el mismo maximo y
-        colisionar (carrera); el volumen de creacion es bajo y se considera aceptable.
-        """
         current = (
             db.session.query(db.func.max(cls.serial_seq))
             .filter(cls.org_id == org_id)
@@ -88,10 +71,6 @@ class Project(BaseModel, SoftDeleteMixin):
         return (current or 0) + 1
 
     def formatted_serial(self, prefix):
-        """Formatea el serial como `{prefijo}-{seq:04d}`, o `{seq:04d}` sin prefijo.
-
-        Devuelve `None` si el proyecto aun no tiene `serial_seq` asignado.
-        """
         if self.serial_seq is None:
             return None
         padded = f'{self.serial_seq:04d}'
@@ -102,7 +81,6 @@ class Project(BaseModel, SoftDeleteMixin):
 
     @property
     def current_signature(self):
-        """Devuelve la firma de memoria vigente, o None si no hay ninguna."""
         for signature in self.signatures:
             if signature.is_current:
                 return signature
@@ -137,12 +115,6 @@ class Project(BaseModel, SoftDeleteMixin):
         return None
 
     def to_dict(self, prefix=_UNSET):
-        """Serializa el proyecto.
-
-        `prefix` es el prefijo de serie de la org (branding). Si no se pasa, se lee
-        perezosamente del branding de la org del proyecto; los listados deben resolverlo una
-        sola vez por org y pasarlo para evitar N+1.
-        """
         if prefix is _UNSET:
             from app.services.org_service import OrgService
             prefix = OrgService.get_branding(self.org_id).get('project_prefix')

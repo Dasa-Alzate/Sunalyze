@@ -1,10 +1,3 @@
-"""Adaptador de cola sobre Redis + RQ (opcional).
-
-`rq` y `redis` se importan de forma **perezosa** dentro de los métodos para que la app y los
-tests arranquen sin la dependencia cuando el backend activo es síncrono. Encola la función
-registrada (importable) para que el worker la resuelva; el worker debe correr dentro de un
-contexto de aplicación (ver docs/pdf-scalability-research.md).
-"""
 
 from app.gateways.queue.base import (
     JobQueue, STATUS_QUEUED, STATUS_STARTED, STATUS_FINISHED, STATUS_FAILED,
@@ -25,7 +18,6 @@ _RQ_STATUS_MAP = {
 
 
 class RQQueue(JobQueue):
-    """Encola los jobs en Redis para que los procese un worker de RQ."""
 
     is_async = True
 

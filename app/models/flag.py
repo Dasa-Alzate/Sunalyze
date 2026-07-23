@@ -1,10 +1,3 @@
-"""Feature flags: definición del flag + overrides por ámbito.
-
-Un flag está "encendido" en un contexto si algún override lo concede, resuelto
-por especificidad (user > org > global > default). El override lleva su `source`
-(grant manual, experimento, dev) para poder caducar/revocar por origen; hoy el
-pago no existe, pero sería una fuente más sin tocar nada.
-"""
 
 from app.extensions import db
 from .database import BaseModel

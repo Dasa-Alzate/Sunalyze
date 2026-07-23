@@ -1,13 +1,3 @@
-"""Dominio de plantillas de documentos. Sin HTTP.
-
-Reglas de propiedad (espejo de CatalogService):
-- Plantilla con org_id NULL + scope 'system' -> banco oficial (solo lectura; instalable).
-- Plantilla con org_id -> propiedad del workspace (CRUD por sus admins).
-- Biblioteca de una org = sus TemplateInstallation (plantillas seleccionadas).
-
-Multi-tenant estricto: cada lectura/escritura comprueba que el recurso pertenece a la org
-activa; lo ajeno responde NotFound (no se distingue de "no existe", evitando IDOR).
-"""
 
 import logging
 from datetime import datetime

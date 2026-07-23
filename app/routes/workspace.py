@@ -1,10 +1,3 @@
-"""Endpoints de workspace: listado y cambio del workspace activo.
-
-El workspace activo vive en la sesion (`session['org_id']`, la fuente que
-resuelve `current_org_id()`); cambiarlo re-escopa todas las lecturas
-multi-tenant. Cambiar a una org donde no hay Membership responde 404
-(patron IDOR->404: no se revela la existencia de la org).
-"""
 
 from flask import Blueprint, request, jsonify
 

@@ -1,11 +1,3 @@
-"""Esquemas de validacion de creacion y actualizacion de proyectos.
-
-Tipa y acota los campos que llegan en el body de POST/PATCH de proyecto, que
-antes se volcaban crudos al modelo sin comprobar tipo ni rango. Todos los campos
-son opcionales en la actualizacion; en la creacion solo `cliente` es obligatorio.
-Las rutas aplican el resultado con model_dump(exclude_unset=True), de modo que un
-campo no enviado conserva su valor actual y no se pisan opcionales.
-"""
 
 from typing import Optional
 
@@ -43,7 +35,6 @@ class ProjectUpdateSchema(BaseModel):
     @field_validator('*', mode='before')
     @classmethod
     def _empty_to_none(cls, value):
-        """Normaliza cadenas vacias o solo-espacios a None (opcional ausente)."""
         if isinstance(value, str) and value.strip() == '':
             return None
         return value

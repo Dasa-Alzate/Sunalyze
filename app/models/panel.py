@@ -1,27 +1,10 @@
-"""Modelo de panel solar fotovoltaico."""
 
 from app import db
 from .database import BaseModel
 from .provenance import ProvenanceMixin
 
-class Panel(BaseModel, ProvenanceMixin):
-    """
-    Representa un panel solar con sus especificaciones tecnicas.
 
-    Attributes:
-        nombre: Nombre/modelo del panel.
-        y: Eficiencia del panel (%).
-        tcp: Coeficiente de temperatura de potencia (%/C).
-        tcv: Coeficiente de temperatura de voltaje (%/C).
-        voc: Voltaje de circuito abierto (V).
-        vmp: Voltaje en el punto de maxima potencia (V).
-        imp: Corriente en el punto de maxima potencia (A).
-        isc: Corriente de cortocircuito (A).
-        power: Potencia nominal (W).
-        t_noct: Temperatura nominal de operacion de la celda (C).
-        height: Altura del panel (mm).
-        width: Ancho del panel (mm).
-    """
+class Panel(BaseModel, ProvenanceMixin):
     __tablename__ = 'panels'
 
     catalog_id = db.Column(db.Integer, db.ForeignKey('catalogs.id'), index=True)

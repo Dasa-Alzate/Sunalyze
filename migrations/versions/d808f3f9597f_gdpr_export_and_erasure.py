@@ -1,15 +1,6 @@
-"""gdpr export and erasure
-
-Revision ID: d808f3f9597f
-Revises: 4ea694e9d6b2
-Create Date: 2026-06-17 15:29:31.503794
-
-"""
 from alembic import op
 import sqlalchemy as sa
 
-
-# revision identifiers, used by Alembic.
 revision = 'd808f3f9597f'
 down_revision = 'c7f602e8e288'
 branch_labels = None

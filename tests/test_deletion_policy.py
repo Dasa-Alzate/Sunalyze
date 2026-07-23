@@ -1,12 +1,3 @@
-"""Tests de la política de borrado a nivel BD (ondelete coherente).
-
-Ejercita las FK con `PRAGMA foreign_keys=ON` (SQLite las ignora por defecto) para
-comprobar el comportamiento real de la BD ante un hard-delete:
-
-- CASCADE: borrar un padre (proyecto, usuario) borra sus hijos de propiedad.
-- SET NULL: borrar un actor deja el registro vivo con la referencia a NULL.
-- El soft-delete existente sigue funcionando igual (no lo altera esta política).
-"""
 
 import unittest
 

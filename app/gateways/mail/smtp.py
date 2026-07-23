@@ -1,10 +1,3 @@
-"""Adaptador SMTP genérico con stdlib (`smtplib` + `email.message.EmailMessage`).
-
-Compatible con cualquier proveedor que exponga un endpoint SMTP autenticado
-(SES-SMTP, Brevo, Mailgun, Gmail...). STARTTLS activado por defecto (puerto 587)
-y `login()` solo cuando hay usuario configurado. Cualquier fallo de red o de
-protocolo se traduce a `MailError` para que el orquestador decida qué hacer.
-"""
 
 import smtplib
 from email.message import EmailMessage
@@ -13,7 +6,6 @@ from app.gateways.mail.base import MailGateway, MailError
 
 
 class SMTPMail(MailGateway):
-    """Envía correo HTML por SMTP con STARTTLS y autenticación opcionales."""
 
     def __init__(self, host, port, username, password, starttls, sender, timeout):
         self.host = host
@@ -26,7 +18,6 @@ class SMTPMail(MailGateway):
 
     @classmethod
     def from_config(cls, config):
-        """Construye el adaptador desde la configuración Flask activa."""
         return cls(
             host=config['MAIL_SMTP_HOST'],
             port=int(config.get('MAIL_SMTP_PORT') or 587),

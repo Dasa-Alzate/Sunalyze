@@ -1,4 +1,3 @@
-"""Orquestacion de diagramas unifilares SVG: dominio, sin HTTP."""
 
 from app.services.circuit import CircuitService
 from app.errors import ValidationError

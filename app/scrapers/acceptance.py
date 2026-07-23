@@ -1,19 +1,3 @@
-"""Criterios de aceptación de hallazgos del scraper, centralizados y por capas.
-
-Resolución por especificidad creciente (la última gana):
-    global[tipo]  →  marca[marca][tipo]  →  equipo[external_id]
-
-Cada capa aporta criterios parciales en DOS severidades:
-- `block`:  detectan falsos positivos / equipos indeseados → el hallazgo NO sube.
-- `review`: sospechosos pero plausibles → el hallazgo sube marcado `needs_review`.
-
-Dentro de cada severidad:
-- `required`: campos que DEBEN venir (si una capa los define, reemplaza a la anterior).
-- `ranges`: cotas por campo {campo: [min, max]} (merge por campo, la específica gana).
-
-`evaluate(product, brand)` devuelve {'verdict', 'block', 'review'} donde verdict es
-'blocked' | 'review' | 'accepted'. Cambiar criterios = editar este fichero.
-"""
 
 from .base import VITAL
 

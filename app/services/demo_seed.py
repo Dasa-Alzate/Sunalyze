@@ -1,11 +1,3 @@
-"""Seeder del dataset de demo local (`flask seed demo`).
-
-Construye un entorno realista para desarrollo: cuenta superadmin, catálogos
-de equipos, plantillas oficiales, flags activados para la org, y tres
-proyectos en distintos puntos del flujo (borrador, en_revision y aprobado
-con instalación de posventa, lecturas, mantenimiento y escenario financiero).
-Idempotente: si la org ya tiene proyectos, no duplica el dataset.
-"""
 
 import hashlib
 from datetime import date, timedelta

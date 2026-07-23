@@ -1,16 +1,9 @@
-"""Firma de la memoria tecnica de un proyecto.
-
-Registra quien firmo, cuando y un hash SHA-256 del PDF generado como prueba de
-integridad del documento firmado. Una sola firma vigente por proyecto
-(is_current); las anteriores quedan como historico.
-"""
 
 from app.extensions import db
 from .database import BaseModel
 
 
 class MemoriaSignature(BaseModel):
-    """Firma vinculada a un proyecto, con snapshot de integridad del PDF."""
     __tablename__ = 'memoria_signatures'
 
     org_id = db.Column(db.Integer, db.ForeignKey('organizations.id', ondelete='CASCADE'), index=True, nullable=False)

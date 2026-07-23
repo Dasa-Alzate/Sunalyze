@@ -1,11 +1,3 @@
-"""Tests del módulo financiero: motor (payback/VAN/TIR/LCOE/CO2), CRUD de
-escenarios, gating del flag y IDOR, más no-regresión del modelo de proyecto.
-
-Motor: casos conocidos calculables a mano (TIR de [-1000,600,600] ≈ 0.13066,
-signo del VAN, cashflow con degradación/escalada, contado vs financiado, y TIR
-sin raíz devuelve None sin petar). Rutas: compute devuelve el desglose completo,
-CRUD persiste, flag off -> 403 e IDOR -> 404.
-"""
 
 import unittest
 

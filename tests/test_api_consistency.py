@@ -1,8 +1,3 @@
-"""Tests de la convencion REST uniforme y del generador `flask api-map`.
-
-Cubre: update por PATCH de panel y de proyecto (200 + persiste), retirada del verbo PUT
-(405) en esos recursos, y que `flask api-map` escribe docs/api-map.md con los endpoints /api.
-"""
 
 import os
 import unittest

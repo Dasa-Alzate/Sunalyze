@@ -1,8 +1,3 @@
-"""Variables del diagrama funcional: dominio, sin HTTP.
-
-Valida la entrada, resuelve panel/inversor y devuelve el dict de variables;
-el route decide la plantilla y la respuesta.
-"""
 
 from app.models.panel import Panel
 from app.models.inverter import Inverter

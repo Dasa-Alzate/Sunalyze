@@ -1,11 +1,3 @@
-"""Registry de filtros de formato del pipeline `valor | filtro(args)`.
-
-Los filtros numéricos formatean según el *locale* de presentación (el de la jurisdicción de la
-plantilla), no un es-ES fijo. El locale y la moneda llegan al filtro como `presentation` desde
-el resolver, no como argumentos de la plantilla. Solo se invocan funciones registradas aquí; un
-nombre no registrado produce TemplateError, nunca una llamada arbitraria. Formateo solo con
-stdlib (sin babel).
-"""
 
 import math
 from datetime import date, datetime
@@ -32,7 +24,6 @@ def _separators(locale):
 
 
 def _is_empty(value):
-    """True para valores ausentes: None o cadena en blanco (una entidad opcional sin dato)."""
     return value is None or (isinstance(value, str) and value.strip() == '')
 
 
@@ -70,11 +61,6 @@ def _format_grouped(number, decimals, decimal_sep, thousands_sep):
 
 
 def filter_number(value, decimals=2, presentation=None):
-    """Formatea con N decimales y la coma decimal del locale (sin separador de miles).
-
-    None-safe: un valor ausente (None o cadena en blanco) devuelve '' en vez de romper, igual
-    que el resto de filtros; así una entidad opcional sin dato no ensucia el documento.
-    """
     if _is_empty(value):
         return ''
     decimal_sep, _ = _separators((presentation or {}).get('locale'))
@@ -82,7 +68,6 @@ def filter_number(value, decimals=2, presentation=None):
 
 
 def filter_thousands(value, decimals=2, presentation=None):
-    """Formatea con separador de miles y decimal del locale. None-safe (ausente -> '')."""
     if _is_empty(value):
         return ''
     decimal_sep, thousands_sep = _separators((presentation or {}).get('locale'))
@@ -90,7 +75,6 @@ def filter_thousands(value, decimals=2, presentation=None):
 
 
 def filter_money(value, decimals=2, presentation=None):
-    """Formatea un importe según la moneda y el locale de la plantilla. None-safe (ausente -> '')."""
     if _is_empty(value):
         return ''
     presentation = presentation or {}
@@ -104,12 +88,10 @@ def filter_money(value, decimals=2, presentation=None):
 
 
 def filter_currency(value, decimals=2, presentation=None):
-    """Alias de `money`."""
     return filter_money(value, decimals, presentation=presentation)
 
 
 def filter_date(value, fmt=None, presentation=None):
-    """Formatea una fecha según el orden del locale (en: m/d/Y, resto: d/m/Y)."""
     if value is None or value == '':
         return ''
     if isinstance(value, str):
@@ -130,7 +112,6 @@ def filter_date(value, fmt=None, presentation=None):
 
 
 def filter_ellipsis(value, max_length, presentation=None):
-    """Corta el texto a `max_length` caracteres y añade … si se truncó."""
     text = '' if value is None else str(value)
     max_length = int(max_length)
     if max_length < 0:
@@ -149,22 +130,15 @@ def filter_lower(value, presentation=None):
 
 
 def filter_capitalize(value, presentation=None):
-    """Primera letra en mayúscula, el resto sin tocar (no baja el resto, a diferencia de str)."""
     text = '' if value is None else str(value)
     return text[:1].upper() + text[1:] if text else ''
 
 
 def filter_title(value, presentation=None):
-    """Cada palabra con inicial mayúscula (útil para nombres propios en minúscula)."""
     return ('' if value is None else str(value)).title()
 
 
 def filter_default(value, fallback='', presentation=None):
-    """Devuelve `fallback` cuando el valor está ausente (None o cadena en blanco).
-
-    Pareja natural de los filtros None-safe: `{{ finance.net_capex | money | default('N/D') }}`
-    muestra un texto de reemplazo en vez de un hueco cuando el dato no existe.
-    """
     if value is None or (isinstance(value, str) and value.strip() == ''):
         return fallback
     return value

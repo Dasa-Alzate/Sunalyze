@@ -1,6 +1,6 @@
 # API map
 
-Mapa autogenerado por `flask api-map`. Endpoints `/api`: 121.
+Mapa autogenerado por `flask api-map`. Endpoints `/api`: 122.
 
 No editar a mano: regenerar con `flask api-map`.
 
@@ -41,6 +41,7 @@ No editar a mano: regenerar con `flask api-map`.
 | GET | `/api/catalogs` | `catalogs.list_catalogs` |  |
 | POST | `/api/catalogs` | `catalogs.create_catalog` |  |
 | DELETE | `/api/catalogs/<int:catalog_id>` | `catalogs.delete_catalog` |  |
+| PATCH | `/api/catalogs/<int:catalog_id>` | `catalogs.update_catalog` |  |
 | POST | `/api/catalogs/<int:catalog_id>/restore` | `catalogs.restore_catalog` |  |
 | POST | `/api/catalogs/<int:catalog_id>/subscribe` | `catalogs.subscribe` |  |
 | POST | `/api/catalogs/<int:catalog_id>/unsubscribe` | `catalogs.unsubscribe` |  |
@@ -61,8 +62,8 @@ No editar a mano: regenerar con `flask api-map`.
 | POST | `/api/<any(panels,inverters,batteries,wires):resource>` | `crud.create_equipment` |  |
 | DELETE | `/api/<any(panels,inverters,batteries,wires):resource>/<int:item_id>` | `crud.delete_equipment` |  |
 | GET | `/api/<any(panels,inverters,batteries,wires):resource>/<int:item_id>` | `crud.get_equipment` |  |
-| PATCH | `/api/<any(panels,inverters,batteries,wires):resource>/<int:item_id>` | `crud.update_equipment` | Edita un equipo propio o del catálogo OFICIAL (curación in situ). |
-| POST | `/api/<any(panels,inverters,batteries,wires):resource>/import` | `crud.import_equipment` | Importa equipos desde un fichero TSV/CSV/Excel al catálogo propio de la org. |
+| PATCH | `/api/<any(panels,inverters,batteries,wires):resource>/<int:item_id>` | `crud.update_equipment` |  |
+| POST | `/api/<any(panels,inverters,batteries,wires):resource>/import` | `crud.import_equipment` |  |
 | POST | `/api/wires/calculate-section` | `crud.calculate_section` |  |
 | GET | `/api/wires/search` | `crud.search_wires` |  |
 

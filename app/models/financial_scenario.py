@@ -1,10 +1,3 @@
-"""Modelo de escenario financiero por proyecto (org-scoped).
-
-Permite varios escenarios por proyecto (p. ej. contado vs financiado). Guarda los
-supuestos (`assumptions`) y el resultado cacheado (`results`) como JSON en columnas
-de texto, siguiendo el patrón de `Project.resultados`. `is_default` marca el
-escenario destacado del proyecto.
-"""
 
 import json
 

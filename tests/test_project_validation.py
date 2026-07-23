@@ -1,9 +1,3 @@
-"""Validacion de tipo y rango en creacion y actualizacion de proyectos.
-
-Comprueba que el body se valida con el esquema pydantic (422 ante coordenadas o
-potencias fuera de rango) y que un payload valido persiste (200/201), sin romper
-los campos opcionales ausentes.
-"""
 
 import unittest
 

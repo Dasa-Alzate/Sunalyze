@@ -1,4 +1,3 @@
-"""Jerarquia de excepciones de dominio + handlers HTTP centralizados."""
 
 import logging
 from flask import jsonify

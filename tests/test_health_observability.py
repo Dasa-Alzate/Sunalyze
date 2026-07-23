@@ -1,9 +1,3 @@
-"""Tests del endpoint /health y de la integración opcional de Sentry.
-
-Cubre: 200 con BD sana y shape del JSON; 503 con BD caída (mock de la sesión);
-prioridad de /health sobre el catch-all de la SPA; exención del rate limiting
-default; y que sin SENTRY_DSN la app arranca sin importar sentry_sdk.
-"""
 
 import sys
 import unittest

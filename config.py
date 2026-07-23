@@ -61,12 +61,6 @@ def _resolve_mail_backend():
 
 
 def _resolve_mfa_enc_key():
-    """En producción exige una `MFA_ENC_KEY` propia; fuera de prod, `None`.
-
-    Con `None`, `mfa._fernet` deriva la clave de `SECRET_KEY` (fallback solo apto para
-    desarrollo). En producción esa derivación acopla el cifrado de los secretos TOTP a
-    la rotación de `SECRET_KEY`, por lo que se exige una clave dedicada.
-    """
     key = os.environ.get('MFA_ENC_KEY') or None
     if _IS_PRODUCTION and not key:
         raise RuntimeError(

@@ -1,10 +1,3 @@
-"""Tests de integracion de la bitacora de actividad (backlog §1).
-
-Usa SQLite en memoria y el cliente de pruebas de Flask. Cubre: soft-delete y
-restore de proyecto y catalogo, unicidad de nombre de catalogo ignorando
-borrados, feed paginado de /api/audit con enlace resuelto, cobertura de audit
-en acciones de equipo y catalogo, y no-regresion del CRUD existente.
-"""
 
 import unittest
 

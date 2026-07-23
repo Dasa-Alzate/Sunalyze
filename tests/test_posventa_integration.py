@@ -1,8 +1,3 @@
-"""Tests de posventa: creacion de instalacion desde proyecto aprobado (y no
-aprobado -> Conflict), transicion de estado, CRUD de visita/incidencia/lectura,
-resumen esperado-vs-real, gating del flag (off -> 403), IDOR (otra org -> 404) y
-no-regresion del modelo de proyecto.
-"""
 
 import unittest
 

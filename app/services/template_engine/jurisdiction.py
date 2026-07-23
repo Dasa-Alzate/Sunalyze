@@ -1,9 +1,3 @@
-"""Perfiles de presentación por país (code-as-config) y resolución de jurisdicción.
-
-Cada país mapea a `{locale, currency, page_size}`. La jurisdicción de una plantilla deriva de
-su `country`; `locale` y `currency` explícitos en la plantilla son override. No depende de
-Flask ni de babel: el formateo de números/moneda usa solo stdlib (ver `filters.py`).
-"""
 
 DEFAULT_COUNTRY = 'ES'
 
@@ -33,18 +27,12 @@ CURRENCY_SYMBOL_AFTER = {'EUR'}
 
 
 def country_profile(country):
-    """Perfil de presentación de un país (default ES si desconocido o vacío)."""
     if not country:
         return dict(COUNTRY_PROFILES[DEFAULT_COUNTRY])
     return dict(COUNTRY_PROFILES.get(country.strip().upper(), COUNTRY_PROFILES[DEFAULT_COUNTRY]))
 
 
 def resolve_jurisdiction(country=None, locale=None, currency=None):
-    """Resuelve la presentación efectiva: perfil del país con overrides explícitos.
-
-    Devuelve `{locale, currency, page_size}`. `locale`/`currency` no vacíos sobreescriben el
-    valor derivado del país.
-    """
     profile = country_profile(country)
     if locale:
         profile['locale'] = locale.strip()

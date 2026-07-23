@@ -1,9 +1,3 @@
-"""Tests de conteos de catálogo agregados (fix N+1 de library/marketplace).
-
-Verifica que counts_map produce exactamente los mismos conteos que las queries
-por catálogo previas y que library/marketplace ejecutan un número de queries
-acotado e independiente del número de catálogos visibles.
-"""
 
 import unittest
 
@@ -27,7 +21,6 @@ def _make_app():
 
 
 class _QueryCounter:
-    """Contador de sentencias SQL emitidas via eventos de SQLAlchemy."""
 
     def __init__(self, engine):
         self.engine = engine

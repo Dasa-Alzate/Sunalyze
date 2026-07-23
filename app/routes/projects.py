@@ -1,4 +1,3 @@
-"""CRUD de proyectos, scoped al workspace (org) activo del usuario."""
 
 import logging
 from flask import Blueprint, request, jsonify

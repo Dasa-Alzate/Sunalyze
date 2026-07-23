@@ -1,10 +1,3 @@
-"""Notificacion dirigida a un usuario: proyeccion por-destinatario de un evento.
-
-Org-scoped y fan-out on write: se almacena una fila por destinatario. Cada
-usuario lee solo las suyas. `to_dict()` resuelve un enlace de navegacion a
-partir de `entity_type`/`entity_id` para que el frontend abra el objeto
-referido sin reconstruir rutas.
-"""
 
 import json
 

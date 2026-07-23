@@ -1,10 +1,3 @@
-"""Tests de RGPD: export portable (Art. 15/20) y supresion/anonimizacion (Art. 17).
-
-Cubre: contenido del export y ausencia de secretos; aislamiento multi-tenant del
-export; borrado que anonimiza en sitio (la fila sobrevive, la PII se vacia) y
-soft-deletea la organizacion personal; el caso de conflicto (unico owner de un
-workspace compartido / cuenta ya borrada); y los gates de sesion/rol.
-"""
 
 import unittest
 

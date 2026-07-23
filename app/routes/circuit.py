@@ -1,4 +1,3 @@
-"""Endpoint de diagramas unifilares SVG. HTTP fino sobre CircuitDiagramService."""
 
 from flask import Blueprint, jsonify, request, Response
 
@@ -9,7 +8,6 @@ circuit_bp = Blueprint('circuit', __name__, url_prefix='/api/circuit')
 
 
 def _validate_args(args):
-    """Valida tipo/rango de los params enviados. Ignora los ausentes/vacios."""
     sent = {
         k: v for k, v in args.items()
         if k in CircuitConfigSchema.model_fields and str(v).strip() != ''

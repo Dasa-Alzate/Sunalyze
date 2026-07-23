@@ -1,8 +1,3 @@
-"""Registro de auditoría de acciones del portal de superadmin.
-
-Toda acción con efecto (aplicar migración, conceder superadmin, aprobar/lockear
-equipo, tocar tickets) deja rastro: quién, desde qué IP, qué y sobre qué.
-"""
 
 from app.extensions import db
 from .database import BaseModel

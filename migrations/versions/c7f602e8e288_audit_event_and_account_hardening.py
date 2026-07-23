@@ -1,15 +1,6 @@
-"""audit event and account hardening
-
-Revision ID: c7f602e8e288
-Revises: 4ea694e9d6b2
-Create Date: 2026-06-17 15:30:50.874325
-
-"""
 from alembic import op
 import sqlalchemy as sa
 
-
-# revision identifiers, used by Alembic.
 revision = 'c7f602e8e288'
 down_revision = '13972b434fe3'
 branch_labels = None

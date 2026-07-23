@@ -1,10 +1,3 @@
-"""Endpoints del módulo financiero. Capa HTTP fina.
-
-Todas las rutas van detrás del flag `finance` (@require_flag) y de un permiso RBAC
-(lectura: PROJECT_VIEW; escritura: PROJECT_EDIT). El alcance por org_id se aplica en
-FinanceService (IDOR -> 404). `compute` calcula al vuelo sin persistir; los escenarios
-son el CRUD persistente por proyecto.
-"""
 
 from flask import Blueprint, request, jsonify
 

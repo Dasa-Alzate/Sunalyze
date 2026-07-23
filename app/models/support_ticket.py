@@ -1,4 +1,3 @@
-"""Tickets de soporte al cliente y sus mensajes."""
 
 from app.extensions import db
 from .database import BaseModel

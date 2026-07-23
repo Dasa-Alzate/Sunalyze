@@ -1,10 +1,3 @@
-"""Autorizacion RBAC: permisos, matriz rol->permisos y decorador de endpoint.
-
-Separado de la autenticacion (security.py). Los permisos se evaluan contra el
-rol del usuario en el WORKSPACE ACTIVO (Membership.role), no contra el usuario
-global: la misma persona puede ser 'owner' de su espacio y 'member' de una
-empresa. La matriz vive en un unico sitio (ROLE_PERMISSIONS) para mantenerla.
-"""
 
 from functools import wraps
 from flask import g
@@ -87,11 +80,6 @@ def has_permission(permission):
 
 
 def require_flag(key):
-    """Gate de feature flag: 403 si el flag no está activo en el contexto actual.
-
-    Ortogonal al permiso (RBAC) y al rol de plataforma: responde "¿está la
-    funcionalidad habilitada aquí?", no "¿te dejan hacerlo?".
-    """
     def decorator(fn):
         @wraps(fn)
         def wrapper(*args, **kwargs):
@@ -105,11 +93,6 @@ def require_flag(key):
 
 
 def require_permission(*permissions):
-    """Exige sesion + que el rol en el workspace activo conceda los permisos.
-
-    Uso: @require_permission(Permission.PROJECT_EDIT)
-    401 si no hay sesion; 403 si el rol no concede algun permiso requerido.
-    """
     def decorator(fn):
         @wraps(fn)
         def wrapper(*args, **kwargs):

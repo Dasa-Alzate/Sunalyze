@@ -1,4 +1,3 @@
-"""Endpoints de autenticacion por correo. Capa HTTP fina sobre AuthService."""
 
 from flask import Blueprint, request, jsonify, current_app
 

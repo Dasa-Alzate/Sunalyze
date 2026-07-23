@@ -1,15 +1,6 @@
-"""report templates: plantillas org + versiones + biblioteca
-
-Revision ID: 293a01810210
-Revises: c1052d9f2335
-Create Date: 2026-06-22 12:59:36.802302
-
-"""
 from alembic import op
 import sqlalchemy as sa
 
-
-# revision identifiers, used by Alembic.
 revision = '293a01810210'
 down_revision = 'c1052d9f2335'
 branch_labels = None

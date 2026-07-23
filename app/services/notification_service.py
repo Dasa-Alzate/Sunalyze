@@ -1,13 +1,3 @@
-"""Servicio de notificaciones: fan-out on write y lectura por-usuario.
-
-`notify(...)` hace `add`+`flush` (sin commit), igual que AuditService: el commit
-lo ejecuta el service de dominio junto a su mutacion, de modo que la
-notificacion y el cambio que la origina son atomicos. Crea una fila por
-destinatario (fan-out) y nunca notifica al propio actor.
-
-La lectura esta scoped al usuario y al workspace activos; un usuario solo ve y
-marca sus propias notificaciones (IDOR -> NotFound -> 404).
-"""
 
 import json
 import logging
@@ -34,11 +24,6 @@ class NotificationService:
     @staticmethod
     def notify(recipients, type, actor=None, org_id=None,
                entity_type=None, entity_id=None, payload=None):
-        """Crea una notificacion por destinatario (fan-out) y hace flush.
-
-        `recipients` admite ids o modelos User. Se deduplican los ids y se
-        excluye al actor. Devuelve las notificaciones creadas (sin commit).
-        """
         actor_id = _user_id(actor)
 
         unique = []

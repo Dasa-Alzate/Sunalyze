@@ -1,8 +1,3 @@
-"""Lectura y aplicación de migraciones Alembic desde el portal.
-
-`status()`/`history()` solo leen; `do_upgrade()` ejecuta upgrade-to-head y
-devuelve (antes, después) para auditar. El downgrade NO se expone por la web.
-"""
 
 from flask import current_app
 from flask_migrate import upgrade as _upgrade

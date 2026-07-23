@@ -1,10 +1,3 @@
-"""Tokenizador de expresiones de plantilla. Gramática restringida, sin ejecución.
-
-Reconoce números, strings entre comillas, identificadores (rutas con punto), operadores
-aritméticos, paréntesis, coma y la barra de pipeline. Rechaza de raíz cualquier identificador
-peligroso (dunders o prefijo de guion bajo), de modo que `__class__`, `__globals__`,
-`__mro__`, etc. nunca llegan a parsearse ni a resolverse.
-"""
 
 import re
 
@@ -50,11 +43,6 @@ def _reject_unsafe_name(name):
 
 
 def tokenize(source):
-    """Convierte el interior de un `{{ ... }}` en una lista de tokens.
-
-    Lanza TemplateError ante caracteres no reconocidos, expresiones demasiado largas o
-    identificadores que apunten a atributos internos (dunders / guion bajo inicial).
-    """
     if source is None:
         raise TemplateError('Expresión vacía.')
     if len(source) > MAX_EXPRESSION_LENGTH:

@@ -1,13 +1,5 @@
-"""notifications inbox fan-on-write
-
-Revision ID: 6f05e59255bc
-Revises: 827266176ee7
-Create Date: 2026-06-22 15:30:18.520783
-
-"""
 from alembic import op
 import sqlalchemy as sa
-
 
 revision = '6f05e59255bc'
 down_revision = '242fcf9fa595'

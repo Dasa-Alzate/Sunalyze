@@ -1,9 +1,3 @@
-"""Allowlist de IP en la API /api/admin/* (defensa en profundidad).
-
-Con `SUPERADMIN_IP_ALLOWLIST` configurada, una IP fuera de la lista recibe
-403 JSON con code (contrato DomainError) incluso siendo superadmin; una IP
-listada pasa. Sin allowlist no hay filtro (comportamiento de desarrollo).
-"""
 
 import unittest
 

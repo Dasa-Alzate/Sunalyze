@@ -1,22 +1,10 @@
-"""Modelo de inversor fotovoltaico."""
 
 from app import db
 from .database import BaseModel
 from .provenance import ProvenanceMixin
 
-class Inverter(BaseModel, ProvenanceMixin):
-    """
-    Representa un inversor con sus especificaciones tecnicas.
 
-    Attributes:
-        nombre: Nombre/modelo del inversor.
-        y: Eficiencia del inversor (%).
-        power_max: Potencia maxima DC de entrada (kW).
-        power: Potencia nominal AC de salida (kW).
-        vmax: Voltaje maximo de entrada DC (V).
-        I_max_input: Corriente maxima de entrada DC (A).
-        I_max_output: Corriente maxima de salida AC (A).
-    """
+class Inverter(BaseModel, ProvenanceMixin):
     __tablename__ = 'inverters'
 
     catalog_id = db.Column(db.Integer, db.ForeignKey('catalogs.id'), index=True)

@@ -1,13 +1,5 @@
-"""generated documents: pdf desde plantilla con version fijada
-
-Revision ID: 42edc2baf2b1
-Revises: 293a01810210
-Create Date: 2026-06-22 13:19:18.688894
-
-"""
 from alembic import op
 import sqlalchemy as sa
-
 
 revision = '42edc2baf2b1'
 down_revision = '293a01810210'

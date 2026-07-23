@@ -1,4 +1,3 @@
-"""Tests del scraper Autosolar: deducción de marca, parseo, enrutado y dedup."""
 
 import os
 import unittest

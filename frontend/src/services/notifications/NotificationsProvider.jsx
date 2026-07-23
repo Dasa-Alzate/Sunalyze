@@ -27,7 +27,7 @@ export function NotificationsProvider({ children }) {
       const d = await api.notifications.unreadCount()
       if (aliveRef.current) setCount(d?.unread_count || 0)
     } catch {
-      // contador best-effort: un fallo de red no rompe la UI
+      void 0
     }
   }, [])
 

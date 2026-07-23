@@ -1,9 +1,3 @@
-"""Seguridad y contrato de error del endpoint de envio de correos.
-
-Cubre que POST /api/emails/<id>/send exige superadmin (401 anonimo, 403 logueado
-sin privilegio) y que las respuestas de error llevan el campo `code` del contrato
-DomainError.
-"""
 
 import unittest
 

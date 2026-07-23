@@ -1,10 +1,3 @@
-"""Esquemas de validacion de la generacion de diagramas unifilares.
-
-Todos los campos son opcionales: solo se valida un campo cuando se envia. Los
-campos no enviados conservan los defaults del dominio (CircuitService), de modo
-que las plantillas nombradas siguen renderizando como hoy. La presencia de los
-campos obligatorios la sigue verificando CircuitDiagramService.
-"""
 
 from typing import Optional
 
@@ -31,7 +24,6 @@ class CircuitConfigSchema(BaseModel):
     @field_validator('ac_phases')
     @classmethod
     def _phases_in_set(cls, value):
-        """ac_phases solo admite 1 o 3 (monofasico o trifasico)."""
         if value is not None and value not in (1, 3):
             raise ValueError('debe ser 1 o 3')
         return value

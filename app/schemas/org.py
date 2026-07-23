@@ -1,4 +1,3 @@
-"""Esquemas de validación de la organización."""
 
 import os
 import re
@@ -20,12 +19,6 @@ class OrgBrandingSchema(BaseModel):
     @field_validator('logo_path')
     @classmethod
     def logo_path_is_safe_relative(cls, v):
-        """`logo_path` es una ruta relativa segura bajo el dir de branding.
-
-        Rechaza esquemas (`http/https/file/data`), rutas absolutas, backslashes y
-        cualquier componente `..`, cerrando SSRF/LFI en el render del PDF (defensa en
-        profundidad junto al url_fetcher restringido de WeasyPrint).
-        """
         if v is None:
             return v
         candidate = v.strip()
@@ -45,7 +38,6 @@ class OrgBrandingSchema(BaseModel):
     @field_validator('primary_color')
     @classmethod
     def primary_color_is_hex(cls, v):
-        """Acepta solo un color hexadecimal CSS (`#RGB`..`#RRGGBBAA`)."""
         if v is None:
             return v
         candidate = v.strip()
@@ -58,7 +50,6 @@ class OrgBrandingSchema(BaseModel):
     @field_validator('project_prefix')
     @classmethod
     def project_prefix_is_slug(cls, v):
-        """Prefijo del nº de serie: alfanumérico/guion, máx. 8, normalizado a mayúsculas."""
         if v is None:
             return v
         candidate = v.strip().upper()

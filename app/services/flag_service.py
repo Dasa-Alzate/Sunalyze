@@ -1,13 +1,3 @@
-"""Resolución y gestión de feature flags. Dominio sin HTTP.
-
-Resolución por especificidad: user > org > global > default del flag.
-Flag inexistente -> False (default-safe: una feature desconocida está apagada).
-
-La resolución de `is_enabled` se cachea con TTL corto usando claves versionadas:
-cada escritura de Flag/FlagOverride rota la versión almacenada en la propia
-cache, con lo que todas las entradas previas quedan huérfanas al instante sin
-necesidad de borrado por patrón (funciona igual con SimpleCache y RedisCache).
-"""
 
 import logging
 from uuid import uuid4
@@ -57,7 +47,6 @@ class FlagService:
 
     @staticmethod
     def invalidate_cache():
-        """Rota la versión de cache: invalida toda resolución cacheada al instante."""
         cache.set(_CACHE_VERSION_KEY, uuid4().hex, timeout=0)
 
     @classmethod

@@ -1,15 +1,9 @@
-"""Historial ligero de eventos de legalizacion de un proyecto.
-
-Cada transicion de estado registra un evento inmutable (de->a, actor, nota,
-timestamp) para auditar el avance del expediente.
-"""
 
 from app.extensions import db
 from .database import BaseModel
 
 
 class ProjectEvent(BaseModel):
-    """Evento de transicion de estado del expediente de legalizacion."""
     __tablename__ = 'project_events'
 
     org_id = db.Column(db.Integer, db.ForeignKey('organizations.id', ondelete='CASCADE'), index=True, nullable=False)

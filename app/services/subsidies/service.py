@@ -1,19 +1,3 @@
-"""Servicio de incentivos: del catálogo por capas a una lista de `Incentive`.
-
-`applicable` resuelve las capas (nacional → CCAA → municipio) para un proyecto y devuelve la
-lista de incentivos que el motor financiero ya consume (mismo schema `Incentive`:
-`kind`, `amount`, `year`, `label`). Dominio puro, sin Flask ni BD.
-
-Mapeo a `kind`:
-- IRPF       → capex_reduction (deducción estatal, abarata la inversión efectiva).
-- Next Gen   → capex_reduction (subvención directa).
-- IBI        → cashflow repartido en N años (bonificación municipal plurianual del tributo).
-- ICIO       → cashflow del año 1 (bonificación municipal del tributo único de obra).
-
-Si no se conoce el municipio, solo aplican los incentivos nacionales (IRPF + Next Gen base).
-Los importes que dependen de datos externos (cuota del IBI, base del ICIO) usan estimaciones
-del catálogo; en producción los aportaría el usuario. Ver docs/subsidies-research.md.
-"""
 
 from . import catalog
 

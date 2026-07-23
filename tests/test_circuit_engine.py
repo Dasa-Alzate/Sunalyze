@@ -1,4 +1,3 @@
-"""Tests del motor de diagramas: geometria de puertos, connect(), plantillas y API."""
 
 import types
 import unittest

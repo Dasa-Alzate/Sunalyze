@@ -1,8 +1,3 @@
-"""Endpoints de posventa: instalaciones, mantenimiento, incidencias y lecturas.
-
-Capa HTTP fina sobre InstallationService. Scoped al workspace activo (org),
-gateada por la feature flag `posventa` y por permisos de proyecto. IDOR -> 404.
-"""
 
 from flask import Blueprint, request, jsonify
 

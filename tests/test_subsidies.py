@@ -1,11 +1,3 @@
-"""Tests de subvenciones ES por capas y su integración con el motor financiero.
-
-Resolución de incentivos: nacional solo (IRPF + Next Gen); nacional+CCAA+municipio acumulan;
-IRPF con tope de base; IBI repartido en N años. Integración: con incentivos aplicados el
-payback simple/descontado y la TIR mejoran frente a sin ellos, con los mismos supuestos.
-Wiring de templates: el catálogo de propuesta_comercial incluye finance.* y render_version
-resuelve {{ finance.payback_years }} con escenario y queda vacío sin escenario.
-"""
 
 import unittest
 

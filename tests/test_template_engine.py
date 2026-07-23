@@ -1,8 +1,3 @@
-"""Tests del motor de plantillas: resolución, cálculo, filtros y rechazo de input malicioso.
-
-No requieren Flask ni base de datos: el resolver opera sobre objetos sencillos. Se centran en
-la garantía de seguridad (no hay ejecución de código sobre el input del usuario).
-"""
 
 import unittest
 
@@ -193,7 +188,6 @@ class DocumentKindRegistryTest(unittest.TestCase):
 
 
 class SecuritySSTITest(unittest.TestCase):
-    """El input malicioso típico de SSTI debe ser rechazado, nunca ejecutado."""
 
     MALICIOUS = [
         '().__class__',
@@ -232,7 +226,6 @@ class SecuritySSTITest(unittest.TestCase):
 
 
 class FilterRobustnessTest(unittest.TestCase):
-    """Filtros None-safe, argumentos malformados -> TemplateError (no 500), y no finitos."""
 
     def test_numeric_filters_none_safe(self):
         for expr in ('number(2)', 'thousands(0)', 'money', 'currency'):
@@ -276,7 +269,6 @@ class FilterRobustnessTest(unittest.TestCase):
 
 
 class ErrorContextTest(unittest.TestCase):
-    """En modo raise, el error nombra la expresión concreta que falló (feedback al autor)."""
 
     def test_render_text_raise_names_expression(self):
         r = _resolver()

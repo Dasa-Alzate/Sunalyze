@@ -1,4 +1,3 @@
-"""Usuario autenticable por correo/contraseña."""
 
 import json
 import hashlib
@@ -45,24 +44,15 @@ class User(BaseModel, SoftDeleteMixin):
         self.password_hash = generate_password_hash(raw)
 
     def revoke_sessions(self):
-        """Rota `session_gen`, invalidando todas las sesiones emitidas hasta ahora.
-
-        Las sesiones son stateless (cookie firmada que transporta `session_gen`).
-        `current_user()` exige que el valor de la cookie coincida con el del usuario;
-        al incrementarlo, cualquier cookie previa deja de validar. Se llama al cambiar
-        o resetear la contraseña y al anonimizar la cuenta.
-        """
         self.session_gen = (self.session_gen or 0) + 1
 
     def check_password(self, raw):
         return check_password_hash(self.password_hash, raw)
 
     def set_recovery_codes(self, codes):
-        """Genera y persiste solo los hashes de una lista de códigos en claro."""
         self.mfa_recovery_codes = json.dumps([mfa.hash_recovery_code(c) for c in codes])
 
     def consume_recovery_code(self, code):
-        """Valida y elimina un código de recuperación; True si era válido."""
         stored = json.loads(self.mfa_recovery_codes or '[]')
         for index, hashed in enumerate(stored):
             if mfa.verify_recovery_code(code, hashed):
@@ -76,9 +66,6 @@ class User(BaseModel, SoftDeleteMixin):
         return len(json.loads(self.mfa_recovery_codes or '[]'))
 
     def enable_mfa(self, secret):
-        """Activa MFA con el secreto confirmado y genera códigos de recuperación.
-
-        Devuelve los códigos en claro (solo se muestran una vez)."""
         self.mfa_secret = mfa.encrypt_secret(secret)
         self.mfa_enabled = True
         codes = mfa.generate_recovery_codes()
@@ -90,16 +77,10 @@ class User(BaseModel, SoftDeleteMixin):
         return bool(secret) and mfa.verify_totp(secret, code)
 
     def is_locked_out(self, now=None):
-        """True si la cuenta esta bloqueada por intentos fallidos."""
         now = now or datetime.utcnow()
         return self.lockout_until is not None and self.lockout_until > now
 
     def register_failed_login(self, now=None):
-        """Suma un intento fallido (soft lockout por ventana) y bloquea al llegar al umbral.
-
-        Si el ultimo fallo es mas antiguo que la ventana, el contador se
-        reinicia antes de sumar (mitiga el lockout como vector de DoS).
-        """
         now = now or datetime.utcnow()
         if (
             self.last_failed_login_at is None
@@ -112,7 +93,6 @@ class User(BaseModel, SoftDeleteMixin):
             self.lockout_until = now + LOCKOUT_DURATION
 
     def register_successful_login(self, now=None):
-        """Resetea el estado de bloqueo y marca el ultimo acceso."""
         now = now or datetime.utcnow()
         self.failed_login_count = 0
         self.last_failed_login_at = None
@@ -120,13 +100,6 @@ class User(BaseModel, SoftDeleteMixin):
         self.last_login_at = now
 
     def anonymize(self):
-        """Reemplaza la PII directa por valores anonimos e irreversibles (Art. 17).
-
-        El email pasa a un token opaco unico bajo el dominio reservado .invalid
-        (RFC 2606), derivado por SHA-256 de un secreto aleatorio no almacenado, de
-        modo que no es reversible y conserva la unicidad de la constraint. Invalida
-        la contraseña y deja el nombre en valores neutros. Idempotente.
-        """
         if self.email.endswith('@anonymized.invalid'):
             return
         digest = hashlib.sha256(f'{self.id}:{secrets.token_hex(16)}'.encode()).hexdigest()[:32]

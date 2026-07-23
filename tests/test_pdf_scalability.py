@@ -1,12 +1,3 @@
-"""Tests de las abstracciones de escalabilidad de PDF (StorageGateway + JobQueue).
-
-Todo con fakes: nunca infra real (ni S3/MinIO ni Redis). Cubre:
-- LocalStorage: roundtrip save/read/exists y layout `generated/<org>/<key>`.
-- Selección por config: `get_storage` (local|s3) y `get_queue` (sync|rq) sin importar boto3/rq.
-- SyncQueue: ejecuta inline, is_async False, get_status/get_result.
-- Camino asíncrono (202 + polling) con una cola fake para documentos y para la memoria,
-  sin Redis.
-"""
 
 import os
 import tempfile
@@ -58,11 +49,6 @@ def _make_app(overrides=None):
 
 
 class FakeAsyncQueue(JobQueue):
-    """Cola fake que reporta semántica asíncrona sin infra.
-
-    Ejecuta el job al encolar (para tener un resultado real) pero deja el estado en `queued`
-    hasta que el test lo marca `finished`, ejercitando el camino 202 + polling.
-    """
 
     is_async = True
 

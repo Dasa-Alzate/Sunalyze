@@ -1,9 +1,3 @@
-"""Deducción y canonicalización de marca para scrapers de distribuidores.
-
-`scraper_name` es la clave normalizada con la que se busca/crea el catálogo de la
-marca; `KNOWN_BRANDS` mapea variantes tipográficas a un display canónico para no
-fragmentar catálogos por diferencias triviales.
-"""
 
 import re
 import unicodedata

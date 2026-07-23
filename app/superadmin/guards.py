@@ -1,10 +1,3 @@
-"""Protecciones del portal de superadmin: IP allowlist, gate de rol y auditoría.
-
-Capas (de fuera hacia dentro):
-1. `enforce_ip`  — before_request del blueprint: filtra por IP ANTES del login.
-2. `require_superadmin` — exige sesión + User.is_superadmin en cada vista.
-3. `log_action` — deja rastro auditado (actor, IP, acción) de todo efecto.
-"""
 
 from functools import wraps
 
@@ -41,7 +34,6 @@ def require_superadmin(fn):
 
 
 def set_pending_mfa(user):
-    """Marca un usuario como autenticado por password, pendiente de MFA."""
     session[_PENDING_MFA_KEY] = user.id
 
 
@@ -50,7 +42,6 @@ def clear_pending_mfa():
 
 
 def pending_mfa_user():
-    """Usuario en estado intermedio (password ok, MFA aún no resuelto)."""
     user_id = session.get(_PENDING_MFA_KEY)
     if not user_id:
         return None
@@ -58,8 +49,6 @@ def pending_mfa_user():
 
 
 def log_action(action, target=None, detail=None, actor=None):
-    """Deja rastro auditado; `actor` permite fijar el usuario explícitamente
-    cuando aún no hay sesión completa (p. ej. login con MFA pendiente)."""
     user = actor or current_user()
     entry = SuperadminAudit(
         actor_user_id=user.id if user else None,

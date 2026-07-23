@@ -1,11 +1,3 @@
-"""Comandos de línea: portal de superadmin y scrapers de catálogos.
-
-- `flask superadmin grant|revoke|mfa-reset|list <email>` — bootstrap del portal.
-- `flask scrape list` · `flask scrape run <brand> [--dry-run]` — scrapers de marcas.
-- `flask flags seed` — asegura los feature flags por defecto.
-- `flask docs seed` — siembra el banco oficial de tipos de documento (España).
-- `flask seed demo` — cuenta de prueba superadmin + dataset de demo (idempotente).
-"""
 
 import os
 
@@ -27,7 +19,6 @@ seed_cli = AppGroup('seed', help='Datos de prueba para desarrollo local.')
 
 @seed_cli.command('demo')
 def seed_demo():
-    """Crea la cuenta de prueba (superadmin) y un dataset de demo completo. Idempotente."""
     from app.services.demo_seed import DemoSeeder, DEMO_EMAIL, DEMO_PASSWORD
     if current_app.config.get('IS_PRODUCTION') and os.environ.get('ALLOW_SEED_DEMO') != '1':
         click.echo('Aviso: entorno marcado como producción. Si es un despliegue real NO sigas; '
@@ -68,9 +59,6 @@ def revoke(email):
 @superadmin_cli.command('mfa-reset')
 @click.argument('email')
 def mfa_reset(email):
-    """Desactiva el MFA de un superadmin (recuperación ante pérdida del factor).
-
-    El usuario será forzado a reenrolar en su próximo login."""
     user = _find(email)
     user.mfa_enabled = False
     user.mfa_secret = None
@@ -128,7 +116,6 @@ def seed_flags():
 
 @docs_cli.command('seed')
 def seed_docs():
-    """Siembra el banco oficial de tipos de documento (España). Idempotente."""
     from app.services.document_bank import DocumentBankSeeder
     report = DocumentBankSeeder.seed()
     click.echo(
@@ -197,7 +184,6 @@ def _render_api_map(rows):
 
 @click.command('api-map')
 def api_map():
-    """Introspecta el url_map, filtra rutas /api y escribe docs/api-map.md."""
     rows = _api_rows()
     content = _render_api_map(rows)
     root = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))

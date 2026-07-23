@@ -1,13 +1,5 @@
-"""superadmin portal
-
-Revision ID: c3357c982972
-Revises: 4ea694e9d6b2
-Create Date: 2026-06-17 13:32:57.345328
-
-"""
 from alembic import op
 import sqlalchemy as sa
-
 
 revision = 'c3357c982972'
 down_revision = '4ea694e9d6b2'

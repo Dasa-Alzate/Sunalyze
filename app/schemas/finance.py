@@ -1,10 +1,3 @@
-"""Esquemas de validación del módulo financiero.
-
-`FinancialAssumptions` reúne los supuestos del estudio económico con defaults
-españoles sensatos (ver docs/finance-research.md). El CAPEX se admite como total
-o como desglose (equipo / mano de obra / legalización) más el IVA. La financiación
-es opcional. El motor (app.services.finance) consume este objeto por atributos.
-"""
 
 from typing import Optional, List
 

@@ -1,4 +1,3 @@
-"""Esquemas de validación del constructor de plantillas de documentos."""
 
 from typing import Optional, List
 

@@ -1,4 +1,3 @@
-"""Endpoints de equipo: miembros e invitaciones. Capa HTTP fina."""
 
 from flask import Blueprint, request, jsonify, current_app
 

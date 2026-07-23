@@ -1,9 +1,3 @@
-"""Logica de dominio RGPD: portabilidad de datos y derecho al olvido.
-
-Aisla las reglas de los Art. 15/20 (export portable) y Art. 17 (supresion via
-anonimizacion + soft-delete) del transporte HTTP. No toca request/response;
-devuelve estructuras serializables o lanza DomainError.
-"""
 
 import io
 import json
@@ -27,24 +21,16 @@ class GdprService:
 
     @staticmethod
     def _owned_org_ids(user):
-        """Ids de organizaciones (no borradas) donde el usuario es owner."""
         return [m.org_id for m in user.memberships if m.role == 'owner']
 
     @staticmethod
     def accept_privacy(user):
-        """Registra el consentimiento de privacidad con su instante (flag minimo)."""
         user.privacy_accepted_at = datetime.utcnow()
         db.session.commit()
         return user
 
     @staticmethod
     def export_data(user):
-        """Construye el volcado portable de los datos personales del usuario.
-
-        Cubre perfil y membresias (Art. 15) y los datos de las organizaciones que
-        posee como owner, incluidos sus proyectos (Art. 20). En formato JSON, de
-        uso comun y lectura mecanica. No incluye secretos (password_hash).
-        """
         profile = user.to_dict()
         profile.pop('organizations', None)
 
@@ -82,7 +68,6 @@ class GdprService:
 
     @staticmethod
     def export_zip(user):
-        """Empaqueta el export JSON en un ZIP en memoria (stdlib zipfile)."""
         payload = GdprService.export_data(user)
         buffer = io.BytesIO()
         with zipfile.ZipFile(buffer, 'w', zipfile.ZIP_DEFLATED) as zf:
@@ -95,15 +80,6 @@ class GdprService:
 
     @staticmethod
     def erase_account(user):
-        """Ejercita el derecho al olvido (Art. 17) sobre la cuenta del usuario.
-
-        Anonimiza la PII directa del usuario y lo soft-deletea. Las organizaciones
-        personales de las que es unico miembro se soft-deletean tambien, pero sus
-        proyectos se conservan por retencion legal de la documentacion tecnica. En
-        una organizacion compartida no se permite la supresion si el usuario es el
-        unico owner: debe transferir la propiedad antes (preserva el acceso del
-        equipo y la integridad del workspace).
-        """
         if user.is_deleted:
             raise Conflict('La cuenta ya fue eliminada.', code='account.already_deleted')
 

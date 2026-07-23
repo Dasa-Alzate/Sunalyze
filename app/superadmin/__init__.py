@@ -1,9 +1,3 @@
-"""Portal de superadmin: blueprint Jinja con guardas, servible en subdominio.
-
-`register_superadmin(app)` lo monta en el subdominio configurado
-(`SUPERADMIN_SUBDOMAIN` + `SERVER_NAME`) o, en su defecto, bajo `/superadmin`
-para desarrollo local. El filtro de IP corre como before_request del blueprint.
-"""
 
 from app.superadmin.views import superadmin_bp
 from app.superadmin.guards import enforce_ip

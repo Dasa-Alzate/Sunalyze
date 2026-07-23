@@ -1,11 +1,3 @@
-"""Allowlist de IP compartida para superficies administrativas.
-
-Fuente unica de la logica de filtrado por IP que protege tanto el portal
-superadmin (HTML) como la API `/api/admin/*` (JSON). Lee la configuracion
-`SUPERADMIN_IP_ALLOWLIST` (IPs o redes CIDR separadas por coma o punto y coma;
-vacia = sin filtro) y `SUPERADMIN_TRUST_PROXY` (confiar en el primer salto de
-`X-Forwarded-For`).
-"""
 
 import ipaddress
 

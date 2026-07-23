@@ -1,15 +1,6 @@
-"""soft delete deleted_at en projects y catalogs
-
-Revision ID: 242fcf9fa595
-Revises: 827266176ee7
-Create Date: 2026-06-22 15:30:22.436169
-
-"""
 from alembic import op
 import sqlalchemy as sa
 
-
-# revision identifiers, used by Alembic.
 revision = '242fcf9fa595'
 down_revision = '827266176ee7'
 branch_labels = None

@@ -1,21 +1,10 @@
-"""Modelo de cable/conductor electrico."""
 
 from app import db
 from .database import BaseModel
 from .provenance import ProvenanceMixin
 
-class Wire(BaseModel, ProvenanceMixin):
-    """
-    Representa un cable electrico con sus especificaciones.
 
-    Attributes:
-        nombre: Nombre/modelo del cable (opcional; los cables suelen carecer de modelo propio).
-        seccion: Seccion transversal del cable (mm2).
-        corriente: Corriente maxima admisible (A).
-        tipo: Tipo de cable (ej: 'B1', 'B2', 'F').
-        material: Material conductor ('Cu' o 'Al').
-        no_conductores: Numero de conductores.
-    """
+class Wire(BaseModel, ProvenanceMixin):
     __tablename__ = 'wires'
 
     catalog_id = db.Column(db.Integer, db.ForeignKey('catalogs.id'), index=True)

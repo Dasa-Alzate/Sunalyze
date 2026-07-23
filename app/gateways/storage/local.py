@@ -1,10 +1,3 @@
-"""Adaptador de almacenamiento en filesystem local (DEFAULT).
-
-Replica EXACTO el layout histórico de `DocumentService`: los artefactos viven en
-`instance/generated/<org_id>/<key>` y la `ref` es la ruta relativa a `instance_path`
-(idéntica al valor que `GeneratedDocument.pdf_path` ha guardado siempre). Así, con el backend
-por defecto, el comportamiento y las rutas en disco no cambian.
-"""
 
 import os
 
@@ -16,7 +9,6 @@ GENERATED_SUBDIR = 'generated'
 
 
 class LocalStorage(StorageGateway):
-    """Guarda los PDF bajo `instance/generated/<org_id>/<key>`."""
 
     def _base_dir(self):
         base = os.path.join(current_app.instance_path, GENERATED_SUBDIR)

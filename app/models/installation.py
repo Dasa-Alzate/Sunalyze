@@ -1,10 +1,3 @@
-"""Modelos de posventa: instalacion entregada y su seguimiento operativo.
-
-Una `Installation` nace 1:1 de un `Project` aprobado (puesta en marcha). Sobre
-ella se registran visitas de mantenimiento, incidencias operativas (distintas
-del soporte de plataforma `SupportTicket`) y lecturas de produccion reales para
-comparar lo real con el baseline esperado del dimensionamiento.
-"""
 
 from app import db
 from .database import BaseModel
@@ -19,7 +12,6 @@ INCIDENT_STATUSES = ('abierta', 'en_proceso', 'resuelta')
 
 
 class Installation(BaseModel):
-    """Instalacion fotovoltaica entregada y en seguimiento, 1:1 con un proyecto."""
     __tablename__ = 'installations'
 
     org_id = db.Column(db.Integer, db.ForeignKey('organizations.id', ondelete='CASCADE'), index=True, nullable=False)
@@ -71,7 +63,6 @@ class Installation(BaseModel):
 
 
 class MaintenanceVisit(BaseModel):
-    """Visita de mantenimiento (preventivo/correctivo) sobre una instalacion."""
     __tablename__ = 'maintenance_visits'
 
     org_id = db.Column(db.Integer, db.ForeignKey('organizations.id', ondelete='CASCADE'), index=True, nullable=False)
@@ -102,7 +93,6 @@ class MaintenanceVisit(BaseModel):
 
 
 class Incident(BaseModel):
-    """Incidencia operativa de la instalacion (no es soporte de plataforma)."""
     __tablename__ = 'installation_incidents'
 
     org_id = db.Column(db.Integer, db.ForeignKey('organizations.id', ondelete='CASCADE'), index=True, nullable=False)
@@ -133,7 +123,6 @@ class Incident(BaseModel):
 
 
 class ProductionReading(BaseModel):
-    """Lectura de produccion real de la instalacion para un periodo (manual, v1)."""
     __tablename__ = 'production_readings'
 
     org_id = db.Column(db.Integer, db.ForeignKey('organizations.id', ondelete='CASCADE'), index=True, nullable=False)

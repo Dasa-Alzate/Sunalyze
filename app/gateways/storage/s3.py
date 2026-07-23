@@ -1,15 +1,8 @@
-"""Adaptador de almacenamiento compatible S3/MinIO (opcional).
-
-`boto3` se importa de forma **perezosa** dentro de los métodos para que la app y los tests
-arranquen sin la dependencia instalada cuando el backend activo es local. La `ref` es la clave
-del objeto (`<prefix>/<org_id>/<key>`), que se guarda en `GeneratedDocument.pdf_path`.
-"""
 
 from app.gateways.storage.base import StorageGateway, StorageError
 
 
 class S3Storage(StorageGateway):
-    """Persiste los PDF como objetos en un bucket S3/MinIO."""
 
     def __init__(self, bucket, prefix='generated', endpoint_url=None, region=None,
                  access_key=None, secret_key=None, url_expires=3600):

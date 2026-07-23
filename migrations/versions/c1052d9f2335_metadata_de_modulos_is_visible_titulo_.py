@@ -1,10 +1,3 @@
-"""metadata de modulos (is_visible, titulo, imagenes, help_url, price)
-
-Revision ID: c1052d9f2335
-Revises: b64810c2d28c
-Create Date: 2026-06-17 11:24:50.343322
-
-"""
 from alembic import op
 import sqlalchemy as sa
 from sqlalchemy.dialects import mysql

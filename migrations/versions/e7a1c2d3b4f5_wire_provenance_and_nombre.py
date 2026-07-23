@@ -1,13 +1,5 @@
-"""provenance y nombre en wires (cables scrapeables)
-
-Revision ID: e7a1c2d3b4f5
-Revises: f2b7c1a9d4e0
-Create Date: 2026-07-23 09:00:00.000000
-
-"""
 from alembic import op
 import sqlalchemy as sa
-
 
 revision = 'e7a1c2d3b4f5'
 down_revision = 'f2b7c1a9d4e0'

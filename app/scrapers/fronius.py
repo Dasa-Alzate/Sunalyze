@@ -1,10 +1,3 @@
-"""Adapter de Fronius: HTML técnico oficial (estático, sin JS).
-
-Verificado: las páginas technical-data exponen las specs como texto etiquetado
-(Max. input voltage, MPP range, Max. continuous output current, Max. efficiency).
-La identidad (modelo + potencia AC) viene del seed de descubrimiento; la página
-enriquece vmax, eficiencia y corrientes. Lo que no aparezca queda nulo.
-"""
 
 import logging
 import lxml.html

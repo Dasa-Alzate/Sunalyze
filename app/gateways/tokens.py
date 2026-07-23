@@ -1,8 +1,3 @@
-"""Tokens firmados y con caducidad para flujos por correo (verificacion/reset).
-
-Stateless: usan itsdangerous + SECRET_KEY, sin tabla de tokens. Cada proposito
-lleva su propio salt para que un token de un flujo no sirva en otro.
-"""
 
 from flask import current_app
 from itsdangerous import URLSafeTimedSerializer, BadSignature, SignatureExpired

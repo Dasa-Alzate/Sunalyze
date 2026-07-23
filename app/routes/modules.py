@@ -1,9 +1,3 @@
-"""Marketplace de módulos de cara al usuario.
-
-Solo lista módulos marcados is_visible. Activar/desactivar crea un override de
-ámbito org (autoservicio sin pago por ahora); cuando exista billing, este punto
-pasará por entitlement.
-"""
 
 from flask import Blueprint, jsonify
 

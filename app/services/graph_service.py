@@ -1,4 +1,3 @@
-"""Servicio de generación de gráficos SVG para la memoria técnica."""
 
 import pygal
 from pygal.style import Style
@@ -24,8 +23,6 @@ _COMMON_STYLE = dict(
 CHART_STYLE = Style(**_COMMON_STYLE, colors=('#3498db',))
 BALANCE_STYLE = Style(**_COMMON_STYLE, colors=('#f39c12', '#3498db'))
 
-# Distribución mensual del consumo (peso relativo por mes, suma = 1)
-# Más consumo en verano (aire acondicionado) e invierno (calefacción)
 MONTHLY_CONSUMPTION_WEIGHTS = [
     0.095, 0.085, 0.080, 0.075, 0.070, 0.080,
     0.095, 0.095, 0.080, 0.075, 0.080, 0.090,
@@ -47,11 +44,9 @@ BASE_CONFIG = dict(
 
 
 class GraphService:
-    """Genera gráficos SVG de producción e irradiancia para la memoria técnica."""
 
     @staticmethod
     def generate_monthly_production(monthly_data: list[float]) -> str:
-        """Gráfico de barras con producción mensual en kWh."""
         chart = pygal.Bar(**BASE_CONFIG)
         chart.title = 'Producción mensual estimada (kWh)'
         chart.add('Producción', [round(v) for v in monthly_data])
@@ -59,7 +54,6 @@ class GraphService:
 
     @staticmethod
     def generate_monthly_irradiance(monthly_data: list[float]) -> str:
-        """Gráfico de barras con irradiancia mensual en kWh/m²."""
         chart = pygal.Bar(**BASE_CONFIG)
         chart.title = 'Irradiación mensual en el plano (kWh/m²)'
         chart.add('Irradiación', monthly_data)
@@ -67,7 +61,6 @@ class GraphService:
 
     @staticmethod
     def generate_energy_balance(monthly_production: list[float], annual_consumption: float) -> str:
-        """Gráfico de barras agrupadas: producción vs consumo estimado mensual."""
         monthly_consumption = [round(annual_consumption * w) for w in MONTHLY_CONSUMPTION_WEIGHTS]
 
         chart = pygal.Bar(

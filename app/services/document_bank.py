@@ -1,15 +1,3 @@
-"""Siembra del banco oficial de tipos de documento del instalador FV (España).
-
-Define el catálogo de plantillas oficiales (`OFFICIAL_TEMPLATES_ES`) — cada una con su
-`kind`, sus tags (`country`, `required_by`, `stage`) y su contenido por secciones con
-expresiones del motor de variables — y un sembrador idempotente que las materializa como
-plantillas system (`org_id` NULL, `scope='system'`, `is_official=True`, `status='published'`)
-con una `TemplateVersion` v1 publicada.
-
-Es dominio puro (sin Flask): lo consume el CLI `flask docs seed` y los tests. La idempotencia
-se basa en la identidad lógica `(kind, name, country)`: si ya existe una plantilla system con
-esa terna, se omite; nunca se duplica ni se sobrescribe.
-"""
 
 from datetime import datetime
 
@@ -275,7 +263,6 @@ OFFICIAL_TEMPLATES_ES = [
 
 
 class DocumentBankSeeder:
-    """Materializa el banco oficial de plantillas ES de forma idempotente."""
 
     COUNTRY = 'ES'
     LOCALE = 'es'
@@ -293,7 +280,6 @@ class DocumentBankSeeder:
 
     @classmethod
     def seed(cls, specs=None):
-        """Crea las plantillas oficiales que falten. Devuelve {created, skipped}."""
         specs = specs if specs is not None else OFFICIAL_TEMPLATES_ES
         created = 0
         skipped = 0

@@ -1,17 +1,3 @@
-"""Estudio económico de una instalación fotovoltaica: dominio puro, sin Flask.
-
-`compute` recibe los supuestos (objeto con los atributos de FinancialAssumptions),
-la producción anual estimada (kWh/año, del analysis_service) y opcionalmente el
-ratio de autoconsumo (si falta, se toma el del supuesto o un default). Devuelve un
-desglose completo: cashflow año a año, ahorro del año 1, payback simple/descontado,
-ROI, TIR, VAN, LCOE y CO₂ evitado.
-
-Puntos de enchufe para fases futuras:
-- `incentives`: lista de incentivos que reducen el CAPEX neto (Fase 2,
-  subvenciones) o aportan cashflow en un año concreto. En Fase 1 llega vacía.
-- `production_kwh_year` y `self_consumption_ratio`: una fuente horaria futura
-  (Datadis/ESIOS) solo tiene que afinar estos valores o el bloque de ahorro anual.
-"""
 
 from .metrics import npv, irr, payback_period
 

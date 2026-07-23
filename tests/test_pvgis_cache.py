@@ -1,10 +1,3 @@
-"""Tests de la cache compartida de PVGIS sobre Flask-Caching.
-
-Mockea pvlib igual que el resto de la suite: la primera llamada baja los datos,
-las siguientes con los mismos parametros se sirven de cache, un fallo de red
-propaga la excepcion sin envenenar la cache, y la clave es estable por
-parametros.
-"""
 
 import unittest
 from unittest.mock import patch

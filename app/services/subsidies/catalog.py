@@ -1,20 +1,3 @@
-"""Catálogo de incentivos al autoconsumo FV en España, centralizado y por capas.
-
-Resolución por especificidad creciente (la específica añade/ajusta sobre la general):
-    NACIONAL  →  CCAA[<ccaa>]  →  MUNICIPIO[<municipio>]
-
-Mismo espíritu que `app/scrapers/acceptance.py`: config-as-code, sin BD. Cambiar los
-porcentajes/topes/importes = editar este fichero. Las claves de CCAA y municipio se
-normalizan en minúsculas y sin distinción de acentos básica (ver `_norm`).
-
-Cada capa declara reglas que `resolve` combina:
-- `irpf`: {pct, base_max} → deducción nacional sobre el CAPEX con IVA (capex_reduction).
-- `next_gen`: {eur_per_kwp, cap_eur} → ayuda Next Generation (capex_reduction).
-- `ibi`: {pct, years, annual_quota_eur} → bonificación municipal del IBI (cashflow N años).
-- `icio`: {pct, base_ratio} → bonificación municipal del ICIO (cashflow año 1).
-
-Fuentes y matices en docs/subsidies-research.md.
-"""
 
 NACIONAL = {
     'irpf': {'pct': 0.40, 'base_max': 7500.0},
@@ -61,7 +44,6 @@ def _norm(value):
 
 
 def resolve(ccaa=None, municipio=None):
-    """Combina las capas aplicables en un único dict de reglas, la específica ajusta."""
     resolved = {
         'irpf': dict(NACIONAL.get('irpf', {})),
         'next_gen': dict(NACIONAL.get('next_gen', {})),

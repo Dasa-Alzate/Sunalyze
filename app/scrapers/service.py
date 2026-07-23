@@ -1,11 +1,3 @@
-"""Orquestación del scraping: discover → fetch → parse → upsert con provenance.
-
-Enruta cada producto al catálogo de su marca (`product.brand`) y al modelo de su
-tipo (`product.kind`). Si el scraper exige marca por producto (`requires_product_brand`)
-y no se dedujo, el producto se rechaza. Dedup dentro de la marca: external_id →
-nombre normalizado (consulta global por el unique) → vitales con tolerancia; en el
-match por vitales sobrevive el nombre existente. `is_locked` nunca se pisa.
-"""
 
 import logging
 from datetime import datetime

@@ -1,23 +1,9 @@
-"""Construcción del contexto de render desde un Project y su resolver seguro.
-
-El resolver solo lee atributos presentes en la whitelist del catálogo de variables. Una ruta
-fuera de la whitelist o sobre una entidad ausente produce TemplateError; jamás se usa `getattr`
-sobre nombres no autorizados, de modo que no hay vía hacia dunders ni objetos internos.
-"""
 
 from .errors import TemplateError
 from .catalog import whitelist
 
 
 def build_context(project, user=None, org=None):
-    """Arma el dict de entidades de render.
-
-    Incluye project, panel, inverter, battery, wire, user, org, finance y las entidades de
-    posventa (installation, maintenance, incident). Todas las opcionales son None-safe: si la
-    instalación, su última visita o una incidencia abierta no existen, la entidad es None y sus
-    variables resuelven a vacío (placeholder), sin romper el render. La batería y el cableado
-    siguen el mismo patrón.
-    """
     panel = getattr(project, 'panel', None)
     inverter = getattr(project, 'inverter', None)
     battery = getattr(project, 'battery', None)
@@ -41,7 +27,6 @@ def build_context(project, user=None, org=None):
 
 
 class _FinanceView:
-    """Vista plana del dict `results` de un escenario, con los atributos del catálogo finance."""
 
     def __init__(self, results):
         capex = results.get('capex') or {}
@@ -141,7 +126,6 @@ def _project_org(project):
 
 
 class ContextResolver:
-    """Resuelve rutas `entidad.atributo` contra el contexto, respetando la whitelist."""
 
     def __init__(self, context, allowed=None, presentation=None):
         self.context = context

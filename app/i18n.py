@@ -1,9 +1,3 @@
-"""Resolucion del locale activo por precedencia, con stdlib + Flask.
-
-No introduce librerias de i18n en el backend: la traduccion de la UI vive en el
-cliente. Aqui solo se decide que locale aplica a una peticion (para emails y para
-exponerlo al frontend) por precedencia: usuario > Accept-Language > default.
-"""
 
 from flask import request
 
@@ -12,7 +6,6 @@ SUPPORTED_LOCALES = ('es', 'en')
 
 
 def normalize_locale(value):
-    """Reduce un locale a su idioma soportado (`es-ES` -> `es`) o None."""
     if not value:
         return None
     lang = str(value).strip().lower().replace('_', '-').split('-')[0]
@@ -20,7 +13,6 @@ def normalize_locale(value):
 
 
 def resolve_locale(user=None):
-    """Locale activo por precedencia: user.locale > Accept-Language > default."""
     from_user = normalize_locale(getattr(user, 'locale', None)) if user else None
     if from_user:
         return from_user

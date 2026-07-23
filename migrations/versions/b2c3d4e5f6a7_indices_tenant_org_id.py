@@ -1,12 +1,4 @@
-"""indices por org_id en invitations y memberships
-
-Revision ID: b2c3d4e5f6a7
-Revises: f1a2b3c4d5e6
-Create Date: 2026-07-04 00:00:00.000000
-
-"""
 from alembic import op
-
 
 revision = 'b2c3d4e5f6a7'
 down_revision = 'f1a2b3c4d5e6'

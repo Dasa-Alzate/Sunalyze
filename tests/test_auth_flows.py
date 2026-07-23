@@ -1,25 +1,3 @@
-"""Flujos de autenticacion y autorizacion por la puerta HTTP real (auditoria #9).
-
-A diferencia del resto de la suite, aqui NO se inyecta `sess['user_id']`: cada
-sesion se obtiene registrandose o iniciando sesion contra los endpoints reales.
-Los correos se capturan con un mock de `EmailService.send` (el backend de mail
-jamas se toca) y los tokens se extraen del contexto capturado, como haria el
-destinatario real. La clase de CSRF corre con `WTF_CSRF_ENABLED=True` y fija el
-contrato double-submit cookie + cabecera `X-CSRFToken` de la SPA.
-
-El harness NO mantiene un app context empujado durante los requests: Flask
-reutilizaria ese contexto y `g` (cache del token CSRF de Flask-WTF y de
-`_role` en authz) sobreviviria entre requests, cosa que en produccion nunca
-ocurre. La BD se toca en bloques `app_context` propios; sqlite en memoria
-persiste entre contextos gracias al StaticPool de Flask-SQLAlchemy.
-
-Comportamientos REALES documentados (no asumidos):
-- El registro inicia sesion inmediatamente, antes de verificar el correo.
-- `email_verified` no gatea ningun endpoint: una cuenta sin verificar puede
-  iniciar sesion y operar con normalidad.
-- Los tokens de reset son de un solo uso: el payload lleva una huella del
-  password_hash y muere al cambiar la contraseña: ver `test_reset_token_is_single_use`.
-"""
 
 import time
 import unittest
@@ -56,9 +34,6 @@ class AuthFlowTestBase(unittest.TestCase):
     csrf_enabled = False
 
     def setUp(self):
-        """Desactiva el rate limiting solo durante el test: `limiter` es un
-        singleton de modulo y `RATELIMIT_ENABLED=False` en `init_app` lo apagaria
-        para el resto de la suite si no se restaurase."""
         previous_limiter_state = limiter.enabled
         self.app = _make_app(csrf_enabled=self.csrf_enabled)
         self.addCleanup(setattr, limiter, 'enabled', previous_limiter_state)
@@ -141,7 +116,6 @@ class RegistrationFlowTest(AuthFlowTestBase):
             self.assertTrue(User.query.filter_by(email='nueva@example.com').one().email_verified)
 
     def test_register_logs_user_in_before_verification(self):
-        """Comportamiento real: la sesion se abre en el 201, sin esperar al verify."""
         client = self.app.test_client()
         self._register(client, 'directa@example.com')
         me = client.get('/api/auth/me').get_json()
@@ -204,7 +178,6 @@ class EmailVerificationTest(AuthFlowTestBase):
         self.assertEqual(resp.get_json()['code'], 'token.expired')
 
     def test_unverified_account_can_log_in(self):
-        """Comportamiento real: email_verified no gatea el login ni la API."""
         self._fresh_user('sinverificar@example.com')
         client = self.app.test_client()
         resp = self._login(client, 'sinverificar@example.com', VALID_PASSWORD)
@@ -343,11 +316,6 @@ class PasswordResetTest(AuthFlowTestBase):
                                      VALID_PASSWORD).status_code, 200)
 
     def test_reset_token_is_single_use(self):
-        """Auditoria #7: el token de reset incluye una huella del password_hash actual.
-        Al cambiar la contraseña la huella cambia y el token muere: un segundo uso del
-        MISMO token se rechaza con 422/token.invalid. (Antes, con payload {'uid'}, el
-        token era reutilizable durante su hora de vida; esta asercion se actualizo al
-        implementar el un-solo-uso.)"""
         self._fresh_user('reusada@example.com')
         token = self._reset_token_for('reusada@example.com')
         first = self.app.test_client().post('/api/auth/reset-password',
@@ -364,11 +332,6 @@ class PasswordResetTest(AuthFlowTestBase):
 
 
 class CsrfContractTest(AuthFlowTestBase):
-    """Contrato CSRF de la SPA con la proteccion ACTIVADA (double-submit).
-
-    La app setea la cookie `csrf_token` (legible por JS) en cada respuesta y
-    Flask-WTF valida la cabecera `X-CSRFToken` contra la sesion firmada. El
-    mensaje de error es el mismo que se observa en produccion."""
 
     csrf_enabled = True
 

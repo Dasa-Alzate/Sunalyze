@@ -1,8 +1,3 @@
-"""Endpoints de notificaciones y trabajo pendiente. Capa HTTP fina.
-
-Todo scoped al usuario y al workspace activos. Un usuario solo lee y marca sus
-propias notificaciones (IDOR -> 404). El trabajo pendiente se deriva al vuelo.
-"""
 
 from flask import Blueprint, request, jsonify
 

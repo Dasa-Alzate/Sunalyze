@@ -1,4 +1,3 @@
-"""Pertenencia N:M de un usuario a un workspace, con rol."""
 
 from app.extensions import db
 from .database import BaseModel

@@ -1,8 +1,3 @@
-"""Sesion de usuario: helpers y decorador de autorizacion.
-
-Auth por cookie de sesion firmada (misma-origen SPA + Flask). Guarda el
-usuario activo y el workspace activo (org_id) en la sesion.
-"""
 
 from functools import wraps
 from flask import session, g

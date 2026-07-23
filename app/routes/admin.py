@@ -1,9 +1,3 @@
-"""Consola de plataforma: gestión de feature flags. Solo super-admin.
-
-Defensa en profundidad: ademas de `require_superadmin`, todo el blueprint pasa
-por la misma allowlist de IP que el portal superadmin (`app/ip_allowlist.py`).
-Allowlist vacia = sin filtro; IP fuera de la lista = 403 JSON (DomainError).
-"""
 
 from flask import Blueprint, request, jsonify
 

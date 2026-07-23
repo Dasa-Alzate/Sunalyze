@@ -1,21 +1,8 @@
-"""Modelos del constructor de plantillas de documentos (a nivel de organización).
-
-Patrón system/oficial igual que `Catalog`: una plantilla con `org_id` NULL y `scope='system'`
-es del banco oficial (solo lectura); con `org_id` presente pertenece al workspace. La
-biblioteca de una organización son sus `TemplateInstallation` (plantillas seleccionadas, con
-favorito, categoría y etiquetas). Quitar de la selección borra solo la fila de instalación,
-nunca la plantilla system.
-
-`GeneratedDocument` registra cada PDF producido a partir de una plantilla + un proyecto,
-fijando la versión de plantilla usada (`template_version_id`) para trazabilidad y un hash
-SHA-256 de los bytes como prueba de integridad (mismo patrón que `MemoriaSignature`).
-"""
 
 import json
 
 from app.extensions import db
 from .database import BaseModel
-
 
 _PROJECT_GROUP_NAMES = ('project', 'panel', 'inverter', 'battery', 'wire', 'user', 'org')
 _POSVENTA_GROUP_NAMES = ('installation', 'maintenance', 'incident')
@@ -43,12 +30,6 @@ _DOCUMENT_KIND_BY_KEY = {entry['key']: entry for entry in DOCUMENT_KIND_REGISTRY
 
 
 class DocumentKind:
-    """Registro de tipos de documento (code-as-config, no tabla).
-
-    Cada kind declara su `key`, `label` y los grupos de variables que expone (`var_groups`).
-    Añadir un kind = una entrada en `DOCUMENT_KIND_REGISTRY`. Las constantes y `ALL` se conservan
-    por compatibilidad con el código que las referencia.
-    """
 
     MEMORIA_CALCULO = 'memoria_calculo'
     DOCUMENTO_LEGAL = 'documento_legal'
@@ -80,7 +61,6 @@ class DocumentKind:
 
 
 def document_kind_var_groups(key):
-    """Nombres de grupos de variables que expone un DocumentKind (para el catálogo)."""
     entry = _DOCUMENT_KIND_BY_KEY.get(key)
     return entry['var_groups'] if entry else ()
 
@@ -93,7 +73,6 @@ DOCUMENT_STATUSES = ('generated', 'failed')
 
 
 class ReportTemplate(BaseModel):
-    """Plantilla de documento. org_id NULL + scope 'system' => banco oficial (solo lectura)."""
 
     __tablename__ = 'report_templates'
 
@@ -138,7 +117,6 @@ class ReportTemplate(BaseModel):
 
     @property
     def presentation(self):
-        """Jurisdicción efectiva {locale, currency, page_size}: país + overrides explícitos."""
         from app.services.template_engine.jurisdiction import resolve_jurisdiction
         return resolve_jurisdiction(self.country, self.locale, self.currency)
 
@@ -176,11 +154,6 @@ class ReportTemplate(BaseModel):
 
 
 class TemplateVersion(BaseModel):
-    """Una versión inmutable del contenido de una plantilla.
-
-    `content` es una lista ordenada de secciones {id, type, title, body}, donde `body` lleva
-    texto con expresiones embebidas `{{ ... }}`. Se persiste como JSON en TEXT.
-    """
 
     __tablename__ = 'template_versions'
     __table_args__ = (
@@ -224,7 +197,6 @@ class TemplateVersion(BaseModel):
 
 
 class TemplateCategory(BaseModel):
-    """Categoría plana de la biblioteca de una organización (1:n, sin subniveles)."""
 
     __tablename__ = 'template_categories'
     __table_args__ = (
@@ -242,7 +214,6 @@ class TemplateCategory(BaseModel):
 
 
 class Label(BaseModel):
-    """Etiqueta de la organización, asignable a instalaciones (n:n)."""
 
     __tablename__ = 'template_labels'
     __table_args__ = (
@@ -260,7 +231,6 @@ class Label(BaseModel):
 
 
 class TemplateInstallation(BaseModel):
-    """Entrada de la biblioteca de una organización: una plantilla seleccionada."""
 
     __tablename__ = 'template_installations'
     __table_args__ = (
@@ -302,7 +272,6 @@ class TemplateInstallation(BaseModel):
 
 
 class InstallationLabel(BaseModel):
-    """Tabla puente n:n entre instalaciones y etiquetas."""
 
     __tablename__ = 'installation_labels'
     __table_args__ = (
@@ -320,12 +289,6 @@ class InstallationLabel(BaseModel):
 
 
 class GeneratedDocument(BaseModel):
-    """PDF generado desde una plantilla (versión fijada) y un proyecto.
-
-    Org-scoped. `template_version_id` fija la versión exacta usada para que el documento sea
-    reproducible y trazable aunque la plantilla evolucione. `pdf_path` es la ruta del artefacto
-    (relativa a `instance_path`); `pdf_sha256`/`pdf_size_bytes` son el snapshot de integridad.
-    """
 
     __tablename__ = 'generated_documents'
 

@@ -1,9 +1,3 @@
-"""Contratos y utilidades de scraping, tolerantes a datos parciales.
-
-La entrada NO es rígida: un `NormalizedProduct` lleva solo los campos que se
-pudieron extraer. Solo se exige el conjunto VITAL por tipo; si falta algo vital
-el producto se descarta (con motivo); lo no-vital ausente queda como null.
-"""
 
 import re
 from dataclasses import dataclass, field
@@ -33,10 +27,6 @@ class NormalizedProduct:
 
 
 def to_float_eu(raw):
-    """Convierte un número en convención europea/US a float.
-
-    '96,9' -> 96.9 · '1.000,5' -> 1000.5 · '6.60' -> 6.6 · None -> None.
-    """
     if raw is None:
         return None
     s = str(raw).strip()
@@ -53,12 +43,6 @@ def to_float_eu(raw):
 
 
 def grab(text, labels, unit):
-    """Busca una etiqueta y captura el primer número seguido de `unit`.
-
-    Salta cualificadores intermedios (p.ej. 'output current 240 V: 20,8 A' →
-    devuelve 20.8, no 240). `unit` es un patrón regex ('V\\b', 'A\\b', '%').
-    Devuelve None si no encuentra (campo ausente = válido si no es vital).
-    """
     low = text.lower()
     for label in labels:
         idx = low.find(label.lower())

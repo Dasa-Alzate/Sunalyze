@@ -1,8 +1,3 @@
-"""Endpoints RGPD: export portable (Art. 15/20) y supresion (Art. 17).
-
-Capa HTTP fina sobre GdprService. El usuario actua siempre sobre SUS propios
-datos (current_user); los endpoints estan gateados por permiso.
-"""
 
 from flask import Blueprint, jsonify, Response
 

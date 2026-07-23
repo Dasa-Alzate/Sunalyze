@@ -1,10 +1,3 @@
-"""Dimensionamiento fotovoltaico: dominio puro, sin HTTP.
-
-Recibe un dict de entradas ya deserializado, devuelve un dict de resultados
-y lanza DomainError ante datos invalidos. La irradiancia llega via
-PvgisClient (gateway); la visibilidad de equipos llega como lista de
-catalogos visibles del workspace (None = sin scoping, p. ej. uso interno).
-"""
 
 import math
 import logging
@@ -236,12 +229,6 @@ class AnalysisService:
 
     @staticmethod
     def _battery_analysis(battery, quantity, necesidad, autoconsumo, annual_production):
-        """Dimensionado de capacidad y estimacion de uplift de autoconsumo (v1, balance diario).
-
-        Heuristica documentada (no es simulacion horaria): capa el aporte de la bateria por la
-        capacidad util entregable (usable * round_trip_efficiency), por el excedente diario
-        disponible y por el hueco de consumo no cubierto por autoconsumo directo.
-        """
         dod = (battery.dod / 100) if battery.dod else DEFAULT_DOD
         rte = (battery.round_trip_efficiency / 100) if battery.round_trip_efficiency else DEFAULT_ROUND_TRIP_EFFICIENCY
 

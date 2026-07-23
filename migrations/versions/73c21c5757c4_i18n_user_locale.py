@@ -1,15 +1,6 @@
-"""i18n: user.locale
-
-Revision ID: 73c21c5757c4
-Revises: 827266176ee7
-Create Date: 2026-06-22 15:31:19.469305
-
-"""
 from alembic import op
 import sqlalchemy as sa
 
-
-# revision identifiers, used by Alembic.
 revision = '73c21c5757c4'
 down_revision = '6f05e59255bc'
 branch_labels = None

@@ -1,10 +1,3 @@
-"""Tests de integración del módulo de plantillas: render, CRUD, biblioteca, IDOR y flag gate.
-
-Usa una base SQLite en memoria construida con db.create_all() y el cliente de pruebas de
-Flask. Cubre: render de una plantilla de ejemplo contra un proyecto, CRUD + biblioteca,
-aislamiento por org (IDOR -> 404) y el gate del flag `templates` (apagado -> 403; encendido
--> pasa).
-"""
 
 import unittest
 

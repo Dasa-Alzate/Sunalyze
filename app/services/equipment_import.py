@@ -1,13 +1,3 @@
-"""Importación masiva de equipos desde TSV/CSV/Excel.
-
-Parsea el fichero (stdlib para csv/tsv, openpyxl perezoso para xlsx/xls), mapea las
-cabeceras a los campos del modelo del recurso, valida rango y requeridos por fila y hace
-upsert en el catálogo propio de la organización (nunca el oficial). Cada fila se procesa
-en su propio savepoint: una fila inválida se reporta como error sin abortar el resto.
-
-Claves naturales del upsert: `nombre` para paneles/inversores/baterías; la tupla física
-`(tipo, material, seccion, no_conductores)` para cables.
-"""
 
 import csv
 import io
@@ -148,7 +138,6 @@ class EquipmentImportService:
 
     @staticmethod
     def run(resource, cfg, org_id, filename, content, catalog_id=None):
-        """Digiere el fichero y hace upsert. Devuelve {created, updated, errors}."""
         header, data_rows = _rows_from_file(filename, content)
         mapping = _header_map(header, cfg)
         if not mapping:

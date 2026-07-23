@@ -1,11 +1,3 @@
-"""Endpoint de salud para probes de infraestructura.
-
-Sin autenticación, sin org y exento de rate limiting: lo consumen healthchecks
-de Docker/orquestadores cada pocos segundos. Devuelve solo ok/error por
-componente, nunca detalles internos (versiones, hosts, mensajes de excepción).
-La BD es dependencia dura (fallo -> 503); la caché es blanda (se refleja en el
-campo pero no degrada el código HTTP).
-"""
 
 import uuid
 

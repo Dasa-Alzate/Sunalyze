@@ -1,9 +1,3 @@
-"""Esquemas de validacion de los endpoints de autenticacion (pydantic v2).
-
-La politica de contrasena sigue OWASP ASVS 4.0 V2.1: longitud minima 12,
-maxima 128, sin reglas de composicion obligatorias (2.1.9) y rechazo de las
-contrasenas filtradas/triviales mas comunes (subconjunto local de 2.1.7).
-"""
 
 from pydantic import BaseModel, EmailStr, Field, field_validator
 

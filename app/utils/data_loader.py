@@ -1,4 +1,3 @@
-"""Carga de datos iniciales: catalogo oficial del marketplace por marca."""
 
 import json
 import logging
@@ -60,7 +59,6 @@ def _official_catalog(brand):
 
 
 def load_initial_data():
-    """Carga los datos iniciales desde el JSON a la base de datos"""
 
     json_path = os.path.join(os.path.dirname(__file__), '../../data/database.json')
 
@@ -141,12 +139,6 @@ def load_initial_data():
 
 
 def ensure_marketplace():
-    """Backfill idempotente del marketplace.
-
-    Asigna catalogo oficial por marca a los equipos huerfanos (catalog_id
-    NULL) y suscribe todos los workspaces existentes a los catalogos
-    oficiales. Seguro de ejecutar tras cada migracion.
-    """
     orphans = 0
     for model in (Panel, Inverter, Battery):
         for row in model.query.filter(model.catalog_id.is_(None)).all():

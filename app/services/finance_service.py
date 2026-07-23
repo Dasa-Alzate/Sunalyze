@@ -1,9 +1,3 @@
-"""Orquestación del módulo financiero: CRUD de escenarios + cálculo por proyecto.
-
-Capa de dominio (sin HTTP) que envuelve el motor puro `app.services.finance` y
-resuelve, a partir del proyecto, la producción anual y el ratio de autoconsumo
-cuando no se pasan explícitamente. Todo va scoped por `org_id` (sin IDOR).
-"""
 
 from app.extensions import db
 from app.models.project import Project

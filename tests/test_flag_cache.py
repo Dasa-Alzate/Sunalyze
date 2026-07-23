@@ -1,9 +1,3 @@
-"""Tests de la cache de resolución de feature flags.
-
-Fija dos invariantes: (1) la segunda resolución idéntica se sirve de cache sin
-tocar la BD; (2) cualquier escritura (upsert, override, clear) invalida la
-cache y el cambio es visible inmediatamente, sin esperar al TTL.
-"""
 
 import unittest
 

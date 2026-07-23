@@ -1,27 +1,10 @@
-"""Modelo de bateria de almacenamiento fotovoltaico."""
 
 from app import db
 from .database import BaseModel
 from .provenance import ProvenanceMixin
 
-class Battery(BaseModel, ProvenanceMixin):
-    """
-    Representa una bateria de almacenamiento con sus especificaciones tecnicas.
 
-    Attributes:
-        nombre: Nombre/modelo de la bateria.
-        capacity_kwh: Capacidad nominal (kWh).
-        usable_kwh: Capacidad util (kWh).
-        dod: Profundidad de descarga (%).
-        power_kw: Potencia de carga/descarga (kW).
-        voltage: Voltaje nominal (V).
-        technology: Quimica/tecnologia (p. ej. LiFePO4).
-        round_trip_efficiency: Eficiencia de ida y vuelta (%).
-        max_cycles: Numero maximo de ciclos.
-        height: Altura (mm).
-        width: Ancho (mm).
-        depth: Profundidad (mm).
-    """
+class Battery(BaseModel, ProvenanceMixin):
     __tablename__ = 'batteries'
 
     catalog_id = db.Column(db.Integer, db.ForeignKey('catalogs.id'), index=True)

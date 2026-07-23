@@ -1,8 +1,3 @@
-"""Endpoints del flujo de legalizacion: transiciones, firma e historial.
-
-Capa HTTP fina sobre LegalizationService. Scoped al workspace activo (org) y
-gateada por permisos.
-"""
 
 from flask import Blueprint, request, jsonify
 

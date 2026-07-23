@@ -1,11 +1,3 @@
-"""Adaptador de cola síncrono (DEFAULT): ejecuta el job inline.
-
-Reproduce el comportamiento actual: al encolar, el job corre en el mismo request y su
-resultado queda disponible de inmediato. Las excepciones **propagan** para conservar el mismo
-contrato de error que la generación síncrona previa. Los resultados se guardan en un buffer
-acotado a nivel de clase para que un posible sondeo posterior en el mismo proceso los
-encuentre.
-"""
 
 import uuid
 from collections import OrderedDict
@@ -17,7 +9,6 @@ from app.jobs import resolve_job
 
 
 class SyncQueue(JobQueue):
-    """Ejecuta los jobs de forma inmediata y bloqueante."""
 
     is_async = False
 

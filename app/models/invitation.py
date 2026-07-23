@@ -1,4 +1,3 @@
-"""Invitacion para incorporar a una persona a un workspace con un rol."""
 
 import secrets
 from datetime import datetime, timedelta
@@ -16,7 +15,6 @@ def _new_token():
 
 
 class Invitation(BaseModel):
-    """Invitacion pendiente de aceptacion, vinculada a un email y una org."""
     __tablename__ = 'invitations'
 
     org_id = db.Column(db.Integer, db.ForeignKey('organizations.id', ondelete='CASCADE'), nullable=False, index=True)

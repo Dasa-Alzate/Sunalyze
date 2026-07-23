@@ -1,4 +1,3 @@
-"""Endpoints de plantillas de correo: catalogo, preview y envio (dev)."""
 
 import logging
 from flask import Blueprint, request, jsonify, Response

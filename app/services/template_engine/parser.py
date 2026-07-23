@@ -1,14 +1,3 @@
-"""Parser y evaluador de expresiones de plantilla.
-
-No usa Jinja, `eval`, `exec`, `compile` ni `getattr` dinámico sobre objetos arbitrarios.
-El interior de cada `{{ ... }}` es un *pipeline*:
-
-    expr ( '|' filtro ( '(' args ')' )? )*
-
-donde `expr` es una ruta de variable (`panel.power`), un literal, o una expresión aritmética
-sobre números, rutas y los operadores `+ - * / ( )` más las funciones `round` y `sum`. La
-evaluación aritmética usa un algoritmo shunting-yard propio: nunca se evalúa código.
-"""
 
 import math
 import re
@@ -26,7 +15,6 @@ _MAX_DEPTH = 32
 
 
 class ParsedExpression:
-    """Pipeline ya parseado: una expresión base + una cadena de filtros."""
 
     __slots__ = ('atoms', 'filters', 'is_path')
 
@@ -82,13 +70,6 @@ def _is_arithmetic(atoms):
 
 @lru_cache(maxsize=1024)
 def parse_expression(source):
-    """Parsea el interior de un `{{ ... }}` a un ParsedExpression.
-
-    Cacheado: una expresión es puramente sintáctica (no depende de datos de tenant) y el
-    `ParsedExpression` resultante es de solo lectura durante `evaluate`, así que reusarlo entre
-    renders es seguro y evita re-tokenizar cada `{{ ... }}` en cada documento. `lru_cache` no
-    cachea excepciones, de modo que una expresión inválida vuelve a lanzar `TemplateError`.
-    """
     tokens = tokenize(source)
     if not tokens:
         raise TemplateError('Expresión vacía.')
@@ -249,11 +230,6 @@ def _collect_call_args(atoms, lparen_index, resolver, depth):
 
 
 def evaluate(parsed, resolver):
-    """Evalúa un ParsedExpression contra un resolver de variables y aplica los filtros.
-
-    La presentación (locale/currency) se toma del resolver, de modo que los filtros
-    numéricos y de moneda formatean según la jurisdicción de la plantilla.
-    """
     if parsed.is_path:
         value = _resolve_atom(parsed.atoms[0], resolver)
     else:
@@ -265,11 +241,6 @@ def evaluate(parsed, resolver):
 
 
 def render_text(text, resolver, on_error='placeholder'):
-    """Sustituye cada `{{ ... }}` de `text` por su valor resuelto.
-
-    `on_error='placeholder'` deja un marcador legible y nunca propaga (modo render seguro);
-    `on_error='raise'` propaga TemplateError (modo validación/preview estricto).
-    """
     if not text:
         return ''
 

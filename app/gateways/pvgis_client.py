@@ -1,11 +1,3 @@
-"""Adaptador de PVGIS (irradiancia horaria) con cache compartida via Flask-Caching.
-
-Unica frontera con la API externa: detras de esta interfaz el dominio es
-mockeable en tests. La cache usa la extension `cache` (SimpleCache en dev,
-Redis en produccion), con TTL largo porque la serie historica de irradiancia
-es inmutable para unos parametros dados. Un fallo de red no cachea nada y
-propaga la excepcion, igual que antes.
-"""
 
 import logging
 

@@ -1,4 +1,3 @@
-"""Esquemas de validacion de invitaciones y gestion de miembros (pydantic v2)."""
 
 from typing import Literal
 from pydantic import BaseModel, EmailStr

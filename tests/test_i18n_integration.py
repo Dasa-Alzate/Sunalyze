@@ -1,8 +1,3 @@
-"""Tests de la fase backend de i18n: persistencia y exposicion de user.locale,
-resolucion de locale por precedencia (user > Accept-Language > es), codigos de
-error estables en la API (code + message), emails locale-aware y no-regresion de
-auth/errores existentes.
-"""
 
 import unittest
 

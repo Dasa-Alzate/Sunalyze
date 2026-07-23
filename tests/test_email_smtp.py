@@ -1,11 +1,3 @@
-"""Backend de correo SMTP: mensaje correcto, TLS/login y contrato blando.
-
-Con un fake de `smtplib.SMTP` (sin red ni envío real) verifica que el adaptador
-SMTP construye el mensaje con from/to/subject/cuerpo correctos, que STARTTLS y
-login se invocan según configuración, que un fallo SMTP no propaga excepción a
-los llamadores de `EmailService.send`, que el backend `log` sigue siendo el
-default sin cambios y que la validación de config rechaza backends desconocidos.
-"""
 
 import os
 import smtplib

@@ -1,9 +1,3 @@
-"""Endpoints del constructor de plantillas de documentos. Capa HTTP fina.
-
-Todas las rutas van detrás del flag `templates` (@require_flag) y de un permiso RBAC. La
-lectura exige TEMPLATE_VIEW; la escritura, TEMPLATE_MANAGE (owner+admin). El alcance por
-org_id se aplica en TemplateService (sin IDOR).
-"""
 
 from flask import Blueprint, request, jsonify, Response, current_app
 

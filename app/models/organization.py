@@ -1,4 +1,3 @@
-"""Workspace/tenant. Una persona o autonomo es un workspace de un solo miembro."""
 
 from app.extensions import db
 from .database import BaseModel, SoftDeleteMixin
@@ -8,11 +7,6 @@ PLANS = ('free', 'pro', 'business')
 
 
 class Organization(BaseModel, SoftDeleteMixin):
-    """Unico eje de propiedad de los datos.
-
-    La diferencia entre persona/autonomo y empresa es configuracion (type +
-    plan + nº de miembros), no un modelo de datos distinto.
-    """
     __tablename__ = 'organizations'
 
     nombre = db.Column(db.String(150), nullable=False)
@@ -40,12 +34,6 @@ class Organization(BaseModel, SoftDeleteMixin):
 
 
 class OrgBrandingProfile(BaseModel):
-    """Marca de la organización aplicada al render de documentos (1:1 con la org).
-
-    Org-scoped. Sin fila de branding, los documentos se renderizan con el estilo por defecto.
-    `logo_path` es relativa a `instance_path`; `primary_color` es un color CSS; `footer_text` es
-    el pie de página del PDF.
-    """
 
     __tablename__ = 'org_branding_profiles'
     __table_args__ = (

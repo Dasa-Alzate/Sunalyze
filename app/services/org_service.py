@@ -1,13 +1,3 @@
-"""Servicios de organización: perfil de marca (branding) aplicado al render de documentos.
-
-Org-scoped: el branding es 1:1 con la organización del workspace activo, así que la
-propiedad se deriva de `org_id` (sin IDOR por recurso). El perfil se crea perezosamente la
-primera vez que se guarda.
-
-El logo se almacena en el árbol de la instancia bajo `cfiles/<org_id>/logo.<ext>` (un único
-fichero por organización, se reemplaza en cada subida). `logo_path` queda relativa a
-`instance_path`, que es lo que embebe el `pdf_url_fetcher` al renderizar documentos.
-"""
 
 import glob
 import io
@@ -24,11 +14,6 @@ _RASTER_EXT = {'png': 'png', 'jpeg': 'jpg', 'webp': 'webp'}
 
 
 def _sniff_image_ext(data):
-    """Devuelve la extensión canónica si `data` es una imagen soportada, si no None.
-
-    Valida el tipo real del contenido (no la extensión declarada): png/jpeg/webp vía Pillow,
-    svg por olfateo del prólogo XML/`<svg`.
-    """
     from PIL import Image, UnidentifiedImageError
 
     try:
@@ -84,12 +69,6 @@ class OrgService:
 
     @staticmethod
     def save_logo(org_id, instance_path, data):
-        """Valida, reemplaza y persiste el logo de la organización.
-
-        Rechaza (422) lo que no sea imagen png/jpeg/webp/svg o supere el tamaño máximo. Borra
-        cualquier `logo.*` previo para no acumular y actualiza `logo_path` (relativa a
-        `instance_path`).
-        """
         if not data:
             raise ValidationError('El logo está vacío.')
         if len(data) > _MAX_LOGO_BYTES:

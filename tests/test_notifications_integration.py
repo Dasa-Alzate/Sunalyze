@@ -1,11 +1,3 @@
-"""Tests de notificaciones (fan-on-write) y trabajo pendiente (derivado).
-
-Verifica: fan-out al invitar/cambiar rol/expulsar/firmar memoria notifica a los
-implicados pero NO al actor; unread-count correcto; read/read-all marcan; un
-usuario no ve ni marca notificaciones de otro (IDOR -> 404); y que el trabajo
-pendiente se deriva del estado vigente sin persistir filas (un proyecto en
-borrador aparece y desaparece al cambiar de estado).
-"""
 
 import unittest
 

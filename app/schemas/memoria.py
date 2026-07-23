@@ -1,12 +1,3 @@
-"""Esquema de validacion del formulario de la memoria tecnica (PDF).
-
-Tipa los campos del formulario que llegan como `request.form`. La presencia de
-los campos obligatorios la sigue verificando MemoriaService.REQUIRED_FIELDS; este
-esquema aporta validacion de tipo y rango (422 ante basura, negativos o fuera de
-rango). Los campos vacios se normalizan a None antes de validar para no romper los
-opcionales. El servicio re-lee el formulario crudo, asi que validar aqui no altera
-las variables de plantilla ni los SVG generados.
-"""
 
 from typing import Optional
 
@@ -75,7 +66,6 @@ class MemoriaFormSchema(BaseModel):
     @field_validator('*', mode='before')
     @classmethod
     def _empty_to_none(cls, value):
-        """Normaliza cadenas vacias o solo-espacios a None (opcional ausente)."""
         if isinstance(value, str) and value.strip() == '':
             return None
         return value

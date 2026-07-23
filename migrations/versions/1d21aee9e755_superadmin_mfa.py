@@ -1,13 +1,5 @@
-"""superadmin mfa
-
-Revision ID: 1d21aee9e755
-Revises: c3357c982972
-Create Date: 2026-06-17 15:29:23.502042
-
-"""
 from alembic import op
 import sqlalchemy as sa
-
 
 revision = '1d21aee9e755'
 down_revision = 'c3357c982972'

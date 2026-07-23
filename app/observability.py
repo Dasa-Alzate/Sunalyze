@@ -1,11 +1,3 @@
-"""Inicialización opcional de Sentry, activada solo por SENTRY_DSN.
-
-Sigue el patrón del repo para dependencias opcionales (boto3/rq): el import
-de sentry_sdk es perezoso y solo ocurre si hay DSN configurado, de modo que
-sin DSN la app arranca aunque el paquete no esté instalado y no se produce
-ningún efecto secundario. send_default_pii queda en False (RGPD): los eventos
-no llevan IPs, cookies ni datos personales del request.
-"""
 
 
 def init_sentry(app):

@@ -1,9 +1,3 @@
-"""Cambio de workspace activo para usuarios multi-org.
-
-Un switch valido re-escopa el tenant: los proyectos listados despues son los
-de la nueva org. Cambiar a una org sin Membership responde 404 (IDOR->404).
-El listado marca el workspace activo y un usuario mono-org ve exactamente 1.
-"""
 
 import unittest
 

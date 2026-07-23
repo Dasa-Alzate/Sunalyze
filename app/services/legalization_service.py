@@ -1,15 +1,3 @@
-"""Maquina de estados de legalizacion del expediente fotovoltaico (sin Flask).
-
-Modela el ciclo administrativo del proyecto en Espana (RD 244/2019, REBT):
-
-    borrador -> en_revision -> presentado -> aprobado
-                                          -> rechazado
-
-Concentra las transiciones permitidas y sus guardas (p. ej. no avanzar sin la
-memoria tecnica firmada) lejos del transporte HTTP. Devuelve modelos y lanza
-DomainError. La firma de memoria registra firmante, timestamp y un hash SHA-256
-del PDF generado como prueba de integridad.
-"""
 
 import hashlib
 import logging
@@ -41,7 +29,6 @@ class LegalizationService:
 
     @staticmethod
     def allowed_transitions(estado):
-        """Estados destino validos desde `estado` (vacio si terminal/desconocido)."""
         return TRANSITIONS.get(estado, set())
 
     @staticmethod
@@ -50,17 +37,14 @@ class LegalizationService:
 
     @staticmethod
     def hash_pdf(pdf_bytes):
-        """SHA-256 hex de los bytes del PDF de la memoria."""
         return hashlib.sha256(pdf_bytes).hexdigest()
 
     @staticmethod
     def history(project):
-        """Eventos de transicion del proyecto, mas recientes primero."""
         return [event.to_dict() for event in project.events]
 
     @staticmethod
     def state_summary(project):
-        """Estado actual, transiciones posibles y si la memoria esta firmada."""
         return {
             'estado': project.estado,
             'memoria_firmada': project.current_signature is not None,
@@ -72,11 +56,6 @@ class LegalizationService:
 
     @staticmethod
     def sign_memoria(project, user, pdf_sha256, pdf_size_bytes, note=None):
-        """Registra la firma vigente de la memoria del proyecto.
-
-        Marca cualquier firma previa como no vigente (historico) y crea la nueva
-        como `is_current`. Deja constancia en el historial de eventos.
-        """
         if not pdf_sha256:
             raise ValidationError('Hash del PDF requerido para firmar la memoria.', code='memoria.hash_required')
 
@@ -112,12 +91,6 @@ class LegalizationService:
 
     @staticmethod
     def transition(project, user, to_estado, note=None):
-        """Aplica una transicion de estado validando reglas y guardas.
-
-        Lanza ValidationError si el destino no es un estado conocido, Conflict si
-        la transicion no esta permitida desde el estado actual, y Conflict si la
-        guarda de memoria firmada no se cumple.
-        """
         if to_estado not in ESTADOS:
             raise ValidationError(
                 f"Estado invalido. Validos: {', '.join(ESTADOS)}"

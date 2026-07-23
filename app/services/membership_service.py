@@ -1,9 +1,3 @@
-"""Logica de dominio de equipo: invitaciones, roles y miembros.
-
-Concentra todas las invariantes (siempre >=1 owner, nadie concede un rol
-superior al suyo, un admin no toca a un owner, la org PERSONAL es de un solo
-asiento) lejos del transporte HTTP. Devuelve modelos y lanza DomainError.
-"""
 
 import logging
 from datetime import datetime

@@ -1,11 +1,3 @@
-"""Suite parametrizada de denegacion RBAC.
-
-Verifica de forma compacta que un usuario cuyo rol NO concede el permiso exigido
-por `@require_permission` recibe 403 (codigo `authz.forbidden`) en un endpoint
-representativo de cada blueprint protegido, y que un no-superadmin recibe 403 en
-`/api/admin/*`. El rol usado es `member`, que segun `ROLE_PERMISSIONS` carece de
-todos los permisos de administracion probados aqui.
-"""
 
 import unittest
 
@@ -95,8 +87,6 @@ class RbacDenialTest(unittest.TestCase):
                                  f'{name}: 403 por motivo distinto al RBAC')
 
     def test_unauthenticated_is_unauthorized(self):
-        """Sin sesion -> 401. Se excluye `templates`, gateado por `@require_flag`
-        (que precede a la autenticacion), por lo que responde 403 feature_disabled."""
         client = self.app.test_client()
         for name, method, path, _ in DENIED_CASES:
             if name == 'templates':

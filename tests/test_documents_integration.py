@@ -1,14 +1,3 @@
-"""Tests de integración del enganche a PDF de plantillas (GeneratedDocument).
-
-Usa SQLite en memoria y el cliente de pruebas de Flask. Cubre: generar un PDF desde una
-plantilla + proyecto (bytes que empiezan por %PDF, se crea GeneratedDocument con sha256 y
-template_version_id fijado), listar los documentos de un proyecto, descarga (application/pdf),
-aislamiento por org (IDOR -> 404 en doc y proyecto ajenos) y el gate del flag (apagado -> 403).
-
-Si WeasyPrint no puede producir el PDF por falta de libs nativas, los tests que ejercitan
-`write_pdf` se omiten (skip) tras verificar que el HTML ensamblado + el modelo + el wiring
-están correctos; el resto de la cobertura no depende del motor nativo.
-"""
 
 import unittest
 

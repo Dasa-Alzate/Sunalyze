@@ -1,15 +1,6 @@
-"""financial scenarios
-
-Revision ID: 67ad717ad9a4
-Revises: 9a1c7e4b2f10
-Create Date: 2026-06-22 14:36:09.988079
-
-"""
 from alembic import op
 import sqlalchemy as sa
 
-
-# revision identifiers, used by Alembic.
 revision = '67ad717ad9a4'
 down_revision = '9a1c7e4b2f10'
 branch_labels = None

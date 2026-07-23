@@ -1,14 +1,3 @@
-"""Servicio de auditoria: escribe eventos dentro de la transaccion del cambio.
-
-`record(...)` hace `session.add` + `flush`, pero NO `commit`. El commit lo
-ejecuta el llamador junto con su propia mutacion, de modo que el evento de
-auditoria y el cambio que describe son atomicos: si el cambio hace rollback, el
-evento tambien desaparece.
-
-La IP y el correo del actor se resuelven de forma defensiva: el servicio
-funciona aunque se invoque fuera de un contexto de request (p. ej. en tests o
-tareas), en cuyo caso esos campos quedan a None salvo que se pasen explicitos.
-"""
 
 import json
 import logging
@@ -57,12 +46,6 @@ class AuditService:
     @staticmethod
     def record(action, actor=None, org_id=None, entity_type=None,
                entity_id=None, payload=None, ip=None, actor_email=None):
-        """Inserta un AuditEvent en la sesion actual y hace flush (sin commit).
-
-        Devuelve el evento creado. Acepta `actor` (modelo User) del que extrae
-        id/email, o `actor_email` explicito para actores ajenos a la tabla
-        `users`. `payload` puede ser dict/lista (se serializa a JSON) o str.
-        """
         resolved_email = actor_email
         actor_user_id = None
         if actor is not None:
@@ -88,7 +71,6 @@ class AuditService:
 
     @staticmethod
     def list_for_org(org_id, limit=100):
-        """Lee la bitacora de una org, mas reciente primero."""
         return (
             AuditEvent.query
             .filter(AuditEvent.org_id == org_id)
@@ -99,12 +81,6 @@ class AuditService:
 
     @staticmethod
     def feed_for_org(org_id, limit=50, offset=0):
-        """Pagina la bitacora de una org (offset-based) para el feed de actividad.
-
-        Devuelve un dict con `items` enriquecidos (enlace resuelto al objeto),
-        `total`, `limit`, `offset` y `has_more`, de modo que el frontend pueda
-        pintar la paginacion sin una segunda llamada.
-        """
         base = (
             AuditEvent.query
             .filter(AuditEvent.org_id == org_id)
@@ -130,12 +106,6 @@ class AuditService:
 
     @staticmethod
     def resolve_link(entity_type, entity_id):
-        """Resuelve `entity_type -> ruta` de frontend para enlazar al objeto.
-
-        Mapa estatico de dominio a ruta de la SPA. Devuelve None cuando no hay
-        ruta conocida o falta el `entity_id`, para que el frontend lo trate como
-        evento sin enlace.
-        """
         if entity_id is None or not entity_type:
             return None
         routes = {
@@ -156,13 +126,6 @@ class AuditService:
 
     @staticmethod
     def _resolve_names(events):
-        """Resuelve en lote el nombre del elemento referenciado por cada evento.
-
-        Agrupa por `entity_type` y hace una consulta por tipo (evitando N+1),
-        incluyendo los registros con soft-delete via `with_deleted()` para que un
-        elemento borrado conserve su nombre. Devuelve un dict indexado por
-        `(entity_type, entity_id)`.
-        """
         wanted = {}
         for event in events:
             if event.entity_id is None or not event.entity_type:
@@ -214,12 +177,6 @@ class AuditService:
 
     @staticmethod
     def to_feed_dict(event, names=None):
-        """Serializa un AuditEvent para el feed: `to_dict` + enlace + nombre.
-
-        `entity_label` es el nombre del elemento referenciado (resuelto por id,
-        incluyendo soft-deleted), o el nombre del payload como respaldo, o None
-        cuando no puede determinarse (el frontend cae a un texto generico).
-        """
         if names is None:
             names = AuditService._resolve_names([event])
         data = event.to_dict()

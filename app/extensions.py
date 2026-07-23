@@ -1,9 +1,3 @@
-"""Extensiones Flask como singletons, fuente unica de verdad.
-
-Centralizarlas aqui evita los imports circulares que aparecen cuando los
-modelos y la fabrica de la app comparten `db`. `app/__init__` las reexporta
-para mantener compatibilidad con `from app import db`.
-"""
 
 from flask_sqlalchemy import SQLAlchemy
 from flask_caching import Cache

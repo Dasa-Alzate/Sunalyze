@@ -1,14 +1,3 @@
-"""Trabajo pendiente DERIVADO del estado actual: nunca se persiste.
-
-Regla de oro: el pendiente no se almacena como filas; se calcula al vuelo
-consultando el estado vigente (proyectos, invitaciones, cuenta). Cada check es
-una funcion `(user, org_id) -> {type,label,count,link}`; el endpoint ejecuta el
-registro y devuelve los items con `count > 0`. Cambiar el estado (p. ej. sacar
-un proyecto de borrador) hace que el item desaparezca sin tocar ninguna tabla.
-
-El badge de "trabajo pendiente" usa esta misma fuente (suma de counts), no un
-contador separado.
-"""
 
 from datetime import datetime
 
@@ -99,10 +88,6 @@ class PendingWorkService:
 
     @staticmethod
     def derive(user, org_id):
-        """Ejecuta los checks y devuelve los items con trabajo pendiente.
-
-        No persiste nada: cada llamada refleja el estado actual.
-        """
         items = []
         for check in PendingWorkService.CHECKS:
             item = check(user, org_id)

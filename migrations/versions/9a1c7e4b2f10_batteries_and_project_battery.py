@@ -1,13 +1,5 @@
-"""batteries y relacion con proyecto
-
-Revision ID: 9a1c7e4b2f10
-Revises: 42edc2baf2b1
-Create Date: 2026-06-22 14:00:00.000000
-
-"""
 from alembic import op
 import sqlalchemy as sa
-
 
 revision = '9a1c7e4b2f10'
 down_revision = '42edc2baf2b1'

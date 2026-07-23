@@ -1,10 +1,3 @@
-"""Tests de integración de baterías (Fase 1, backend core).
-
-Usa SQLite en memoria y el cliente de pruebas de Flask. Cubre: CRUD de batería en
-catálogo vía API, asignación de batería a proyecto (battery_id + battery_quantity
-aparecen en to_dict), criterios del scraper (VITAL['battery'] y acceptance.evaluate
-accepted/blocked/review) y no-regresión del CRUD de paneles/inversores.
-"""
 
 import unittest
 from unittest.mock import patch

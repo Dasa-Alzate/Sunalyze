@@ -1,10 +1,3 @@
-"""Punto de entrada WSGI para producción (gunicorn).
-
-A diferencia de run.py (servidor de desarrollo), aquí se envuelve la app con
-ProxyFix para que, detrás de un reverse proxy (nginx/Caddy/balanceador), Flask
-lea la IP y el esquema reales desde las cabeceras X-Forwarded-* en lugar de la
-IP del proxy. Esto es lo que necesitan el rate limiting y cualquier filtro por IP.
-"""
 
 from werkzeug.middleware.proxy_fix import ProxyFix
 

@@ -1,4 +1,3 @@
-"""Esquemas de validación de la gestión de flags."""
 
 from typing import Optional
 from pydantic import BaseModel, Field

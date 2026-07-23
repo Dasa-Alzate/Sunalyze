@@ -1,9 +1,3 @@
-"""Dominio de posventa: instalaciones y su seguimiento (sin Flask).
-
-Crea instalaciones desde proyectos aprobados (tomando el baseline de produccion
-del dimensionamiento), gestiona el estado operativo y el CRUD de visitas de
-mantenimiento, incidencias y lecturas. Devuelve modelos y lanza DomainError.
-"""
 
 import logging
 
@@ -36,11 +30,6 @@ class InstallationService:
 
     @staticmethod
     def create_from_project(org_id, project_id):
-        """Crea la instalacion de un proyecto aprobado, con baseline del analisis.
-
-        Conflict si el proyecto no esta aprobado o si ya tiene instalacion.
-        NotFound si el proyecto no existe o es de otra org.
-        """
         project = Project.query.get(project_id)
         if not project or project.org_id != org_id:
             raise NotFound('Proyecto no encontrado.')
@@ -75,7 +64,6 @@ class InstallationService:
 
     @staticmethod
     def set_status(installation, status):
-        """Cambia el estado operativo de la instalacion (conjunto abierto)."""
         if status not in INSTALLATION_STATUSES:
             raise ValidationError(
                 f"Estado invalido. Validos: {', '.join(INSTALLATION_STATUSES)}."
@@ -180,12 +168,6 @@ class InstallationService:
 
     @staticmethod
     def performance_summary(installation):
-        """Resumen esperado-vs-real a partir de la suma de lecturas manuales.
-
-        El real fiable exige monitorizacion automatica (datalogger / API del
-        inversor), deuda futura. v1 suma lecturas manuales: la cifra es
-        indicativa y no se normaliza por el periodo realmente cubierto.
-        """
         readings = installation.readings
         actual_total = round(sum(r.actual_kwh for r in readings), 2)
         expected = installation.expected_annual_kwh

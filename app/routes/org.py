@@ -1,9 +1,3 @@
-"""Endpoints de la organización. Capa HTTP fina.
-
-El branding de la org (logo, color, pie) se aplica al render de documentos. Lectura y
-escritura exigen ORG_MANAGE (owner+admin). El alcance es la org del workspace activo
-(`current_org_id()`), 1:1 con la organización, sin IDOR por recurso.
-"""
 
 from flask import Blueprint, request, jsonify, current_app, send_from_directory
 

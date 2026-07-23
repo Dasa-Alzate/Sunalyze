@@ -1,12 +1,6 @@
-"""Primitivas financieras numéricas en stdlib pura (sin numpy-financial).
-
-VAN/NPV, TIR/IRR (bisección + refinamiento Newton, maneja sin-raíz devolviendo
-None) y payback (simple/descontado) a partir de una serie de cashflows.
-"""
 
 
 def npv(rate, cashflows):
-    """VAN de una serie cuyo elemento 0 es el flujo del año 0 (inversión)."""
     total = 0.0
     for t, cf in enumerate(cashflows):
         total += cf / ((1.0 + rate) ** t)
@@ -23,12 +17,6 @@ def _npv_derivative(rate, cashflows):
 
 
 def irr(cashflows, low=-0.9999, high=10.0, tol=1e-7, max_iter=200):
-    """TIR de la serie de cashflows. Devuelve None si no hay raíz detectable.
-
-    Bisección robusta en [low, high]; si los extremos no cambian de signo (flujo
-    sin raíz, p. ej. todo del mismo signo) devuelve None sin lanzar. Cuando hay
-    raíz, refina con Newton-Raphson y conserva la bisección si Newton diverge.
-    """
     if not cashflows or len(cashflows) < 2:
         return None
 
@@ -74,11 +62,6 @@ def irr(cashflows, low=-0.9999, high=10.0, tol=1e-7, max_iter=200):
 
 
 def payback_period(initial_investment, cashflows):
-    """Año (fraccionario) en que el cashflow acumulado cubre la inversión.
-
-    `cashflows` es la serie de flujos anuales (año 1..N, sin el año 0). Devuelve
-    None si no se recupera dentro del horizonte. Interpola dentro del año.
-    """
     pending = initial_investment
     if pending <= 0:
         return 0.0

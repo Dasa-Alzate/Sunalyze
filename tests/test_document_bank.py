@@ -1,11 +1,3 @@
-"""Tests del banco oficial de tipos de documento (España).
-
-Verifica que `DocumentBankSeeder.seed()` crea N plantillas system con los tags correctos
-(country/required_by/stage/kind), es idempotente (correr dos veces no duplica), que cada
-plantilla renderiza contra un proyecto de ejemplo (con instalación, mantenimiento e
-incidencia para las de posventa) sin error y con variables resueltas, y que aparecen en el
-banco system vía `GET /api/templates/bank`.
-"""
 
 import unittest
 from datetime import date

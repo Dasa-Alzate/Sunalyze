@@ -1,15 +1,3 @@
-"""Adapter de Autosolar (distribuidor multi-marca).
-
-Autosolar vende equipos de muchos fabricantes; cada ficha declara la marca en un
-enlace de fabricante y las especificaciones en una lista `ul.specification` con pares
-«Etiqueta: valor». La identidad y la marca salen de la página; el servicio enruta cada
-producto al catálogo de su marca. Sin marca deducida, el producto no entra
-(requires_product_brand).
-
-Cobertura realista: los paneles exponen los vitales (potencia, Voc, Vmp, Imp) en la
-ficha. Los inversores a menudo no listan la tensión máxima de entrada DC (`vmax`); esos
-quedan parciales y se descartan por las reglas vitales.
-"""
 
 import logging
 import re
@@ -75,16 +63,11 @@ def _find(pairs, *needles):
 
 
 def _seccion_from_title(title):
-    """Captura la seccion en mm2 de un titulo tipo «Cable 6mm2» o «Cable 4 mm²»."""
     m = re.search(r'(\d+(?:[.,]\d+)?)\s*mm', title or '', re.IGNORECASE)
     return to_float_eu(m.group(1)) if m else None
 
 
 def _wire_material(*texts):
-    """Deduce el material conductor a partir del texto de la ficha.
-
-    'aluminio'/'al' → 'Al'; en cualquier otro caso 'Cu' (cobre, valor por defecto).
-    """
     blob = _strip(' '.join(t for t in texts if t))
     if 'alumin' in blob or re.search(r'\bal\b', blob):
         return 'Al'
@@ -92,10 +75,6 @@ def _wire_material(*texts):
 
 
 def _wire_type(title):
-    """Extrae la designacion corta del cable del titulo (p. ej. 'H1Z2Z2-K').
-
-    Devuelve el codigo normalizado (mayusculas, ≤10 caracteres) o 'PV' por defecto.
-    """
     m = re.search(r'\b([A-Z0-9]*[A-Z][A-Z0-9]*-[A-Z])\b', (title or '').upper())
     if m:
         return m.group(1)[:10]

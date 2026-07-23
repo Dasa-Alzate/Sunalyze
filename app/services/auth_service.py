@@ -1,9 +1,3 @@
-"""Logica de dominio de autenticacion y alta de workspace.
-
-Aisla las reglas (unicidad de correo, creacion del workspace personal,
-tokens) del transporte HTTP. Devuelve modelos/tokens y lanza DomainError;
-no toca request/response.
-"""
 
 import hashlib
 import logging
@@ -51,12 +45,6 @@ class AuthService:
 
     @staticmethod
     def authenticate(email, password):
-        """Valida credenciales aplicando lockout por intentos fallidos.
-
-        El cambio de estado de bloqueo (intento fallido o reseteo en exito) se
-        persiste en su propia transaccion. En el camino feliz, el reseteo, el
-        marcado de `last_login` y el evento `auth.login` van en el mismo commit.
-        """
         user = User.active().filter_by(email=email.strip().lower()).first()
 
         if user and user.is_locked_out():
@@ -85,11 +73,6 @@ class AuthService:
 
     @staticmethod
     def _password_fingerprint(user):
-        """Huella corta y estable del `password_hash` actual.
-
-        Incluida en el token de reset, ata el token a la contraseña vigente: al
-        cambiarla la huella cambia, de modo que el token muere tras usarse una vez y
-        no puede reutilizarse."""
         return hashlib.sha256((user.password_hash or '').encode('utf-8')).hexdigest()[:16]
 
     @staticmethod

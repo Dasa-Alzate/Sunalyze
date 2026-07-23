@@ -1,7 +1,3 @@
-"""Motor de plantillas de documentos: parser propio seguro, sin Flask ni eval.
-
-Expone el render de plantillas y el catálogo de variables por tipo de documento.
-"""
 
 from .errors import TemplateError
 from .filters import FILTERS, apply_filter

@@ -1,4 +1,3 @@
-"""Endpoints de analisis, diagrama funcional y memoria PDF. HTTP fino sobre services."""
 
 from flask import Blueprint, request, jsonify, render_template, Response, current_app
 

@@ -1,9 +1,3 @@
-"""Tests de integración: endpoint de kinds de plantillas y branding por organización.
-
-Base SQLite en memoria + cliente de pruebas de Flask. Cubre: `GET /api/templates/kinds`
-devuelve los 8 kinds del registro; `GET/PATCH /api/org/branding` persiste, está gateado por
-ORG_MANAGE (owner/admin sí, member no) y es multi-tenant (cada org ve solo su branding).
-"""
 
 import unittest
 

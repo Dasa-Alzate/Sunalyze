@@ -1,27 +1,10 @@
-"""deletion policy: ondelete coherente (CASCADE / SET NULL) en todas las FK
-
-Alinea la capa BD con la política de borrado (ver docs/deletion-policy-research.md):
-CASCADE en hijos de propiedad (composición), SET NULL en referencias a actor/autor
-(el registro sobrevive sin actor) y sin cambio (RESTRICT por defecto) en lookups.
-
-Batch-safe para SQLite: recrea cada tabla vía op.batch_alter_table. Se pasa la
-naming_convention del proyecto para que Alembic reconozca por nombre las FK reflejadas
-(SQLite no persiste nombres de constraint) y pueda soltarlas y recrearlas con ondelete.
-
-Revision ID: c5d6e7f8a9b0
-Revises: b2c3d4e5f6a7
-Create Date: 2026-07-04 00:00:00.000000
-
-"""
 from alembic import op
 import sqlalchemy as sa
-
 
 revision = 'c5d6e7f8a9b0'
 down_revision = 'b2c3d4e5f6a7'
 branch_labels = None
 depends_on = None
-
 
 NAMING_CONVENTION = {
     'ix': 'ix_%(column_0_label)s',
@@ -30,7 +13,6 @@ NAMING_CONVENTION = {
     'fk': 'fk_%(table_name)s_%(column_0_name)s_%(referred_table_name)s',
     'pk': 'pk_%(table_name)s',
 }
-
 
 FK_CHANGES = {
     'memberships': [
@@ -140,7 +122,6 @@ FK_CHANGES = {
     ],
 }
 
-
 NULLABLE_TO_TRUE = {
     'memoria_signatures': ['signed_by_user_id'],
     'invitations': ['invited_by_user_id'],
@@ -148,7 +129,6 @@ NULLABLE_TO_TRUE = {
 
 
 def _rebuild(table, ondelete_for):
-    """Recrea las FK de `table` con el `ondelete` que devuelva `ondelete_for(default)`."""
     with op.batch_alter_table(table, schema=None, naming_convention=NAMING_CONVENTION) as batch_op:
         if table in NULLABLE_TO_TRUE:
             nullable = ondelete_for('SET NULL') is not None
