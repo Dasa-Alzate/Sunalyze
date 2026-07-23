@@ -1,4 +1,3 @@
-"""Visual style for SVG circuit diagrams."""
 
 from .config import DiagramStyle
 

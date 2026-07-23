@@ -1,4 +1,3 @@
-"""Grid-based SVG diagram compositor."""
 
 from dataclasses import dataclass, field
 from xml.sax.saxutils import escape
@@ -14,12 +13,12 @@ class _PlacedComponent:
     component: object
     gx: float
     gy: float
-    orientation: int = 0       # 0 | 90 | 180 | 270  (clockwise degrees)
+    orientation: int = 0
     label: str = ""
-    label_pos: str = "below"   # above | below | left | right
+    label_pos: str = "below"
     kwargs: dict = field(default_factory=dict)
-    w_cells: float = 1.0       # horizontal scale in grid cells
-    h_cells: float = 1.0       # vertical scale in grid cells
+    w_cells: float = 1.0
+    h_cells: float = 1.0
 
 
 @dataclass
@@ -37,24 +36,6 @@ class _FreeLabel:
 
 
 class Diagram:
-    """
-    Grid-based SVG compositor.
-
-    Grid coordinate conventions
-    ───────────────────────────
-    Integer  (e.g. 2):    exact grid boundary — component top-left corner,
-                          or the edge where two cells meet.
-    Half-int (e.g. 1.5):  centre of that grid cell.
-
-    Example
-    ───────
-    d = Diagram(cols=5, rows=8)
-    d.box(0, 0, 5, 8, title="CC Protection")
-    d.place(Fuse(), 1, 2, orientation=90, label="F1")
-    d.wire(1.5, 0, 1.5, 2)     # vertical wire to top of Fuse cell
-    d.dot(1.5, 3)
-    return d.render()
-    """
 
     def __init__(
         self,
@@ -64,7 +45,7 @@ class Diagram:
         padding: int = 20,
     ):
         self.style = style or DiagramStyle()
-        self._C = self.style.CELL       # 120 px per grid cell
+        self._C = self.style.CELL
         self._pad = padding
         self._w = int(cols * self._C + 2 * padding)
         self._h = int(rows * self._C + 2 * padding)
@@ -74,8 +55,6 @@ class Diagram:
         self._boxes:  list[BoxArea]          = []
         self._dots:   list[_Dot]             = []
         self._labels: list[_FreeLabel]       = []
-
-    # ── Builder API ─────────────────────────────────────────────────────────
 
     def place(
         self,
@@ -87,7 +66,6 @@ class Diagram:
         label_pos: str = "below",
         **kwargs,
     ) -> "_PlacedComponent":
-        """Place a component at grid cell (gx, gy). Returns the placement."""
         pc = _PlacedComponent(
             component, gx, gy, orientation, label, label_pos, kwargs
         )
@@ -105,7 +83,6 @@ class Diagram:
         label_pos: str = "below",
         **kwargs,
     ) -> "_PlacedComponent":
-        """Place a component scaled to (w_cells × h_cells) grid cells. Returns the placement."""
         pc = _PlacedComponent(
             component, gx, gy, 0, label, label_pos, kwargs, w_cells, h_cells
         )
@@ -113,33 +90,26 @@ class Diagram:
         return pc
 
     def wire(self, x1: float, y1: float, x2: float, y2: float) -> "Diagram":
-        """Draw a wire between two grid coordinates."""
         self._wires.append(Wire(x1, y1, x2, y2))
         return self
 
     def dot(self, gx: float, gy: float) -> "Diagram":
-        """Draw a junction dot at a grid coordinate."""
         self._dots.append(_Dot(gx, gy))
         return self
 
     def box(
         self, x1: float, y1: float, x2: float, y2: float, title: str = ""
     ) -> "Diagram":
-        """Draw a dashed box spanning (x1,y1)→(x2,y2) in grid units."""
         self._boxes.append(BoxArea(x1, y1, x2, y2, title))
         return self
 
     def label(
         self, gx: float, gy: float, text: str, anchor: str = "middle"
     ) -> "Diagram":
-        """Draw a free text label at a grid coordinate."""
         self._labels.append(_FreeLabel(gx, gy, text, anchor))
         return self
 
-    # ── Connection points ────────────────────────────────────────────────────
-
     def port(self, placement: "_PlacedComponent", name: str) -> tuple[float, float]:
-        """Return the absolute grid coordinate of a named port on a placement."""
         comp = placement.component
         try:
             local = comp.connection_points(placement.orientation)
@@ -161,16 +131,12 @@ class Diagram:
         placement_b: "_PlacedComponent",
         port_b: str,
     ) -> "Diagram":
-        """Draw a wire between a named port of two placed components."""
         x1, y1 = self.port(placement_a, port_a)
         x2, y2 = self.port(placement_b, port_b)
         self._wires.append(Wire(x1, y1, x2, y2))
         return self
 
-    # ── Render ──────────────────────────────────────────────────────────────
-
     def render(self) -> str:
-        """Return the complete SVG string."""
         s = self._C
         p = self._pad
         st = self.style
@@ -182,7 +148,6 @@ class Diagram:
         def py(gy: float) -> float:
             return gy * s + p
 
-        # 1. Boxes (background layer — rendered first so wires appear on top)
         for ba in self._boxes:
             x, y = px(ba.x1), py(ba.y1)
             w = (ba.x2 - ba.x1) * s
@@ -195,7 +160,6 @@ class Diagram:
             if ba.title:
                 elements.append(self._svg_text(x + w / 2, y + 14, ba.title, st))
 
-        # 2. Wires
         for w in self._wires:
             elements.append(
                 f'<line x1="{px(w.x1)}" y1="{py(w.y1)}"'
@@ -204,7 +168,6 @@ class Diagram:
                 f' stroke-width="{st.stroke_width}" fill="none"/>'
             )
 
-        # 3. Components
         for pc in self._comps:
             body = pc.component.render(st, **pc.kwargs)
             cpx, cpy = px(pc.gx), py(pc.gy)
@@ -230,30 +193,70 @@ class Diagram:
                 )
                 elements.append(self._svg_text(lx, ly, pc.label, st, anch))
 
-        # 4. Junction dots (top layer)
         for d in self._dots:
             elements.append(
                 f'<circle cx="{px(d.gx)}" cy="{py(d.gy)}" r="3.5"'
                 f' fill="{st.stroke_color}"/>'
             )
 
-        # 5. Free labels
         for fl in self._labels:
             elements.append(
                 self._svg_text(px(fl.gx), py(fl.gy), fl.text, st, fl.anchor)
             )
 
+        fs = st.font_size
+        xs = [0.0, float(self._w)]
+        ys = [0.0, float(self._h)]
+
+        def acc(x, y):
+            xs.append(x)
+            ys.append(y)
+
+        for ba in self._boxes:
+            acc(px(ba.x1), py(ba.y1))
+            acc(px(ba.x2), py(ba.y2))
+        for w in self._wires:
+            acc(px(w.x1), py(w.y1))
+            acc(px(w.x2), py(w.y2))
+        for d in self._dots:
+            acc(px(d.gx), py(d.gy))
+        for fl in self._labels:
+            half = len(str(fl.text)) * fs * 0.62 / 2
+            acc(px(fl.gx) - half, py(fl.gy) - fs)
+            acc(px(fl.gx) + half, py(fl.gy))
+        for pc in self._comps:
+            cpx, cpy = px(pc.gx), py(pc.gy)
+            pw, ph = pc.w_cells * s, pc.h_cells * s
+            acc(cpx, cpy)
+            acc(cpx + pw, cpy + ph)
+            if pc.label:
+                box_w, box_h = (ph, pw) if pc.orientation in (90, 270) else (pw, ph)
+                lx, ly, anch = self._label_anchor(cpx, cpy, box_w, box_h, pc.label_pos)
+                tw = len(str(pc.label)) * fs * 0.62
+                if anch == "start":
+                    acc(lx + tw, ly)
+                elif anch == "end":
+                    acc(lx - tw, ly)
+                else:
+                    acc(lx - tw / 2, ly)
+                    acc(lx + tw / 2, ly)
+                acc(lx, ly)
+
+        margin = 10.0
+        vb_x = round(min(xs) - margin, 1)
+        vb_y = round(min(ys) - margin, 1)
+        vb_w = round(max(xs) - vb_x + margin, 1)
+        vb_h = round(max(ys) - vb_y + margin, 1)
+
         body_str = "\n  ".join(elements)
         return (
             f'<svg xmlns="http://www.w3.org/2000/svg"'
-            f' width="{self._w}" height="{self._h}"'
-            f' viewBox="0 0 {self._w} {self._h}">\n'
+            f' width="{vb_w}" height="{vb_h}"'
+            f' viewBox="{vb_x} {vb_y} {vb_w} {vb_h}">\n'
             f'  <style>text {{ font-family: monospace; }}</style>\n'
             f'  {body_str}\n'
             f'</svg>'
         )
-
-    # ── Helpers ─────────────────────────────────────────────────────────────
 
     @staticmethod
     def _label_anchor(
@@ -265,7 +268,6 @@ class Diagram:
             return cpx - 6, cpy + ph / 2 + 4, "end"
         if pos == "right":
             return cpx + pw + 6, cpy + ph / 2 + 4, "start"
-        # below (default)
         return cpx + pw / 2, cpy + ph + 14, "middle"
 
     @staticmethod

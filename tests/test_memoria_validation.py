@@ -1,8 +1,3 @@
-"""Tests de validacion del formulario de la memoria tecnica (POST /imprimir/memoria-pdf).
-
-Cubre: 422 ante basura/negativos/fuera de rango; 200 en ruta valida (si WeasyPrint
-esta disponible); y no-regresion byte-exacta de los 3 SVGs del circuito.
-"""
 
 import hashlib
 import types
@@ -145,12 +140,11 @@ class MemoriaRouteValidationTest(unittest.TestCase):
 
 
 class CircuitSvgByteNoRegressionTest(unittest.TestCase):
-    """Los 3 SVGs de la memoria deben quedar byte-identicos ante entradas validas."""
 
     EXPECTED = {
-        'svg_cc': (5901, '5d5dccd96edf230fda929f9add957f4e'),
-        'svg_ca': (10123, '475a5f0a384edfddf35ba4f83191acab'),
-        'svg_sistema': (14481, '0f8820758d8af22cb6d789d68cda97b2'),
+        'svg_cc': (5917, '9697786b49444a83f88bae9de4d19aac'),
+        'svg_ca': (10487, '9bce08b8e47e7ebfbe0e5a9eebe58f6d'),
+        'svg_sistema': (14929, '149882399fc7f9a9e6456a0b74defc6a'),
     }
 
     def setUp(self):

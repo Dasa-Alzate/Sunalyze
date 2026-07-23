@@ -1,4 +1,3 @@
-"""Electrical circuit component symbols."""
 
 from .fuse import Fuse
 from .switch import Switch

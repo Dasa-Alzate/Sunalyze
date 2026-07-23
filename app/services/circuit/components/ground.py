@@ -1,13 +1,8 @@
-"""Earth / ground symbol (toma de tierra)."""
 
 from ..core.component import Component
 
 
 class Ground(Component):
-    """
-    Earth/ground symbol (PE — Protective Earth).
-    Three decreasing horizontal lines.
-    """
 
     PORTS = {"in": (60, 0)}
 

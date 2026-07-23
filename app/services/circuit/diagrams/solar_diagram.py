@@ -1,10 +1,3 @@
-"""Named solar installation diagram (parametric, port-driven wiring).
-
-A single vertical one-line diagram whose protection chain is driven by template
-options (``has_fuses``, ``has_battery``). Wiring uses the diagram's named
-connection ports (``connect(a, 'out', b, 'in')``) so segments snap to component
-edges regardless of orientation, instead of hard-coded grid coordinates.
-"""
 
 from ..components import (
     Battery, CircuitBreaker, FVGenerator, Fuse, Ground, Inverter, Switch,
@@ -14,7 +7,6 @@ from ..core.diagram import Diagram
 
 
 class SolarDiagram:
-    """Parametric vertical solar diagram with optional fuses and battery."""
 
     def __init__(
         self,
@@ -42,10 +34,14 @@ class SolarDiagram:
         chain.append(("gnd", Ground(), 0, "Tierra general", "below", {}))
 
         step = 1.5
-        body_rows = (len(chain) - 1) * step + 1.4
+        last = len(chain) - 1
+        gnd_gap = 1.5 if self.has_battery else 0.0
+
+        def gy_of(i):
+            return i * step + (gnd_gap if i == last else 0.0)
+
+        body_rows = gy_of(last) + 1.4
         total_rows = body_rows + 0.6
-        if self.has_battery:
-            total_rows += 2.5
 
         d = Diagram(cols=4, rows=total_rows, style=style)
         d.box(0, 0, 4, body_rows)
@@ -54,20 +50,21 @@ class SolarDiagram:
         placements = {}
         for i, (key, comp, orient, label, lpos, kw) in enumerate(chain):
             placements[key] = d.place(
-                comp, 1, i * step, orientation=orient,
+                comp, 1, gy_of(i), orientation=orient,
                 label=label, label_pos=lpos, **kw,
             )
 
-        for i in range(len(chain) - 1):
-            d.wire(BUS, i * step + 1.0, BUS, (i + 1) * step)
+        for i in range(last):
+            d.wire(BUS, gy_of(i) + 1.0, BUS, gy_of(i + 1))
 
         if self.has_battery:
             inv = placements["inv"]
             _, by = d.port(inv, "ac_out")
-            y_bat = by + 1.0
-            d.dot(BUS, by)
-            d.wire(BUS, by, 3.0, by)
-            d.wire(3.0, by, 3.0, y_bat)
+            y_split = by + 0.7
+            y_bat = y_split + 0.9
+            d.dot(BUS, y_split)
+            d.wire(BUS, y_split, 3.0, y_split)
+            d.wire(3.0, y_split, 3.0, y_bat)
             d.place_scaled(
                 Battery(), 2.5, y_bat, 1.0, 1.0,
                 label=(ac.battery_model[:14] or "Bateria"), label_pos="below",

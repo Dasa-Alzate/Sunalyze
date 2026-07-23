@@ -1,23 +1,19 @@
-"""Photovoltaic generator symbol (generador fotovoltaico)."""
 
 from ..core.component import Component
 
 
 class FVGenerator(Component):
-    """
-    PV generator symbol: circle with 'G'.
-    Designed for the top of a vertical PV branch.
-    """
 
     PORTS = {"out": (60, 120)}
 
     def render(self, style, label: str = "GENERADOR FV",
                sublabel: str = "", **kwargs) -> str:
         c = ""
-        c += self._circle(60, 44, 28, style)
-        c += self._text(60, 50, "G", style)
+        c += self._circle(60, 62, 25, style)
+        c += self._line(60, 87, 60, 120, style)
+        c += self._text(60, 66, "G", style)
         if label:
-            c += self._text(60, 10, label, style)
+            c += self._text(60, 14, label, style)
         if sublabel:
-            c += self._text(60, 22, sublabel, style)
+            c += self._text(60, 28, sublabel, style)
         return c

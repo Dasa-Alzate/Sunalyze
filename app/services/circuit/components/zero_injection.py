@@ -1,13 +1,8 @@
-"""Zero injection / network analyzer device symbol."""
 
 from ..core.component import Component
 
 
 class ZeroInjection(Component):
-    """
-    Zero injection device / network analyzer (analizador de red).
-    Rectangle body with abbreviated label inside.
-    """
 
     def render(self, style, label: str = "", model: str = "", **kwargs) -> str:
         c = ""

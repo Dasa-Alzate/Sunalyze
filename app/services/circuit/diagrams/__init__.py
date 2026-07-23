@@ -1,4 +1,3 @@
-"""Circuit diagram generators and named-template registry."""
 
 from .dc_strings_diagram import DCStringsDiagram
 from .full_system_diagram import FullSystemDiagram

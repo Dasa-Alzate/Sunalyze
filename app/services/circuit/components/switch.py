@@ -1,13 +1,8 @@
-"""Switch (interruptor/seccionador) circuit symbol — IEC 60617."""
 
 from ..core.component import Component
 
 
 class Switch(Component):
-    """
-    IEC 60617 switch/disconnector symbol: a conductor broken by a hinged
-    contact arm that lifts away from the fixed contact to open the circuit.
-    """
 
     def render(self, style, label: str = "", **kwargs) -> str:
         c = ""

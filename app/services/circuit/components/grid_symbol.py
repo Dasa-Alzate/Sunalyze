@@ -1,13 +1,8 @@
-"""AC grid connection symbol (símbolo de red eléctrica)."""
 
 from ..core.component import Component
 
 
 class GridSymbol(Component):
-    """
-    AC grid connection indicator: circle with '~' and voltage/frequency labels.
-    Designed for the top of a vertical bus.
-    """
 
     PORTS = {"out": (60, 120)}
 

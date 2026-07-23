@@ -1,14 +1,8 @@
-"""Battery storage (almacenamiento) circuit symbol."""
 
 from ..core.component import Component
 
 
 class Battery(Component):
-    """
-    Battery bank symbol.
-    Rectangle enclosing two stacked battery cells (long/short plate pairs),
-    with a "+" terminal mark. Connection is on the top edge (DC).
-    """
 
     PORTS = {"in": (60, 0), "out": (60, 0)}
 

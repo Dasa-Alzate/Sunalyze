@@ -1,4 +1,3 @@
-"""Circuit diagram service — orchestrates DC and AC unifilar generation."""
 
 from .core.config import SystemConfig, DCConfig, ACConfig, DiagramStyle
 from .diagrams import DCStringsDiagram, GridConnectionDiagram, FullSystemDiagram
@@ -6,59 +5,33 @@ from .diagrams.registry import TEMPLATES, list_templates, render_template
 
 
 class CircuitService:
-    """
-    Generates SVG unifilar diagrams for photovoltaic installations.
-
-    Usage:
-        config = CircuitService.config_from_dict(data, style=None)
-        svg_cc = CircuitService.generate_cc_vertical(config)
-        svg_grid = CircuitService.generate_grid_connection(config)
-        svg_full = CircuitService.generate_full_system(config)
-    """
 
     @staticmethod
     def generate_cc_vertical(config: SystemConfig) -> str:
-        """DC strings vertical diagram — N strings, fuses, MCB, SPD, inverter top-to-bottom."""
         return DCStringsDiagram(config.dc, config.style).render()
 
     @staticmethod
     def generate_grid_connection(config: SystemConfig) -> str:
-        """Grid connection diagram — PV branch connecting to AC main bus + house."""
         return GridConnectionDiagram(config.ac, config.style).render()
 
     @staticmethod
     def generate_full_system(config: SystemConfig) -> str:
-        """Full system overview — CC panel / inverter / AC panel / house panel."""
         return FullSystemDiagram(config.dc, config.ac, config.style).render()
 
     @staticmethod
     def list_templates() -> list[dict]:
-        """Return the named templates as [{name, label}, ...]."""
         return list_templates()
 
     @staticmethod
     def generate_template(name: str, config: SystemConfig) -> str:
-        """Render any registered named template (or building block) to SVG."""
         return render_template(name, config)
 
     @staticmethod
     def has_template(name: str) -> bool:
-        """Return True if a template name is registered."""
         return name in TEMPLATES
 
     @staticmethod
     def config_from_dict(data: dict, style: DiagramStyle | None = None) -> SystemConfig:
-        """
-        Build a SystemConfig from a flat dictionary (e.g. request.form or JSON).
-
-        Expected keys (all required unless noted):
-            panel_model, panel_voc, panel_isc,
-            panels_per_string, num_strings,
-            dc_fuse_i, dc_switch_v, dc_cable_section,
-            inverter_model, inverter_power, inverter_output_i,
-            ac_phases, ac_mcb_i, ac_rcd_i, ac_rcd_sensitivity, ac_cable_section,
-            ac_has_zero_injection (optional, bool), ac_zero_injection_model (optional)
-        """
         def _float(key: str, default: float = 0.0) -> float:
             try:
                 return float(data.get(key, default))

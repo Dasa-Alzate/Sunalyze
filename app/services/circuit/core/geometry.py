@@ -1,13 +1,3 @@
-"""Connection-point geometry for circuit components.
-
-A component declares its connection points (ports) in local 120x120 cell
-coordinates. The diagram places a component with an orientation in
-{0, 90, 180, 270} degrees clockwise, applied as a rotation around the cell
-centre (60, 60) -- the same transform the renderer emits as
-``rotate(orientation, 60, 60)``. ``rotate_point`` reproduces that transform so
-a declared port can be resolved to its on-screen location, letting wires snap
-to component edges regardless of orientation.
-"""
 
 from typing import Dict, Tuple
 
@@ -18,7 +8,6 @@ Point = Tuple[float, float]
 
 
 def rotate_point(x: float, y: float, orientation: int) -> Point:
-    """Rotate a local point clockwise around the cell centre (60, 60)."""
     o = orientation % 360
     cx = cy = CENTER
     if o == 0:
@@ -35,5 +24,4 @@ def rotate_point(x: float, y: float, orientation: int) -> Point:
 def transform_ports(
     ports: Dict[str, Point], orientation: int
 ) -> Dict[str, Point]:
-    """Return ports transformed by orientation, in local cell coordinates."""
     return {name: rotate_point(x, y, orientation) for name, (x, y) in ports.items()}

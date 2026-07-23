@@ -1,9 +1,3 @@
-"""Named diagram template registry.
-
-Each template is a builder ``builder(config: SystemConfig) -> svg_str``. The
-registry exposes the four named solar templates plus the three building-block
-diagrams, all keyed by a stable name with a human label.
-"""
 
 from ..core.config import SystemConfig
 from .dc_strings_diagram import DCStringsDiagram
@@ -73,10 +67,8 @@ TEMPLATES = {
 
 
 def list_templates() -> list[dict]:
-    """Return [{name, label}, ...] for every registered template."""
     return [{"name": name, "label": spec["label"]} for name, spec in TEMPLATES.items()]
 
 
 def render_template(name: str, config: SystemConfig) -> str:
-    """Render a named template to SVG. Raises KeyError if unknown."""
     return TEMPLATES[name]["builder"](config)

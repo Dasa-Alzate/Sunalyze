@@ -1,4 +1,3 @@
-"""Base class for all SVG circuit components."""
 
 from abc import ABC, abstractmethod
 from typing import ClassVar, Dict, Tuple
@@ -8,20 +7,6 @@ from .geometry import transform_ports
 
 
 class Component(ABC):
-    """
-    Base class for all circuit symbols.
-
-    Each component renders its body in a CELL×CELL local coordinate space.
-    Components are connection-agnostic: they draw the symbol only.
-    Placement, orientation, scale, and wire routing are the Diagram's responsibility.
-
-    Each component declares named connection points (ports) in local CELL×CELL
-    coordinates via the ``PORTS`` class attribute. ``connection_points`` returns
-    those ports transformed by an orientation so the diagram can snap wires to
-    the correct edges. Defaults assume a vertical pass-through (top→bottom).
-
-    render() returns raw SVG elements — no outer <g transform>.
-    """
 
     CELL: ClassVar[int] = 120
 
@@ -32,17 +17,13 @@ class Component(ABC):
 
     @abstractmethod
     def render(self, style, **kwargs) -> str:
-        """Return SVG body content (no wrapping <g>)."""
         ...
 
     @classmethod
     def connection_points(
         cls, orientation: int = 0
     ) -> Dict[str, Tuple[float, float]]:
-        """Return this component's ports transformed by orientation (local coords)."""
         return transform_ports(cls.PORTS, orientation)
-
-    # ── SVG helpers ─────────────────────────────────────────────────────────
 
     @staticmethod
     def _path(d: str, style, dasharray: str = "") -> str:

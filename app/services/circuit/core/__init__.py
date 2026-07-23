@@ -1,4 +1,3 @@
-"""Core building blocks of the circuit diagram engine."""
 
 from .box_area import BoxArea
 from .component import Component
