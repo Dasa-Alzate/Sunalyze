@@ -140,6 +140,7 @@ export const api = {
     list: () => get('/api/catalogs'),
     listDeleted: () => get('/api/catalogs?deleted=true'),
     create: (b) => post('/api/catalogs', b),
+    update: (id, b) => patch(`/api/catalogs/${id}`, b),
     remove: (id) => del(`/api/catalogs/${id}`),
     restore: (id) => post(`/api/catalogs/${id}/restore`, {}),
     subscribe: (id) => post(`/api/catalogs/${id}/subscribe`, {}),

@@ -1,12 +1,6 @@
-"""Dominio de catalogos: biblioteca del workspace, marketplace y suscripciones.
-
-Reglas de propiedad:
-- Catalogo con org_id NULL -> marketplace (solo lectura; suscribible).
-- Catalogo con org_id -> propiedad del workspace (CRUD por sus miembros).
-- Biblioteca efectiva de un workspace = catalogos propios + suscritos.
-"""
 
 import logging
+import re
 
 from sqlalchemy import func
 from sqlalchemy.exc import IntegrityError
@@ -51,12 +45,6 @@ class CatalogService:
 
     @staticmethod
     def counts_map(catalog_ids):
-        """Conteos de equipos por catálogo en una query agregada por tipo.
-
-        Devuelve {catalog_id: {'panels': n, 'inverters': n, 'batteries': n,
-        'wires': n}} para todo el conjunto pedido, con ceros para catálogos
-        sin equipos.
-        """
         from app.models.panel import Panel
         from app.models.inverter import Inverter
         from app.models.battery import Battery
@@ -109,7 +97,6 @@ class CatalogService:
 
     @classmethod
     def deleted_library(cls, org_id):
-        """Catalogos propios soft-deleteados del workspace, para la papelera."""
         if not org_id:
             return []
         rows = Catalog.with_deleted().filter(
@@ -132,11 +119,6 @@ class CatalogService:
 
     @staticmethod
     def official_catalog(display_name, *, active=True):
-        """Catálogo oficial de una marca, localizado por scraper_name normalizado.
-
-        Si no existe lo crea (marketplace, oficial). `active=False` lo deja en
-        cuarentena: invisible para usuarios hasta que un superusuario lo active.
-        """
         key = normalize_brand(display_name)
         catalog = Catalog.query.filter_by(scraper_name=key, org_id=None).first()
         if not catalog:
@@ -169,6 +151,24 @@ class CatalogService:
         if not catalog or catalog.org_id != org_id:
             raise NotFound('Catálogo no encontrado en tu workspace.')
         catalog.deleted_at = None
+        db.session.flush()
+        return catalog
+
+    @staticmethod
+    def set_color(org_id, catalog_id, color, allow_marketplace=False):
+        catalog = Catalog.query.get(catalog_id)
+        if not catalog or catalog.is_deleted:
+            raise NotFound('Catálogo no encontrado.')
+        if catalog.org_id is None:
+            if not allow_marketplace:
+                raise Forbidden('Solo un superadministrador puede recolorear catálogos del marketplace.')
+        elif catalog.org_id != org_id:
+            raise NotFound('Catálogo no encontrado en tu workspace.')
+
+        normalized = (color or '').strip() or None
+        if normalized is not None and not re.fullmatch(r'#(?:[0-9a-fA-F]{3}|[0-9a-fA-F]{6})', normalized):
+            raise ValidationError('Color inválido: usa formato hex «#rrggbb».', code='catalog.color.invalid')
+        catalog.color = normalized
         db.session.flush()
         return catalog
 

@@ -1,16 +1,9 @@
-"""Catalogos de equipos: del marketplace (org_id NULL) o propios de un workspace."""
 
 from app.extensions import db
 from .database import BaseModel, SoftDeleteMixin
 
 
 class Catalog(BaseModel, SoftDeleteMixin):
-    """Coleccion de equipos.
-
-    org_id NULL -> catalogo publico del marketplace (solo lectura para los
-    usuarios; los oficiales se siembran con is_official=True).
-    org_id presente -> catalogo privado del workspace, con CRUD completo.
-    """
     __tablename__ = 'catalogs'
 
     nombre = db.Column(db.String(120), nullable=False)
@@ -19,6 +12,7 @@ class Catalog(BaseModel, SoftDeleteMixin):
     is_official = db.Column(db.Boolean, nullable=False, default=False)
     scraper_name = db.Column(db.String(100), index=True)
     is_active = db.Column(db.Boolean, nullable=False, default=True)
+    color = db.Column(db.String(9))
 
     @property
     def is_marketplace(self):
@@ -34,6 +28,7 @@ class Catalog(BaseModel, SoftDeleteMixin):
             'is_marketplace': self.is_marketplace,
             'scraper_name': self.scraper_name,
             'is_active': self.is_active,
+            'color': self.color,
         }
 
     def __repr__(self):
@@ -42,7 +37,6 @@ class Catalog(BaseModel, SoftDeleteMixin):
 
 
 class CatalogSubscription(BaseModel):
-    """Suscripcion de un workspace a un catalogo del marketplace."""
     __tablename__ = 'catalog_subscriptions'
     __table_args__ = (db.UniqueConstraint('org_id', 'catalog_id', name='uq_sub_org_catalog'),)
 

@@ -9,7 +9,7 @@ import { useAuth } from '@/services/auth'
 
 const SCHEMAS = {
   panels: {
-    label: 'Paneles', singular: 'panel', icon: 'square', resource: 'panels',
+    label: 'Paneles', singular: 'panel', icon: 'grid-3x3', resource: 'panels',
     columns: [
       { key: 'nombre', label: 'Nombre', name: true },
       { key: 'power', label: 'W', num: true },
@@ -31,7 +31,7 @@ const SCHEMAS = {
       { key: 't_noct', label: 'NOCT (°C)', num: true },
       { key: 'width', label: 'Ancho (mm)', num: true },
       { key: 'height', label: 'Alto (mm)', num: true },
-      { key: 'datasheet', label: 'Ficha técnica (URL)', placeholder: 'https://…' },
+      { key: 'datasheet', label: 'Ficha técnica (URL)', placeholder: 'https://…', link: true },
     ],
   },
   inverters: {
@@ -98,7 +98,7 @@ const SCHEMAS = {
 const TAB_ORDER = ['panels', 'inverters', 'batteries', 'wires']
 
 export default function EquipmentLibrary() {
-  const { can } = useAuth()
+  const { can, isPlatformAdmin } = useAuth()
   const canEdit = can('equipment:edit')
   const canManage = can('catalog:manage')
   const canSubscribe = can('catalog:subscribe')
@@ -148,6 +148,19 @@ export default function EquipmentLibrary() {
     acc[t] = (catalogs || []).reduce((sum, c) => sum + ((c.counts && c.counts[t]) || 0), 0)
     return acc
   }, {})
+  const catalogColors = {}
+  ;[...(catalogs || []), ...(market || [])].forEach((c) => { if (c.color) catalogColors[c.id] = c.color })
+
+  async function setCatalogColor(cat, color) {
+    try {
+      await api.catalogs.update(cat.id, { color: color || null })
+      const apply = (list) => (list ? list.map((c) => (c.id === cat.id ? { ...c, color: color || null } : c)) : list)
+      setCatalogs(apply)
+      setMarket(apply)
+    } catch (e) {
+      toast('error', 'No se pudo cambiar el color', e.message)
+    }
+  }
   const visibleRows = (rows || []).filter((r) => filter === 'todos' || String(r.catalog_id) === String(filter))
 
   async function save(values) {
@@ -292,6 +305,8 @@ export default function EquipmentLibrary() {
             canSubscribe={canSubscribe}
             onToggle={toggleSubscription}
             onRemoveCatalog={removeCatalog}
+            onSetColor={setCatalogColor}
+            canColorMarket={isPlatformAdmin}
           />
         ) : rows === null ? (
           <Spinner label={`Cargando ${schema.label.toLowerCase()}…`} />
@@ -340,7 +355,7 @@ export default function EquipmentLibrary() {
                         ))}
                         <td>
                           <span style={{ display: 'inline-flex', gap: 6, alignItems: 'center', flexWrap: 'wrap' }}>
-                            <Badge tone={r.deletable ? 'brand' : 'neutral'} icon={r.deletable ? 'user' : 'store'}>
+                            <Badge tone={r.deletable ? 'brand' : 'neutral'} icon={r.deletable ? 'user' : 'store'} color={catalogColors[r.catalog_id]}>
                               {r.catalog_nombre || '—'}
                             </Badge>
                             {r.scraped && <Badge tone="accent" icon="bot">Scraped</Badge>}
@@ -394,7 +409,26 @@ export default function EquipmentLibrary() {
   )
 }
 
-function MarketplaceView({ market, ownCatalogs, countsLabel, canManage, canSubscribe, onToggle, onRemoveCatalog }) {
+function CatalogColorControl({ color, editable, onChange }) {
+  if (!editable) {
+    return color ? <span className="catalog-color__swatch" style={{ background: color }} title="Color del badge" /> : null
+  }
+  return (
+    <span className="catalog-color">
+      <input
+        type="color"
+        className="catalog-color__input"
+        value={color || '#107c41'}
+        onChange={(e) => onChange(e.target.value)}
+        aria-label="Color del badge del catálogo"
+        title="Color del badge"
+      />
+      {color && <IconBtn icon="x" label="Quitar color" size="sm" onClick={() => onChange(null)} />}
+    </span>
+  )
+}
+
+function MarketplaceView({ market, ownCatalogs, countsLabel, canManage, canSubscribe, onToggle, onRemoveCatalog, onSetColor, canColorMarket }) {
   if (market === null) return <Spinner label="Cargando marketplace…" />
   return (
     <>
@@ -408,8 +442,9 @@ function MarketplaceView({ market, ownCatalogs, countsLabel, canManage, canSubsc
           {ownCatalogs.map((c) => (
             <div className="sun-card catalog-card" key={c.id}>
               <div className="catalog-card__head">
-                <Icon name="folder" size={18} color="var(--green-600)" />
+                <Icon name="folder" size={18} color={c.color || 'var(--green-600)'} />
                 <span className="catalog-card__title">{c.nombre}</span>
+                <CatalogColorControl color={c.color} editable={canManage} onChange={(v) => onSetColor(c, v)} />
                 {canManage && <IconBtn icon="trash-2" label="Eliminar catálogo" size="sm" onClick={() => onRemoveCatalog(c)} />}
               </div>
               <div className="catalog-card__desc">{c.descripcion || 'Catálogo propio del workspace'}</div>
@@ -424,9 +459,10 @@ function MarketplaceView({ market, ownCatalogs, countsLabel, canManage, canSubsc
         {market.map((c) => (
           <div className="sun-card catalog-card" key={c.id}>
             <div className="catalog-card__head">
-              <Icon name="store" size={18} color="var(--blue-500)" />
+              <Icon name="store" size={18} color={c.color || 'var(--blue-500)'} />
               <span className="catalog-card__title">{c.nombre}</span>
               {c.is_official && <Badge tone="info" icon="badge-check">Oficial</Badge>}
+              <CatalogColorControl color={c.color} editable={canColorMarket} onChange={(v) => onSetColor(c, v)} />
             </div>
             <div className="catalog-card__desc">{c.descripcion}</div>
             <div className="catalog-card__meta">{countsLabel(c)}</div>
@@ -477,10 +513,11 @@ function EditDrawer({ schema, initial, ownCatalogs, onClose, onSave }) {
             </div>
           )}
           <div className="sun-speclist">
-            {schema.fields.map((f) => (
-              f.select ? (
-                <SelectField key={f.key} label={f.label} options={f.select} value={values[f.key]} onChange={set(f.key)} />
-              ) : (
+            {schema.fields.map((f) => {
+              if (f.select) {
+                return <SelectField key={f.key} label={f.label} options={f.select} value={values[f.key]} onChange={set(f.key)} />
+              }
+              const field = (
                 <Field
                   key={f.key}
                   label={f.label}
@@ -493,7 +530,22 @@ function EditDrawer({ schema, initial, ownCatalogs, onClose, onSave }) {
                   onChange={set(f.key)}
                 />
               )
-            ))}
+              if (!f.link) return field
+              const raw = (values[f.key] || '').trim()
+              const href = raw && !/^https?:\/\//i.test(raw) ? `https://${raw}` : raw
+              return (
+                <div key={f.key} className="sun-field-with-action">
+                  {field}
+                  <IconBtn
+                    icon="external-link"
+                    label={raw ? 'Abrir ficha técnica en una pestaña nueva' : 'Introduce una URL para abrir la ficha técnica'}
+                    bordered
+                    disabled={!raw}
+                    onClick={() => window.open(href, '_blank', 'noopener,noreferrer')}
+                  />
+                </div>
+              )
+            })}
           </div>
         </div>
         <div className="sun-drawer__foot">

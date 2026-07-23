@@ -1,4 +1,3 @@
-"""Endpoints de catalogos y marketplace. Capa HTTP fina sobre CatalogService."""
 
 from flask import Blueprint, request, jsonify
 
@@ -51,6 +50,25 @@ def delete_catalog(catalog_id):
     )
     db.session.commit()
     return jsonify({'message': 'Catálogo eliminado'})
+
+
+@catalogs_bp.route('/api/catalogs/<int:catalog_id>', methods=['PATCH'])
+@require_permission(Permission.CATALOG_MANAGE)
+def update_catalog(catalog_id):
+    data = request.get_json(silent=True) or {}
+    org_id = current_org_id()
+    user = current_user()
+    catalog = CatalogService.set_color(
+        org_id, catalog_id, data.get('color'),
+        allow_marketplace=bool(getattr(user, 'is_superadmin', False)),
+    )
+    AuditService.record(
+        'catalog.update', actor=user, org_id=org_id,
+        entity_type='catalog', entity_id=catalog.id,
+        payload={'nombre': catalog.nombre, 'color': catalog.color},
+    )
+    db.session.commit()
+    return jsonify({**catalog.to_dict(), 'own': catalog.org_id == org_id})
 
 
 @catalogs_bp.route('/api/catalogs/<int:catalog_id>/restore', methods=['POST'])

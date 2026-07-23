@@ -41,7 +41,7 @@ export function Btn({ variant = 'primary', size = 'md', icon, iconRight, block, 
     >
       {icon && <Icon name={icon} size={16} />}
       {children && <span>{children}</span>}
-      {iconRight && <Icon name={iconRight} size={16} />}
+      {iconRight && <Icon name={iconRight} size={16} className="sun-btn__ic-right" />}
     </button>
   )
 }
@@ -69,9 +69,16 @@ export function IconBtn({ icon, label, bordered, size = 'md', onClick, disabled,
   )
 }
 
-export function Badge({ tone = 'neutral', icon, children }) {
+export function Badge({ tone = 'neutral', icon, color, children }) {
+  const style = color
+    ? {
+        background: `color-mix(in srgb, ${color} 16%, transparent)`,
+        color,
+        border: `1px solid color-mix(in srgb, ${color} 45%, transparent)`,
+      }
+    : undefined
   return (
-    <span className={`sun-badge sun-badge--${tone}`}>
+    <span className={`sun-badge sun-badge--${tone}`} style={style}>
       {icon && <Icon name={icon} size={12} />}
       {children}
     </span>
