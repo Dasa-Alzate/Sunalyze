@@ -4,14 +4,14 @@
     {% if tutorial.steps %}
     <ol class="assist-tutorial__steps">
         {% for strong, text in tutorial.steps %}
-        <li><strong>{{ strong }}.</strong> {{ text }}</li>
+        <li><strong>{{ strong }}.</strong> {{ text | safe }}</li>
         {% endfor %}
     </ol>
     {% endif %}
     {% if tutorial.tips %}
     <div class="assist-tutorial__tips">
         {% for tip in tutorial.tips %}
-        <p>💡 {{ tip }}</p>
+        <p>💡 {{ tip | safe }}</p>
         {% endfor %}
     </div>
     {% endif %}

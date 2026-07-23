@@ -1,4 +1,5 @@
 import { useEffect, useRef, useState } from 'react'
+import { useSearchParams } from 'react-router-dom'
 import { Topbar } from '@/shared/ui'
 import { Btn, IconBtn, Icon, Badge, Field, SelectField, ExportMenu, Spinner, ErrorState, Scrim } from '@/shared/ui'
 import { api } from '@/api/client'
@@ -103,7 +104,13 @@ export default function EquipmentLibrary() {
   const canEdit = can('equipment:edit')
   const canManage = can('catalog:manage')
   const canSubscribe = can('catalog:subscribe')
-  const [tab, setTab] = useState('panels')
+  const [searchParams] = useSearchParams()
+  const urlTab = searchParams.get('tab')
+  const [tab, setTab] = useState(() => ([...TAB_ORDER, 'marketplace'].includes(urlTab) ? urlTab : 'panels'))
+
+  useEffect(() => {
+    if ([...TAB_ORDER, 'marketplace'].includes(urlTab)) setTab(urlTab)
+  }, [urlTab])
 
   useEffect(() => { emitSubview('equipos', tab) }, [tab])
   const [data, setData] = useState({ panels: null, inverters: null, batteries: null, wires: null })

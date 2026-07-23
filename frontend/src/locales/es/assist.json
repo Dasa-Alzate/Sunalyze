@@ -37,5 +37,12 @@
       "wires": "Cables",
       "marketplace": "Marketplace"
     }
+  },
+  "unsaved": {
+    "title": "Tienes cambios sin guardar",
+    "desc": "Si sales ahora, los cambios de este proyecto se perderán.",
+    "saveAndGo": "Guardar y continuar",
+    "discard": "Salir sin guardar",
+    "cancel": "Cancelar"
   }
 }

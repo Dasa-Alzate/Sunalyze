@@ -37,5 +37,12 @@
       "wires": "Wires",
       "marketplace": "Marketplace"
     }
+  },
+  "unsaved": {
+    "title": "You have unsaved changes",
+    "desc": "If you leave now, this project's changes will be lost.",
+    "saveAndGo": "Save and continue",
+    "discard": "Leave without saving",
+    "cancel": "Cancel"
   }
 }

@@ -166,7 +166,7 @@ export function Card({ className = '', children, ...rest }) {
   return <div className={`sun-card ${className}`} {...rest}>{children}</div>
 }
 
-export function Scrim({ onClose, label, children }) {
+export function Scrim({ onClose, label, center, children }) {
   const { t } = useTranslation('common')
   const trapRef = useFocusTrap(true)
   useEffect(() => {
@@ -175,10 +175,30 @@ export function Scrim({ onClose, label, children }) {
     return () => document.removeEventListener('keydown', onKey)
   }, [onClose])
   return (
-    <div ref={trapRef} className="sun-scrim" role="dialog" aria-modal="true" aria-label={label || t('dialog')}>
+    <div ref={trapRef} className={`sun-scrim${center ? ' sun-scrim--center' : ''}`} role="dialog" aria-modal="true" aria-label={label || t('dialog')}>
       <button type="button" className="sun-scrim__backdrop" aria-label={t('actions.close')} onClick={onClose} />
       {children}
     </div>
+  )
+}
+
+export function ConfirmDialog({ open, title, description, actions = [], onClose, icon = 'alert-triangle' }) {
+  if (!open) return null
+  return (
+    <Scrim onClose={onClose} label={title} center>
+      <div className="sun-confirm">
+        <div className="sun-confirm__head">
+          <Icon name={icon} size={20} color="var(--state-warn)" />
+          <h3>{title}</h3>
+        </div>
+        {description && <p className="sun-confirm__desc">{description}</p>}
+        <div className="sun-confirm__actions">
+          {actions.map((a) => (
+            <Btn key={a.label} variant={a.variant || 'secondary'} icon={a.icon} onClick={a.onClick}>{a.label}</Btn>
+          ))}
+        </div>
+      </div>
+    </Scrim>
   )
 }
 

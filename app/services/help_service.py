@@ -1,5 +1,9 @@
 DEFAULT_KEY = '_default'
 
+
+def _l(href, text):
+    return f'<a href="{href}" class="assist-link">{text}</a>'
+
 TUTORIALS = {
     'resumen': {
         DEFAULT_KEY: {
@@ -8,7 +12,7 @@ TUTORIALS = {
             'steps': [
                 ('Revisa los KPIs', 'Los indicadores muestran proyectos activos, kWp totales y memorias generadas.'),
                 ('Proyectos recientes', 'Haz clic en cualquier proyecto para retomar su diseño.'),
-                ('Crea un proyecto', 'Usa «Nuevo proyecto» para empezar de coordenadas a memoria en minutos.'),
+                ('Crea un proyecto', f'Usa {_l("/app/diseno", "«Nuevo proyecto»")} para empezar de coordenadas a memoria en minutos.'),
             ],
             'tips': ['Con Cmd/Ctrl+K abres la paleta de comandos desde cualquier vista.'],
         },
@@ -22,7 +26,7 @@ TUTORIALS = {
                 ('Abre un proyecto', 'Haz clic en una fila para entrar a su diseño.'),
                 ('Duplica o elimina', 'Los iconos al final de cada fila duplican o mandan el proyecto a la papelera.'),
             ],
-            'tips': ['El número de serie (ej. DEMO-0001) se configura en Configuración → Marca.'],
+            'tips': [f'El número de serie (ej. DEMO-0001) se configura en {_l("/app/configuracion", "Configuración → Marca")}.'],
         },
     },
     'diseno': {
@@ -50,11 +54,11 @@ TUTORIALS = {
             'title': 'Paso 2 — Selección de equipos',
             'intro': 'Elige panel, inversor y batería desde tu biblioteca.',
             'steps': [
-                ('Panel solar', 'Obligatorio para dimensionar; busca por nombre o potencia y navega con las flechas.'),
+                ('Panel solar', f'Obligatorio para dimensionar; busca por nombre o potencia. ¿No aparece? Añádelo en {_l("/app/equipos", "Equipos")}.'),
                 ('Inversor', 'Opcional: si no eliges, el análisis propone inversores compatibles.'),
                 ('Batería', 'Opcional: al elegirla define también la cantidad.'),
             ],
-            'tips': ['¿No encuentras un equipo? Añádelo en la vista Equipos o impórtalo desde el marketplace.'],
+            'tips': [f'¿No encuentras un equipo? Añádelo en {_l("/app/equipos", "la vista Equipos")} o impórtalo desde {_l("/app/equipos?tab=marketplace", "el marketplace")}.'],
         },
         'analisis': {
             'title': 'Paso 3 — Análisis y dimensionamiento',
@@ -107,7 +111,7 @@ TUTORIALS = {
                 ('Añade o importa', 'Alta manual con «Añadir» o masiva con «Importar» (TSV/CSV/Excel).'),
                 ('Edita cualquier equipo', 'Los scrapeados llevan badge «Scraped» que desaparece al curarlos a mano.'),
             ],
-            'tips': ['El badge de catálogo puede llevar color: configúralo en el marketplace.'],
+            'tips': [f'El badge de catálogo puede llevar color: configúralo en {_l("/app/equipos?tab=marketplace", "el marketplace")}.'],
         },
         'marketplace': {
             'title': 'Marketplace de catálogos',
@@ -147,7 +151,7 @@ TUTORIALS = {
             'title': 'Análisis financiero',
             'intro': 'Modela la rentabilidad del proyecto: inversión, ahorro y retorno.',
             'steps': [
-                ('Elige el proyecto', 'Los escenarios financieros se asocian a un proyecto aprobado o en curso.'),
+                ('Elige el proyecto', f'Los escenarios financieros se asocian a un proyecto aprobado o en curso; ábrelo desde {_l("/app/proyectos", "Proyectos")}.'),
                 ('Ajusta supuestos', 'Precio de la energía, subida anual, degradación de paneles.'),
                 ('Lee los resultados', 'Payback, TIR y ahorro acumulado a 25 años.'),
             ],
@@ -159,7 +163,7 @@ TUTORIALS = {
             'title': 'Posventa',
             'intro': 'Seguimiento de instalaciones entregadas: incidencias y mantenimiento.',
             'steps': [
-                ('Registra la instalación', 'Vincula la instalación real al proyecto aprobado.'),
+                ('Registra la instalación', f'Vincula la instalación real al proyecto aprobado; lo encuentras en {_l("/app/proyectos", "Proyectos")}.'),
                 ('Gestiona incidencias', 'Crea tickets y ciérralos al resolverlos.'),
             ],
             'tips': [],
@@ -214,8 +218,8 @@ GENERIC = {
     'title': 'Sunalyze',
     'intro': 'Navega con la barra lateral o abre la paleta de comandos con Cmd/Ctrl+K.',
     'steps': [
-        ('Proyectos', 'El flujo principal: de coordenadas a memoria técnica firmable.'),
-        ('Equipos', 'Tu biblioteca de paneles, inversores, baterías y cables.'),
+        ('Proyectos', f'El flujo principal: de coordenadas a memoria técnica firmable. Empieza en {_l("/app/proyectos", "Proyectos")}.'),
+        ('Equipos', f'Tu biblioteca de paneles, inversores, baterías y cables: {_l("/app/equipos", "ábrela aquí")}.'),
     ],
     'tips': [],
 }

@@ -1,8 +1,9 @@
 import { useEffect, useState } from 'react'
-import { useLocation } from 'react-router-dom'
+import { useLocation, useNavigate } from 'react-router-dom'
 import { useTranslation } from 'react-i18next'
-import { Icon, IconBtn, Spinner } from '@/shared/ui'
+import { Icon, IconBtn, Spinner, ConfirmDialog } from '@/shared/ui'
 import { api } from '@/api/client'
+import { getUnsavedGuard } from '@/shared/unsavedGuard'
 import { wireAssist, emitView, assistBus, getSnapshot } from './wiring'
 import './assist.css'
 
@@ -11,11 +12,38 @@ const RECENT_ERROR_MS = 2 * 60 * 1000
 export function HelpAssist() {
   const { t } = useTranslation('assist')
   const location = useLocation()
+  const navigate = useNavigate()
   const [open, setOpen] = useState(false)
   const [ctx, setCtx] = useState(() => getSnapshot().context)
   const [html, setHtml] = useState(null)
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState(null)
+  const [pendingHref, setPendingHref] = useState(null)
+
+  function go(href) {
+    setPendingHref(null)
+    navigate(href)
+  }
+
+  function onBodyClick(e) {
+    const a = e.target instanceof Element ? e.target.closest('a[href^="/app"]') : null
+    if (!a) return
+    if (e.metaKey || e.ctrlKey || e.shiftKey || e.altKey || e.button !== 0) return
+    e.preventDefault()
+    const href = a.getAttribute('href')
+    assistBus.emit('help.link', { href, view: ctx.view, subview: ctx.subview })
+    const guard = getUnsavedGuard()
+    if (guard && guard.isDirty()) setPendingHref(href)
+    else go(href)
+  }
+
+  async function saveAndGo() {
+    const guard = getUnsavedGuard()
+    const href = pendingHref
+    if (!guard) { go(href); return }
+    const ok = await guard.save()
+    if (ok) go(href)
+  }
 
   useEffect(() => { wireAssist() }, [])
   useEffect(() => { emitView(location.pathname) }, [location.pathname])
@@ -109,7 +137,8 @@ export function HelpAssist() {
               <Icon name="alert-circle" size={14} />{error}
             </div>
           ) : html ? (
-            <div dangerouslySetInnerHTML={{ __html: html }} />
+            /* eslint-disable-next-line jsx-a11y/no-static-element-interactions, jsx-a11y/click-events-have-key-events */
+            <div onClick={onBodyClick} dangerouslySetInnerHTML={{ __html: html }} />
           ) : null}
         </div>
         <div className="sun-assist__foot">
@@ -117,6 +146,17 @@ export function HelpAssist() {
           <span>{t('agentSoon')}</span>
         </div>
       </aside>
+      <ConfirmDialog
+        open={Boolean(pendingHref)}
+        title={t('unsaved.title')}
+        description={t('unsaved.desc')}
+        onClose={() => setPendingHref(null)}
+        actions={[
+          { label: t('unsaved.cancel'), variant: 'ghost', onClick: () => setPendingHref(null) },
+          { label: t('unsaved.discard'), variant: 'secondary', icon: 'arrow-right', onClick: () => go(pendingHref) },
+          { label: t('unsaved.saveAndGo'), variant: 'primary', icon: 'save', onClick: saveAndGo },
+        ]}
+      />
     </>
   )
 }
