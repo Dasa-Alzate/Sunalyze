@@ -206,6 +206,28 @@
             height: auto;
         }
 
+        .image-container svg {
+            max-width: 100%;
+        }
+
+        @page plano-h {
+            size: A4 landscape;
+            margin: 12mm;
+            @bottom-center {
+                content: "Página " counter(page) " de " counter(pages);
+                font-size: 9pt;
+                color: #666;
+            }
+        }
+
+        section.plano {
+            break-before: page;
+        }
+
+        section.plano-h {
+            page: plano-h;
+        }
+
         /* ===== Firmas ===== */
         .signature {
             margin-top: 40px;
@@ -653,7 +675,7 @@
     </section>
 
     {# ===== ESQUEMAS ===== #}
-    <section>
+    <section class="plano">
         <h3 class="underline" id="esquema-ca">ESQUEMA UNIFILAR CA</h3>
         <div class="image-container">
             {%- if svg_ca -%}
@@ -664,7 +686,7 @@
         </div>
     </section>
 
-    <section>
+    <section class="plano">
         <h3 class="underline" id="esquema-cc">ESQUEMA UNIFILAR CC</h3>
         <div class="image-container">
             {%- if svg_cc -%}
@@ -675,7 +697,7 @@
         </div>
     </section>
 
-    <section>
+    <section class="plano plano-h">
         <h3 class="underline" id="esquema-general">ESQUEMA GENERAL CA/CC</h3>
         <div class="image-container">
             {%- if svg_sistema -%}

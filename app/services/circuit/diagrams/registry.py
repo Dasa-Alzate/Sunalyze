@@ -62,12 +62,21 @@ TEMPLATES = {
     "full-system": {
         "label": "Sistema completo",
         "builder": _full_system,
+        "orientation": "landscape",
     },
 }
 
 
 def list_templates() -> list[dict]:
     return [{"name": name, "label": spec["label"]} for name, spec in TEMPLATES.items()]
+
+
+def template_label(name: str) -> str:
+    return TEMPLATES[name]["label"]
+
+
+def template_orientation(name: str) -> str:
+    return TEMPLATES[name].get("orientation", "portrait")
 
 
 def render_template(name: str, config: SystemConfig) -> str:
