@@ -28,5 +28,9 @@ PY
 echo "[entrypoint] aplicando migraciones (flask db upgrade)..."
 flask db upgrade
 
+echo "[entrypoint] sembrando datos por defecto (idempotente)..."
+flask flags seed || echo "[entrypoint] aviso: flags seed falló (continuo)"
+flask docs seed || echo "[entrypoint] aviso: docs seed falló (continuo)"
+
 echo "[entrypoint] arrancando: $*"
 exec "$@"
