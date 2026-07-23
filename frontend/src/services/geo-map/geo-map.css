@@ -2,7 +2,10 @@
 .geo-map__search { display: flex; gap: var(--space-2); align-items: stretch; }
 .geo-map__search .sun-btn { height: 32px; white-space: nowrap; }
 .geo-map__frame { border: 1px solid var(--border-subtle); border-radius: var(--radius-lg); overflow: hidden; background: var(--ink-100); }
-.geo-map__frame iframe { width: 100%; height: 100%; border: 0; display: block; }
-.geo-map__empty { height: 100%; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 8px; color: var(--text-subtle); font-size: var(--text-sm); }
+.geo-map__canvas { width: 100%; height: 100%; }
+.geo-map__pin-dot { display: block; width: 16px; height: 16px; border-radius: 50%; background: var(--green-500); border: 3px solid #fff; box-shadow: 0 0 0 1px rgba(0, 0, 0, 0.35), 0 1px 4px rgba(0, 0, 0, 0.3); }
+.geo-map__hint { display: flex; align-items: center; gap: 6px; font-size: var(--text-xs); color: var(--text-subtle); }
 .geo-map__coords { display: inline-flex; align-items: center; gap: 6px; font-size: var(--text-sm); color: var(--text-muted); }
+:root[data-theme="dark"] .geo-map__canvas .leaflet-tile { filter: brightness(0.82) contrast(1.05); }
 .geo-map__error { display: flex; align-items: center; gap: 6px; font-size: var(--text-xs); color: var(--danger-fg); }
+.geo-map__note { display: flex; align-items: center; gap: 6px; font-size: var(--text-xs); color: var(--state-warn, var(--text-muted)); }

@@ -31,6 +31,7 @@ export function useFocusTrap(active = true) {
       if (parent) {
         for (const sibling of parent.children) {
           if (sibling === node || sibling.hasAttribute('aria-hidden')) continue
+          if (sibling.classList.contains('sun-scrim__backdrop')) continue
           if (sibling.matches('[aria-live],[role="status"],[role="alert"]')) continue
           if (sibling.querySelector('[aria-live],[role="status"],[role="alert"]')) continue
           sibling.setAttribute('aria-hidden', 'true')

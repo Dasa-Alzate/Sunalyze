@@ -1,4 +1,3 @@
-/* Sunalyze app shell + screen layout — kit-local styles. */
 
 .sr-only { position: absolute; width: 1px; height: 1px; padding: 0; margin: -1px; overflow: hidden; clip: rect(0, 0, 0, 0); white-space: nowrap; border: 0; }
 
@@ -9,7 +8,6 @@
 
 .sun-app { display: grid; grid-template-columns: var(--sidebar-w) 1fr; min-height: 100vh; background: var(--bg-app); }
 
-/* ---- Sidebar (light Fluent rail) ---- */
 .sun-sidebar { background: var(--surface-card); color: var(--text-body); display: flex; flex-direction: column; padding: var(--space-4) var(--space-3); position: sticky; top: 0; height: 100vh; border-right: 1px solid var(--border-subtle); }
 .sun-sidebar__brand { display: flex; align-items: center; gap: var(--space-2); padding: var(--space-2) var(--space-3) var(--space-5); font-family: var(--font-display); font-weight: var(--fw-semibold); font-size: var(--text-lg); letter-spacing: 0; color: var(--text-strong); }
 .sun-sidebar__nav { display: flex; flex-direction: column; gap: 2px; flex: 1; }
@@ -27,7 +25,6 @@
 .sun-userchip__meta span { color: var(--text-subtle); font-size: var(--text-xs); }
 .sun-avatar { width: 32px; height: 32px; border-radius: var(--radius-pill); background: var(--green-100); color: var(--green-700); display: flex; align-items: center; justify-content: center; font-weight: var(--fw-semibold); font-size: var(--text-sm); flex: none; }
 
-/* ---- Main column ---- */
 .sun-main { display: flex; flex-direction: column; min-width: 0; }
 .sun-topbar { display: flex; align-items: center; justify-content: space-between; gap: var(--space-4); padding: var(--space-5) var(--space-8); background: var(--surface-card); border-bottom: 1px solid var(--border-subtle); position: sticky; top: 0; z-index: 20; }
 .sun-topbar__title h1 { font-size: var(--text-2xl); font-weight: 800; letter-spacing: -0.02em; }
@@ -36,7 +33,6 @@
 .sun-content { padding: var(--space-8); flex: 1; min-width: 0; }
 .sun-content--narrow { max-width: var(--container-max); margin: 0 auto; width: 100%; }
 
-/* ---- Dashboard ---- */
 .sun-kpis { display: grid; grid-template-columns: repeat(4, 1fr); gap: var(--space-4); margin-bottom: var(--space-6); }
 .sun-kpi { background: var(--surface-card); border: 1px solid var(--border-subtle); border-radius: var(--radius-lg); padding: var(--space-5); box-shadow: var(--shadow-sm); display: flex; flex-direction: column; gap: var(--space-2); }
 .sun-kpi__top { display: flex; align-items: center; justify-content: space-between; }
@@ -45,11 +41,9 @@
 .sun-section-title { display: flex; align-items: center; justify-content: space-between; margin-bottom: var(--space-3); }
 .sun-section-title h3 { font-size: var(--text-lg); font-weight: 700; }
 
-/* ---- Toolbar (list/library) ---- */
 .sun-toolbar { display: flex; align-items: center; gap: var(--space-3); margin-bottom: var(--space-4); }
 .sun-toolbar__search { flex: 1; max-width: 380px; }
 
-/* ---- Wizard (W2): stepper | form | summary ---- */
 .sun-wizard { display: grid; grid-template-columns: 248px 1fr var(--summary-w); gap: var(--space-5); align-items: start; }
 .sun-wizard__panel { background: var(--surface-card); border: 1px solid var(--border-subtle); border-radius: var(--radius-lg); box-shadow: var(--shadow-sm); }
 .sun-wizard__pad { padding: var(--space-6); }
@@ -66,7 +60,6 @@
 .sun-divider { display: flex; align-items: center; gap: var(--space-3); font-size: var(--text-2xs); font-weight: 800; letter-spacing: var(--tracking-wider); text-transform: uppercase; color: var(--text-subtle); margin: var(--space-5) 0 var(--space-3); }
 .sun-divider::after { content: ""; flex: 1; height: 1px; background: var(--border-subtle); }
 
-/* ---- Memoria split (W4) ---- */
 .sun-memoria { display: grid; grid-template-columns: 1fr 1fr; gap: var(--space-5); align-items: start; }
 .sun-memoria__sections { display: flex; flex-direction: column; gap: var(--space-2); }
 .sun-msection { border: 1px solid var(--border); border-radius: var(--radius-md); background: var(--surface-card); overflow: hidden; }
@@ -82,7 +75,6 @@
 .sun-page__diagram { border: 1.5px dashed var(--border-strong); border-radius: var(--radius-sm); padding: 14px; display: flex; align-items: center; justify-content: center; gap: 18px; margin-top: 14px; }
 .sun-page__diagram img { height: 46px; opacity: 0.85; }
 
-/* ---- Drawer ---- */
 .sun-scrim { position: fixed; inset: 0; background: var(--surface-overlay); z-index: 40; display: flex; justify-content: flex-end; }
 .sun-scrim__backdrop { position: absolute; inset: 0; border: 0; padding: 0; margin: 0; background: transparent; cursor: default; }
 .sun-drawer { position: relative; z-index: 1; width: 440px; max-width: 92vw; background: var(--surface-card); height: 100%; box-shadow: var(--shadow-overlay); display: flex; flex-direction: column; }
@@ -91,18 +83,15 @@
 .sun-drawer__body { padding: var(--space-5); overflow-y: auto; display: flex; flex-direction: column; gap: var(--space-4); }
 .sun-drawer__foot { margin-top: auto; padding: var(--space-4) var(--space-5); border-top: 1px solid var(--border-subtle); display: flex; gap: var(--space-3); justify-content: flex-end; }
 
-/* ---- Project list row name ---- */
 .sun-cell-client { display: flex; flex-direction: column; gap: 1px; }
 .sun-cell-client strong { color: var(--text-strong); font-weight: 600; }
 .sun-cell-client span { font-size: var(--text-xs); color: var(--text-subtle); }
 .sun-cell-status { display: inline-flex; align-items: center; gap: 7px; }
 
-/* spec list (drawer) */
 .sun-speclist { display: grid; grid-template-columns: 1fr 1fr; gap: var(--space-3); }
 
 @keyframes sunToastIn { from { opacity: 0; transform: translateY(8px); } to { opacity: 1; transform: translateY(0); } }
 
-/* ---- Notifications ---- */
 .sun-notif-bell__icon { position: relative; display: inline-flex; }
 .sun-notif-badge { position: absolute; top: -6px; right: -8px; min-width: 16px; height: 16px; padding: 0 4px; border-radius: var(--radius-pill); background: var(--danger); color: #fff; font-size: 10px; font-weight: 700; line-height: 16px; text-align: center; }
 .sun-notif-center__actions { display: flex; align-items: center; gap: var(--space-2); }
@@ -122,10 +111,13 @@
 
 .sun-activity__subtitle, .sun-trash__subtitle { margin: 0 0 var(--space-4); color: var(--text-muted); font-size: var(--text-sm); }
 .sun-activity-list { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; }
-.sun-activity-item { position: relative; z-index: 0; display: flex; align-items: flex-start; gap: var(--space-3); padding: var(--space-3) 0; border-bottom: 1px solid var(--border-subtle); }
-.sun-activity-item:last-child { border-bottom: 0; }
+.sun-activity-item { position: relative; z-index: 0; display: flex; align-items: flex-start; gap: var(--space-3); padding: var(--space-3) 0; }
 .sun-activity-item__icon { position: static; width: 30px; height: 30px; flex: none; display: inline-flex; align-items: center; justify-content: center; border-radius: var(--radius-pill); background: var(--soft-chip); color: var(--text-muted); }
-.sun-activity-item__icon::before { content: ''; position: absolute; left: 15px; top: calc(var(--space-3) + 15px); width: 2px; height: 100%; transform: translateX(-50%); background: var(--border-subtle); z-index: -1; }
+.sun-activity-item__icon--create { background: color-mix(in srgb, var(--green-500) 16%, transparent); color: var(--green-500); }
+.sun-activity-item__icon--delete { background: color-mix(in srgb, var(--red-500) 16%, transparent); color: var(--red-500); }
+.sun-activity-item__icon--edit { background: color-mix(in srgb, var(--amber-500) 18%, transparent); color: var(--amber-600); }
+.sun-activity-item__icon--rename { background: color-mix(in srgb, var(--blue-500) 16%, transparent); color: var(--blue-500); }
+.sun-activity-item__icon::before { content: ''; position: absolute; left: 15px; top: calc(var(--space-3) + 34px); width: 2px; height: calc(100% - 34px); transform: translateX(-50%); background: var(--border-subtle); z-index: -1; }
 .sun-activity-item:last-child .sun-activity-item__icon::before { content: none; }
 .sun-activity-item__body { flex: 1; min-width: 0; }
 .sun-activity-item__text { margin: 0; font-size: var(--text-sm); color: var(--text-strong); }

@@ -25,6 +25,14 @@ export function CommandPalette({ onClose, onRun, mac }) {
   }, [])
 
   useEffect(() => {
+    function onKey(e) {
+      if (e.key === 'Escape') onClose()
+    }
+    document.addEventListener('keydown', onKey)
+    return () => document.removeEventListener('keydown', onKey)
+  }, [onClose])
+
+  useEffect(() => {
     const el = document.getElementById(`${baseId}-opt-${active}`)
     if (el && typeof el.scrollIntoView === 'function') el.scrollIntoView({ block: 'nearest' })
   }, [active, baseId])
@@ -36,10 +44,7 @@ export function CommandPalette({ onClose, onRun, mac }) {
   }
 
   function onKeyDown(e) {
-    if (e.key === 'Escape') {
-      e.preventDefault()
-      onClose()
-    } else if (e.key === 'ArrowDown') {
+    if (e.key === 'ArrowDown') {
       e.preventDefault()
       setActive((i) => (results.length ? (i + 1) % results.length : 0))
     } else if (e.key === 'ArrowUp') {
@@ -54,7 +59,7 @@ export function CommandPalette({ onClose, onRun, mac }) {
   const activeId = results.length ? `${baseId}-opt-${active}` : undefined
 
   return (
-    <div className="sun-scrim sun-scrim--center" role="presentation">
+    <div className="sun-scrim sun-scrim--center" role="presentation" onKeyDown={onKeyDown}>
       <button type="button" className="sun-scrim__backdrop" aria-label="Cerrar" onClick={onClose} />
       <div
         ref={trapRef}
@@ -78,7 +83,6 @@ export function CommandPalette({ onClose, onRun, mac }) {
             placeholder="Buscar comando o acción…"
             value={query}
             onChange={(e) => setQuery(e.target.value)}
-            onKeyDown={onKeyDown}
           />
         </div>
         <ul ref={listRef} id={listId} role="listbox" aria-label="Comandos" className="sun-cmdk__list">

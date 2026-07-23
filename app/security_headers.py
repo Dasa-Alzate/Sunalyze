@@ -1,11 +1,3 @@
-"""Endurecimiento HTTP: CSRF, cabeceras de seguridad y rate limiting.
-
-register_security(app) centraliza la postura de seguridad transversal:
-- CSRF (Flask-WTF) con patron double-submit cookie + cabecera X-CSRFToken.
-- Cabeceras: CSP, nosniff, anti-clickjacking, referrer-policy, HSTS (prod).
-- Rate limiting (Flask-Limiter) inicializado; los limites por endpoint se
-  declaran con @limiter.limit en las rutas sensibles (auth).
-"""
 
 from flask import jsonify
 from flask_wtf.csrf import CSRFError, generate_csrf
@@ -14,10 +6,10 @@ from app.extensions import csrf, limiter
 
 CSP_DIRECTIVES = {
     'default-src': "'self'",
-    'script-src': "'self'",
+    'script-src': "'self' 'sha256-W3VlYOkiCmZzATwlGWce86qt1r5NXrQlWFWN1C8uX/E='",
     'style-src': "'self' 'unsafe-inline' https://fonts.googleapis.com",
     'font-src': "'self' https://fonts.gstatic.com",
-    'img-src': "'self' data:",
+    'img-src': "'self' data: https://*.tile.openstreetmap.org",
     'connect-src': "'self' https://nominatim.openstreetmap.org",
     'frame-src': "https://www.openstreetmap.org https://openstreetmap.org",
     'base-uri': "'self'",

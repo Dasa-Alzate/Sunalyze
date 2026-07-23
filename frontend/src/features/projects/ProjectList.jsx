@@ -3,7 +3,7 @@ import { useNavigate } from 'react-router-dom'
 import { Topbar } from '@/shared/ui'
 import { Btn, IconBtn, Badge, Dot, Icon, ExportMenu, Spinner, ErrorState } from '@/shared/ui'
 import { api } from '@/api/client'
-import { estadoMeta, relativo } from '@/shared/estados'
+import { ESTADOS, estadoMeta, relativo } from '@/shared/estados'
 import { dec } from '@/shared/format'
 import { exportRows } from '@/services/export'
 import { toast } from '@/services/toast'
@@ -16,6 +16,8 @@ export default function ProjectList() {
   const [error, setError] = useState(null)
   const [q, setQ] = useState('')
   const [estado, setEstado] = useState('todos')
+  const [page, setPage] = useState(1)
+  const PAGE_SIZE = 10
 
   function load() {
     setError(null)
@@ -29,6 +31,11 @@ export default function ProjectList() {
     const oke = estado === 'todos' || p.estado === estado
     return okq && oke
   })
+
+  useEffect(() => { setPage(1) }, [q, estado])
+  const totalPages = Math.max(1, Math.ceil(rows.length / PAGE_SIZE))
+  const safePage = Math.min(page, totalPages)
+  const pageRows = rows.slice((safePage - 1) * PAGE_SIZE, safePage * PAGE_SIZE)
 
   async function duplicate(id) {
     try {
@@ -67,9 +74,9 @@ export default function ProjectList() {
           </div>
           <select className="sun-select" style={{ width: 180 }} value={estado} onChange={(e) => setEstado(e.target.value)}>
             <option value="todos">Todos los estados</option>
-            <option value="memoria">Memoria</option>
-            <option value="diseno">Diseño</option>
-            <option value="borrador">Borrador</option>
+            {Object.entries(ESTADOS).map(([key, m]) => (
+              <option key={key} value={key}>{m.label}</option>
+            ))}
           </select>
           <div style={{ marginLeft: 'auto' }}>
             <ExportMenu
@@ -112,7 +119,7 @@ export default function ProjectList() {
                 </tr>
               </thead>
               <tbody>
-                {rows.map((p) => {
+                {pageRows.map((p) => {
                   const e = estadoMeta(p.estado)
                   return (
                     <tr
@@ -150,6 +157,18 @@ export default function ProjectList() {
                 })}
               </tbody>
             </table>
+            {totalPages > 1 && (
+              <div className="sun-pagination">
+                <span className="sun-pagination__info">
+                  {(safePage - 1) * PAGE_SIZE + 1}–{Math.min(safePage * PAGE_SIZE, rows.length)} de {rows.length}
+                </span>
+                <div className="sun-pagination__nav">
+                  <Btn variant="secondary" size="sm" icon="chevron-left" disabled={safePage <= 1} onClick={() => setPage(safePage - 1)}>Anterior</Btn>
+                  <span className="sun-pagination__page">{safePage} / {totalPages}</span>
+                  <Btn variant="secondary" size="sm" iconRight="chevron-right" disabled={safePage >= totalPages} onClick={() => setPage(safePage + 1)}>Siguiente</Btn>
+                </div>
+              </div>
+            )}
           </div>
         )}
       </div>

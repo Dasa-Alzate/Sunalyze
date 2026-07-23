@@ -17,14 +17,35 @@ function actionLabel(t, action) {
   return t([`actions.${action}`, '_raw'], { defaultValue: action })
 }
 
+const EVENT_STYLE = {
+  create: { tone: 'create', icon: 'plus' },
+  restore: { tone: 'create', icon: 'rotate-ccw' },
+  subscribe: { tone: 'create', icon: 'plus' },
+  enable: { tone: 'create', icon: 'toggle-right' },
+  generate: { tone: 'create', icon: 'file-text' },
+  update: { tone: 'edit', icon: 'pencil' },
+  change_role: { tone: 'edit', icon: 'pencil' },
+  rename: { tone: 'rename', icon: 'text-cursor-input' },
+  delete: { tone: 'delete', icon: 'trash-2' },
+  remove: { tone: 'delete', icon: 'trash-2' },
+  unsubscribe: { tone: 'delete', icon: 'minus' },
+  disable: { tone: 'delete', icon: 'toggle-left' },
+}
+
+function eventStyle(action) {
+  const verb = (action || '').split('.')[1] || ''
+  return EVENT_STYLE[verb] || { tone: 'neutral', icon: 'activity' }
+}
+
 function ActivityRow({ item }) {
   const { t } = useTranslation('activity')
   const actor = item.actor_email || t('unknownActor')
   const path = toAppPath(item.link)
+  const { tone, icon } = eventStyle(item.action)
   return (
     <li className="sun-activity-item">
-      <span className="sun-activity-item__icon" aria-hidden="true">
-        <Icon name="activity" size={16} />
+      <span className={`sun-activity-item__icon sun-activity-item__icon--${tone}`} aria-hidden="true">
+        <Icon name={icon} size={16} />
       </span>
       <div className="sun-activity-item__body">
         <p className="sun-activity-item__text">

@@ -1,4 +1,4 @@
-import { useEffect, useId, useMemo, useState } from 'react'
+import { useEffect, useId, useMemo, useRef, useState } from 'react'
 import { useNavigate, useParams } from 'react-router-dom'
 import { Topbar } from '@/shared/ui'
 import { Btn, Badge, Icon, Field, SelectField, ExportMenu, Spinner, ErrorState } from '@/shared/ui'
@@ -177,6 +177,16 @@ export default function Wizard() {
     exportRows(fmt, name, ['Métrica', 'Valor', 'Unidad'], summary.map((r) => [r.label, r.value, r.unit || '']))
   }
 
+  const stepValid = [
+    Boolean(form.cliente.trim() && form.necesidad !== '' && form.latitud !== '' && form.longitud !== ''),
+    Boolean(panelId),
+    Boolean(results),
+    true,
+    true,
+  ]
+  const firstInvalid = stepValid.findIndex((v) => !v)
+  const maxReachable = firstInvalid === -1 ? STEPS.length - 1 : firstInvalid
+
   const stepState = (i) => {
     if (i === step) return 'active'
     if (stale && i >= 2) return 'stale'
@@ -210,10 +220,17 @@ export default function Wizard() {
           <nav className="sun-stepper">
             {STEPS.map((s, i) => {
               const st = stepState(i)
+              const locked = i > maxReachable
               return (
-                <button key={i} className={`sun-step sun-step--${st}`} onClick={() => setStep(i)}>
+                <button
+                  key={i}
+                  className={`sun-step sun-step--${st}${locked ? ' sun-step--locked' : ''}`}
+                  disabled={locked}
+                  title={locked ? 'Completa los pasos anteriores para continuar' : undefined}
+                  onClick={() => setStep(i)}
+                >
                   <span className="sun-step__marker">
-                    {st === 'done' ? <Icon name="check" size={15} /> : st === 'stale' ? <Icon name="alert-triangle" size={15} /> : (i + 1)}
+                    {locked ? <Icon name="lock" size={13} /> : st === 'done' ? <Icon name="check" size={15} /> : st === 'stale' ? <Icon name="alert-triangle" size={15} /> : (i + 1)}
                   </span>
                   <span className="sun-step__body">
                     <span className="sun-step__idx">Paso {i + 1}</span>
@@ -257,7 +274,7 @@ export default function Wizard() {
                   <span>Instalación coplanar (definir inclinación y azimut)</span>
                 </label>
                 {form.coplanar && (
-                  <div className="sun-wizard__formgrid" style={{ marginTop: 'var(--space-4)' }}>
+                  <div className="sun-wizard__formgrid sun-reveal" style={{ marginTop: 'var(--space-4)' }}>
                     <Field label="Inclinación (°)" numeric type="number" step="any" value={form.inclinacion} onChange={(e) => patch({ inclinacion: e.target.value })} />
                     <Field label="Azimut (°)" numeric type="number" step="any" value={form.azimut} onChange={(e) => patch({ azimut: e.target.value })} hint="180 = sur" />
                   </div>
@@ -362,9 +379,9 @@ export default function Wizard() {
             <div className="sun-wizard__nav">
               <Btn variant="secondary" icon="arrow-left" disabled={step === 0} onClick={() => setStep(Math.max(0, step - 1))}>Atrás</Btn>
               {step === 1 ? (
-                <Btn variant="primary" iconRight="arrow-right" data-busy={analyzing} disabled={analyzing} onClick={() => { setStep(2); if (!results || stale) analyze() }}>{analyzing ? 'Calculando…' : 'Calcular y continuar'}</Btn>
+                <Btn variant="primary" iconRight="arrow-right" data-busy={analyzing} disabled={analyzing || !stepValid[1]} onClick={() => { setStep(2); if (!results || stale) analyze() }}>{analyzing ? 'Calculando…' : 'Calcular y continuar'}</Btn>
               ) : (
-                <Btn variant="primary" iconRight="arrow-right" onClick={() => (step < STEPS.length - 1 ? setStep(step + 1) : goToMemoria())}>{step < STEPS.length - 1 ? 'Continuar' : 'Generar memoria'}</Btn>
+                <Btn variant="primary" iconRight="arrow-right" disabled={!stepValid[step]} onClick={() => (step < STEPS.length - 1 ? setStep(step + 1) : goToMemoria())}>{step < STEPS.length - 1 ? 'Continuar' : 'Generar memoria'}</Btn>
               )}
             </div>
           </div>
@@ -407,10 +424,43 @@ function batteryMeta(b) {
 function SearchSelect({ placeholder, options, value, onPick, meta, clearable, onClear, labelId }) {
   const [open, setOpen] = useState(false)
   const [q, setQ] = useState('')
+  const [active, setActive] = useState(0)
+  const rootRef = useRef(null)
   const listId = useId()
   const list = q ? options.filter((o) => o.nombre.toLowerCase().includes(q.toLowerCase())) : options
+
+  useEffect(() => { setActive(0) }, [q])
+  useEffect(() => {
+    if (!open) return undefined
+    function onDoc(e) { if (rootRef.current && !rootRef.current.contains(e.target)) setOpen(false) }
+    document.addEventListener('mousedown', onDoc)
+    return () => document.removeEventListener('mousedown', onDoc)
+  }, [open])
+
+  function choose(o) {
+    if (!o) return
+    onPick(o)
+    setOpen(false)
+    setQ('')
+  }
+
+  function onKeyDown(e) {
+    if (e.key === 'ArrowDown') {
+      e.preventDefault()
+      if (!open) { setOpen(true); return }
+      setActive((i) => (list.length ? (i + 1) % list.length : 0))
+    } else if (e.key === 'ArrowUp') {
+      e.preventDefault()
+      setActive((i) => (list.length ? (i - 1 + list.length) % list.length : 0))
+    } else if (e.key === 'Enter') {
+      if (open && list.length) { e.preventDefault(); choose(list[active]) }
+    } else if (e.key === 'Escape') {
+      if (open) { e.preventDefault(); setOpen(false) }
+    }
+  }
+
   return (
-    <div className="sun-search" onMouseLeave={() => setOpen(false)}>
+    <div className="sun-search" ref={rootRef}>
       <div className="sun-search__control">
         <Icon name="search" size={16} />
         <input
@@ -419,10 +469,12 @@ function SearchSelect({ placeholder, options, value, onPick, meta, clearable, on
           aria-expanded={open}
           aria-controls={listId}
           aria-labelledby={labelId}
+          aria-activedescendant={open && list.length ? `${listId}-opt-${active}` : undefined}
           placeholder={value ? value.nombre : placeholder}
           value={q}
           onFocus={() => setOpen(true)}
           onChange={(e) => { setQ(e.target.value); setOpen(true) }}
+          onKeyDown={onKeyDown}
         />
         {value && clearable && (
           <button type="button" className="sun-search__clear" aria-label="Borrar selección" onClick={(e) => { e.stopPropagation(); onClear && onClear() }}>
@@ -434,14 +486,16 @@ function SearchSelect({ placeholder, options, value, onPick, meta, clearable, on
       {open && (
         <div className="sun-search__menu" role="listbox" id={listId}>
           {list.length === 0 && <div className="sun-search__empty">Sin coincidencias</div>}
-          {list.map((o) => (
+          {list.map((o, i) => (
             <button
               type="button"
               key={o.id}
+              id={`${listId}-opt-${i}`}
               role="option"
               aria-selected={value && value.id === o.id}
-              className={`sun-search__opt${value && value.id === o.id ? ' sun-search__opt--active' : ''}`}
-              onClick={() => { onPick(o); setOpen(false); setQ('') }}
+              className={`sun-search__opt${i === active ? ' sun-search__opt--active' : ''}`}
+              onMouseMove={() => setActive(i)}
+              onClick={() => choose(o)}
             >
               <span className="sun-search__opt-name">{o.nombre}</span>
               <span className="sun-search__opt-meta">{meta(o)}</span>
