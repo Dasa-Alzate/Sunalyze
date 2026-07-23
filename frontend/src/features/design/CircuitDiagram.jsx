@@ -106,6 +106,7 @@ export default function CircuitDiagram({ panel = null, inverter = null, hasBatte
     ...form,
     has_fuses: hasFuses ? 'true' : 'false',
     has_battery: hasBattery ? 'true' : 'false',
+    sheet: '1',
   }), [form, hasFuses, hasBattery])
 
   const debouncedParams = useDebounced(params, 350)

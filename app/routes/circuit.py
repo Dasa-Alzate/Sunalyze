@@ -23,6 +23,7 @@ def get_templates():
 @circuit_bp.route('/<string:diagram_type>')
 def get_diagram(diagram_type):
     args = request.args.to_dict()
+    sheet = str(args.pop('sheet', '')).strip().lower() in ('1', 'true', 'yes')
     _validate_args(args)
-    svg = CircuitDiagramService.generate(diagram_type, args)
+    svg = CircuitDiagramService.generate(diagram_type, args, sheet=sheet)
     return Response(svg, mimetype='image/svg+xml')
