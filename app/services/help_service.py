@@ -8,9 +8,9 @@ TUTORIALS = {
     'resumen': {
         DEFAULT_KEY: {
             'title': 'Panel de resumen',
-            'intro': 'Estás en el panel general: KPIs de tus proyectos y accesos rápidos.',
+            'intro': 'Estás en el panel general: los indicadores de tus proyectos y accesos rápidos.',
             'steps': [
-                ('Revisa los KPIs', 'Los indicadores muestran proyectos activos, kWp totales y memorias generadas.'),
+                ('Revisa los indicadores', 'Muestran tus proyectos activos, los kWp totales y las memorias generadas.'),
                 ('Proyectos recientes', 'Haz clic en cualquier proyecto para retomar su diseño.'),
                 ('Crea un proyecto', f'Usa {_l("/app/diseno", "«Nuevo proyecto»")} para empezar de coordenadas a memoria en minutos.'),
             ],
@@ -68,7 +68,7 @@ TUTORIALS = {
                 ('Revisa los resultados', 'Strings, paneles por string y producción anual estimada con datos PVGIS.'),
                 ('Recalcula si cambias algo', 'Si un dato queda obsoleto verás el aviso de «desactualizado».'),
             ],
-            'tips': ['El aviso amarillo en el stepper indica resultados desactualizados.'],
+            'tips': ['El aviso amarillo en la lista de pasos indica que los resultados quedaron desactualizados.'],
         },
         'diagrama': {
             'title': 'Paso 4 — Diagrama unifilar',
@@ -76,7 +76,7 @@ TUTORIALS = {
             'steps': [
                 ('Elige plantilla', 'Solar con/sin fusibles, con baterías, CC por strings, conexión a red o sistema completo.'),
                 ('Ajusta parámetros', 'Los campos vienen pre-rellenados con tu panel e inversor del paso 2.'),
-                ('Descarga el SVG', 'El botón de descarga exporta el plano para adjuntarlo donde necesites.'),
+                ('Descarga el plano', 'El botón de descarga guarda el esquema como imagen para adjuntarlo donde necesites.'),
             ],
             'tips': ['Estos esquemas se incrustan automáticamente en la memoria técnica.'],
         },
@@ -109,9 +109,9 @@ TUTORIALS = {
             'steps': [
                 ('Navega por pestañas', 'Cada tipo de equipo tiene su pestaña con contador.'),
                 ('Añade o importa', 'Alta manual con «Añadir» o masiva con «Importar» (TSV/CSV/Excel).'),
-                ('Edita cualquier equipo', 'Los scrapeados llevan badge «Scraped» que desaparece al curarlos a mano.'),
+                ('Edita cualquier equipo', 'Los equipos traídos automáticamente de la web llevan la etiqueta «Scraped»; desaparece al editarlos a mano.'),
             ],
-            'tips': [f'El badge de catálogo puede llevar color: configúralo en {_l("/app/equipos?tab=marketplace", "el marketplace")}.'],
+            'tips': [f'La etiqueta con el nombre del catálogo puede llevar color: elígelo en {_l("/app/equipos?tab=marketplace", "el marketplace")}.'],
         },
         'marketplace': {
             'title': 'Marketplace de catálogos',
@@ -119,7 +119,7 @@ TUTORIALS = {
             'steps': [
                 ('Suscríbete', '«Añadir a mi biblioteca» hace visibles los equipos del catálogo en tus pestañas.'),
                 ('Crea catálogos propios', 'Agrupa tus equipos por proveedor o proyecto.'),
-                ('Color del badge', 'El selector de color de cada tarjeta tiñe el badge del catálogo en los listados.'),
+                ('Color del catálogo', 'El selector de color de cada tarjeta tiñe la etiqueta del catálogo en los listados de equipos.'),
             ],
             'tips': [],
         },
@@ -140,7 +140,7 @@ TUTORIALS = {
             'title': 'Plantillas de documentos',
             'intro': 'Crea y edita plantillas de documentos (certificados, contratos…) con variables.',
             'steps': [
-                ('Filtra por tipo', 'Los chips filtran la galería por tipo de documento.'),
+                ('Filtra por tipo', 'Los botones de filtro sobre la galería la acotan por tipo de documento.'),
                 ('Edita en el builder', 'Cada plantilla se edita con variables «{{ }}» que se rellenan con datos del proyecto.'),
             ],
             'tips': [],
@@ -164,7 +164,7 @@ TUTORIALS = {
             'intro': 'Seguimiento de instalaciones entregadas: incidencias y mantenimiento.',
             'steps': [
                 ('Registra la instalación', f'Vincula la instalación real al proyecto aprobado; lo encuentras en {_l("/app/proyectos", "Proyectos")}.'),
-                ('Gestiona incidencias', 'Crea tickets y ciérralos al resolverlos.'),
+                ('Gestiona incidencias', 'Registra las incidencias y ciérralas al resolverlas.'),
             ],
             'tips': [],
         },
@@ -174,7 +174,7 @@ TUTORIALS = {
             'title': 'Actividad',
             'intro': 'Bitácora de acciones de tu organización, con código de colores por tipo.',
             'steps': [
-                ('Lee el timeline', 'Verde = crear, amarillo = editar, rojo = borrar, azul = renombrar.'),
+                ('Lee la línea de tiempo', 'Verde = crear, amarillo = editar, rojo = borrar, azul = renombrar.'),
                 ('Salta al elemento', 'La flecha de cada evento te lleva al recurso afectado.'),
             ],
             'tips': [],

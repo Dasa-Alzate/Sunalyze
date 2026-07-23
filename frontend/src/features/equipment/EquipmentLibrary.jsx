@@ -421,7 +421,7 @@ export default function EquipmentLibrary() {
 
 function CatalogColorControl({ color, editable, onChange }) {
   if (!editable) {
-    return color ? <span className="catalog-color__swatch" style={{ background: color }} title="Color del badge" /> : null
+    return color ? <span className="catalog-color__swatch" style={{ background: color }} title="Color del catálogo" /> : null
   }
   return (
     <span className="catalog-color">
@@ -430,8 +430,8 @@ function CatalogColorControl({ color, editable, onChange }) {
         className="catalog-color__input"
         value={color || '#107c41'}
         onChange={(e) => onChange(e.target.value)}
-        aria-label="Color del badge del catálogo"
-        title="Color del badge"
+        aria-label="Color de la etiqueta del catálogo"
+        title="Color de la etiqueta del catálogo"
       />
       {color && <IconBtn icon="x" label="Quitar color" size="sm" onClick={() => onChange(null)} />}
     </span>
