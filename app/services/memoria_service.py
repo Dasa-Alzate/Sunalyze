@@ -83,8 +83,73 @@ class MemoriaService:
         datasheets = MemoriaService._collect_datasheets(panel, inverter) if form_data else []
         return MemoriaService._merge_pdfs(memoria_pdf, datasheets)
 
+    _PREVIEW_RESERVED = {'config', 'request', 'session', 'g', 'url_for', 'get_flashed_messages'}
+
+    @staticmethod
+    def preview_html(form_data, org_id=None):
+        import re
+        from app.services.catalog_service import CatalogService
+
+        template_vars = {}
+        if form_data:
+            template_vars = {
+                k: v for k, v in form_data.items()
+                if re.fullmatch(r'[a-z0-9_]{1,64}', k) and k not in MemoriaService._PREVIEW_RESERVED
+            }
+            visible = set(CatalogService.visible_catalog_ids(org_id)) if org_id else set()
+
+            def _visible(model, key):
+                pk = form_data.get(key)
+                if not pk:
+                    return None
+                row = model.query.get(pk)
+                if row is None:
+                    return None
+                if org_id and row.catalog_id and row.catalog_id not in visible:
+                    return None
+                return row
+
+            panel = _visible(Panel, 'panel_id')
+            inverter = _visible(Inverter, 'inverter_id')
+            battery = _visible(Battery, 'battery_id')
+            defaults = InstallationDefaults.get()
+            if panel and inverter and defaults:
+                template_vars.update(MemoriaService._build_template_vars(form_data, panel, inverter, defaults))
+                template_vars.update(MemoriaService._build_battery_vars(form_data, battery))
+                template_vars.update(MemoriaService._build_circuit_svgs(form_data, panel, inverter, battery))
+                template_vars.update(MemoriaService._build_graph_svgs(form_data))
+        return render_template('memoria_tecnica_pdf.html', **template_vars)
+
+    @staticmethod
+    def _derived_vars(data, panel):
+        derived = {}
+        inyection = (data.get('inyection_type') or '').lower()
+        if inyection:
+            if 'sin' in inyection:
+                derived['anti_pouring_verbosed'] = 'La instalación contempla sistema antivertido (inyección cero), que impide el vertido de excedentes a la red'
+            else:
+                derived['anti_pouring_verbosed'] = 'La instalación no contempla sistema antivertido, dado que se acoge a la modalidad de autoconsumo con excedentes'
+        try:
+            n = int(float(data.get('panels_number') or 0))
+            if n > 0 and panel.width and panel.height:
+                derived['panels_surface'] = round(n * panel.width * panel.height / 1e6, 1)
+        except (ValueError, TypeError):
+            pass
+        inclination = data.get('panels_inclination')
+        if inclination not in (None, ''):
+            derived['panels_inclination_verbosed'] = f'con una inclinación de {inclination}º sobre la horizontal'
+        azimut = data.get('panels_azimut')
+        if azimut not in (None, ''):
+            derived['panels_azimut_verbosed'] = f'con un azimut de {azimut}º'
+        return derived
+
     @staticmethod
     def _build_template_vars(data, panel, inverter, defaults):
+        derived = MemoriaService._derived_vars(data, panel)
+
+        def dv(key):
+            return data.get(key) or derived.get(key)
+
         return {
             'client_name': data.get('client_name'),
             'address': data.get('address'),
@@ -96,20 +161,20 @@ class MemoriaService:
             'input_v': data.get('input_v'),
             'input_v_type': data.get('input_v_type'),
             'inyection_type': data.get('inyection_type'),
-            'panels_inclination_verbosed': data.get('panels_inclination_verbosed'),
-            'panels_azimut_verbosed': data.get('panels_azimut_verbosed'),
+            'panels_inclination_verbosed': dv('panels_inclination_verbosed'),
+            'panels_azimut_verbosed': dv('panels_azimut_verbosed'),
             'panels_peak_power_kw': data.get('panels_peak_power_kw'),
             'panels_number': data.get('panels_number'),
             'panels_place': data.get('panels_place'),
             'panels_disposition': data.get('panels_disposition'),
-            'panels_surface': data.get('panels_surface'),
+            'panels_surface': dv('panels_surface'),
             'panels_inclination': data.get('panels_inclination'),
             'panels_azimut': data.get('panels_azimut'),
             'orientation_loss_verbosed': data.get('orientation_loss_verbosed'),
             'shadows_loss_verbosed': data.get('shadows_loss_verbosed'),
             'panel_temp_min_limit': data.get('panel_temp_min_limit'),
             'panel_temp_max_limit': data.get('panel_temp_max_limit'),
-            'anti_pouring_verbosed': data.get('anti_pouring_verbosed'),
+            'anti_pouring_verbosed': dv('anti_pouring_verbosed'),
             'batteries_verbosed': data.get('batteries_verbosed'),
             'panels_model': panel.nombre,
             'panels_power': panel.power,
@@ -179,10 +244,13 @@ class MemoriaService:
             return {
                 'has_battery': False,
                 'battery_quantity': battery_quantity,
+                'batteries_verbosed': data.get('batteries_verbosed') or 'La instalación no contempla sistema de acumulación mediante baterías',
             }
         return {
             'has_battery': True,
             'battery_quantity': battery_quantity,
+            'batteries_verbosed': data.get('batteries_verbosed')
+            or f'La instalación contempla un sistema de acumulación compuesto por {battery_quantity} batería(s) {battery.nombre}',
             'battery_model': battery.nombre,
             'battery_capacity_kwh': battery.capacity_kwh,
             'battery_usable_kwh': battery.usable_kwh,
