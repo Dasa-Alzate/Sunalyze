@@ -10,6 +10,7 @@ import { useCommands, isMac, formatShortcut } from '@/services/actions'
 import { toast } from '@/services/toast'
 import NotificationBell from '@/features/notifications/NotificationBell'
 import WorkspaceSwitcher from '@/app/WorkspaceSwitcher'
+import { HelpAssist } from '@/services/assist'
 
 const NAV = [
   { to: '/app', key: 'resumen', icon: 'layout-dashboard', end: true },
@@ -117,6 +118,7 @@ export function AppLayout() {
       <main id="main" ref={mainRef} tabIndex={-1} className="sun-main">
         <Outlet />
       </main>
+      <HelpAssist />
       <div className="sr-only" role="status" aria-live="polite" aria-atomic="true">{announcement}</div>
     </div>
   )

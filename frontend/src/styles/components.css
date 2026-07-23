@@ -255,6 +255,12 @@
 
 .sun-scrim.sun-scrim--center { align-items: flex-start; justify-content: center; }
 
+.sun-confirm { position: relative; z-index: 1; margin-top: 18vh; width: 440px; max-width: 92vw; background: var(--surface-card); border-radius: var(--radius-lg); box-shadow: var(--shadow-overlay); padding: var(--space-6); display: flex; flex-direction: column; gap: var(--space-3); }
+.sun-confirm__head { display: flex; align-items: center; gap: var(--space-3); }
+.sun-confirm__head h3 { font-size: var(--text-lg); font-weight: 700; color: var(--text-strong); }
+.sun-confirm__desc { font-size: var(--text-sm); color: var(--text-muted); margin: 0; }
+.sun-confirm__actions { display: flex; justify-content: flex-end; gap: var(--space-3); margin-top: var(--space-2); flex-wrap: wrap; }
+
 .sun-cmdk { position: relative; z-index: 1; margin-top: 12vh; width: 560px; max-width: 92vw; background: var(--surface-card);
   border: 1px solid var(--border-subtle); border-radius: var(--radius-2xl); box-shadow: var(--shadow-overlay); overflow: hidden; display: flex; flex-direction: column; }
 .sun-cmdk__search { display: flex; align-items: center; gap: var(--space-3); padding: var(--space-4) var(--space-5); border-bottom: 1px solid var(--border-subtle); color: var(--text-muted); }

@@ -1,4 +1,5 @@
 import { useEffect, useRef, useState } from 'react'
+import { useSearchParams } from 'react-router-dom'
 import { Topbar } from '@/shared/ui'
 import { Btn, IconBtn, Icon, Badge, Field, SelectField, ExportMenu, Spinner, ErrorState, Scrim } from '@/shared/ui'
 import { api } from '@/api/client'
@@ -6,6 +7,7 @@ import { dec } from '@/shared/format'
 import { exportRows } from '@/services/export'
 import { toast } from '@/services/toast'
 import { useAuth } from '@/services/auth'
+import { emitSubview } from '@/services/assist'
 
 const SCHEMAS = {
   panels: {
@@ -102,7 +104,15 @@ export default function EquipmentLibrary() {
   const canEdit = can('equipment:edit')
   const canManage = can('catalog:manage')
   const canSubscribe = can('catalog:subscribe')
-  const [tab, setTab] = useState('panels')
+  const [searchParams] = useSearchParams()
+  const urlTab = searchParams.get('tab')
+  const [tab, setTab] = useState(() => ([...TAB_ORDER, 'marketplace'].includes(urlTab) ? urlTab : 'panels'))
+
+  useEffect(() => {
+    if ([...TAB_ORDER, 'marketplace'].includes(urlTab)) setTab(urlTab)
+  }, [urlTab])
+
+  useEffect(() => { emitSubview('equipos', tab) }, [tab])
   const [data, setData] = useState({ panels: null, inverters: null, batteries: null, wires: null })
   const [catalogs, setCatalogs] = useState(null)
   const [market, setMarket] = useState(null)
@@ -411,7 +421,7 @@ export default function EquipmentLibrary() {
 
 function CatalogColorControl({ color, editable, onChange }) {
   if (!editable) {
-    return color ? <span className="catalog-color__swatch" style={{ background: color }} title="Color del badge" /> : null
+    return color ? <span className="catalog-color__swatch" style={{ background: color }} title="Color del catálogo" /> : null
   }
   return (
     <span className="catalog-color">
@@ -420,8 +430,8 @@ function CatalogColorControl({ color, editable, onChange }) {
         className="catalog-color__input"
         value={color || '#107c41'}
         onChange={(e) => onChange(e.target.value)}
-        aria-label="Color del badge del catálogo"
-        title="Color del badge"
+        aria-label="Color de la etiqueta del catálogo"
+        title="Color de la etiqueta del catálogo"
       />
       {color && <IconBtn icon="x" label="Quitar color" size="sm" onClick={() => onChange(null)} />}
     </span>

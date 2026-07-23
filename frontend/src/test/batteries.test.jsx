@@ -43,7 +43,7 @@ const api = {
   analyze: vi.fn(() => Promise.resolve(analysis)),
 }
 
-vi.mock('@/api/client', () => ({ api, csrfToken: () => 'tok' }))
+vi.mock('@/api/client', () => ({ api, csrfToken: () => 'tok', setApiErrorHandler: () => {} }))
 vi.mock('@/services/toast', () => ({ toast: () => {} }))
 vi.mock('@/services/export', () => ({ exportRows: () => {} }))
 vi.mock('@/services/geo-map', () => ({ GeoMap: () => null }))

@@ -21,6 +21,18 @@ function notifyUnauthorized(path, status) {
   }
 }
 
+let apiErrorHandler = null
+
+export function setApiErrorHandler(fn) {
+  apiErrorHandler = fn
+}
+
+function notifyApiError(path, status, message) {
+  if (apiErrorHandler) {
+    try { apiErrorHandler(path, status, message) } catch { void 0 }
+  }
+}
+
 async function request(path, options = {}) {
   const method = (options.method || 'GET').toUpperCase()
   const headers = { 'Content-Type': 'application/json', ...(options.headers || {}) }
@@ -35,9 +47,16 @@ async function request(path, options = {}) {
   if (!res.ok) {
     notifyUnauthorized(path, res.status)
     const message = (data && (data.error || data.message)) || `Error ${res.status}`
+    notifyApiError(path, res.status, message)
     throw new ApiError(message, res.status, data)
   }
   return data
+}
+
+async function requestText(path) {
+  const res = await fetch(path, { credentials: 'include' })
+  if (!res.ok) throw new ApiError(`Error ${res.status}`, res.status, null)
+  return res.text()
 }
 
 async function requestBlob(path, options = {}) {
@@ -264,6 +283,12 @@ export const api = {
   },
   pendingWork: {
     get: () => get('/api/pending-work'),
+  },
+  help: {
+    tutorial: ({ view, subview }) => {
+      const qs = new URLSearchParams({ view: view || '', subview: subview || '' }).toString()
+      return requestText(`/api/help/tutorial?${qs}`)
+    },
   },
   circuit: {
     templates: () => get('/api/circuit/templates'),
