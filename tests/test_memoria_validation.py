@@ -142,9 +142,9 @@ class MemoriaRouteValidationTest(unittest.TestCase):
 class CircuitSvgByteNoRegressionTest(unittest.TestCase):
 
     EXPECTED = {
-        'svg_cc': (5917, '9697786b49444a83f88bae9de4d19aac'),
-        'svg_ca': (10487, '9bce08b8e47e7ebfbe0e5a9eebe58f6d'),
-        'svg_sistema': (14929, '149882399fc7f9a9e6456a0b74defc6a'),
+        'svg_cc': (7605, 'a109aafdd2bc41dbe4a8d239edbf1d63'),
+        'svg_ca': (12174, 'c6fd2bbe0a898788bc986591ebe099d6'),
+        'svg_sistema': (16598, '3d17ff872aef37f5a6e6c046548c61af'),
     }
 
     def setUp(self):

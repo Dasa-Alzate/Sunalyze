@@ -16,7 +16,7 @@ class CircuitDiagramService:
         return CircuitService.list_templates()
 
     @classmethod
-    def generate(cls, diagram_type, data):
+    def generate(cls, diagram_type, data, sheet=False):
         if not CircuitService.has_template(diagram_type):
             valid = ', '.join(t['name'] for t in CircuitService.list_templates())
             raise ValidationError(f"Tipo desconocido: '{diagram_type}'. Válidos: {valid}")
@@ -26,4 +26,7 @@ class CircuitDiagramService:
             raise ValidationError('Parámetros obligatorios ausentes', details={'fields': missing})
 
         config = CircuitService.config_from_dict(data)
-        return CircuitService.generate_template(diagram_type, config)
+        svg = CircuitService.generate_template(diagram_type, config)
+        if sheet:
+            svg = CircuitService.wrap_sheet(svg, diagram_type)
+        return svg

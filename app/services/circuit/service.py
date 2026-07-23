@@ -1,7 +1,10 @@
 
 from .core.config import SystemConfig, DCConfig, ACConfig, DiagramStyle
+from .core.plan_sheet import wrap_plan_sheet, fit_to_mm
 from .diagrams import DCStringsDiagram, GridConnectionDiagram, FullSystemDiagram
-from .diagrams.registry import TEMPLATES, list_templates, render_template
+from .diagrams.registry import (
+    TEMPLATES, list_templates, render_template, template_label, template_orientation,
+)
 
 
 class CircuitService:
@@ -29,6 +32,19 @@ class CircuitService:
     @staticmethod
     def has_template(name: str) -> bool:
         return name in TEMPLATES
+
+    @staticmethod
+    def wrap_sheet(svg: str, name: str, title: str = '', fields=None) -> str:
+        return wrap_plan_sheet(
+            svg,
+            title=title or template_label(name).upper(),
+            orientation=template_orientation(name),
+            fields=fields,
+        )
+
+    @staticmethod
+    def fit_to_mm(svg: str, max_w_mm: float, max_h_mm: float) -> str:
+        return fit_to_mm(svg, max_w_mm, max_h_mm)
 
     @staticmethod
     def config_from_dict(data: dict, style: DiagramStyle | None = None) -> SystemConfig:

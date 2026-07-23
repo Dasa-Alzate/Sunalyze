@@ -281,10 +281,26 @@ class MemoriaService:
 
             config = SystemConfig(dc=dc, ac=ac)
 
+            fields = [
+                ('Cliente', data.get('client_name') or ''),
+                ('Fecha', data.get('date') or ''),
+                ('Firma y sello', ''),
+                ('CUPS', data.get('energy_company_cups') or ''),
+            ]
+
+            def _sheet(svg, name, title):
+                wrapped = CircuitService.wrap_sheet(svg, name, title=title, fields=fields)
+                if name == 'full-system':
+                    return CircuitService.fit_to_mm(wrapped, 260, 180)
+                return CircuitService.fit_to_mm(wrapped, 165, 240)
+
             return {
-                'svg_ca': CircuitService.generate_grid_connection(config),
-                'svg_cc': CircuitService.generate_cc_vertical(config),
-                'svg_sistema': CircuitService.generate_full_system(config),
+                'svg_ca': _sheet(CircuitService.generate_grid_connection(config),
+                                 'grid-connection', 'ESQUEMA DE CONEXIÓN A RED — UNIFILAR CA'),
+                'svg_cc': _sheet(CircuitService.generate_cc_vertical(config),
+                                 'cc-strings', 'ESQUEMA UNIFILAR CC — CAMPO FOTOVOLTAICO'),
+                'svg_sistema': _sheet(CircuitService.generate_full_system(config),
+                                      'full-system', 'ESQUEMA GENERAL DEL SISTEMA CA/CC'),
             }
 
         except Exception:
