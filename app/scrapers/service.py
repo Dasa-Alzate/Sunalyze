@@ -13,6 +13,7 @@ from datetime import datetime
 from app.extensions import db
 from app.models.panel import Panel
 from app.models.inverter import Inverter
+from app.models.wire import Wire
 from app.models.scrape_run import ScrapeRun
 from app.services.catalog_service import CatalogService
 from app.scrapers.registry import get_scraper
@@ -20,8 +21,9 @@ from app.scrapers import acceptance
 
 logger = logging.getLogger(__name__)
 
-_MODEL = {'panel': Panel, 'inverter': Inverter}
-_VITAL_NUM = {'panel': ('power', 'voc', 'vmp', 'imp'), 'inverter': ('power', 'vmax')}
+_MODEL = {'panel': Panel, 'inverter': Inverter, 'wire': Wire}
+_VITAL_NUM = {'panel': ('power', 'voc', 'vmp', 'imp'), 'inverter': ('power', 'vmax'),
+              'wire': ('seccion', 'corriente')}
 _TOL = 0.02
 
 

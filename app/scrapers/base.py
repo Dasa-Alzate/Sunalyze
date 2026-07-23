@@ -12,6 +12,7 @@ VITAL = {
     'panel': ('nombre', 'power', 'voc', 'vmp', 'imp'),
     'inverter': ('nombre', 'power', 'vmax'),
     'battery': ('nombre', 'capacity_kwh', 'power_kw', 'voltage'),
+    'wire': ('seccion', 'material'),
 }
 
 

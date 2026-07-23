@@ -32,6 +32,7 @@ _MAX_PAGES = 40
 SEED = [
     {'kind': 'panel', 'url': _BASE + '/paneles-solares'},
     {'kind': 'inverter', 'url': _BASE + '/inversores'},
+    {'kind': 'wire', 'url': _BASE + '/cables'},
 ]
 
 
@@ -71,6 +72,36 @@ def _find(pairs, *needles):
         if all(n in key for n in needles):
             return value
     return None
+
+
+def _seccion_from_title(title):
+    """Captura la seccion en mm2 de un titulo tipo «Cable 6mm2» o «Cable 4 mm²»."""
+    m = re.search(r'(\d+(?:[.,]\d+)?)\s*mm', title or '', re.IGNORECASE)
+    return to_float_eu(m.group(1)) if m else None
+
+
+def _wire_material(*texts):
+    """Deduce el material conductor a partir del texto de la ficha.
+
+    'aluminio'/'al' → 'Al'; en cualquier otro caso 'Cu' (cobre, valor por defecto).
+    """
+    blob = _strip(' '.join(t for t in texts if t))
+    if 'alumin' in blob or re.search(r'\bal\b', blob):
+        return 'Al'
+    return 'Cu'
+
+
+def _wire_type(title):
+    """Extrae la designacion corta del cable del titulo (p. ej. 'H1Z2Z2-K').
+
+    Devuelve el codigo normalizado (mayusculas, ≤10 caracteres) o 'PV' por defecto.
+    """
+    m = re.search(r'\b([A-Z0-9]*[A-Z][A-Z0-9]*-[A-Z])\b', (title or '').upper())
+    if m:
+        return m.group(1)[:10]
+    if re.search(r'\bPV\b', (title or '').upper()):
+        return 'PV'
+    return 'PV'
 
 
 class AutoSolarScraper:
@@ -123,6 +154,22 @@ class AutoSolarScraper:
 
         pairs, datasheet = _spec_pairs(doc)
         kind = ref['kind']
+        if kind == 'wire':
+            material_txt = _find(pairs, 'material') or _find(pairs, 'conductor')
+            conductores = _num(_find(pairs, 'conductores') or _find(pairs, 'numero', 'polos'))
+            fields = {
+                'nombre': title,
+                'seccion': _seccion_from_title(title) or _num(_find(pairs, 'seccion')),
+                'corriente': _num(_find(pairs, 'intensidad', 'admisible')
+                                  or _find(pairs, 'corriente') or _find(pairs, 'intensidad')),
+                'material': _wire_material(title, material_txt),
+                'no_conductores': int(conductores) if conductores else 1,
+                'tipo': _wire_type(title),
+            }
+            fields = {k: v for k, v in fields.items() if v is not None}
+            return [NormalizedProduct(kind=kind, external_id=ref['external_id'],
+                                      source_url=ref['url'], fields=fields,
+                                      brand=display or self.brand)]
         if kind == 'inverter':
             fields = {
                 'nombre': title,
