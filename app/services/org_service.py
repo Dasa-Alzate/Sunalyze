@@ -5,9 +5,10 @@ import os
 
 from app.errors import ValidationError
 from app.extensions import db
-from app.models.organization import OrgBrandingProfile
+from app.models.organization import OrgBrandingProfile, OrgBudgetProfile
 
 _BRANDING_ATTRS = ('logo_path', 'primary_color', 'footer_text', 'project_prefix')
+_BUDGET_ATTRS = ('labor_fixed', 'labor_per_panel', 'equipment_inflation_pct', 'custom_lines')
 _LOGO_DIRNAME = 'cfiles'
 _MAX_LOGO_BYTES = 2 * 1024 * 1024
 _RASTER_EXT = {'png': 'png', 'jpeg': 'jpg', 'webp': 'webp'}
@@ -56,6 +57,32 @@ class OrgService:
             profile = OrgBrandingProfile(org_id=org_id)
             db.session.add(profile)
         return profile
+
+    @staticmethod
+    def get_budget_profile(org_id):
+        profile = OrgBudgetProfile.query.filter_by(org_id=org_id).first()
+        if profile is not None:
+            return profile.to_dict()
+        return {
+            'id': None,
+            'org_id': org_id,
+            'labor_fixed': 0,
+            'labor_per_panel': 0,
+            'equipment_inflation_pct': 0,
+            'custom_lines': [],
+        }
+
+    @staticmethod
+    def update_budget_profile(org_id, fields):
+        profile = OrgBudgetProfile.query.filter_by(org_id=org_id).first()
+        if profile is None:
+            profile = OrgBudgetProfile(org_id=org_id)
+            db.session.add(profile)
+        for attr in _BUDGET_ATTRS:
+            if attr in fields:
+                setattr(profile, attr, fields[attr])
+        db.session.commit()
+        return profile.to_dict()
 
     @staticmethod
     def update_branding(org_id, fields):

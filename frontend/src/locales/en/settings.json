@@ -12,6 +12,7 @@
     "nav": "Settings sections",
     "tabs": {
       "marca": "Branding",
+      "presupuesto": "Budget",
       "flags": "Flags"
     }
   },

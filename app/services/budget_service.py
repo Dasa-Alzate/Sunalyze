@@ -42,8 +42,18 @@ class BudgetService:
         db.session.flush()
         return cls.get_budget(project)
 
+    @staticmethod
+    def _final_price(base, org_pct, equip_pct):
+        price = (base or 0) * (1 + (org_pct or 0) / 100) * (1 + (equip_pct or 0) / 100)
+        return round(price, 2)
+
     @classmethod
     def seed_from_design(cls, project):
+        from app.services.org_service import OrgService
+
+        profile = OrgService.get_budget_profile(project.org_id)
+        org_pct = profile.get('equipment_inflation_pct') or 0
+
         items = []
         resultados = project.resultados or {}
         n_paneles = 0
@@ -51,21 +61,25 @@ class BudgetService:
             n_paneles = int(resultados.get('cell_amount') or 0)
         except (TypeError, ValueError):
             pass
+        n_modulos = max(1, n_paneles)
 
         panel = Panel.query.get(project.panel_id) if project.panel_id else None
         if panel:
             items.append({'capitulo': 1, 'descripcion': f'Módulo fotovoltaico {panel.nombre} ({panel.power:.0f} Wp)',
-                          'unidad': 'ud', 'cantidad': max(1, n_paneles), 'precio_unitario': 0})
+                          'unidad': 'ud', 'cantidad': n_modulos,
+                          'precio_unitario': cls._final_price(panel.precio_unitario, org_pct, panel.inflacion_pct)})
 
         inverter = Inverter.query.get(project.inverter_id) if project.inverter_id else None
         if inverter:
             items.append({'capitulo': 1, 'descripcion': f'Inversor {inverter.nombre} ({inverter.power:.1f} kW)',
-                          'unidad': 'ud', 'cantidad': 1, 'precio_unitario': 0})
+                          'unidad': 'ud', 'cantidad': 1,
+                          'precio_unitario': cls._final_price(inverter.precio_unitario, org_pct, inverter.inflacion_pct)})
 
         battery = Battery.query.get(project.battery_id) if project.battery_id else None
         if battery:
             items.append({'capitulo': 1, 'descripcion': f'Batería {battery.nombre} ({battery.capacity_kwh:.1f} kWh)',
-                          'unidad': 'ud', 'cantidad': max(1, project.battery_quantity or 1), 'precio_unitario': 0})
+                          'unidad': 'ud', 'cantidad': max(1, project.battery_quantity or 1),
+                          'precio_unitario': cls._final_price(battery.precio_unitario, org_pct, battery.inflacion_pct)})
 
         items.append({'capitulo': 2, 'descripcion': 'Cableado CC/CA, protecciones eléctricas y pequeño material',
                       'unidad': 'PA', 'cantidad': 1, 'precio_unitario': 0})
@@ -73,13 +87,32 @@ class BudgetService:
                       'unidad': 'PA', 'cantidad': 1, 'precio_unitario': 0})
 
         estructura = 'coplanar' if project.coplanar else 'con inclinación'
-        items.append({'capitulo': 3, 'descripcion': f'Estructura {estructura} para {max(1, n_paneles)} módulos',
+        items.append({'capitulo': 3, 'descripcion': f'Estructura {estructura} para {n_modulos} módulos',
                       'unidad': 'PA', 'cantidad': 1, 'precio_unitario': 0})
-        items.append({'capitulo': 3, 'descripcion': 'Mano de obra: montaje y puesta en marcha',
-                      'unidad': 'PA', 'cantidad': 1, 'precio_unitario': 0})
+
+        mano_obra = round((profile.get('labor_fixed') or 0) + (profile.get('labor_per_panel') or 0) * n_modulos, 2)
+        items.append({'capitulo': 3, 'descripcion': f'Mano de obra: montaje y puesta en marcha ({n_modulos} módulos)',
+                      'unidad': 'PA', 'cantidad': 1, 'precio_unitario': mano_obra})
 
         items.append({'capitulo': 4, 'descripcion': 'Legalización, boletín eléctrico y tramitación de autoconsumo',
                       'unidad': 'PA', 'cantidad': 1, 'precio_unitario': 0})
+
+        for line in profile.get('custom_lines') or []:
+            try:
+                capitulo = int(line.get('capitulo') or 4)
+            except (TypeError, ValueError):
+                capitulo = 4
+            descripcion = str(line.get('descripcion') or '').strip()
+            if not descripcion or capitulo not in CAPITULOS:
+                continue
+            try:
+                cantidad = float(line.get('cantidad') or 1)
+                precio = float(line.get('precio_unitario') or 0)
+            except (TypeError, ValueError):
+                cantidad, precio = 1, 0
+            items.append({'capitulo': capitulo, 'descripcion': descripcion,
+                          'unidad': str(line.get('unidad') or 'ud'),
+                          'cantidad': cantidad, 'precio_unitario': precio})
 
         return cls.replace(project, project.budget_iva_pct, items)
 

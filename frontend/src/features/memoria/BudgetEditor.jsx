@@ -98,14 +98,33 @@ export default function BudgetEditor({ projectId, canEdit, onSaved }) {
 
   if (loading) return <Spinner label="Cargando presupuesto…" />
 
+  const equipRows = items.filter((i) => i.capitulo === 1)
+  const tarifarioVacio = canEdit && equipRows.length > 0 && equipRows.every((i) => !Number(i.precio_unitario))
+
   return (
     <div className="sun-budget">
       <div className="sun-divider">Presupuesto</div>
+      {tarifarioVacio && (
+        <div className="sun-inline-note sun-inline-note--info">
+          <Icon name="info" size={14} /> Los equipos están a 0 €. Mantén tu tarifario en Configuración → Presupuesto y en la biblioteca de equipos para pre-rellenar precios.
+        </div>
+      )}
       {items.length === 0 ? (
         <div className="sun-inline-note sun-inline-note--info">
           <Icon name="info" size={14} /> Sin partidas todavía. Pre-rellena desde el diseño o añade partidas a mano.
         </div>
       ) : (
+        <div className="sun-budget__row sun-budget__row--head" aria-hidden="true">
+          <span>Cód.</span>
+          <span>Descripción</span>
+          <span>Ud</span>
+          <span className="num">Cant.</span>
+          <span className="num">Precio €</span>
+          <span className="num">Importe €</span>
+          <span />
+        </div>
+      )}
+      {items.length > 0 && (
         Object.entries(CAPITULOS).map(([num, titulo]) => {
           const capNum = Number(num)
           const rows = items.map((i, idx) => ({ ...i, idx })).filter((i) => i.capitulo === capNum)
@@ -117,8 +136,9 @@ export default function BudgetEditor({ projectId, canEdit, onSaved }) {
                 <strong>{num}. {titulo}</strong>
                 {rows.length > 0 && <span className="num">{money(subtotal)} €</span>}
               </div>
-              {rows.map((i) => (
+              {rows.map((i, pos) => (
                 <div key={i.idx} className="sun-budget__row">
+                  <span className="sun-budget__code mono">{num}.{pos + 1}</span>
                   <input className="sun-input" placeholder="Descripción de la partida" value={i.descripcion}
                     disabled={!canEdit} onChange={(e) => updateItem(i.idx, { descripcion: e.target.value })} />
                   <input className="sun-input" aria-label="Unidad" value={i.unidad}
@@ -128,7 +148,7 @@ export default function BudgetEditor({ projectId, canEdit, onSaved }) {
                   <input className="sun-input num" aria-label="Precio unitario (€)" type="number" min="0" step="any" value={i.precio_unitario}
                     disabled={!canEdit} onChange={(e) => updateItem(i.idx, { precio_unitario: e.target.value })} />
                   <span className="sun-budget__importe num">{money((Number(i.cantidad) || 0) * (Number(i.precio_unitario) || 0))}</span>
-                  {canEdit && <IconBtn icon="trash-2" label="Quitar partida" size="sm" onClick={() => removeItem(i.idx)} />}
+                  {canEdit ? <IconBtn icon="trash-2" label="Quitar partida" size="sm" onClick={() => removeItem(i.idx)} /> : <span />}
                 </div>
               ))}
               {canEdit && (

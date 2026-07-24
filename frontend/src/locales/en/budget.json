@@ -1,0 +1,38 @@
+{
+  "title": "Budget parameters",
+  "intro": "Rates and adjustments that feed each project's pre-generated budget.",
+  "save": "Save parameters",
+  "saved": "Budget parameters saved",
+  "saveError": "Could not save the parameters",
+  "loadError": "Could not load the parameters",
+  "groups": {
+    "labor": "Labor",
+    "inflation": "Equipment inflation",
+    "lines": "Custom line items"
+  },
+  "fields": {
+    "laborFixed": "Fixed per installation (€)",
+    "laborFixedHint": "Commissioning and management: added once per project.",
+    "laborPerPanel": "Per installed module (€/unit)",
+    "laborPerPanelHint": "Multiplied by the number of modules in the design.",
+    "inflationPct": "General equipment inflation (%)",
+    "inflationPctHint": "Covers market price fluctuation. It compounds with each equipment's own inflation and never shows as a concept: the budget only reflects the final price."
+  },
+  "lines": {
+    "empty": "No custom lines yet. Lines added here are included in every pre-generated budget.",
+    "add": "Add line",
+    "chapter": "Chapter",
+    "description": "Description",
+    "descriptionPlaceholder": "E.g.: Construction waste management",
+    "unit": "Unit",
+    "qty": "Qty",
+    "price": "Price (€)",
+    "remove": "Remove line"
+  },
+  "chapters": {
+    "1": "1 · Equipment",
+    "2": "2 · Electrical installation",
+    "3": "3 · Structure and mounting",
+    "4": "4 · Legalization and processing"
+  }
+}

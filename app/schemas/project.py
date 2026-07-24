@@ -31,6 +31,7 @@ class ProjectUpdateSchema(BaseModel):
     tipo_voltaje: Optional[str] = Field(default=None, max_length=20)
 
     resultados: Optional[dict] = None
+    layout: Optional[dict] = None
 
     @field_validator('*', mode='before')
     @classmethod

@@ -213,6 +213,8 @@ export const api = {
   org: {
     getBranding: () => get('/api/org/branding'),
     setBranding: (b) => patch('/api/org/branding', b),
+    getBudgetProfile: () => get('/api/org/budget-profile'),
+    setBudgetProfile: (b) => patch('/api/org/budget-profile', b),
     logoUrl: () => '/api/org/branding/logo',
     uploadLogo: (file) => {
       const fd = new FormData()

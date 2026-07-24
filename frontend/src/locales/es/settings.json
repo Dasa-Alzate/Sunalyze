@@ -12,6 +12,7 @@
     "nav": "Secciones de configuración",
     "tabs": {
       "marca": "Marca",
+      "presupuesto": "Presupuesto",
       "flags": "Flags"
     }
   },

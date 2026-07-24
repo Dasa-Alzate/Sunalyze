@@ -19,6 +19,7 @@ const SCHEMAS = {
       { key: 'vmp', label: 'Vmp', num: true },
       { key: 'imp', label: 'Imp', num: true },
       { key: 'dim', label: 'Dim. (mm)', render: (r) => `${r.width || 0}×${r.height || 0}` },
+      { key: 'precio_unitario', label: '€ tarifa', num: true, render: (r) => (r.precio_unitario != null ? dec(r.precio_unitario) : '—') },
     ],
     fields: [
       { key: 'nombre', label: 'Nombre', required: true, placeholder: 'Ej: LONGi Hi-MO6 550W' },
@@ -33,6 +34,8 @@ const SCHEMAS = {
       { key: 't_noct', label: 'NOCT (°C)', num: true },
       { key: 'width', label: 'Ancho (mm)', num: true },
       { key: 'height', label: 'Alto (mm)', num: true },
+      { key: 'precio_unitario', label: 'Precio tarifa (€/ud)', num: true },
+      { key: 'inflacion_pct', label: 'Inflación por imprevistos (%)', num: true },
       { key: 'datasheet', label: 'Ficha técnica (URL)', placeholder: 'https://…', link: true },
     ],
   },
@@ -45,6 +48,7 @@ const SCHEMAS = {
       { key: 'vmax', label: 'Vmax', num: true },
       { key: 'I_max_input', label: 'I máx in', num: true },
       { key: 'I_max_output', label: 'I máx out', num: true },
+      { key: 'precio_unitario', label: '€ tarifa', num: true, render: (r) => (r.precio_unitario != null ? dec(r.precio_unitario) : '—') },
     ],
     fields: [
       { key: 'nombre', label: 'Nombre', required: true, placeholder: 'Ej: Fronius PRIMO 5.0-1' },
@@ -54,6 +58,8 @@ const SCHEMAS = {
       { key: 'I_max_input', label: 'I máx entrada (A)', num: true, required: true },
       { key: 'I_max_output', label: 'I máx salida (A)', num: true, required: true },
       { key: 'y', label: 'Eficiencia (%)', num: true },
+      { key: 'precio_unitario', label: 'Precio tarifa (€/ud)', num: true },
+      { key: 'inflacion_pct', label: 'Inflación por imprevistos (%)', num: true },
     ],
   },
   batteries: {
@@ -65,6 +71,7 @@ const SCHEMAS = {
       { key: 'power_kw', label: 'kW', num: true },
       { key: 'voltage', label: 'V', num: true },
       { key: 'technology', label: 'Tecnología' },
+      { key: 'precio_unitario', label: '€ tarifa', num: true, render: (r) => (r.precio_unitario != null ? dec(r.precio_unitario) : '—') },
     ],
     fields: [
       { key: 'nombre', label: 'Nombre', required: true, placeholder: 'Ej: BYD HVS 5.1' },
@@ -76,6 +83,8 @@ const SCHEMAS = {
       { key: 'technology', label: 'Tecnología', placeholder: 'Ej: LiFePO4' },
       { key: 'round_trip_efficiency', label: 'Eficiencia ida y vuelta (%)', num: true },
       { key: 'max_cycles', label: 'Ciclos máximos', num: true },
+      { key: 'precio_unitario', label: 'Precio tarifa (€/ud)', num: true },
+      { key: 'inflacion_pct', label: 'Inflación por imprevistos (%)', num: true },
     ],
   },
   wires: {

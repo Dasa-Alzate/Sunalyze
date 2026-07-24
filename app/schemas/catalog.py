@@ -21,6 +21,8 @@ class PanelSchema(BaseModel):
     t_noct: Optional[float] = Field(default=None, gt=0, le=100)
     width: Optional[int] = Field(default=None, ge=0, le=10000)
     height: Optional[int] = Field(default=None, ge=0, le=10000)
+    precio_unitario: Optional[float] = Field(default=None, ge=0, le=10_000_000)
+    inflacion_pct: Optional[float] = Field(default=None, ge=0, le=100)
 
 
 class InverterSchema(BaseModel):
@@ -30,6 +32,8 @@ class InverterSchema(BaseModel):
     I_max_input: Optional[float] = Field(default=None, ge=0, le=10000)
     I_max_output: Optional[float] = Field(default=None, ge=0, le=10000)
     y: Optional[float] = Field(default=None, ge=0, le=100)
+    precio_unitario: Optional[float] = Field(default=None, ge=0, le=10_000_000)
+    inflacion_pct: Optional[float] = Field(default=None, ge=0, le=100)
 
 
 class BatterySchema(BaseModel):
@@ -43,6 +47,8 @@ class BatterySchema(BaseModel):
     width: Optional[int] = Field(default=None, ge=0, le=10000)
     height: Optional[int] = Field(default=None, ge=0, le=10000)
     depth: Optional[int] = Field(default=None, ge=0, le=10000)
+    precio_unitario: Optional[float] = Field(default=None, ge=0, le=10_000_000)
+    inflacion_pct: Optional[float] = Field(default=None, ge=0, le=100)
 
 
 class WireSchema(BaseModel):

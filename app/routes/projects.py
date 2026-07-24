@@ -45,6 +45,8 @@ def _apply(project, data):
             setattr(project, field, data[field])
     if 'resultados' in data:
         project.resultados = data['resultados']
+    if 'layout' in data:
+        project.layout = data['layout']
 
 
 def _owned_or_404(project_id, include_deleted=False):
@@ -185,6 +187,7 @@ def duplicate_project(project_id):
     copied = {f: getattr(source, f) for f in _EDITABLE_FIELDS if f not in ('cliente', 'estado')}
     _apply(clone, copied)
     clone.resultados = source.resultados
+    clone.layout = source.layout
     clone.estado = 'borrador'
     db.session.add(clone)
     db.session.commit()

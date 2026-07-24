@@ -1,0 +1,38 @@
+{
+  "title": "Parámetros de presupuesto",
+  "intro": "Tarifas y ajustes que alimentan la pre-generación del presupuesto de cada proyecto.",
+  "save": "Guardar parámetros",
+  "saved": "Parámetros de presupuesto guardados",
+  "saveError": "No se pudieron guardar los parámetros",
+  "loadError": "No se pudieron cargar los parámetros",
+  "groups": {
+    "labor": "Mano de obra",
+    "inflation": "Inflación de equipos",
+    "lines": "Partidas personalizadas"
+  },
+  "fields": {
+    "laborFixed": "Fijo por instalación (€)",
+    "laborFixedHint": "Puesta en marcha y gestión: se suma una vez por proyecto.",
+    "laborPerPanel": "Por módulo instalado (€/ud)",
+    "laborPerPanelHint": "Se multiplica por el número de módulos del diseño.",
+    "inflationPct": "Inflación general de equipos (%)",
+    "inflationPctHint": "Cubre la fluctuación de precios de mercado. Se compone con la inflación propia de cada equipo y no aparece como concepto: el presupuesto solo refleja el precio final."
+  },
+  "lines": {
+    "empty": "Sin partidas propias todavía. Las líneas que añadas aquí se incluirán en cada presupuesto pre-generado.",
+    "add": "Añadir partida",
+    "chapter": "Capítulo",
+    "description": "Descripción",
+    "descriptionPlaceholder": "Ej: Gestión de residuos de obra",
+    "unit": "Ud",
+    "qty": "Cant.",
+    "price": "Precio (€)",
+    "remove": "Quitar partida"
+  },
+  "chapters": {
+    "1": "1 · Equipos",
+    "2": "2 · Instalación eléctrica",
+    "3": "3 · Estructura y montaje",
+    "4": "4 · Legalización y tramitación"
+  }
+}

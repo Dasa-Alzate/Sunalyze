@@ -1,4 +1,6 @@
 
+import json
+
 from app.extensions import db
 from .database import BaseModel, SoftDeleteMixin
 
@@ -63,3 +65,48 @@ class OrgBrandingProfile(BaseModel):
 
     def __repr__(self):
         return f'<OrgBrandingProfile org{self.org_id}>'
+
+
+class OrgBudgetProfile(BaseModel):
+
+    __tablename__ = 'org_budget_profiles'
+    __table_args__ = (
+        db.UniqueConstraint('org_id', name='uq_org_budget_org'),
+    )
+
+    org_id = db.Column(
+        db.Integer, db.ForeignKey('organizations.id', ondelete='CASCADE'),
+        nullable=False, index=True,
+    )
+    labor_fixed = db.Column(db.Float, nullable=False, default=0)
+    labor_per_panel = db.Column(db.Float, nullable=False, default=0)
+    equipment_inflation_pct = db.Column(db.Float, nullable=False, default=0)
+    _custom_lines = db.Column('custom_lines', db.Text)
+
+    organization = db.relationship('Organization')
+
+    @property
+    def custom_lines(self):
+        if not self._custom_lines:
+            return []
+        try:
+            return json.loads(self._custom_lines)
+        except (ValueError, TypeError):
+            return []
+
+    @custom_lines.setter
+    def custom_lines(self, value):
+        self._custom_lines = json.dumps(value) if value else None
+
+    def to_dict(self):
+        return {
+            'id': self.id,
+            'org_id': self.org_id,
+            'labor_fixed': self.labor_fixed,
+            'labor_per_panel': self.labor_per_panel,
+            'equipment_inflation_pct': self.equipment_inflation_pct,
+            'custom_lines': self.custom_lines,
+        }
+
+    def __repr__(self):
+        return f'<OrgBudgetProfile org{self.org_id}>'

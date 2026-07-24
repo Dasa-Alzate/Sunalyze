@@ -17,6 +17,8 @@ class Inverter(BaseModel, ProvenanceMixin):
     power_max = db.Column(db.Float)
     I_max_input = db.Column(db.Float)
     I_max_output = db.Column(db.Float)
+    precio_unitario = db.Column(db.Float)
+    inflacion_pct = db.Column(db.Float)
     datasheet = db.Column(db.String(200))
     
     def to_dict(self):
@@ -31,6 +33,8 @@ class Inverter(BaseModel, ProvenanceMixin):
             'vmax': self.vmax,
             'I_max_input': self.I_max_input,
             'I_max_output': self.I_max_output,
+            'precio_unitario': self.precio_unitario,
+            'inflacion_pct': self.inflacion_pct,
             'datasheet': self.datasheet,
             **self.provenance_dict(),
         }

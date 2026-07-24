@@ -3,6 +3,7 @@ import { useTranslation } from 'react-i18next'
 import { Topbar, Icon } from '@/shared/ui'
 import { useAuth } from '@/services/auth'
 import BrandingSettings from '@/features/settings/BrandingSettings'
+import BudgetSettings from '@/features/settings/BudgetSettings'
 import Flags from '@/features/admin/Flags'
 
 export default function Configuracion() {
@@ -13,6 +14,7 @@ export default function Configuracion() {
     const list = []
     if (can('org:manage')) {
       list.push({ key: 'marca', icon: 'palette', render: () => <BrandingSettings /> })
+      list.push({ key: 'presupuesto', icon: 'calculator', render: () => <BudgetSettings /> })
     }
     if (isPlatformAdmin) {
       list.push({ key: 'flags', icon: 'flag', render: () => <Flags /> })

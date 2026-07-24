@@ -5,7 +5,7 @@ from app.security import current_org_id
 from app.authz import require_permission, Permission
 from app.errors import ValidationError, NotFound
 from app.services.org_service import OrgService
-from app.schemas.org import OrgBrandingSchema
+from app.schemas.org import OrgBrandingSchema, OrgBudgetProfileSchema
 
 org_bp = Blueprint('org', __name__)
 
@@ -26,6 +26,25 @@ def update_branding():
     data = OrgBrandingSchema(**_body())
     return jsonify(OrgService.update_branding(
         current_org_id(), data.model_dump(exclude_unset=True)))
+
+
+@org_bp.route('/api/org/budget-profile', methods=['GET'])
+@require_permission(Permission.ORG_MANAGE)
+def get_budget_profile():
+    return jsonify(OrgService.get_budget_profile(current_org_id()))
+
+
+@org_bp.route('/api/org/budget-profile', methods=['PATCH'])
+@require_permission(Permission.ORG_MANAGE)
+def update_budget_profile():
+    data = OrgBudgetProfileSchema(**_body())
+    fields = data.model_dump(exclude_unset=True)
+    if 'custom_lines' in fields and fields['custom_lines'] is not None:
+        fields['custom_lines'] = [
+            {k: v for k, v in line.items() if k != 'orden'}
+            for line in fields['custom_lines']
+        ]
+    return jsonify(OrgService.update_budget_profile(current_org_id(), fields))
 
 
 @org_bp.route('/api/org/branding/logo', methods=['POST'])

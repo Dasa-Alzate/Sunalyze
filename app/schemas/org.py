@@ -1,10 +1,12 @@
 
 import os
 import re
-from typing import Optional
+from typing import List, Optional
 from urllib.parse import urlparse
 
 from pydantic import BaseModel, Field, field_validator
+
+from app.schemas.budget import BudgetItemSchema
 
 _HEX_COLOR = re.compile(r'^#[0-9a-fA-F]{3,8}$')
 _PREFIX = re.compile(r'^[A-Z0-9-]{1,8}$')
@@ -58,3 +60,10 @@ class OrgBrandingSchema(BaseModel):
         if not _PREFIX.match(candidate):
             raise ValueError('El prefijo solo admite letras, números y guiones (máx. 8).')
         return candidate
+
+
+class OrgBudgetProfileSchema(BaseModel):
+    labor_fixed: Optional[float] = Field(default=None, ge=0, le=10_000_000)
+    labor_per_panel: Optional[float] = Field(default=None, ge=0, le=1_000_000)
+    equipment_inflation_pct: Optional[float] = Field(default=None, ge=0, le=100)
+    custom_lines: Optional[List[BudgetItemSchema]] = Field(default=None, max_length=50)

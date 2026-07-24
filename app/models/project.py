@@ -43,6 +43,7 @@ class Project(BaseModel, SoftDeleteMixin):
     budget_iva_pct = db.Column(db.Float, nullable=False, default=21)
 
     _resultados = db.Column('resultados', db.Text)
+    _layout = db.Column('layout', db.Text)
 
     panel = db.relationship('Panel', foreign_keys=[panel_id])
     inverter = db.relationship('Inverter', foreign_keys=[inverter_id])
@@ -102,6 +103,19 @@ class Project(BaseModel, SoftDeleteMixin):
         self._resultados = json.dumps(value) if value is not None else None
 
     @property
+    def layout(self):
+        if not self._layout:
+            return None
+        try:
+            return json.loads(self._layout)
+        except (ValueError, TypeError):
+            return None
+
+    @layout.setter
+    def layout(self, value):
+        self._layout = json.dumps(value) if value is not None else None
+
+    @property
     def kwp(self):
         data = self.resultados
         if data and data.get('total_field_power') is not None:
@@ -149,6 +163,7 @@ class Project(BaseModel, SoftDeleteMixin):
             'potencia_contratada': self.potencia_contratada,
             'tipo_voltaje': self.tipo_voltaje,
             'resultados': self.resultados,
+            'layout': self.layout,
             'kwp': self.kwp,
             'n_paneles': self.n_paneles,
             'memoria_firmada': self.current_signature is not None,

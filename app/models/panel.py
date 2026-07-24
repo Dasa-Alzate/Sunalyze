@@ -22,6 +22,8 @@ class Panel(BaseModel, ProvenanceMixin):
     t_noct = db.Column(db.Float)
     height = db.Column(db.Integer)
     width = db.Column(db.Integer)
+    precio_unitario = db.Column(db.Float)
+    inflacion_pct = db.Column(db.Float)
     datasheet = db.Column(db.String(200))
     
     def to_dict(self):
@@ -41,6 +43,8 @@ class Panel(BaseModel, ProvenanceMixin):
             't_noct': self.t_noct,
             'height': self.height,
             'width': self.width,
+            'precio_unitario': self.precio_unitario,
+            'inflacion_pct': self.inflacion_pct,
             'datasheet': self.datasheet,
             **self.provenance_dict(),
         }

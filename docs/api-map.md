@@ -1,6 +1,6 @@
 # API map
 
-Mapa autogenerado por `flask api-map`. Endpoints `/api`: 125.
+Mapa autogenerado por `flask api-map`. Endpoints `/api`: 128.
 
 No editar a mano: regenerar con `flask api-map`.
 
@@ -162,6 +162,8 @@ No editar a mano: regenerar con `flask api-map`.
 | PATCH | `/api/org/branding` | `org.update_branding` |  |
 | GET | `/api/org/branding/logo` | `org.get_logo` |  |
 | POST | `/api/org/branding/logo` | `org.upload_logo` |  |
+| GET | `/api/org/budget-profile` | `org.get_budget_profile` |  |
+| PATCH | `/api/org/budget-profile` | `org.update_budget_profile` |  |
 
 ## posventa
 
