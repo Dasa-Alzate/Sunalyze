@@ -35,9 +35,9 @@ LOCATION_HALF_EXTENT_M = 150.0
 LAYOUT_MARGIN_M = 4.0
 TARGET_PX = 1400
 
-STYLE_ROOF = 'fill="#38bdf8" fill-opacity="0.06" stroke="#38bdf8" stroke-width="3" stroke-dasharray="10 6"'
-STYLE_EXCLUSION = 'fill="#ef4444" fill-opacity="0.2" stroke="#ef4444" stroke-width="2" stroke-dasharray="6 4"'
-STYLE_PANEL = 'fill="#0f2c52" fill-opacity="0.88" stroke="#e2e8f0" stroke-width="1.2"'
+STYLE_ROOF = 'fill="#38bdf8" fill-opacity="0.10" stroke="#0284c7" stroke-width="6" stroke-dasharray="16 9"'
+STYLE_EXCLUSION = 'fill="#ef4444" fill-opacity="0.22" stroke="#dc2626" stroke-width="4" stroke-dasharray="9 6"'
+STYLE_PANEL = 'fill="#0f2c52" fill-opacity="0.9" stroke="#e2e8f0" stroke-width="2"'
 
 
 def _converter(origin_lat, origin_lng):
@@ -122,8 +122,19 @@ class SitePlanService:
             f' font-size="11" fill="#ffffff" stroke="#131316" stroke-width="0.4" paint-order="stroke">{escape(ATTRIBUTION)}</text>'
         )
 
+    @staticmethod
+    def _pin(cx, cy):
+        r = 22
+        tip = cy + 54
+        return (
+            f'<path d="M {cx} {tip} C {cx - 30} {cy + 6}, {cx - r} {cy - 16}, {cx} {cy - 20}'
+            f' C {cx + r} {cy - 16}, {cx + 30} {cy + 6}, {cx} {tip} Z"'
+            f' fill="#dc2626" stroke="#ffffff" stroke-width="4"/>'
+            f'<circle cx="{cx}" cy="{cy - 4}" r="9" fill="#ffffff"/>'
+        )
+
     @classmethod
-    def location_plan_svg(cls, lat, lng):
+    def location_plan_svg(cls, lat, lng, layout=None):
         lat = float(lat)
         lng = float(lng)
         to_local, to_latlng = _converter(lat, lng)
@@ -141,19 +152,73 @@ class SitePlanService:
                 f'<image x="0" y="0" width="{size}" height="{size}" opacity="0.75" href="{cls._data_uri(parcels, "image/png")}"/>'
             )
         c = size / 2
-        parts.append(
-            f'<circle cx="{c}" cy="{c}" r="26" fill="none" stroke="#dc2626" stroke-width="4"/>'
-            f'<line x1="{c - 44}" y1="{c}" x2="{c - 14}" y2="{c}" stroke="#dc2626" stroke-width="4"/>'
-            f'<line x1="{c + 14}" y1="{c}" x2="{c + 44}" y2="{c}" stroke="#dc2626" stroke-width="4"/>'
-            f'<line x1="{c}" y1="{c - 44}" x2="{c}" y2="{c - 14}" stroke="#dc2626" stroke-width="4"/>'
-            f'<line x1="{c}" y1="{c + 14}" x2="{c}" y2="{c + 44}" stroke="#dc2626" stroke-width="4"/>'
-        )
         m_per_px = (2 * LOCATION_HALF_EXTENT_M) / size
+
+        roof = (layout or {}).get('roof') or []
+        origin = (layout or {}).get('origin')
+        if len(roof) >= 3 and origin:
+            o_to_local, _ = _converter(float(origin[0]), float(origin[1]))
+            pts = []
+            for p in roof:
+                x_m, y_m = o_to_local(float(p[0]), float(p[1]))
+                pts.append(f'{c + x_m / m_per_px:.1f},{c - y_m / m_per_px:.1f}')
+            parts.append(f'<polygon points="{" ".join(pts)}" {STYLE_ROOF}/>')
+            parts.append(f'<text x="{c}" y="{c - 34}" text-anchor="middle" font-family="monospace"'
+                         f' font-size="20" fill="#ffffff" stroke="#131316" stroke-width="0.6"'
+                         f' paint-order="stroke">Campo fotovoltaico</text>')
+        parts.append(cls._pin(c, c))
+
         parts.append(cls._scale_bar(size, size, m_per_px))
         parts.append(cls._north_arrow(size))
         parts.append(cls._attribution(size, size))
         body = '\n'.join(parts)
         return f'<svg xmlns="http://www.w3.org/2000/svg" width="{size}" height="{size}" viewBox="0 0 {size} {size}">{body}</svg>'
+
+    @classmethod
+    def schematic_layout_svg(cls, n_panels, panel_w_mm, panel_h_mm, orientation='v'):
+        """Disposición esquemática (sin geolocalizar) a partir del nº de paneles.
+
+        Fallback cuando el usuario no ha dibujado la cubierta: entrega igualmente
+        un plano de disposición con la retícula de N módulos y sus dimensiones.
+        """
+        n = max(1, int(n_panels or 0))
+        w_mm = float(panel_w_mm or 0)
+        h_mm = float(panel_h_mm or 0)
+        if w_mm <= 0 or h_mm <= 0:
+            return None
+        pw = (h_mm if orientation == 'h' else w_mm) / 1000
+        ph = (w_mm if orientation == 'h' else h_mm) / 1000
+
+        cols = max(1, round(math.sqrt(n * ph / pw))) if pw else 1
+        cols = min(n, max(1, cols))
+        rows = math.ceil(n / cols)
+        gap = 0.03
+
+        scale = 150.0
+        margin = 60
+        cell_w = (pw + gap) * scale
+        cell_h = (ph + gap) * scale
+        width = round(cols * cell_w + 2 * margin)
+        height = round(rows * cell_h + 2 * margin + 40)
+
+        parts = [f'<rect x="0" y="0" width="{width}" height="{height}" fill="#ffffff"/>']
+        placed = 0
+        for r in range(rows):
+            for cc in range(cols):
+                if placed >= n:
+                    break
+                x = margin + cc * cell_w
+                y = margin + r * cell_h
+                parts.append(f'<rect x="{x:.1f}" y="{y:.1f}" width="{pw * scale:.1f}" height="{ph * scale:.1f}"'
+                             f' fill="#0f2c52" fill-opacity="0.9" stroke="#e2e8f0" stroke-width="2" rx="3"/>')
+                placed += 1
+        parts.append(cls._scale_bar(width, height, 1 / scale))
+        parts.append(cls._north_arrow(width))
+        parts.append(f'<text x="{margin}" y="{height - 16}" font-family="monospace" font-size="18" fill="#131316">'
+                     f'{n} módulos · {cols}×{rows} · módulo {w_mm:.0f}×{h_mm:.0f} mm '
+                     f'({"horizontal" if orientation == "h" else "vertical"})</text>')
+        body = '\n'.join(parts)
+        return f'<svg xmlns="http://www.w3.org/2000/svg" width="{width}" height="{height}" viewBox="0 0 {width} {height}">{body}</svg>'
 
     @staticmethod
     def _grid_geometry(layout):

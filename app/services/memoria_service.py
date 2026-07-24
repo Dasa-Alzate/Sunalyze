@@ -163,16 +163,28 @@ class MemoriaService:
                 wrapped = wrap_plan_sheet(svg, title=title, orientation='landscape', fields=fields)
                 return CircuitService.fit_to_mm(wrapped, 250, 168)
 
+            layout = project.layout if project else None
+
             if lat is not None and lng is not None:
-                inner = SitePlanService.location_plan_svg(lat, lng)
+                inner = SitePlanService.location_plan_svg(lat, lng, layout)
                 if inner:
                     result['svg_plano_ubicacion'] = _sheet(inner, 'PLANO DE UBICACIÓN Y EMPLAZAMIENTO')
 
-            layout = project.layout if project else None
+            inner = None
             if layout and layout.get('cells'):
                 inner = SitePlanService.layout_plan_svg(layout)
-                if inner:
-                    result['svg_plano_disposicion'] = _sheet(inner, 'PLANO DE DISPOSICIÓN DE PANELES')
+            if inner is None:
+                res = (project.resultados if project else None) or {}
+                try:
+                    n_paneles = int(res.get('cell_amount') or data.get('panels_number') or 0)
+                except (TypeError, ValueError):
+                    n_paneles = 0
+                panel = Panel.query.get(project.panel_id) if project and project.panel_id else None
+                if n_paneles and panel and panel.width and panel.height:
+                    orient = (layout or {}).get('orientation') or 'v'
+                    inner = SitePlanService.schematic_layout_svg(n_paneles, panel.width, panel.height, orient)
+            if inner:
+                result['svg_plano_disposicion'] = _sheet(inner, 'PLANO DE DISPOSICIÓN DE PANELES')
         except Exception:
             logger.exception('Error generando planos de ubicación/disposición para la memoria')
         return result
@@ -473,8 +485,8 @@ class MemoriaService:
             def _sheet(svg, name, title):
                 wrapped = CircuitService.wrap_sheet(svg, name, title=title, fields=fields)
                 if name == 'full-system':
-                    return CircuitService.fit_to_mm(wrapped, 260, 180)
-                return CircuitService.fit_to_mm(wrapped, 165, 240)
+                    return CircuitService.fit_to_mm(wrapped, 258, 164)
+                return CircuitService.fit_to_mm(wrapped, 165, 212)
 
             return {
                 'svg_ca': _sheet(CircuitService.generate_grid_connection(config),

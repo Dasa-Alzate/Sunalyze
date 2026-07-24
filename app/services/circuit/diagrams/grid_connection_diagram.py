@@ -46,7 +46,7 @@ class GridConnectionDiagram:
                 voltage="1N 230VAC", frequency="50Hz  TT")
         d.wire(BUS_MAIN, R_GRID + 1.0, BUS_MAIN, R_METER)
 
-        d.place(Meter(), 1, R_METER, orientation=90,
+        d.place(Meter(), 1, R_METER,
                 label="Contador Bidireccional", label_pos="right")
         d.wire(BUS_MAIN, R_METER + 1, BUS_MAIN, R_ICP)
 
@@ -86,12 +86,10 @@ class GridConnectionDiagram:
                 label_pos="right")
         d.wire(BUS_PV, R_PV_LDIF + 1, BUS_PV, R_PV_MCB2)
 
-        spd_tap = R_PV_MCB2 - 0.25
+        spd_tap = R_PV_MCB2 + 0.05
         d.dot(BUS_PV, spd_tap)
         d.wire(BUS_PV, spd_tap, SPD_X, spd_tap)
         d.place(SurgeArrester(), 4.5, spd_tap, label="SPD", label_pos="right")
-        d.wire(SPD_X, spd_tap + 1, SPD_X, spd_tap + 1.5)
-        d.place(Ground(), 4.5, spd_tap + 1.5, label="PE")
 
         d.place(CircuitBreaker(), 3, R_PV_MCB2, orientation=90,
                 label=f"I.MAG  {cfg.mcb_i:.0f}A", label_pos="right")
