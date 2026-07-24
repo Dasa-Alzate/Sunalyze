@@ -48,11 +48,23 @@ export default function ProjectList() {
   }
 
   async function remove(id, cliente) {
-    if (!window.confirm(`¿Eliminar el proyecto de ${cliente}? Esta acción no se puede deshacer.`)) return
     try {
       await api.projects.remove(id)
-      toast('success', 'Proyecto eliminado')
       load()
+      toast('info', 'Proyecto eliminado', cliente, {
+        action: {
+          label: 'Deshacer',
+          onClick: async () => {
+            try {
+              await api.projects.restore(id)
+              load()
+              toast('success', 'Proyecto restaurado', cliente)
+            } catch (e) {
+              toast('error', 'No se pudo restaurar', e.message)
+            }
+          },
+        },
+      })
     } catch (e) {
       toast('error', 'No se pudo eliminar', e.message)
     }

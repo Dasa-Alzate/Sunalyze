@@ -1,11 +1,13 @@
 import { useEffect, useRef, useState } from 'react'
+import { useSearchParams } from 'react-router-dom'
 import { Topbar } from '@/shared/ui'
-import { Btn, IconBtn, Icon, Badge, Field, SelectField, ExportMenu, Spinner, ErrorState, Scrim } from '@/shared/ui'
+import { Btn, IconBtn, Icon, Badge, Field, SelectField, ExportMenu, Spinner, ErrorState, Scrim, ConfirmDialog } from '@/shared/ui'
 import { api } from '@/api/client'
 import { dec } from '@/shared/format'
 import { exportRows } from '@/services/export'
 import { toast } from '@/services/toast'
 import { useAuth } from '@/services/auth'
+import { emitSubview } from '@/services/assist'
 
 const SCHEMAS = {
   panels: {
@@ -102,7 +104,15 @@ export default function EquipmentLibrary() {
   const canEdit = can('equipment:edit')
   const canManage = can('catalog:manage')
   const canSubscribe = can('catalog:subscribe')
-  const [tab, setTab] = useState('panels')
+  const [searchParams] = useSearchParams()
+  const urlTab = searchParams.get('tab')
+  const [tab, setTab] = useState(() => ([...TAB_ORDER, 'marketplace'].includes(urlTab) ? urlTab : 'panels'))
+
+  useEffect(() => {
+    if ([...TAB_ORDER, 'marketplace'].includes(urlTab)) setTab(urlTab)
+  }, [urlTab])
+
+  useEffect(() => { emitSubview('equipos', tab) }, [tab])
   const [data, setData] = useState({ panels: null, inverters: null, batteries: null, wires: null })
   const [catalogs, setCatalogs] = useState(null)
   const [market, setMarket] = useState(null)
@@ -110,6 +120,7 @@ export default function EquipmentLibrary() {
   const [editing, setEditing] = useState(null)
   const [importing, setImporting] = useState(false)
   const [newCatalog, setNewCatalog] = useState(false)
+  const [removing, setRemoving] = useState(null)
   const [filter, setFilter] = useState('todos')
 
   const isMarket = tab === 'marketplace'
@@ -193,9 +204,9 @@ export default function EquipmentLibrary() {
     }
   }
 
-  async function remove(row) {
-    const name = row.nombre || `${row.tipo} ${row.seccion}mm²`
-    if (!window.confirm(`¿Eliminar ${name}?`)) return
+  async function confirmRemove() {
+    const row = removing
+    setRemoving(null)
     try {
       await api[schema.resource].remove(row.id)
       toast('success', 'Eliminado')
@@ -239,13 +250,27 @@ export default function EquipmentLibrary() {
   async function removeCatalog(cat) {
     const c = cat.counts || {}
     const total = (c.panels || 0) + (c.inverters || 0) + (c.batteries || 0) + (c.wires || 0)
-    if (!window.confirm(`¿Eliminar el catálogo «${cat.nombre}»? Se borrarán sus ${total} equipos.`)) return
     try {
       await api.catalogs.remove(cat.id)
-      toast('success', 'Catálogo eliminado')
       loadCatalogs()
       loadMarket()
       invalidateEquipment()
+      toast('info', 'Catálogo eliminado', `«${cat.nombre}» con sus ${total} equipos`, {
+        action: {
+          label: 'Deshacer',
+          onClick: async () => {
+            try {
+              await api.catalogs.restore(cat.id)
+              loadCatalogs()
+              loadMarket()
+              invalidateEquipment()
+              toast('success', 'Catálogo restaurado', cat.nombre)
+            } catch (e) {
+              toast('error', 'No se pudo restaurar', e.message)
+            }
+          },
+        },
+      })
     } catch (e) {
       toast('error', 'No se pudo eliminar', e.message)
     }
@@ -365,7 +390,7 @@ export default function EquipmentLibrary() {
                           {r.editable && canEdit ? (
                             <span style={{ display: 'inline-flex', gap: 4 }}>
                               <IconBtn icon="pencil" label="Editar" size="sm" onClick={() => setEditing(r)} />
-                              {r.deletable && <IconBtn icon="trash-2" label="Eliminar" size="sm" onClick={() => remove(r)} />}
+                              {r.deletable && <IconBtn icon="trash-2" label="Eliminar" size="sm" onClick={() => setRemoving(r)} />}
                             </span>
                           ) : (
                             <span title="Equipo del marketplace (solo lectura)" style={{ color: 'var(--text-subtle)', display: 'inline-flex' }}>
@@ -401,6 +426,16 @@ export default function EquipmentLibrary() {
           />
         )}
 
+        <ConfirmDialog
+          open={Boolean(removing)}
+          title="Eliminar equipo"
+          description={removing ? `Se eliminará «${removing.nombre || `${removing.tipo} ${removing.seccion}mm²`}» de forma permanente.` : ''}
+          onClose={() => setRemoving(null)}
+          actions={[
+            { label: 'Cancelar', variant: 'ghost', onClick: () => setRemoving(null) },
+            { label: 'Eliminar', variant: 'danger', icon: 'trash-2', onClick: confirmRemove },
+          ]}
+        />
         {newCatalog && (
           <CatalogDrawer onClose={() => setNewCatalog(false)} onSave={createCatalog} />
         )}
@@ -411,7 +446,7 @@ export default function EquipmentLibrary() {
 
 function CatalogColorControl({ color, editable, onChange }) {
   if (!editable) {
-    return color ? <span className="catalog-color__swatch" style={{ background: color }} title="Color del badge" /> : null
+    return color ? <span className="catalog-color__swatch" style={{ background: color }} title="Color del catálogo" /> : null
   }
   return (
     <span className="catalog-color">
@@ -420,8 +455,8 @@ function CatalogColorControl({ color, editable, onChange }) {
         className="catalog-color__input"
         value={color || '#107c41'}
         onChange={(e) => onChange(e.target.value)}
-        aria-label="Color del badge del catálogo"
-        title="Color del badge"
+        aria-label="Color de la etiqueta del catálogo"
+        title="Color de la etiqueta del catálogo"
       />
       {color && <IconBtn icon="x" label="Quitar color" size="sm" onClick={() => onChange(null)} />}
     </span>

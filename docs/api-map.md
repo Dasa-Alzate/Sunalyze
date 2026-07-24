@@ -103,6 +103,12 @@ No editar a mano: regenerar con `flask api-map`.
 | GET | `/api/gdpr/export` | `gdpr.export_data` |  |
 | GET | `/api/gdpr/export.zip` | `gdpr.export_zip` |  |
 
+## help
+
+| Método(s) | Ruta | Endpoint | Resumen |
+| --- | --- | --- | --- |
+| GET | `/api/help/tutorial` | `help.tutorial` |  |
+
 ## legalization
 
 | Método(s) | Ruta | Endpoint | Resumen |

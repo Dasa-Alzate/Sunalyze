@@ -218,6 +218,13 @@
 .sun-toast__icon { flex: none; margin-top: 1px; }
 .sun-toast__icon svg, .sun-toast__icon [data-lucide] { width: 18px; height: 18px; }
 .sun-toast__body { flex: 1; min-width: 0; }
+.sun-toast__action { flex: none; align-self: center; border: 1px solid var(--border-strong); background: transparent; color: var(--text-strong); font-family: var(--font-sans); font-size: var(--text-sm); font-weight: var(--fw-semibold); padding: var(--space-1) var(--space-3); border-radius: var(--radius-sm); cursor: pointer; }
+.sun-toast__action:hover { background: var(--hover-surface); }
+
+.sun-savestate { display: inline-flex; align-items: center; gap: 5px; font-size: var(--text-xs); color: var(--text-subtle); white-space: nowrap; }
+.sun-savestate svg { color: var(--green-600); }
+.sun-savestate--dirty { color: var(--amber-700); }
+.sun-savestate--dirty svg { color: var(--amber-600); }
 .sun-toast__title { font-weight: var(--fw-semibold); font-size: var(--text-base); color: var(--text-strong); }
 .sun-toast__msg { font-size: var(--text-sm); color: var(--text-muted); margin-top: 2px; }
 .sun-toast--success { border-left-color: var(--success); }
