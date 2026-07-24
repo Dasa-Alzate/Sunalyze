@@ -221,6 +221,7 @@ class MemoriaService:
             template_vars.update(MemoriaService._build_battery_vars(form_data, battery))
             template_vars.update(MemoriaService._build_circuit_svgs(form_data, panel, inverter, battery))
             template_vars.update(MemoriaService._build_graph_svgs(form_data, project))
+            template_vars.update(MemoriaService._build_solar_path(form_data, project))
             template_vars.update(MemoriaService._build_budget_vars(project))
             template_vars.update(MemoriaService._build_site_plan_svgs(form_data, project))
 
@@ -270,6 +271,7 @@ class MemoriaService:
                 template_vars.update(MemoriaService._build_battery_vars(form_data, battery))
                 template_vars.update(MemoriaService._build_circuit_svgs(form_data, panel, inverter, battery))
                 template_vars.update(MemoriaService._build_graph_svgs(form_data, project))
+                template_vars.update(MemoriaService._build_solar_path(form_data, project))
             template_vars.update(MemoriaService._build_budget_vars(project))
             template_vars.update(MemoriaService._build_site_plan_svgs(form_data, project))
         return render_template('memoria_tecnica_pdf.html', **template_vars)
@@ -501,6 +503,34 @@ class MemoriaService:
             logger.exception('Error generando diagramas SVG para la memoria')
             empty = '<svg xmlns="http://www.w3.org/2000/svg" width="400" height="80"><text x="10" y="40" font-family="monospace" font-size="12" fill="#888">Diagrama no disponible</text></svg>'
             return {'svg_ca': empty, 'svg_cc': empty, 'svg_sistema': empty}
+
+    @staticmethod
+    def _build_solar_path(data, project=None):
+        from app.services.solar_path_service import SolarPathService
+
+        def _num(v):
+            try:
+                return float(v)
+            except (TypeError, ValueError):
+                return None
+
+        lat = _num(data.get('latitude'))
+        if lat is None and project:
+            lat = project.latitud
+        if lat is None:
+            return {}
+        res = (project.resultados if project else None) or {}
+        tilt = None
+        if project and project.inclinacion is not None:
+            tilt = project.inclinacion
+        elif res.get('beta_optimal') is not None:
+            tilt = res['beta_optimal']
+        azimuth = project.azimut if project and project.azimut is not None else 180
+        try:
+            return {'svg_solar_path': SolarPathService.generate(lat, tilt=tilt, azimuth=azimuth)}
+        except Exception:
+            logger.exception('Error generando la trayectoria solar')
+            return {}
 
     @staticmethod
     def _build_graph_svgs(data, project=None):
