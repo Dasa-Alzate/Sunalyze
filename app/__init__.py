@@ -54,6 +54,7 @@ def create_app(config_overrides=None):
     from app.routes.notifications import notifications_bp
     from app.routes.org import org_bp
     from app.routes.workspace import workspace_bp
+    from app.routes.help import help_bp
 
     app.register_blueprint(health_bp)
     app.register_blueprint(main_bp)
@@ -75,6 +76,7 @@ def create_app(config_overrides=None):
     app.register_blueprint(notifications_bp)
     app.register_blueprint(org_bp)
     app.register_blueprint(workspace_bp)
+    app.register_blueprint(help_bp)
 
     from app.errors import register_error_handlers
     register_error_handlers(app)

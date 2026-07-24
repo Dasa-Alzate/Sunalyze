@@ -1,6 +1,6 @@
 # API map
 
-Mapa autogenerado por `flask api-map`. Endpoints `/api`: 122.
+Mapa autogenerado por `flask api-map`. Endpoints `/api`: 123.
 
 No editar a mano: regenerar con `flask api-map`.
 
@@ -94,6 +94,12 @@ No editar a mano: regenerar con `flask api-map`.
 | POST | `/api/gdpr/consent` | `gdpr.accept_privacy` |  |
 | GET | `/api/gdpr/export` | `gdpr.export_data` |  |
 | GET | `/api/gdpr/export.zip` | `gdpr.export_zip` |  |
+
+## help
+
+| Método(s) | Ruta | Endpoint | Resumen |
+| --- | --- | --- | --- |
+| GET | `/api/help/tutorial` | `help.tutorial` |  |
 
 ## legalization
 

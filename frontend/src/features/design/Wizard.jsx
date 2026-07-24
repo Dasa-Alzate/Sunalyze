@@ -4,11 +4,16 @@ import { Topbar } from '@/shared/ui'
 import { Btn, Badge, Icon, Field, SelectField, ExportMenu, Spinner, ErrorState } from '@/shared/ui'
 import { api } from '@/api/client'
 import { dec, int, num } from '@/shared/format'
+import { relativo } from '@/shared/estados'
 import { exportRows } from '@/services/export'
 import { toast } from '@/services/toast'
 import { GeoMap } from '@/services/geo-map'
 import { useAuth } from '@/services/auth'
+import { emitSubview } from '@/services/assist'
+import { registerUnsavedGuard } from '@/shared/unsavedGuard'
 import CircuitDiagram from './CircuitDiagram'
+
+const STEP_KEYS = ['lugar', 'equipos', 'analisis', 'diagrama', 'memoria']
 
 const STEPS = [
   { title: 'Datos del lugar', icon: 'map-pin' },
@@ -45,6 +50,8 @@ export default function Wizard() {
   const [batteryQty, setBatteryQty] = useState(1)
 
   const [step, setStep] = useState(0)
+
+  useEffect(() => { emitSubview('diseno', STEP_KEYS[step]) }, [step])
   const [results, setResults] = useState(null)
   const [stale, setStale] = useState(false)
   const [analyzing, setAnalyzing] = useState(false)
@@ -65,6 +72,7 @@ export default function Wizard() {
         if (proj) {
           setProjectId(proj.id)
           setSerial(proj.serial || null)
+          setLastSaved(proj.updated_at || null)
           setForm({
             cliente: proj.cliente || '', localidad: proj.localidad || '', direccion: proj.direccion || '',
             necesidad: proj.necesidad ?? '', autoconsumo: proj.autoconsumo ?? 90,
@@ -87,10 +95,21 @@ export default function Wizard() {
   const inverter = useMemo(() => inverters.find((i) => i.id === inverterId) || null, [inverters, inverterId])
   const battery = useMemo(() => batteries.find((b) => b.id === batteryId) || null, [batteries, batteryId])
 
-  function patch(p) { setForm((f) => ({ ...f, ...p })); if (results) setStale(true) }
-  function pickPanel(p) { setPanelId(p.id); if (results) setStale(true) }
-  function pickInverter(i) { setInverterId(i.id); if (results) setStale(true) }
-  function pickBattery(b) { setBatteryId(b.id); if (results) setStale(true) }
+  const dirtyRef = useRef(false)
+  const saveRef = useRef(null)
+  const [dirty, setDirty] = useState(false)
+  const [lastSaved, setLastSaved] = useState(null)
+  function touch() { dirtyRef.current = true; setDirty(true); if (results) setStale(true) }
+
+  useEffect(() => registerUnsavedGuard({
+    isDirty: () => dirtyRef.current,
+    save: async () => Boolean(await saveRef.current({ silent: true })),
+  }), [])
+
+  function patch(p) { setForm((f) => ({ ...f, ...p })); touch() }
+  function pickPanel(p) { setPanelId(p.id); touch() }
+  function pickInverter(i) { setInverterId(i.id); touch() }
+  function pickBattery(b) { setBatteryId(b.id); touch() }
 
   async function analyze() {
     if (!panelId) { toast('warning', 'Selecciona un panel', 'El panel es obligatorio para dimensionar'); setStep(1); return }
@@ -115,6 +134,8 @@ export default function Wizard() {
       const res = await api.analyze(body)
       setResults(res)
       setStale(false)
+      dirtyRef.current = true
+      setDirty(true)
       toast('success', 'Dimensionamiento calculado')
     } catch (e) {
       setAnalysisError(e.message)
@@ -155,6 +176,9 @@ export default function Wizard() {
         setSerial(proj.serial || null)
         window.history.replaceState(null, '', `/app/diseno/${proj.id}`)
       }
+      dirtyRef.current = false
+      setDirty(false)
+      setLastSaved(new Date().toISOString())
       if (!silent) toast('success', 'Proyecto guardado')
       return proj
     } catch (e) {
@@ -164,6 +188,8 @@ export default function Wizard() {
       setSaving(false)
     }
   }
+
+  saveRef.current = save
 
   async function goToMemoria() {
     const proj = await save({ silent: true })
@@ -209,6 +235,10 @@ export default function Wizard() {
         actions={
           <>
             {serial && <Badge tone="neutral"><span className="mono">{serial}</span></Badge>}
+            <span className={`sun-savestate${dirty ? ' sun-savestate--dirty' : ''}`}>
+              <Icon name={dirty ? 'circle-dashed' : 'check'} size={13} />
+              {dirty ? 'Cambios sin guardar' : lastSaved ? `Guardado ${relativo(lastSaved)}` : ''}
+            </span>
             <Btn variant="secondary" icon="save" data-busy={saving} disabled={saving} onClick={() => save()}>Guardar</Btn>
             <Btn variant="secondary" icon="workflow" onClick={() => setStep(3)}>Diagrama unifilar</Btn>
             <Btn variant="primary" icon="file-text" onClick={goToMemoria}>Ir a la memoria</Btn>
@@ -293,18 +323,18 @@ export default function Wizard() {
                   <span className="sun-field__label" id="ss-inverter">
                     Inversor <span style={{ color: 'var(--text-subtle)', fontWeight: 500 }}>· opcional — déjalo vacío para ver compatibles</span>
                   </span>
-                  <SearchSelect labelId="ss-inverter" placeholder="Buscar inversor…" options={inverters} value={inverter} onPick={pickInverter} meta={inverterMeta} clearable onClear={() => { setInverterId(null); if (results) setStale(true) }} />
+                  <SearchSelect labelId="ss-inverter" placeholder="Buscar inversor…" options={inverters} value={inverter} onPick={pickInverter} meta={inverterMeta} clearable onClear={() => { setInverterId(null); touch() }} />
                 </div>
                 <div className="sun-field" style={{ marginTop: 'var(--space-4)' }}>
                   <span className="sun-field__label" id="ss-battery">
                     Batería <span style={{ color: 'var(--text-subtle)', fontWeight: 500 }}>· opcional — déjala vacía para «Sin batería»</span>
                   </span>
-                  <SearchSelect labelId="ss-battery" placeholder="Buscar batería…" options={batteries} value={battery} onPick={pickBattery} meta={batteryMeta} clearable onClear={() => { setBatteryId(null); if (results) setStale(true) }} />
+                  <SearchSelect labelId="ss-battery" placeholder="Buscar batería…" options={batteries} value={battery} onPick={pickBattery} meta={batteryMeta} clearable onClear={() => { setBatteryId(null); touch() }} />
                 </div>
                 {battery && (
                   <div style={{ marginTop: 'var(--space-4)', maxWidth: 220 }}>
                     <Field label="Cantidad de baterías" numeric type="number" step="1" min="1" value={batteryQty}
-                      onChange={(e) => { setBatteryQty(e.target.value); if (results) setStale(true) }} hint="ud" />
+                      onChange={(e) => { setBatteryQty(e.target.value); touch() }} hint="ud" />
                   </div>
                 )}
                 <label className="sun-check" style={{ marginTop: 'var(--space-4)' }}>
