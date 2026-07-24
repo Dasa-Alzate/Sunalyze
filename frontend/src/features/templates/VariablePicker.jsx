@@ -53,42 +53,44 @@ export default function VariablePicker({ kind, onInsert, onClose }) {
           ) : groups.length === 0 ? (
             <p style={{ color: 'var(--text-muted)' }}>No hay variables disponibles para este tipo de documento.</p>
           ) : (
-            <div className="sun-speclist">
-              <SelectField
-                label="Entidad"
-                value={entity}
-                onChange={(e) => setEntity(e.target.value)}
-                options={groups.map((g) => ({ value: g.entity, label: g.label }))}
-              />
-              <SelectField
-                label="Propiedad"
-                value={path}
-                onChange={(e) => setPath(e.target.value)}
-                options={(activeGroup?.vars || []).map((v) => ({ value: v.path, label: `${v.label} (${v.tipo})` }))}
-              />
-              <SelectField
-                label="Formato"
-                value={filterValue}
-                onChange={(e) => { setFilterValue(e.target.value); setArgValues({}) }}
-                options={FILTERS.map((f) => ({ value: f.value, label: f.label }))}
-              />
-              {(filterDef?.args || []).map((a) => (
-                <Field
-                  key={a.key}
-                  label={a.label}
-                  type="number"
-                  numeric
-                  value={argValues[a.key] ?? a.default}
-                  onChange={(e) => setArgValues((v) => ({ ...v, [a.key]: e.target.value }))}
+            <>
+              <div className="sun-speclist">
+                <SelectField
+                  label="Entidad"
+                  value={entity}
+                  onChange={(e) => setEntity(e.target.value)}
+                  options={groups.map((g) => ({ value: g.entity, label: g.label }))}
                 />
-              ))}
+                <SelectField
+                  label="Propiedad"
+                  value={path}
+                  onChange={(e) => setPath(e.target.value)}
+                  options={(activeGroup?.vars || []).map((v) => ({ value: v.path, label: `${v.label} (${v.tipo})` }))}
+                />
+                <SelectField
+                  label="Formato"
+                  value={filterValue}
+                  onChange={(e) => { setFilterValue(e.target.value); setArgValues({}) }}
+                  options={FILTERS.map((f) => ({ value: f.value, label: f.label }))}
+                />
+                {(filterDef?.args || []).map((a) => (
+                  <Field
+                    key={a.key}
+                    label={a.label}
+                    type="number"
+                    numeric
+                    value={argValues[a.key] ?? a.default}
+                    onChange={(e) => setArgValues((v) => ({ ...v, [a.key]: e.target.value }))}
+                  />
+                ))}
+              </div>
               {preview && (
-                <div className="sun-section-title" style={{ marginTop: 'var(--space-2)' }}>
-                  <Icon name="code" size={14} />
-                  <code style={{ fontFamily: 'var(--font-mono)', color: 'var(--text-brand)' }}>{preview}</code>
+                <div className="sun-var-preview">
+                  <span className="sun-var-preview__icon"><Icon name="code" size={13} /></span>
+                  <code className="sun-var-preview__code">{preview}</code>
                 </div>
               )}
-            </div>
+            </>
           )}
         </div>
         <footer className="sun-drawer__foot">
