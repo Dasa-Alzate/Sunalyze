@@ -1,4 +1,5 @@
 import { useState, useRef, useEffect, useId } from 'react'
+import { Link } from 'react-router-dom'
 import * as Lucide from 'lucide-react'
 import { useTranslation } from 'react-i18next'
 import { useAsyncAction } from '@/shared/useAsyncAction'
@@ -347,11 +348,27 @@ export function ErrorState({ message, onRetry }) {
   )
 }
 
-export function Topbar({ title, crumb, actions }) {
+const CRUMB_ROUTES = {
+  'Proyectos': '/app/proyectos',
+  'Plantillas': '/app/plantillas',
+  'Finanzas': '/app/finanzas',
+  'Posventa': '/app/posventa',
+  'Marketplace': '/app/modulos',
+  'Biblioteca': '/app/equipos',
+  'Documentos': '/app/plantillas',
+  'Inicio': '/app',
+}
+
+export function Topbar({ title, crumb, crumbTo, actions }) {
+  const to = crumbTo || CRUMB_ROUTES[crumb]
   return (
     <header className="sun-topbar">
       <div className="sun-topbar__title">
-        {crumb && <span className="sun-topbar__crumb">{crumb}<Icon name="chevron-right" size={14} /></span>}
+        {crumb && (to ? (
+          <Link to={to} className="sun-topbar__crumb sun-topbar__crumb--link">{crumb}<Icon name="chevron-right" size={14} /></Link>
+        ) : (
+          <span className="sun-topbar__crumb">{crumb}<Icon name="chevron-right" size={14} /></span>
+        ))}
         <h1>{title}</h1>
       </div>
       <div className="sun-topbar__actions">{actions}</div>

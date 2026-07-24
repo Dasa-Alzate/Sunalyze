@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useState } from 'react'
 import { useTranslation } from 'react-i18next'
-import { Topbar, Card, Btn, Icon, Scrim, Spinner, ErrorState } from '@/shared/ui'
+import { Topbar, Card, Btn, Icon, ConfirmDialog, Spinner, ErrorState } from '@/shared/ui'
 import { useAuth } from '@/services/auth'
 import { api } from '@/api/client'
 import { toast } from '@/services/toast'
@@ -9,18 +9,17 @@ import { dateTime } from '@/shared/format'
 function ConfirmRestore({ kind, name, onCancel, onConfirm }) {
   const { t } = useTranslation('trash')
   return (
-    <Scrim label={t('confirm.title')} onClose={onCancel}>
-      <div className="sun-drawer sun-confirm">
-        <header className="sun-drawer__head"><h3>{t('confirm.title')}</h3></header>
-        <div className="sun-drawer__body">
-          <p>{t(`confirm.${kind}`, { name })}</p>
-        </div>
-        <footer className="sun-drawer__foot">
-          <Btn variant="secondary" onClick={onCancel}>{t('confirm.cancel')}</Btn>
-          <Btn icon="rotate-ccw" onClick={onConfirm}>{t('confirm.accept')}</Btn>
-        </footer>
-      </div>
-    </Scrim>
+    <ConfirmDialog
+      open
+      icon="rotate-ccw"
+      title={t('confirm.title')}
+      description={t(`confirm.${kind}`, { name })}
+      onClose={onCancel}
+      actions={[
+        { label: t('confirm.cancel'), variant: 'secondary', onClick: onCancel },
+        { label: t('confirm.accept'), variant: 'primary', icon: 'rotate-ccw', onClick: onConfirm },
+      ]}
+    />
   )
 }
 

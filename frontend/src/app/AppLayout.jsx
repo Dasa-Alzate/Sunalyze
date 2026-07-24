@@ -12,21 +12,29 @@ import NotificationBell from '@/features/notifications/NotificationBell'
 import WorkspaceSwitcher from '@/app/WorkspaceSwitcher'
 import { HelpAssist } from '@/services/assist'
 
-const NAV = [
-  { to: '/app', key: 'resumen', icon: 'layout-dashboard', end: true },
-  { to: '/app/proyectos', key: 'proyectos', icon: 'folder' },
-  { to: '/app/diseno', key: 'diseno', icon: 'sliders-horizontal' },
-  { to: '/app/equipos', key: 'equipos', icon: 'package' },
-  { to: '/app/modulos', key: 'modulos', icon: 'store' },
-  { to: '/app/equipo', key: 'equipo', icon: 'users', business: true },
-  { to: '/app/memoria', key: 'memoria', icon: 'file-text' },
-  { to: '/app/plantillas', key: 'plantillas', icon: 'layout-template', flag: 'templates' },
-  { to: '/app/finanzas', key: 'finanzas', icon: 'calculator', flag: 'finance' },
-  { to: '/app/posventa', key: 'posventa', icon: 'plug-zap', flag: 'posventa' },
-  { to: '/app/actividad', key: 'actividad', icon: 'activity', perm: 'audit:view' },
-  { to: '/app/papelera', key: 'papelera', icon: 'trash-2', perm: 'project:delete' },
-  { to: '/app/configuracion', key: 'configuracion', icon: 'settings', perm: 'org:manage' },
+const NAV_GROUPS = [
+  [
+    { to: '/app', key: 'resumen', icon: 'layout-dashboard', end: true },
+    { to: '/app/proyectos', key: 'proyectos', icon: 'folder' },
+    { to: '/app/diseno', key: 'diseno', icon: 'sliders-horizontal' },
+    { to: '/app/equipos', key: 'equipos', icon: 'package' },
+    { to: '/app/memoria', key: 'memoria', icon: 'file-text' },
+  ],
+  [
+    { to: '/app/plantillas', key: 'plantillas', icon: 'layout-template', flag: 'templates' },
+    { to: '/app/finanzas', key: 'finanzas', icon: 'calculator', flag: 'finance' },
+    { to: '/app/posventa', key: 'posventa', icon: 'plug-zap', flag: 'posventa' },
+    { to: '/app/equipo', key: 'equipo', icon: 'users', business: true },
+  ],
+  [
+    { to: '/app/actividad', key: 'actividad', icon: 'activity', perm: 'audit:view' },
+    { to: '/app/modulos', key: 'modulos', icon: 'store' },
+    { to: '/app/papelera', key: 'papelera', icon: 'trash-2', perm: 'project:delete' },
+    { to: '/app/configuracion', key: 'configuracion', icon: 'settings', perm: 'org:manage' },
+  ],
 ]
+
+const NAV = NAV_GROUPS.flat()
 
 function initials(name) {
   if (!name) return 'U'
@@ -38,7 +46,8 @@ function Sidebar() {
   const { user, org, logout, isPlatformAdmin, flag, can } = useAuth()
   const { navigate } = useTransition()
   const { openPalette } = useCommands()
-  const items = NAV.filter((n) => (!n.business || org?.type !== 'PERSONAL') && (!n.platform || isPlatformAdmin) && (!n.flag || flag(n.flag)) && (!n.perm || can(n.perm)))
+  const isVisible = (n) => (!n.business || org?.type !== 'PERSONAL') && (!n.platform || isPlatformAdmin) && (!n.flag || flag(n.flag)) && (!n.perm || can(n.perm))
+  const groups = NAV_GROUPS.map((group) => group.filter(isVisible)).filter((group) => group.length > 0)
 
   async function onLogout() {
     await logout()
@@ -53,16 +62,21 @@ function Sidebar() {
         <span>{t('brand')}</span>
       </TransitionLink>
       <nav className="sun-sidebar__nav">
-        {items.map((n) => (
-          <NavLink
-            key={n.to}
-            to={n.to}
-            end={n.end}
-            className={({ isActive }) => `sun-nav-item${isActive ? ' sun-nav-item--active' : ''}`}
-          >
-            <Icon name={n.icon} size={18} />
-            <span>{t(`items.${n.key}`)}</span>
-          </NavLink>
+        {groups.map((group, gi) => (
+          <div className="sun-nav-group" key={gi}>
+            {gi > 0 && <div className="sun-nav-sep" aria-hidden="true" />}
+            {group.map((n) => (
+              <NavLink
+                key={n.to}
+                to={n.to}
+                end={n.end}
+                className={({ isActive }) => `sun-nav-item${isActive ? ' sun-nav-item--active' : ''}`}
+              >
+                <Icon name={n.icon} size={18} />
+                <span>{t(`items.${n.key}`)}</span>
+              </NavLink>
+            ))}
+          </div>
         ))}
       </nav>
       <div className="sun-sidebar__foot">
@@ -71,7 +85,7 @@ function Sidebar() {
           <Icon name="command" size={18} /><span>{t('commands')}</span>
           <span className="kbd" style={{ marginLeft: 'auto' }}>{formatShortcut({ mod: true, code: 'KeyK' }, isMac())}</span>
         </button>
-        <div style={{ display: 'flex', alignItems: 'center', gap: 'var(--space-2)' }}>
+        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 'var(--space-2)' }}>
           <LanguageSwitcher />
           <ThemeToggle />
         </div>
