@@ -9,7 +9,7 @@ CSP_DIRECTIVES = {
     'script-src': "'self' 'sha256-W3VlYOkiCmZzATwlGWce86qt1r5NXrQlWFWN1C8uX/E='",
     'style-src': "'self' 'unsafe-inline' https://fonts.googleapis.com",
     'font-src': "'self' https://fonts.gstatic.com",
-    'img-src': "'self' data: https://*.tile.openstreetmap.org",
+    'img-src': "'self' data: https://*.tile.openstreetmap.org https://www.ign.es https://ovc.catastro.meh.es",
     'connect-src': "'self' https://nominatim.openstreetmap.org",
     'frame-src': "https://www.openstreetmap.org https://openstreetmap.org",
     'base-uri': "'self'",

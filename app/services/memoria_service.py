@@ -57,6 +57,61 @@ class MemoriaService:
         return BudgetService.memoria_vars(project)
 
     @staticmethod
+    def _build_site_plan_svgs(data, org_id=None):
+        from app.models.project import Project
+        from app.services.circuit.core.plan_sheet import wrap_plan_sheet
+        from app.services.site_plan_service import SitePlanService
+
+        def _coord(key):
+            try:
+                value = data.get(key)
+                return float(value) if value not in (None, '') else None
+            except (TypeError, ValueError):
+                return None
+
+        result = {}
+        try:
+            project = None
+            try:
+                pid = int(data.get('project_id') or 0)
+            except (TypeError, ValueError):
+                pid = 0
+            if pid:
+                project = Project.query.get(pid)
+                if project and org_id and project.org_id != org_id:
+                    project = None
+
+            lat = _coord('latitude')
+            lng = _coord('longitude')
+            if (lat is None or lng is None) and project:
+                lat, lng = project.latitud, project.longitud
+
+            fields = [
+                ('Cliente', data.get('client_name') or ''),
+                ('Fecha', data.get('date') or ''),
+                ('Firma y sello', ''),
+                ('Ref. catastral', data.get('catastral_reference') or ''),
+            ]
+
+            def _sheet(svg, title):
+                wrapped = wrap_plan_sheet(svg, title=title, orientation='landscape', fields=fields)
+                return CircuitService.fit_to_mm(wrapped, 250, 168)
+
+            if lat is not None and lng is not None:
+                inner = SitePlanService.location_plan_svg(lat, lng)
+                if inner:
+                    result['svg_plano_ubicacion'] = _sheet(inner, 'PLANO DE UBICACIÓN Y EMPLAZAMIENTO')
+
+            layout = project.layout if project else None
+            if layout and layout.get('cells'):
+                inner = SitePlanService.layout_plan_svg(layout)
+                if inner:
+                    result['svg_plano_disposicion'] = _sheet(inner, 'PLANO DE DISPOSICIÓN DE PANELES')
+        except Exception:
+            logger.exception('Error generando planos de ubicación/disposición para la memoria')
+        return result
+
+    @staticmethod
     def generar_pdf(form_data, org_id=None):
         from weasyprint import HTML
         from flask import current_app
@@ -88,6 +143,7 @@ class MemoriaService:
             template_vars.update(MemoriaService._build_circuit_svgs(form_data, panel, inverter, battery))
             template_vars.update(MemoriaService._build_graph_svgs(form_data))
             template_vars.update(MemoriaService._build_budget_vars(form_data, org_id))
+            template_vars.update(MemoriaService._build_site_plan_svgs(form_data, org_id))
 
         html_string = render_template('memoria_tecnica_pdf.html', **template_vars)
         memoria_pdf = HTML(
@@ -135,6 +191,7 @@ class MemoriaService:
                 template_vars.update(MemoriaService._build_circuit_svgs(form_data, panel, inverter, battery))
                 template_vars.update(MemoriaService._build_graph_svgs(form_data))
             template_vars.update(MemoriaService._build_budget_vars(form_data, org_id))
+            template_vars.update(MemoriaService._build_site_plan_svgs(form_data, org_id))
         return render_template('memoria_tecnica_pdf.html', **template_vars)
 
     @staticmethod

@@ -714,17 +714,25 @@
         </div>
     </section>
 
-    <section>
+    <section class="plano plano-h">
         <h3 class="underline" id="plano-ubicacion">PLANO DE UBICACIÓN</h3>
         <div class="image-container">
-            <p>[Plano de ubicación]</p>
+            {%- if svg_plano_ubicacion -%}
+                {{ svg_plano_ubicacion | safe }}
+            {%- else -%}
+                <p>[Plano de ubicación]</p>
+            {%- endif -%}
         </div>
     </section>
 
-    <section>
+    <section class="plano plano-h">
         <h3 class="underline" id="disposicion-paneles">DISPOSICIÓN PANELES</h3>
         <div class="image-container">
-            <p>[Disposición de paneles]</p>
+            {%- if svg_plano_disposicion -%}
+                {{ svg_plano_disposicion | safe }}
+            {%- else -%}
+                <p>[Disposición de paneles]</p>
+            {%- endif -%}
         </div>
     </section>
 

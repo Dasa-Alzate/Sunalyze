@@ -12,13 +12,15 @@ import { useAuth } from '@/services/auth'
 import { emitSubview } from '@/services/assist'
 import { registerUnsavedGuard } from '@/shared/unsavedGuard'
 import CircuitDiagram from './CircuitDiagram'
+import PanelLayout from './PanelLayout'
 
-const STEP_KEYS = ['lugar', 'equipos', 'analisis', 'diagrama', 'memoria']
+const STEP_KEYS = ['lugar', 'equipos', 'analisis', 'disposicion', 'diagrama', 'memoria']
 
 const STEPS = [
   { title: 'Datos del lugar', icon: 'map-pin' },
   { title: 'Equipos', icon: 'package' },
   { title: 'Análisis', icon: 'bar-chart-3' },
+  { title: 'Disposición', icon: 'layout-grid' },
   { title: 'Diagrama', icon: 'workflow' },
   { title: 'Memoria', icon: 'file-text' },
 ]
@@ -53,6 +55,7 @@ export default function Wizard() {
 
   useEffect(() => { emitSubview('diseno', STEP_KEYS[step]) }, [step])
   const [results, setResults] = useState(null)
+  const [layout, setLayout] = useState(null)
   const [stale, setStale] = useState(false)
   const [analyzing, setAnalyzing] = useState(false)
   const [analysisError, setAnalysisError] = useState(null)
@@ -84,6 +87,7 @@ export default function Wizard() {
           setBatteryId(proj.battery_id || null)
           setBatteryQty(proj.battery_quantity ?? 1)
           if (proj.resultados) setResults(proj.resultados)
+          if (proj.layout) setLayout(proj.layout)
         }
       })
       .catch((e) => alive && setLoadError(e.message))
@@ -164,6 +168,7 @@ export default function Wizard() {
       battery_id: batteryId,
       battery_quantity: batteryId ? (Number(batteryQty) || 1) : null,
       resultados: results,
+      layout,
     }
     if (estado) body.estado = estado
     try {
@@ -196,17 +201,24 @@ export default function Wizard() {
     if (proj) nav(`/app/memoria/${proj.id}`)
   }
 
-  const summary = useMemo(() => buildSummary(results, panel, stale), [results, panel, stale])
+  const summary = useMemo(() => buildSummary(results, panel, stale, layout), [results, panel, stale, layout])
 
   function exportSummary(fmt) {
     const name = `resumen-${(form.cliente || 'proyecto').replace(/\s+/g, '-')}`
     exportRows(fmt, name, ['Métrica', 'Valor', 'Unidad'], summary.map((r) => [r.label, r.value, r.unit || '']))
   }
 
+  function patchLayout(next) {
+    setLayout(next)
+    dirtyRef.current = true
+    setDirty(true)
+  }
+
   const stepValid = [
     Boolean(form.cliente.trim() && form.necesidad !== '' && form.latitud !== '' && form.longitud !== ''),
     Boolean(panelId),
     Boolean(results),
+    true,
     true,
     true,
   ]
@@ -240,7 +252,7 @@ export default function Wizard() {
               {dirty ? 'Cambios sin guardar' : lastSaved ? `Guardado ${relativo(lastSaved)}` : ''}
             </span>
             <Btn variant="secondary" icon="save" data-busy={saving} disabled={saving} onClick={() => save()}>Guardar</Btn>
-            <Btn variant="secondary" icon="workflow" onClick={() => setStep(3)}>Diagrama unifilar</Btn>
+            <Btn variant="secondary" icon="workflow" onClick={() => setStep(4)}>Diagrama unifilar</Btn>
             <Btn variant="primary" icon="file-text" onClick={goToMemoria}>Ir a la memoria</Btn>
           </>
         }
@@ -382,6 +394,24 @@ export default function Wizard() {
             )}
 
             {step === 3 && (
+              <>
+                <div className="sun-divider">Disposición de paneles sobre la cubierta</div>
+                <PanelLayout
+                  lat={form.latitud}
+                  lon={form.longitud}
+                  azimut={form.azimut}
+                  inclinacion={form.inclinacion}
+                  coplanar={form.coplanar}
+                  betaOptimal={results?.beta_optimal}
+                  panel={panel}
+                  requiredPanels={panelesFrom(results, panel)}
+                  layout={layout}
+                  onChange={patchLayout}
+                />
+              </>
+            )}
+
+            {step === 4 && (
               !results ? (
                 <div className="sun-empty" style={{ border: 0, padding: 'var(--space-8) 0' }}>
                   <div className="sun-empty__icon"><Icon name="workflow" size={26} /></div>
@@ -397,7 +427,7 @@ export default function Wizard() {
               )
             )}
 
-            {step === 4 && (
+            {step === 5 && (
               <div className="sun-empty" style={{ border: 0, padding: 'var(--space-8) 0' }}>
                 <div className="sun-empty__icon"><Icon name="file-text" size={26} /></div>
                 <div className="sun-empty__title">Listo para la memoria técnica</div>
@@ -597,7 +627,7 @@ function panelesFrom(results, panel) {
   return null
 }
 
-function buildSummary(results, panel, stale) {
+function buildSummary(results, panel, stale, layout) {
   if (!results) {
     return [
       { label: 'Irradiancia', value: '—' },
@@ -609,13 +639,17 @@ function buildSummary(results, panel, stale) {
   }
   const irr = results.optimal_irradiance ?? results.annual_irradiance_kWh_m2
   const np = panelesFrom(results, panel)
-  return [
+  const rows = [
     { label: 'Irradiancia', value: irr != null ? int(irr) : '—', unit: 'kWh/m²', stale },
     { label: 'Ángulo óptimo', value: results.beta_optimal != null ? `${Math.round(results.beta_optimal)}°` : '—', stale },
     { label: 'Campo FV', value: results.total_field_power != null ? dec(results.total_field_power) : '—', unit: 'kWp', stale },
     { label: 'Paneles', value: np != null ? np : '—', unit: 'ud', stale },
     { label: 'Producción anual', value: results.annual_production != null ? int(results.annual_production) : '—', unit: 'kWh', stale },
   ]
+  if (layout?.cells?.length) {
+    rows.splice(4, 0, { label: 'Colocados en cubierta', value: layout.cells.length, unit: 'ud', stale: np != null && layout.cells.length < np })
+  }
+  return rows
 }
 
 function buildResultCards(results, panel) {
