@@ -90,7 +90,7 @@ export default function BudgetSettings() {
         <Spinner />
       ) : (
         <div className="sun-brandform">
-          <section className="sun-brandgroup">
+          <section className="sun-brandgroup sun-brandgroup--wide">
             <div className="sun-divider">{t('groups.labor')}</div>
             <div className="sun-budgetcfg__grid">
               <div className="sun-field">
@@ -121,7 +121,7 @@ export default function BudgetSettings() {
             </div>
           </section>
 
-          <section className="sun-brandgroup">
+          <section className="sun-brandgroup sun-brandgroup--wide">
             <div className="sun-divider">{t('groups.lines')}</div>
             {lines.length === 0 ? (
               <div className="sun-inline-note sun-inline-note--info">

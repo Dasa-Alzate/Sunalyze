@@ -229,6 +229,10 @@ export default function MemoriaPreview() {
     }
   }
 
+  const accordion = (id && project)
+    ? [...SECTIONS, { id: 'presupuesto', title: 'Presupuesto', custom: 'budget', fields: [] }]
+    : SECTIONS
+
   if (loading) return (<><Topbar title="Memoria" crumb="Proyectos" /><div className="sun-content"><Spinner label="Cargando…" /></div></>)
   if (error) return (<><Topbar title="Memoria" crumb="Proyectos" /><div className="sun-content"><ErrorState message={error} onRetry={() => nav(0)} /></div></>)
 
@@ -248,9 +252,10 @@ export default function MemoriaPreview() {
         <div className="sun-memoria">
           <div>
             <div className="sun-memoria__sections">
-              {SECTIONS.map((s) => {
-                const st = sectionState(s)
-                const note = missingNote(s)
+              {accordion.map((s) => {
+                const isBudget = s.custom === 'budget'
+                const st = isBudget ? 'valid' : sectionState(s)
+                const note = isBudget ? null : missingNote(s)
                 return (
                   <div key={s.id} className={`sun-msection${open === s.id ? ' sun-msection--active' : ''}`}>
                     <button type="button" className="sun-msection__head" aria-expanded={open === s.id} onClick={() => setOpen(open === s.id ? null : s.id)}>
@@ -261,26 +266,27 @@ export default function MemoriaPreview() {
                     </button>
                     {open === s.id && (
                       <div className="sun-msection__body sun-reveal">
-                        <div className="sun-speclist" style={{ marginTop: 'var(--space-4)' }}>
-                          {s.fields.map((f) => (
-                            f.select ? (
-                              <SelectField key={f.key} label={f.label} options={f.select} value={values[f.key]} onChange={set(f.key)} />
-                            ) : (
-                              <Field key={f.key} label={f.label} required={f.required} numeric={f.num}
-                                type={f.num ? 'number' : 'text'} step={f.num ? 'any' : undefined}
-                                value={values[f.key]} onChange={set(f.key)} />
-                            )
-                          ))}
-                        </div>
+                        {isBudget ? (
+                          <BudgetEditor projectId={project.id} canEdit={can('project:edit')} onSaved={() => setPreviewNonce((n) => n + 1)} />
+                        ) : (
+                          <div className="sun-speclist" style={{ marginTop: 'var(--space-4)' }}>
+                            {s.fields.map((f) => (
+                              f.select ? (
+                                <SelectField key={f.key} label={f.label} options={f.select} value={values[f.key]} onChange={set(f.key)} />
+                              ) : (
+                                <Field key={f.key} label={f.label} required={f.required} numeric={f.num}
+                                  type={f.num ? 'number' : 'text'} step={f.num ? 'any' : undefined}
+                                  value={values[f.key]} onChange={set(f.key)} />
+                              )
+                            ))}
+                          </div>
+                        )}
                       </div>
                     )}
                   </div>
                 )
               })}
             </div>
-            {id && project && (
-              <BudgetEditor projectId={project.id} canEdit={can('project:edit')} onSaved={() => setPreviewNonce((n) => n + 1)} />
-            )}
             <div style={{ marginTop: 'var(--space-5)', display: 'flex', gap: 'var(--space-3)' }}>
               <Btn variant="primary" icon="file-text" onClick={generarPDF} disabled={!canSign} title={canSign ? undefined : "Tu rol no permite firmar/generar la memoria"}>Generar PDF</Btn>
               {!id && <span style={{ alignSelf: 'center', fontSize: 'var(--text-sm)', color: 'var(--text-muted)' }}>Abre la memoria desde un proyecto para guardar los datos.</span>}

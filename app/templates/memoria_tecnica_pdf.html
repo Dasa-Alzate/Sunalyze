@@ -19,6 +19,10 @@
             @bottom-center { content: none; }
         }
 
+        :root {
+            --brand: {{ brand_color or '#2c3e50' }};
+        }
+
         body {
             font-family: Calibri, Carlito, 'Segoe UI', Arial, sans-serif;
             font-size: 11pt;
@@ -27,13 +31,17 @@
             margin: 0;
         }
 
+        @media screen {
+            body { padding: 22mm 20mm; box-sizing: border-box; }
+        }
+
         /* ===== Paginación ===== */
         section {
             page-break-before: always;
         }
 
         h1, h2, h3, h4, h5 {
-            color: #2c3e50;
+            color: var(--brand);
             page-break-after: avoid;
             page-break-inside: avoid;
         }
@@ -59,28 +67,36 @@
         }
 
         /* ===== Portada ===== */
+        section.portada {
+            display: flex;
+            flex-direction: column;
+            justify-content: space-evenly;
+            align-items: center;
+            text-align: center;
+            min-height: 240mm;
+        }
+
         .front-page-title {
             text-transform: uppercase;
             font-weight: 800;
-            font-size: 1.8em;
-            text-align: center;
-            margin-top: 30mm;
-            margin-bottom: 28mm;
-            border-bottom: 2px solid #3498db;
-            padding-bottom: 10px;
+            font-size: 1.9em;
+            border-bottom: 3px solid var(--brand);
+            padding-bottom: 14px;
+            margin: 0;
         }
 
         .front-page-subtitle {
             text-transform: uppercase;
-            font-size: 1.25em;
-            text-align: center;
-            margin-bottom: 24mm;
+            font-size: 1.3em;
+            margin: 0;
         }
 
         .front-page-client {
-            text-align: center;
-            font-size: 1.2em;
+            font-size: 1.35em;
+            margin: 0;
         }
+
+        .front-page-client h3 { margin: 0.2em 0; }
 
         /* ===== Indice ===== */
 
@@ -274,7 +290,7 @@
     {%- endmacro %}
 
     {# ===== PORTADA ===== #}
-    <section>
+    <section class="portada">
         <h1 class="front-page-title">Memoria Técnica para Instalación de Autoconsumo Fotovoltaico</h1>
         <h2 class="front-page-subtitle">Instalación Fotovoltaica de Autoconsumo — {{ v(inyection_type, 'con/sin inyección de excedentes') }}</h2>
         <div class="front-page-client">

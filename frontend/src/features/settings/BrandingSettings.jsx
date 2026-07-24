@@ -152,20 +152,6 @@ export default function BrandingSettings() {
           </section>
 
           <section className="sun-brandgroup">
-            <div className="sun-divider">{t('groups.footer')}</div>
-            <div className="sun-field">
-              <label className="sun-field__label" htmlFor={footerId}>{t('fields.footerText')}</label>
-              <textarea
-                id={footerId}
-                className="sun-input"
-                rows={3}
-                value={footerText}
-                onChange={(e) => setFooterText(e.target.value)}
-              />
-            </div>
-          </section>
-
-          <section className="sun-brandgroup">
             <div className="sun-divider">{t('groups.serial')}</div>
             <div className="sun-field">
               <label className="sun-field__label" htmlFor={prefixId}>{t('fields.projectPrefix')}</label>
@@ -179,6 +165,20 @@ export default function BrandingSettings() {
                 onChange={(e) => setProjectPrefix(e.target.value.toUpperCase())}
               />
               <span id={`${prefixId}-hint`} className="sun-field__hint">{t('fields.prefixHint')}</span>
+            </div>
+          </section>
+
+          <section className="sun-brandgroup sun-brandgroup--wide">
+            <div className="sun-divider">{t('groups.footer')}</div>
+            <div className="sun-field">
+              <label className="sun-field__label" htmlFor={footerId}>{t('fields.footerText')}</label>
+              <textarea
+                id={footerId}
+                className="sun-input"
+                rows={3}
+                value={footerText}
+                onChange={(e) => setFooterText(e.target.value)}
+              />
             </div>
           </section>
 

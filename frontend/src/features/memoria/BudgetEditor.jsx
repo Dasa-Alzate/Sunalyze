@@ -1,4 +1,5 @@
 import { useEffect, useState } from 'react'
+import { Link } from 'react-router-dom'
 import { Btn, IconBtn, Icon, Spinner, ConfirmDialog } from '@/shared/ui'
 import { api } from '@/api/client'
 import { toast } from '@/services/toast'
@@ -106,7 +107,12 @@ export default function BudgetEditor({ projectId, canEdit, onSaved }) {
       <div className="sun-divider">Presupuesto</div>
       {tarifarioVacio && (
         <div className="sun-inline-note sun-inline-note--info">
-          <Icon name="info" size={14} /> Los equipos están a 0 €. Mantén tu tarifario en Configuración → Presupuesto y en la biblioteca de equipos para pre-rellenar precios.
+          <Icon name="info" size={14} />
+          <span>
+            Los equipos están a 0 €. Mantén tu tarifario en{' '}
+            <Link to="/app/configuracion" className="sun-link">Configuración → Presupuesto</Link>{' '}
+            y en la <Link to="/app/equipos" className="sun-link">biblioteca de equipos</Link> para pre-rellenar precios.
+          </span>
         </div>
       )}
       {items.length === 0 ? (

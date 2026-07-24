@@ -227,9 +227,24 @@ export default function PanelLayout({ lat, lon, azimut, inclinacion, coplanar, b
   function autoLayout() {
     const { grid: g, geo: gg } = stateRef.current
     if (!g || !gg || gg.roofLocal.length < 3) return
-    const placed = autoLayoutCells(g, gg.roofLocal, gg.exclusionsLocal)
+    const fit = autoLayoutCells(g, gg.roofLocal, gg.exclusionsLocal)
+    const req = Number(requiredPanels) || 0
+    let placed = fit
+    if (req > 0 && fit.length > req) {
+      const mi = fit.reduce((s, [i]) => s + i, 0) / fit.length
+      const mj = fit.reduce((s, [, j]) => s + j, 0) / fit.length
+      placed = [...fit]
+        .sort((a, b) => ((a[0] - mi) ** 2 + (a[1] - mj) ** 2) - ((b[0] - mi) ** 2 + (b[1] - mj) ** 2))
+        .slice(0, req)
+    }
     commitCells(placed, new Set())
-    toast('success', `${placed.length} paneles colocados`, requiredPanels ? `El análisis requiere ${requiredPanels}` : undefined)
+    if (req > 0 && fit.length > req) {
+      toast('success', `${req} paneles colocados`, `Caben ${fit.length}; se dispusieron los ${req} que requiere el análisis`)
+    } else if (req > 0 && placed.length < req) {
+      toast('warning', `Solo caben ${placed.length} de ${req}`, 'Amplía la cubierta o cambia la orientación del panel')
+    } else {
+      toast('success', `${placed.length} paneles colocados`)
+    }
   }
 
   function fillTo(targetLatLng) {
@@ -487,7 +502,7 @@ export default function PanelLayout({ lat, lon, azimut, inclinacion, coplanar, b
 
   const placed = cells.length
   const required = requiredPanels || 0
-  const short = required > 0 && placed < required
+  const short = required > 0 && placed > 0 && placed < required
   const kwp = panel?.power ? (placed * panel.power) / 1000 : null
   const roofArea = geo && geo.roofLocal.length >= 3 ? polygonAreaM2(geo.roofLocal) : null
   const drawing = mode !== 'idle'
@@ -505,6 +520,9 @@ export default function PanelLayout({ lat, lon, azimut, inclinacion, coplanar, b
         </Btn>
         <Btn variant="secondary" icon="sparkles" disabled={roof.length < 3 || drawing} onClick={autoLayout}>
           Auto-disposición
+        </Btn>
+        <Btn variant="secondary" icon="trash-2" disabled={selection.size === 0} onClick={deleteSelection}>
+          Eliminar{selection.size > 1 ? ` (${selection.size})` : ''}
         </Btn>
         <div className="pl-seg" role="group" aria-label="Orientación del panel">
           <button type="button" className={`pl-seg__opt${orientation === 'v' ? ' pl-seg__opt--on' : ''}`}

@@ -225,6 +225,7 @@ class MemoriaService:
             template_vars.update(MemoriaService._build_budget_vars(project))
             template_vars.update(MemoriaService._build_site_plan_svgs(form_data, project))
 
+        template_vars.update(MemoriaService._build_branding_vars(org_id))
         html_string = render_template('memoria_tecnica_pdf.html', **template_vars)
         memoria_pdf = HTML(
             string=html_string,
@@ -274,6 +275,7 @@ class MemoriaService:
                 template_vars.update(MemoriaService._build_solar_path(form_data, project))
             template_vars.update(MemoriaService._build_budget_vars(project))
             template_vars.update(MemoriaService._build_site_plan_svgs(form_data, project))
+        template_vars.update(MemoriaService._build_branding_vars(org_id))
         return render_template('memoria_tecnica_pdf.html', **template_vars)
 
     @staticmethod
@@ -503,6 +505,18 @@ class MemoriaService:
             logger.exception('Error generando diagramas SVG para la memoria')
             empty = '<svg xmlns="http://www.w3.org/2000/svg" width="400" height="80"><text x="10" y="40" font-family="monospace" font-size="12" fill="#888">Diagrama no disponible</text></svg>'
             return {'svg_ca': empty, 'svg_cc': empty, 'svg_sistema': empty}
+
+    @staticmethod
+    def _build_branding_vars(org_id):
+        if not org_id:
+            return {}
+        try:
+            from app.services.org_service import OrgService
+            color = OrgService.get_branding(org_id).get('primary_color')
+            return {'brand_color': color} if color else {}
+        except Exception:
+            logger.exception('Error obteniendo el color de marca para la memoria')
+            return {}
 
     @staticmethod
     def _build_solar_path(data, project=None):

@@ -377,15 +377,17 @@
 .sun-cfg__tab:hover { background: var(--surface-sunken); color: var(--text-strong); }
 .sun-cfg__tab--active { background: var(--surface-brand-soft); border-color: var(--green-300); color: var(--text-brand); font-weight: var(--fw-semibold); }
 .sun-cfg__body { min-width: 0; }
-.sun-cfg-panel { background: var(--surface-card); border: 1px solid var(--border); border-radius: var(--radius-lg); padding: var(--space-5); }
+.sun-cfg-panel { background: var(--surface-card); border: 1px solid var(--border); border-radius: var(--radius-lg); padding: var(--space-6) var(--space-7); }
 .sun-cfg-panel__head { display: flex; align-items: flex-start; justify-content: space-between; gap: var(--space-4); margin-bottom: var(--space-4); }
 .sun-cfg-panel__title { margin: 0; font-size: var(--text-lg); font-weight: var(--fw-semibold); color: var(--text-strong); }
 .sun-cfg-panel__sub { margin: var(--space-1) 0 0; font-size: var(--text-sm); color: var(--text-muted); }
 
-.sun-brandform { display: flex; flex-direction: column; gap: var(--space-5); max-width: 560px; }
-.sun-brandgroup { display: flex; flex-direction: column; gap: var(--space-3); }
+.sun-brandform { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: var(--space-6) var(--space-7); align-items: start; }
+.sun-brandgroup { display: flex; flex-direction: column; gap: var(--space-3); min-width: 0; }
+.sun-brandgroup--wide { grid-column: 1 / -1; }
 .sun-brandgroup .sun-divider { margin: 0 0 var(--space-1); }
-.sun-brandform__foot { display: flex; justify-content: flex-start; padding-top: var(--space-2); }
+.sun-brandform__foot { grid-column: 1 / -1; display: flex; justify-content: flex-start; padding-top: var(--space-3); border-top: 1px solid var(--border-subtle); }
+@media (max-width: 720px) { .sun-brandform { grid-template-columns: 1fr; } }
 .sun-colorrow { display: flex; gap: var(--space-2); align-items: center; }
 .sun-colorrow__swatch { width: 44px; height: 38px; padding: 0; border: none; background: none; cursor: pointer; flex: none; }
 .sun-input--prefix { max-width: 180px; text-transform: uppercase; letter-spacing: var(--tracking-wide); font-family: var(--font-mono); }

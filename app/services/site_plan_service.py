@@ -135,9 +135,14 @@ class SitePlanService:
 
     @classmethod
     def location_plan_svg(cls, lat, lng, layout=None):
-        lat = float(lat)
-        lng = float(lng)
-        to_local, to_latlng = _converter(lat, lng)
+        roof = (layout or {}).get('roof') or []
+        if len(roof) >= 3:
+            center_lat = sum(float(p[0]) for p in roof) / len(roof)
+            center_lng = sum(float(p[1]) for p in roof) / len(roof)
+        else:
+            center_lat, center_lng = float(lat), float(lng)
+
+        to_local, to_latlng = _converter(center_lat, center_lng)
         lat_min, lng_min = to_latlng(-LOCATION_HALF_EXTENT_M, -LOCATION_HALF_EXTENT_M)
         lat_max, lng_max = to_latlng(LOCATION_HALF_EXTENT_M, LOCATION_HALF_EXTENT_M)
         bbox = (lng_min, lat_min, lng_max, lat_max)
@@ -154,13 +159,10 @@ class SitePlanService:
         c = size / 2
         m_per_px = (2 * LOCATION_HALF_EXTENT_M) / size
 
-        roof = (layout or {}).get('roof') or []
-        origin = (layout or {}).get('origin')
-        if len(roof) >= 3 and origin:
-            o_to_local, _ = _converter(float(origin[0]), float(origin[1]))
+        if len(roof) >= 3:
             pts = []
             for p in roof:
-                x_m, y_m = o_to_local(float(p[0]), float(p[1]))
+                x_m, y_m = to_local(float(p[0]), float(p[1]))
                 pts.append(f'{c + x_m / m_per_px:.1f},{c - y_m / m_per_px:.1f}')
             parts.append(f'<polygon points="{" ".join(pts)}" {STYLE_ROOF}/>')
             parts.append(f'<text x="{c}" y="{c - 34}" text-anchor="middle" font-family="monospace"'
@@ -231,8 +233,8 @@ class SitePlanService:
         w = (h_mm if orientation == 'h' else w_mm) / 1000
         length = (w_mm if orientation == 'h' else h_mm) / 1000
         coplanar = bool(layout.get('coplanar'))
-        beta = 0.0 if coplanar else float(layout.get('beta') or 0)
-        depth = length if coplanar else length * math.cos(math.radians(beta))
+        beta = float(layout.get('beta') or 0)
+        depth = length * math.cos(math.radians(beta))
         row_gap = layout.get('row_gap_m')
         if row_gap is None:
             if coplanar:

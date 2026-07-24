@@ -222,7 +222,7 @@ export default function Wizard() {
     if (proj) nav(`/app/memoria/${proj.id}`)
   }
 
-  const summary = useMemo(() => buildSummary(results, panel, stale, layout), [results, panel, stale, layout])
+  const summary = useMemo(() => buildSummary(results, panel, inverter, battery, stale, layout), [results, panel, inverter, battery, stale, layout])
 
   function exportSummary(fmt) {
     const name = `resumen-${(form.cliente || 'proyecto').replace(/\s+/g, '-')}`
@@ -665,9 +665,15 @@ function panelesFrom(results, panel) {
   return null
 }
 
-function buildSummary(results, panel, stale, layout) {
+function buildSummary(results, panel, inverter, battery, stale, layout) {
+  const equipo = [
+    { label: 'Panel', value: panel ? panel.nombre : '—' },
+    { label: 'Inversor', value: inverter ? inverter.nombre : '—' },
+    { label: 'Batería', value: battery ? battery.nombre : 'Sin batería' },
+  ]
   if (!results) {
     return [
+      ...equipo,
       { label: 'Irradiancia', value: '—' },
       { label: 'Ángulo óptimo', value: '—' },
       { label: 'Campo FV', value: '—' },
@@ -678,6 +684,7 @@ function buildSummary(results, panel, stale, layout) {
   const irr = results.optimal_irradiance ?? results.annual_irradiance_kWh_m2
   const np = panelesFrom(results, panel)
   const rows = [
+    ...equipo,
     { label: 'Irradiancia', value: irr != null ? int(irr) : '—', unit: 'kWh/m²', stale },
     { label: 'Ángulo óptimo', value: results.beta_optimal != null ? `${Math.round(results.beta_optimal)}°` : '—', stale },
     { label: 'Campo FV', value: results.total_field_power != null ? dec(results.total_field_power) : '—', unit: 'kWp', stale },
@@ -685,7 +692,7 @@ function buildSummary(results, panel, stale, layout) {
     { label: 'Producción anual', value: results.annual_production != null ? int(results.annual_production) : '—', unit: 'kWh', stale },
   ]
   if (layout?.cells?.length) {
-    rows.splice(4, 0, { label: 'Colocados en cubierta', value: layout.cells.length, unit: 'ud', stale: np != null && layout.cells.length < np })
+    rows.splice(7, 0, { label: 'Colocados en cubierta', value: layout.cells.length, unit: 'ud', stale: np != null && layout.cells.length < np })
   }
   return rows
 }

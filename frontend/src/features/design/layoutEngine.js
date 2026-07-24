@@ -24,8 +24,8 @@ export function makeGrid({ origin, azimut, orientation, panelWmm, panelHmm, beta
   const conv = localConverter(origin)
   const wM = (orientation === 'h' ? panelHmm : panelWmm) / 1000
   const lengthM = (orientation === 'h' ? panelWmm : panelHmm) / 1000
-  const betaDeg = coplanar ? 0 : (beta || 0)
-  const depthM = coplanar ? lengthM : lengthM * Math.cos((betaDeg * Math.PI) / 180)
+  const betaDeg = beta || 0
+  const depthM = lengthM * Math.cos((betaDeg * Math.PI) / 180)
   const gapRow = rowGap != null ? rowGap : (coplanar ? DEFAULT_GAP : Math.max(DEFAULT_GAP, idaeRowGap(lengthM, betaDeg, lat)))
   const gapCol = colGap != null ? colGap : DEFAULT_GAP
   const pitchX = wM + gapCol
