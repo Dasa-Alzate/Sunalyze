@@ -7,7 +7,7 @@ import { useAuth } from '@/services/auth'
 import { num } from '@/shared/format'
 
 export default function Marketplace() {
-  const { can } = useAuth()
+  const { can, refresh } = useAuth()
   const canManage = can('module:manage')
   const [modules, setModules] = useState(null)
   const [error, setError] = useState(null)
@@ -29,6 +29,7 @@ export default function Marketplace() {
         toast('success', 'Módulo activado', m.titulo)
       }
       load()
+      await refresh()
     } catch (e) {
       toast('error', 'No se pudo actualizar', e.message)
     }
