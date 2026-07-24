@@ -23,6 +23,9 @@ class ProjectUpdateSchema(BaseModel):
     inverter_id: Optional[int] = Field(default=None, gt=0)
     battery_id: Optional[int] = Field(default=None, gt=0)
     battery_quantity: Optional[int] = Field(default=None, ge=1, le=10000)
+    wire_dc_id: Optional[int] = Field(default=None, gt=0)
+    wire_ac_id: Optional[int] = Field(default=None, gt=0)
+    wire_ground_id: Optional[int] = Field(default=None, gt=0)
 
     referencia_catastral: Optional[str] = Field(default=None, max_length=40)
     cups: Optional[str] = Field(default=None, max_length=40)

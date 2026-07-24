@@ -246,6 +246,15 @@
             text-decoration: underline;
         }
 
+        .tech-note {
+            border-left: 3px solid #bf8c00;
+            background: #fff8e6;
+            color: #7a5900;
+            padding: 6px 10px;
+            font-size: 0.9em;
+            margin: 8px 0;
+        }
+
         /* ===== Formulas ===== */
         .formula {
             font-family: "Times New Roman", Times, serif;
@@ -425,6 +434,9 @@
 
         <h5 class="underline" id="config-series">Configuración de series</h5>
         <p>Los paneles del campo fotovoltaico se agruparán haciendo series, manteniendo los valores de tensión y corriente de las entradas del inversor y dentro de los márgenes de este, para temperaturas de panel entre {{ v(panel_temp_min_limit) }} y {{ v(panel_temp_max_limit) }}ºC.</p>
+        {% if panel_temp_limits_assumed %}
+        <p class="tech-note">⚠ Rango de temperatura de trabajo asumido según práctica estándar de dimensionado (REBT / IEC 60364-7-712), pendiente de validación por el técnico. La mínima toma la temperatura más fría del emplazamiento (PVGIS) cuando está disponible.</p>
+        {% endif %}
 
         <h4 class="underline" id="estructura-soporte">Estructura soporte</h4>
         <p>La estructura de soporte estará diseñada para el tipo de cubierta.

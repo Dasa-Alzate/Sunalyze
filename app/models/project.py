@@ -34,6 +34,10 @@ class Project(BaseModel, SoftDeleteMixin):
     battery_id = db.Column(db.Integer, db.ForeignKey('batteries.id'))
     battery_quantity = db.Column(db.Integer, default=1)
 
+    wire_dc_id = db.Column(db.Integer, db.ForeignKey('wires.id'))
+    wire_ac_id = db.Column(db.Integer, db.ForeignKey('wires.id'))
+    wire_ground_id = db.Column(db.Integer, db.ForeignKey('wires.id'))
+
     referencia_catastral = db.Column(db.String(40))
     cups = db.Column(db.String(40))
     compania = db.Column(db.String(80))
@@ -48,6 +52,9 @@ class Project(BaseModel, SoftDeleteMixin):
     panel = db.relationship('Panel', foreign_keys=[panel_id])
     inverter = db.relationship('Inverter', foreign_keys=[inverter_id])
     battery = db.relationship('Battery', foreign_keys=[battery_id])
+    wire_dc = db.relationship('Wire', foreign_keys=[wire_dc_id])
+    wire_ac = db.relationship('Wire', foreign_keys=[wire_ac_id])
+    wire_ground = db.relationship('Wire', foreign_keys=[wire_ground_id])
 
     signatures = db.relationship(
         'MemoriaSignature',
@@ -154,9 +161,15 @@ class Project(BaseModel, SoftDeleteMixin):
             'inverter_id': self.inverter_id,
             'battery_id': self.battery_id,
             'battery_quantity': self.battery_quantity,
+            'wire_dc_id': self.wire_dc_id,
+            'wire_ac_id': self.wire_ac_id,
+            'wire_ground_id': self.wire_ground_id,
             'panel_nombre': self.panel.nombre if self.panel else None,
             'inverter_nombre': self.inverter.nombre if self.inverter else None,
             'battery_nombre': self.battery.nombre if self.battery else None,
+            'wire_dc_nombre': self.wire_dc.nombre if self.wire_dc else None,
+            'wire_ac_nombre': self.wire_ac.nombre if self.wire_ac else None,
+            'wire_ground_nombre': self.wire_ground.nombre if self.wire_ground else None,
             'referencia_catastral': self.referencia_catastral,
             'cups': self.cups,
             'compania': self.compania,

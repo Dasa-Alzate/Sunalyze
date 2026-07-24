@@ -42,6 +42,7 @@ export default function Wizard() {
   const [panels, setPanels] = useState([])
   const [inverters, setInverters] = useState([])
   const [batteries, setBatteries] = useState([])
+  const [wires, setWires] = useState([])
 
   const [projectId, setProjectId] = useState(id ? Number(id) : null)
   const [serial, setSerial] = useState(null)
@@ -50,6 +51,9 @@ export default function Wizard() {
   const [inverterId, setInverterId] = useState(null)
   const [batteryId, setBatteryId] = useState(null)
   const [batteryQty, setBatteryQty] = useState(1)
+  const [wireDcId, setWireDcId] = useState(null)
+  const [wireAcId, setWireAcId] = useState(null)
+  const [wireGroundId, setWireGroundId] = useState(null)
 
   const [step, setStep] = useState(0)
 
@@ -66,12 +70,13 @@ export default function Wizard() {
     let alive = true
     setLoading(true)
     setLoadError(null)
-    Promise.all([api.panels.list(), api.inverters.list(), api.batteries.list(), id ? api.projects.get(Number(id)) : Promise.resolve(null)])
-      .then(([ps, invs, bats, proj]) => {
+    Promise.all([api.panels.list(), api.inverters.list(), api.batteries.list(), api.wires.list().catch(() => []), id ? api.projects.get(Number(id)) : Promise.resolve(null)])
+      .then(([ps, invs, bats, ws, proj]) => {
         if (!alive) return
         setPanels(ps)
         setInverters(invs)
         setBatteries(bats)
+        setWires(ws || [])
         if (proj) {
           setProjectId(proj.id)
           setSerial(proj.serial || null)
@@ -86,6 +91,9 @@ export default function Wizard() {
           setInverterId(proj.inverter_id || null)
           setBatteryId(proj.battery_id || null)
           setBatteryQty(proj.battery_quantity ?? 1)
+          setWireDcId(proj.wire_dc_id || null)
+          setWireAcId(proj.wire_ac_id || null)
+          setWireGroundId(proj.wire_ground_id || null)
           if (proj.resultados) setResults(proj.resultados)
           if (proj.layout) setLayout(proj.layout)
         }
@@ -98,6 +106,13 @@ export default function Wizard() {
   const panel = useMemo(() => panels.find((p) => p.id === panelId) || null, [panels, panelId])
   const inverter = useMemo(() => inverters.find((i) => i.id === inverterId) || null, [inverters, inverterId])
   const battery = useMemo(() => batteries.find((b) => b.id === batteryId) || null, [batteries, batteryId])
+  const wireOptions = useMemo(
+    () => wires.map((w) => ({ ...w, nombre: w.nombre || `${w.tipo || 'Cable'} ${w.seccion ?? '?'} mm² ${w.material || ''}`.trim() })),
+    [wires],
+  )
+  const wireDc = useMemo(() => wireOptions.find((w) => w.id === wireDcId) || null, [wireOptions, wireDcId])
+  const wireAc = useMemo(() => wireOptions.find((w) => w.id === wireAcId) || null, [wireOptions, wireAcId])
+  const wireGround = useMemo(() => wireOptions.find((w) => w.id === wireGroundId) || null, [wireOptions, wireGroundId])
 
   const dirtyRef = useRef(false)
   const saveRef = useRef(null)
@@ -114,6 +129,9 @@ export default function Wizard() {
   function pickPanel(p) { setPanelId(p.id); touch() }
   function pickInverter(i) { setInverterId(i.id); touch() }
   function pickBattery(b) { setBatteryId(b.id); touch() }
+  function pickWireDc(w) { setWireDcId(w.id); touch() }
+  function pickWireAc(w) { setWireAcId(w.id); touch() }
+  function pickWireGround(w) { setWireGroundId(w.id); touch() }
 
   async function analyze() {
     if (!panelId) { toast('warning', 'Selecciona un panel', 'El panel es obligatorio para dimensionar'); setStep(1); return }
@@ -167,6 +185,9 @@ export default function Wizard() {
       inverter_id: inverterId,
       battery_id: batteryId,
       battery_quantity: batteryId ? (Number(batteryQty) || 1) : null,
+      wire_dc_id: wireDcId,
+      wire_ac_id: wireAcId,
+      wire_ground_id: wireGroundId,
       resultados: results,
       layout,
     }
@@ -354,6 +375,20 @@ export default function Wizard() {
                   <span className="sun-check__box"><Icon name="check" size={13} /></span>
                   <span>Mostrar todos los inversores compatibles (desactivar filtro por potencia)</span>
                 </label>
+
+                <div className="sun-divider" style={{ marginTop: 'var(--space-6)' }}>Cableado <span style={{ color: 'var(--text-subtle)', fontWeight: 500, fontSize: 'var(--text-sm)' }}>· opcional — la sección alimenta la memoria técnica</span></div>
+                <div className="sun-field">
+                  <span className="sun-field__label" id="ss-wire-dc">Cable CC (serie fotovoltaica)</span>
+                  <SearchSelect labelId="ss-wire-dc" placeholder="Buscar cable CC…" options={wireOptions} value={wireDc} onPick={pickWireDc} meta={wireMeta} clearable onClear={() => { setWireDcId(null); touch() }} />
+                </div>
+                <div className="sun-field" style={{ marginTop: 'var(--space-4)' }}>
+                  <span className="sun-field__label" id="ss-wire-ac">Cable CA (salida del inversor)</span>
+                  <SearchSelect labelId="ss-wire-ac" placeholder="Buscar cable CA…" options={wireOptions} value={wireAc} onPick={pickWireAc} meta={wireMeta} clearable onClear={() => { setWireAcId(null); touch() }} />
+                </div>
+                <div className="sun-field" style={{ marginTop: 'var(--space-4)' }}>
+                  <span className="sun-field__label" id="ss-wire-ground">Cable de tierra</span>
+                  <SearchSelect labelId="ss-wire-ground" placeholder="Buscar cable de tierra…" options={wireOptions} value={wireGround} onPick={pickWireGround} meta={wireMeta} clearable onClear={() => { setWireGroundId(null); touch() }} />
+                </div>
               </>
             )}
 
@@ -479,6 +514,9 @@ function inverterMeta(i) {
 }
 function batteryMeta(b) {
   return `${dec(b.capacity_kwh)} kWh · ${dec(b.power_kw)} kW${b.technology ? ` · ${b.technology}` : ''}`
+}
+function wireMeta(w) {
+  return `${dec(w.seccion)} mm² · ${dec(w.corriente)} A${w.material ? ` · ${w.material}` : ''}${w.tipo ? ` · ${w.tipo}` : ''}`
 }
 
 function SearchSelect({ placeholder, options, value, onPick, meta, clearable, onClear, labelId }) {

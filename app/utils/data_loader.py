@@ -6,9 +6,47 @@ from app.extensions import db
 from app.models.panel import Panel
 from app.models.inverter import Inverter
 from app.models.battery import Battery
+from app.models.wire import Wire
 from app.models.installation_defaults import InstallationDefaults
 from app.models.catalog import Catalog, CatalogSubscription
 from app.models.organization import Organization
+
+STANDARD_WIRES_CATALOG = 'Cables estándar (genérico)'
+
+SEED_WIRES = [
+    {'nombre': 'Cable solar CC H1Z2Z2-K 4 mm² Cu', 'seccion': 4, 'corriente': 28, 'tipo': 'B1', 'material': 'Cu', 'no_conductores': 2},
+    {'nombre': 'Cable solar CC H1Z2Z2-K 6 mm² Cu', 'seccion': 6, 'corriente': 36, 'tipo': 'B1', 'material': 'Cu', 'no_conductores': 2},
+    {'nombre': 'Cable solar CC H1Z2Z2-K 10 mm² Cu', 'seccion': 10, 'corriente': 50, 'tipo': 'B1', 'material': 'Cu', 'no_conductores': 2},
+    {'nombre': 'Cable solar CC H1Z2Z2-K 16 mm² Cu', 'seccion': 16, 'corriente': 68, 'tipo': 'B1', 'material': 'Cu', 'no_conductores': 2},
+    {'nombre': 'Cable CA RV-K 0,6/1kV 6 mm² Cu', 'seccion': 6, 'corriente': 36, 'tipo': 'B1', 'material': 'Cu', 'no_conductores': 3},
+    {'nombre': 'Cable CA RV-K 0,6/1kV 10 mm² Cu', 'seccion': 10, 'corriente': 50, 'tipo': 'B1', 'material': 'Cu', 'no_conductores': 3},
+    {'nombre': 'Cable CA RV-K 0,6/1kV 16 mm² Cu', 'seccion': 16, 'corriente': 68, 'tipo': 'B1', 'material': 'Cu', 'no_conductores': 3},
+    {'nombre': 'Cable CA RV-K 0,6/1kV 25 mm² Cu', 'seccion': 25, 'corriente': 89, 'tipo': 'B1', 'material': 'Cu', 'no_conductores': 3},
+    {'nombre': 'Cable de tierra H07V-K 6 mm² Cu', 'seccion': 6, 'corriente': 36, 'tipo': 'B1', 'material': 'Cu', 'no_conductores': 1},
+    {'nombre': 'Cable de tierra H07V-K 16 mm² Cu', 'seccion': 16, 'corriente': 68, 'tipo': 'B1', 'material': 'Cu', 'no_conductores': 1},
+]
+
+
+def ensure_standard_wires():
+    """Crea (idempotente) el catálogo oficial de cables genéricos y sus tiradas.
+
+    Los nombres siguen la nomenclatura estándar del REBT (H1Z2Z2-K, RV-K, H07V-K)
+    sin marca comercial, para que sirvan de base a cualquier instalador.
+    """
+    from app.services.catalog_service import CatalogService
+
+    catalog = CatalogService.official_catalog(STANDARD_WIRES_CATALOG, active=True)
+    existing = {w.nombre for w in Wire.query.filter_by(catalog_id=catalog.id).all()}
+    created = 0
+    for data in SEED_WIRES:
+        if data['nombre'] in existing:
+            continue
+        db.session.add(Wire(catalog_id=catalog.id, **data))
+        created += 1
+    db.session.commit()
+    if created:
+        logger.info('Catálogo de cables estándar: %d cables creados', created)
+    return created
 
 logger = logging.getLogger(__name__)
 
@@ -130,6 +168,7 @@ def load_initial_data():
         db.session.add(defaults)
 
         db.session.commit()
+        ensure_standard_wires()
         logger.info("Datos iniciales cargados exitosamente!")
 
     except Exception:
@@ -144,6 +183,8 @@ def ensure_marketplace():
         for row in model.query.filter(model.catalog_id.is_(None)).all():
             row.catalog_id = _official_catalog(_brand_from_name(row.nombre)).id
             orphans += 1
+
+    ensure_standard_wires()
 
     officials = Catalog.query.filter(Catalog.org_id.is_(None), Catalog.is_official.is_(True)).all()
     subscribed = 0

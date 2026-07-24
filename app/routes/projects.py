@@ -22,6 +22,7 @@ _EDITABLE_FIELDS = [
     'coplanar', 'inclinacion', 'azimut',
     'panel_id', 'inverter_id',
     'battery_id', 'battery_quantity',
+    'wire_dc_id', 'wire_ac_id', 'wire_ground_id',
     'referencia_catastral', 'cups', 'compania',
     'potencia_contratada', 'tipo_voltaje',
 ]

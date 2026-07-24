@@ -42,23 +42,99 @@ class MemoriaService:
     ]
 
     @staticmethod
-    def _build_budget_vars(form_data, org_id=None):
+    def _load_project(form_data, org_id=None):
         from app.models.project import Project
-        from app.services.budget_service import BudgetService
         try:
             pid = int(form_data.get('project_id') or 0)
         except (TypeError, ValueError):
-            return {}
+            return None
         if not pid:
-            return {}
+            return None
         project = Project.query.get(pid)
         if not project or (org_id and project.org_id != org_id):
+            return None
+        return project
+
+    @staticmethod
+    def _build_budget_vars(project):
+        from app.services.budget_service import BudgetService
+        if not project:
             return {}
         return BudgetService.memoria_vars(project)
 
     @staticmethod
-    def _build_site_plan_svgs(data, org_id=None):
-        from app.models.project import Project
+    def _backfill_vars(data, panel, inverter, project):
+        """Valores que la memoria puede consultar o derivar del proyecto y su análisis.
+
+        Rellena huecos que el formulario no pide (coordenadas, producción,
+        irradiación, ángulos, corrientes de salida, temperaturas de trabajo y
+        secciones de cable) para que el documento no los deje en «___». El
+        formulario, cuando aporta un valor, siempre tiene prioridad.
+        """
+        from datetime import datetime
+
+        bf = {}
+        res = (project.resultados if project else None) or {}
+
+        if project:
+            if project.latitud is not None:
+                bf['latitude'] = project.latitud
+            if project.longitud is not None:
+                bf['longitude'] = project.longitud
+
+        if res.get('altitude') is not None:
+            bf['altitude'] = round(float(res['altitude']))
+        if res.get('annual_production') is not None:
+            bf['annual_production'] = round(float(res['annual_production']))
+        irr = res.get('annual_irradiance_kWh_m2') or res.get('optimal_irradiance')
+        if irr is not None:
+            bf['annual_irradiance'] = round(float(irr))
+
+        beta = res.get('beta_optimal')
+        if project and project.inclinacion is not None:
+            bf['panels_inclination'] = round(float(project.inclinacion), 1)
+        elif beta is not None:
+            bf['panels_inclination'] = round(float(beta), 1)
+        if project and project.azimut is not None:
+            bf['panels_azimut'] = round(float(project.azimut), 1)
+        else:
+            bf['panels_azimut'] = 180
+
+        if panel and panel.isc is not None:
+            bf['panels_output_i_max_expected'] = round(float(panel.isc), 2)
+            bf['panels_output_i_max_oversized'] = round(float(panel.isc) * 1.25, 2)
+        if inverter and inverter.I_max_output is not None:
+            bf['inverter_output_i_max_expected'] = round(float(inverter.I_max_output), 2)
+
+        input_v_type = (data.get('input_v_type') or '').lower()
+        if input_v_type:
+            bf['inverter_phases'] = 'trifásico' if 'trif' in input_v_type else 'monofásico'
+
+        cold = res.get('coldest_temperature')
+        bf['panel_temp_min_limit'] = round(float(cold)) if cold is not None else -10
+        bf['panel_temp_max_limit'] = 70
+        bf['panel_temp_limits_assumed'] = True
+
+        factor = res.get('irradiance_factor_loss')
+        if factor is not None:
+            loss = max(0.0, (1 - float(factor)) * 100)
+            bf['orientation_loss_verbosed'] = f'en torno al {round(loss, 1)}%'.replace('.', ',')
+
+        bf['date'] = datetime.now().strftime('%d/%m/%Y')
+
+        if project:
+            if project.wire_dc:
+                bf['wire_dc_section'] = project.wire_dc.seccion
+                bf['wire_dc_type'] = project.wire_dc.tipo
+            if project.wire_ac:
+                bf['wire_ac_section'] = project.wire_ac.seccion
+                bf['wire_ac_type'] = project.wire_ac.tipo
+            if project.wire_ground:
+                bf['wire_ground_section'] = project.wire_ground.seccion
+        return bf
+
+    @staticmethod
+    def _build_site_plan_svgs(data, project=None):
         from app.services.circuit.core.plan_sheet import wrap_plan_sheet
         from app.services.site_plan_service import SitePlanService
 
@@ -71,16 +147,6 @@ class MemoriaService:
 
         result = {}
         try:
-            project = None
-            try:
-                pid = int(data.get('project_id') or 0)
-            except (TypeError, ValueError):
-                pid = 0
-            if pid:
-                project = Project.query.get(pid)
-                if project and org_id and project.org_id != org_id:
-                    project = None
-
             lat = _coord('latitude')
             lng = _coord('longitude')
             if (lat is None or lng is None) and project:
@@ -138,12 +204,13 @@ class MemoriaService:
             if form_data.get('battery_id'):
                 battery = Battery.query.get(form_data.get('battery_id'))
 
-            template_vars = MemoriaService._build_template_vars(form_data, panel, inverter, defaults)
+            project = MemoriaService._load_project(form_data, org_id)
+            template_vars = MemoriaService._build_template_vars(form_data, panel, inverter, defaults, project)
             template_vars.update(MemoriaService._build_battery_vars(form_data, battery))
             template_vars.update(MemoriaService._build_circuit_svgs(form_data, panel, inverter, battery))
-            template_vars.update(MemoriaService._build_graph_svgs(form_data))
-            template_vars.update(MemoriaService._build_budget_vars(form_data, org_id))
-            template_vars.update(MemoriaService._build_site_plan_svgs(form_data, org_id))
+            template_vars.update(MemoriaService._build_graph_svgs(form_data, project))
+            template_vars.update(MemoriaService._build_budget_vars(project))
+            template_vars.update(MemoriaService._build_site_plan_svgs(form_data, project))
 
         html_string = render_template('memoria_tecnica_pdf.html', **template_vars)
         memoria_pdf = HTML(
@@ -185,13 +252,14 @@ class MemoriaService:
             inverter = _visible(Inverter, 'inverter_id')
             battery = _visible(Battery, 'battery_id')
             defaults = InstallationDefaults.get()
+            project = MemoriaService._load_project(form_data, org_id)
             if panel and inverter and defaults:
-                template_vars.update(MemoriaService._build_template_vars(form_data, panel, inverter, defaults))
+                template_vars.update(MemoriaService._build_template_vars(form_data, panel, inverter, defaults, project))
                 template_vars.update(MemoriaService._build_battery_vars(form_data, battery))
                 template_vars.update(MemoriaService._build_circuit_svgs(form_data, panel, inverter, battery))
-                template_vars.update(MemoriaService._build_graph_svgs(form_data))
-            template_vars.update(MemoriaService._build_budget_vars(form_data, org_id))
-            template_vars.update(MemoriaService._build_site_plan_svgs(form_data, org_id))
+                template_vars.update(MemoriaService._build_graph_svgs(form_data, project))
+            template_vars.update(MemoriaService._build_budget_vars(project))
+            template_vars.update(MemoriaService._build_site_plan_svgs(form_data, project))
         return render_template('memoria_tecnica_pdf.html', **template_vars)
 
     @staticmethod
@@ -218,7 +286,13 @@ class MemoriaService:
         return derived
 
     @staticmethod
-    def _build_template_vars(data, panel, inverter, defaults):
+    def _build_template_vars(data, panel, inverter, defaults, project=None):
+        bf = MemoriaService._backfill_vars(data, panel, inverter, project)
+        eff = dict(data)
+        for key, value in bf.items():
+            if eff.get(key) in (None, ''):
+                eff[key] = value
+        data = eff
         derived = MemoriaService._derived_vars(data, panel)
 
         def dv(key):
@@ -248,6 +322,7 @@ class MemoriaService:
             'shadows_loss_verbosed': data.get('shadows_loss_verbosed'),
             'panel_temp_min_limit': data.get('panel_temp_min_limit'),
             'panel_temp_max_limit': data.get('panel_temp_max_limit'),
+            'panel_temp_limits_assumed': data.get('panel_temp_limits_assumed'),
             'anti_pouring_verbosed': dv('anti_pouring_verbosed'),
             'batteries_verbosed': data.get('batteries_verbosed'),
             'panels_model': panel.nombre,
@@ -272,10 +347,12 @@ class MemoriaService:
             'wire_dc_material': defaults.dc_material,
             'wire_dc_length': data.get('wire_dc_length'),
             'wire_dc_section': data.get('wire_dc_section'),
+            'wire_dc_type': data.get('wire_dc_type'),
             'wire_dc_model': defaults.dc_modelo,
             'wire_ac_material': defaults.ac_material,
             'wire_ac_length': data.get('wire_ac_length'),
             'wire_ac_section': data.get('wire_ac_section'),
+            'wire_ac_type': data.get('wire_ac_type'),
             'wire_ac_model': defaults.ac_modelo,
             'wire_ground_material': defaults.tierra_material,
             'wire_ground_model': defaults.tierra_modelo,
@@ -414,13 +491,23 @@ class MemoriaService:
             return {'svg_ca': empty, 'svg_cc': empty, 'svg_sistema': empty}
 
     @staticmethod
-    def _build_graph_svgs(data):
-        try:
-            monthly_production = json.loads(data.get('monthly_production', '[]'))
-            monthly_irradiance = json.loads(data.get('monthly_irradiance', '[]'))
-        except (json.JSONDecodeError, TypeError):
-            monthly_production = []
-            monthly_irradiance = []
+    def _build_graph_svgs(data, project=None):
+        res = (project.resultados if project else None) or {}
+
+        def _series(key):
+            raw = data.get(key)
+            if raw:
+                try:
+                    parsed = json.loads(raw)
+                    if isinstance(parsed, list) and parsed:
+                        return parsed
+                except (json.JSONDecodeError, TypeError):
+                    pass
+            value = res.get(key)
+            return value if isinstance(value, list) else []
+
+        monthly_production = _series('monthly_production')
+        monthly_irradiance = _series('monthly_irradiance')
 
         result = {}
         if monthly_production:
@@ -428,9 +515,11 @@ class MemoriaService:
         if monthly_irradiance:
             result['svg_irradiance'] = GraphService.generate_monthly_irradiance(monthly_irradiance)
         try:
-            annual_consumption = float(data.get('annual_consumption', 0))
+            annual_consumption = float(data.get('annual_consumption') or 0)
         except (ValueError, TypeError):
             annual_consumption = 0
+        if not annual_consumption and project and project.necesidad:
+            annual_consumption = float(project.necesidad)
         if monthly_production and annual_consumption > 0:
             result['svg_balance'] = GraphService.generate_energy_balance(monthly_production, annual_consumption)
         return result
