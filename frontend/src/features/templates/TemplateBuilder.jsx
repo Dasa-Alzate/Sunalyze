@@ -217,7 +217,7 @@ export default function TemplateBuilder() {
                     )}
                   </div>
                   <div className="sun-msection__body">
-                    <div className="sun-speclist" style={{ marginTop: 'var(--space-3)' }}>
+                    <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--space-3)', marginTop: 'var(--space-3)' }}>
                       <Field
                         label="Título de la sección"
                         value={s.title || ''}
