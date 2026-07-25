@@ -23,7 +23,7 @@ _EDITABLE_FIELDS = [
     'panel_id', 'inverter_id',
     'battery_id', 'battery_quantity',
     'referencia_catastral', 'cups', 'compania',
-    'potencia_contratada', 'tipo_voltaje',
+    'potencia_contratada', 'tipo_voltaje', 'ccaa',
 ]
 
 
