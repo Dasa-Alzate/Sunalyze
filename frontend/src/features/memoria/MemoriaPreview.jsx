@@ -210,6 +210,7 @@ export default function MemoriaPreview() {
         crumb={project ? project.cliente : 'Proyectos'}
         actions={
           <>
+            {id && <Btn variant="secondary" icon="clipboard" onClick={() => nav(`/app/legalizacion/${id}`)}>Legalización</Btn>}
             {id && <Btn variant="secondary" icon="save" data-busy={saving} disabled={saving} onClick={() => saveToProject()}>Guardar</Btn>}
             <Btn variant="primary" icon="file-text" onClick={generarPDF} disabled={!canSign} title={canSign ? undefined : "Tu rol no permite firmar/generar la memoria"}>Generar PDF</Btn>
           </>
