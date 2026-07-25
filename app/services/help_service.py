@@ -102,6 +102,29 @@ TUTORIALS = {
             'tips': ['La memoria incluye los esquemas unifilares como planos con cajetín normativo.'],
         },
     },
+    'legalizacion': {
+        DEFAULT_KEY: {
+            'title': 'Legalización del proyecto',
+            'intro': (
+                'Desde aquí sigues el expediente de la instalación: estado, guía de tramitación '
+                'de tu comunidad autónoma, modelo oficial de MTD y número de expediente de Industria.'
+            ),
+            'steps': [
+                ('Asigna la comunidad autónoma', 'Con la CCAA asignada aparecen la guía paso a paso, los enlaces a la sede y los impresos oficiales. De momento: Comunitat Valenciana y Región de Murcia.'),
+                ('Firma la memoria antes de avanzar', 'El flujo exige la memoria técnica firmada para pasar a «En revisión» o «Presentado»; así el expediente siempre referencia un documento concreto.'),
+                ('Descarga el modelo oficial de MTD', 'En la Comunitat Valenciana, Sunalyze rellena el impreso oficial de la GVA (modelo 23167) con los datos del proyecto; en Murcia genera un documento con la estructura del modelo IEBT de la CARM.'),
+                ('Usa el asistente de presentación', 'Muestra los datos del proyecto en el mismo orden en que los pide el formulario de la sede electrónica, con botón de copiar campo a campo.'),
+                ('Registra el expediente', 'Al presentar, la sede te devuelve un justificante con número de expediente: guárdalo aquí para que quede en el historial del proyecto.'),
+            ],
+            'tips': [
+                'El proceso legal completo es: memoria técnica (MTD) → código CAU y permiso de acceso con la distribuidora → ejecución → certificado de instalación (CIE) → presentación telemática en la sede de Industria de tu CCAA → inscripción en el registro de autoconsumo → compensación de excedentes con tu comercializadora.',
+                'La presentación en la sede es siempre tuya: exige tu certificado digital de instalador habilitado y no puede delegarse en ningún software. Sunalyze prepara los documentos y los datos; tú firmas y presentas.',
+                f'Comunitat Valenciana: trámite de autoconsumo ≤10 kW en {_l("https://www.gva.es/es/inicio/procedimientos?id_proc=18168", "el procedimiento PROP 18168")} y de BT con MTD en {_l("https://sede.gva.es/es/detall-tramit?id_proc=440", "el PROP 440")}.',
+                f'Región de Murcia: registro de instalaciones de BT por declaración responsable en {_l("https://sede.carm.es/web/pagina?IDCONTENIDO=19&IDTIPO=240", "el procedimiento 0019 de la sede de la CARM")}; la tasa se paga durante la presentación.',
+                'Normativa de referencia: RD 244/2019 (autoconsumo) y REBT RD 842/2002 con la ITC-BT-40 (instalaciones generadoras). Con potencia ≤10 kW basta la MTD; por encima hace falta proyecto técnico.',
+            ],
+        },
+    },
     'equipos': {
         DEFAULT_KEY: {
             'title': 'Biblioteca de equipos',
