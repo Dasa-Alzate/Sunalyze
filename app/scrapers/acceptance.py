@@ -58,7 +58,7 @@ GLOBAL = {
             },
         },
         'review': {
-            'required': [],
+            'required': ['voltage'],
             'ranges': {
                 'capacity_kwh': [1, 50],
                 'power_kw': [0.5, 30],
@@ -66,6 +66,23 @@ GLOBAL = {
                 'round_trip_efficiency': [85, 100],
                 'dod': [50, 100],
             },
+        },
+    },
+}
+
+GLOBAL['wire'] = {
+    'block': {
+        'required': ['seccion', 'corriente', 'tipo', 'material', 'no_conductores'],
+        'ranges': {
+            'seccion': [0.5, 1000],
+            'corriente': [1, 5000],
+        },
+    },
+    'review': {
+        'required': [],
+        'ranges': {
+            'seccion': [1, 400],
+            'corriente': [5, 1000],
         },
     },
 }
