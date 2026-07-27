@@ -29,7 +29,7 @@ def create_app(config_overrides=None):
     from app.models import (  # noqa: F401
         panel, inverter, battery, wire, installation_defaults, project,
         user, organization, membership, catalog, invitation, flag,
-        support_ticket, superadmin_audit, scrape_run, audit_event,
+        support_ticket, superadmin_audit, scrape_run, scrape_cache, audit_event,
         memoria_signature, project_event, report_template,
         financial_scenario, installation, notification, budget_item,
     )

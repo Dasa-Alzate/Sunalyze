@@ -5,8 +5,8 @@ from dataclasses import dataclass, field
 VITAL = {
     'panel': ('nombre', 'power', 'voc', 'vmp', 'imp'),
     'inverter': ('nombre', 'power', 'vmax'),
-    'battery': ('nombre', 'capacity_kwh', 'power_kw', 'voltage'),
-    'wire': ('seccion', 'material'),
+    'battery': ('nombre', 'capacity_kwh', 'power_kw'),
+    'wire': ('seccion', 'corriente', 'material'),
 }
 
 
@@ -17,6 +17,7 @@ class NormalizedProduct:
     source_url: str = ''
     fields: dict = field(default_factory=dict)
     brand: str = None
+    notes: list = field(default_factory=list)
 
     def missing_vital(self):
         return [k for k in VITAL[self.kind] if self.fields.get(k) in (None, '')]
@@ -42,17 +43,43 @@ def to_float_eu(raw):
         return None
 
 
-def grab(text, labels, unit):
+MAX_GAP = 28
+
+
+def _segments(text, labels):
     low = text.lower()
     for label in labels:
-        idx = low.find(label.lower())
-        if idx == -1:
-            continue
-        segment = text[idx:idx + 140]
-        m = re.search(r'([0-9][0-9.,]*)\s*' + unit, segment)
+        needle = label.lower()
+        idx = low.find(needle)
+        while idx != -1:
+            end = idx + len(needle)
+            yield text[end:end + MAX_GAP + 60]
+            idx = low.find(needle, end)
+
+
+_ALTERNATIVES = r'(?:\s*/\s*[0-9][0-9.,]*)*'
+
+
+def grab(text, labels, unit, max_gap=MAX_GAP):
+    pattern = re.compile(
+        r'[^0-9]{0,%d}([0-9][0-9.,]*)%s\s*%s' % (max_gap, _ALTERNATIVES, unit)
+    )
+    for segment in _segments(text, labels):
+        m = pattern.match(segment)
         if m:
             return to_float_eu(m.group(1))
     return None
+
+
+def grab_range(text, labels, unit, max_gap=MAX_GAP):
+    pattern = re.compile(
+        r'[^0-9]{0,%d}([0-9][0-9.,]*)\s*[-–]\s*([0-9][0-9.,]*)\s*%s' % (max_gap, unit)
+    )
+    for segment in _segments(text, labels):
+        m = pattern.match(segment)
+        if m:
+            return to_float_eu(m.group(1)), to_float_eu(m.group(2))
+    return None, None
 
 
 def power_from_name(name):
