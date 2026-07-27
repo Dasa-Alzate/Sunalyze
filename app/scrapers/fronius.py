@@ -1,43 +1,119 @@
 
 import logging
-import lxml.html
-import requests
+import re
+import urllib.parse
 
-from .base import NormalizedProduct, grab, power_from_name
+import lxml.html
+
+from . import sitemap
+from .base import NormalizedProduct, grab, grab_range, to_float_eu
+from .scraper import BrandScraper
 
 logger = logging.getLogger(__name__)
 
-_UA = 'SunalyzeBot/0.1 (+catalog-sync; contact: ops@sunalyze.es)'
-_BASE = 'https://www.fronius.com/en-us/usa/solar-energy/installers-partners/technical-data/all-products/inverters/fronius-primo-ul/'
+SITEMAP_INDEX = 'https://www.fronius.com/sitemap-index.xml'
+COUNTRY = 'spain'
+CATALOG_SEGMENT = '/todos-los-productos/'
+INVERTER_SEGMENT = 'inversor'
 
-SEED = [
-    {'slug': 'fronius-primo-5-0-1-208-240', 'nombre': 'Fronius Primo 5.0-1'},
-    {'slug': 'fronius-primo-10-0-1-208-240', 'nombre': 'Fronius Primo 10.0-1'},
-    {'slug': 'fronius-primo-15-0-1-208-240', 'nombre': 'Fronius Primo 15.0-1'},
-]
+VMAX_RANGE = ['Rango de tensión de entrada CC', 'Rango de tensión CC de entrada']
+VMAX_MPP = ['Tensión MPP máxima', 'Máx. Tensión MPP', 'Tensión MPP max']
+POWER_KW = ['Potencia nominal CA', 'Potencia nominal de salida CA']
+POWER_MAX_KVA = ['Máxima potencia de salida', 'Máx. potencia de salida']
+EFFICIENCY = ['Máximo rendimiento', 'Eficiencia Máxima', 'Grado de rendimiento máximo']
+I_INPUT = ['Máxima corriente de entrada', 'Corriente máxima de entrada',
+           'Máx. corriente de entrada de la serie fotovoltaica']
+I_OUTPUT = ['Corriente de salida de CA máxima', 'Corriente de salida CA (Ica nom)',
+            'Máxima corriente de salida CA', 'Corriente máxima de salida']
 
 
-class FroniusScraper:
+def _tail(url):
+    decoded = urllib.parse.unquote(url)
+    if CATALOG_SEGMENT not in decoded:
+        return []
+    return [s for s in decoded.split(CATALOG_SEGMENT)[-1].split('/') if s]
+
+
+def _is_inverter_model(url):
+    parts = _tail(url)
+    return len(parts) == 3 and parts[0] == INVERTER_SEGMENT
+
+
+def _title(doc, fallback):
+    for xpath in ('//meta[@property="og:title"]/@content', '//title/text()'):
+        found = doc.xpath(xpath)
+        if found and found[0].strip():
+            return found[0].strip()
+    headings = doc.xpath('//h1')
+    return headings[0].text_content().strip() if headings else fallback
+
+
+def _power_from_title(title):
+    cleaned = re.sub(r'GEN\s*\d+', ' ', title or '', flags=re.IGNORECASE)
+    m = re.search(r'(\d+(?:[.,]\d+)?)', cleaned)
+    return to_float_eu(m.group(1)) if m else None
+
+
+def _kilo(text, labels):
+    value = grab(text, labels, 'kW')
+    if value is not None:
+        return value
+    value = grab(text, labels, 'W')
+    return value / 1000 if value is not None else None
+
+
+def _kilo_va(text, labels):
+    value = grab(text, labels, 'kVA')
+    if value is not None:
+        return value
+    value = grab(text, labels, 'VA')
+    return value / 1000 if value is not None else None
+
+
+class FroniusScraper(BrandScraper):
     brand = 'Fronius'
     kind = 'inverter'
 
     def discover(self):
-        return [{'external_id': s['slug'], 'nombre': s['nombre'], 'url': _BASE + s['slug']} for s in SEED]
+        urls = sitemap.discover_urls(
+            SITEMAP_INDEX,
+            keep=_is_inverter_model,
+            follow=lambda u: f'country={COUNTRY}' in u,
+        )
+        refs = [{'external_id': '/'.join(_tail(u)[1:])[:120], 'url': u, 'kind': self.kind}
+                for u in urls]
+        logger.info('Fronius: %s fichas de inversor descubiertas', len(refs))
+        return refs
 
-    def fetch(self, ref):
-        resp = requests.get(ref['url'], headers={'User-Agent': _UA}, timeout=20)
-        resp.raise_for_status()
-        return lxml.html.fromstring(resp.text).text_content()
+    def parse(self, ref, raw):
+        doc = lxml.html.fromstring(raw)
+        title = _title(doc, ref['external_id'])
+        text = ' '.join(doc.text_content().split())
+        notes = []
 
-    def parse(self, ref, text):
+        _, vmax = grab_range(text, VMAX_RANGE, 'V')
+        if vmax is None:
+            vmax = grab(text, VMAX_MPP, 'V')
+            if vmax is not None:
+                notes.append('vmax tomado de la tensión MPP máxima: la ficha no publica '
+                             'Ucc máx., el valor es conservador')
+
+        power = _kilo(text, POWER_KW)
+        if power is None:
+            power = _power_from_title(title)
+            if power is not None:
+                notes.append('power deducido del nombre del modelo: la ficha no publica '
+                             'potencia nominal CA')
+
         fields = {
-            'nombre': ref['nombre'],
-            'power': power_from_name(ref['nombre']),
-            'vmax': grab(text, ['Max. input voltage', 'Max input voltage'], r'V\b'),
-            'y': grab(text, ['Max. efficiency', 'Maximum efficiency'], r'%'),
-            'I_max_input': grab(text, ['Max. usable input current', 'Max usable input current'], r'A\b'),
-            'I_max_output': grab(text, ['Max. continuous output current', 'Max. output current'], r'A\b'),
+            'nombre': title,
+            'power': power,
+            'power_max': _kilo_va(text, POWER_MAX_KVA),
+            'vmax': vmax,
+            'y': grab(text, EFFICIENCY, '%'),
+            'I_max_input': grab(text, I_INPUT, 'A'),
+            'I_max_output': grab(text, I_OUTPUT, 'A'),
         }
         fields = {k: v for k, v in fields.items() if v is not None}
         return [NormalizedProduct(kind=self.kind, external_id=ref['external_id'],
-                                  source_url=ref['url'], fields=fields)]
+                                  source_url=ref['url'], fields=fields, notes=notes)]
