@@ -1,6 +1,7 @@
 
 import logging
-from flask import Blueprint, request, jsonify
+import os
+from flask import Blueprint, request, jsonify, send_from_directory
 from pydantic import ValidationError as PydanticValidationError
 
 from app.extensions import db
@@ -23,6 +24,8 @@ from app.errors import NotFound, Forbidden, ValidationError
 logger = logging.getLogger(__name__)
 
 crud_bp = Blueprint('crud', __name__)
+
+DATASHEETS_DIR = os.path.join(os.path.dirname(__file__), '..', '..', 'data', 'datasheets')
 
 RESOURCES = {
     'panels': {
@@ -349,3 +352,9 @@ def calculate_section():
 
     wire = wires[0]
     return jsonify({'seccion': wire.seccion, 'corriente': wire.corriente, 'wire': wire.to_dict()})
+
+
+@crud_bp.route('/api/datasheets/<path:name>', methods=['GET'])
+@require_permission(Permission.EQUIPMENT_VIEW)
+def get_datasheet(name):
+    return send_from_directory(DATASHEETS_DIR, name, mimetype='application/pdf')

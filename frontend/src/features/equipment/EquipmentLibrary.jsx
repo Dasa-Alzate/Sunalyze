@@ -576,7 +576,7 @@ function EditDrawer({ schema, initial, ownCatalogs, onClose, onSave }) {
               )
               if (!f.link) return field
               const raw = (values[f.key] || '').trim()
-              const href = raw && !/^https?:\/\//i.test(raw) ? `https://${raw}` : raw
+              const href = !raw ? '' : /^https?:\/\//i.test(raw) ? raw : `/api/datasheets/${raw.split('/').map(encodeURIComponent).join('/')}`
               return (
                 <div key={f.key} className="sun-field-with-action">
                   {field}
