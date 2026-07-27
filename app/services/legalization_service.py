@@ -9,6 +9,7 @@ from app.models.project_event import ProjectEvent
 from app.models.membership import Membership
 from app.errors import NotFound, ValidationError, Conflict
 from app.services.notification_service import NotificationService
+from app.services import legalization_catalog
 
 logger = logging.getLogger(__name__)
 
@@ -52,7 +53,66 @@ class LegalizationService:
             'transiciones_posibles': sorted(
                 LegalizationService.allowed_transitions(project.estado)
             ),
+            'ccaa': project.ccaa,
+            'expediente_numero': project.expediente_numero,
+            'expediente_fecha': project.expediente_fecha.isoformat() if project.expediente_fecha else None,
         }
+
+    @staticmethod
+    def guide(ccaa):
+        entry = legalization_catalog.resolve(ccaa)
+        if entry is None:
+            raise NotFound(
+                'No hay guia de tramitacion para esa comunidad autonoma todavia.',
+                code='legalization.ccaa_unknown',
+            )
+        guide = {k: v for k, v in entry.items() if k != 'presentacion'}
+        guide['disponibles'] = legalization_catalog.available()
+        return guide
+
+    @staticmethod
+    def presentation(project):
+        entry = legalization_catalog.resolve(project.ccaa)
+        if entry is None:
+            raise NotFound(
+                'Asigna primero una comunidad autonoma con guia disponible al proyecto.',
+                code='legalization.ccaa_unknown',
+            )
+        sections = []
+        for section in entry['presentacion']:
+            campos = [
+                {
+                    'label': campo['label'],
+                    'value': LegalizationService._presentation_value(project, campo['key']),
+                }
+                for campo in section['campos']
+            ]
+            sections.append({'seccion': section['seccion'], 'campos': campos})
+        return {'ccaa': entry['nombre'], 'secciones': sections}
+
+    @staticmethod
+    def _presentation_value(project, key):
+        if key == 'provincia':
+            return legalization_catalog.provincia_hint(project.ccaa)
+        if key == 'potencia_inversor':
+            return project.inverter.power if project.inverter else None
+        if key in ('panel_nombre', 'inverter_nombre', 'battery_nombre'):
+            related = getattr(project, key.replace('_nombre', ''))
+            return related.nombre if related else None
+        return getattr(project, key, None)
+
+    @staticmethod
+    def set_expediente(project, user, numero, fecha=None, note=None):
+        project.expediente_numero = numero
+        project.expediente_fecha = fecha
+        db.session.add(LegalizationService._event(
+            project, user, project.estado, project.estado,
+            note or f'Expediente de industria registrado: {numero}',
+        ))
+        db.session.commit()
+        logger.info('Expediente %s registrado en p%s por u%s', numero,
+                    project.id, user.id if user else None)
+        return project
 
     @staticmethod
     def sign_memoria(project, user, pdf_sha256, pdf_size_bytes, note=None):

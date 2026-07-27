@@ -1,6 +1,6 @@
 # API map
 
-Mapa autogenerado por `flask api-map`. Endpoints `/api`: 123.
+Mapa autogenerado por `flask api-map`. Endpoints `/api`: 127.
 
 No editar a mano: regenerar con `flask api-map`.
 
@@ -106,6 +106,10 @@ No editar a mano: regenerar con `flask api-map`.
 | Método(s) | Ruta | Endpoint | Resumen |
 | --- | --- | --- | --- |
 | GET | `/api/projects/<int:project_id>/legalization` | `legalization.get_legalization` |  |
+| POST | `/api/projects/<int:project_id>/legalization/expediente` | `legalization.set_expediente` |  |
+| GET | `/api/projects/<int:project_id>/legalization/guia` | `legalization.guia` |  |
+| GET | `/api/projects/<int:project_id>/legalization/mtd-oficial` | `legalization.mtd_oficial` |  |
+| GET | `/api/projects/<int:project_id>/legalization/presentacion` | `legalization.presentacion` |  |
 | POST | `/api/projects/<int:project_id>/legalization/transition` | `legalization.transition` |  |
 | POST | `/api/projects/<int:project_id>/memoria/sign` | `legalization.sign_memoria` |  |
 

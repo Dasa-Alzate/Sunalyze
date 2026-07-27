@@ -29,6 +29,7 @@ class ProjectUpdateSchema(BaseModel):
     compania: Optional[str] = Field(default=None, max_length=80)
     potencia_contratada: Optional[float] = Field(default=None, gt=0, le=1000000)
     tipo_voltaje: Optional[str] = Field(default=None, max_length=20)
+    ccaa: Optional[str] = Field(default=None, max_length=40)
 
     resultados: Optional[dict] = None
 

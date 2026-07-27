@@ -155,6 +155,14 @@ export const api = {
     restore: (id) => post(`/api/projects/${id}/restore`, {}),
     duplicate: (id) => post(`/api/projects/${id}/duplicate`),
   },
+  legalization: {
+    get: (id) => get(`/api/projects/${id}/legalization`),
+    transition: (id, b) => post(`/api/projects/${id}/legalization/transition`, b),
+    expediente: (id, b) => post(`/api/projects/${id}/legalization/expediente`, b),
+    guia: (id, ccaa) => get(`/api/projects/${id}/legalization/guia${ccaa ? `?ccaa=${encodeURIComponent(ccaa)}` : ''}`),
+    presentacion: (id) => get(`/api/projects/${id}/legalization/presentacion`),
+    mtdOficial: (id) => requestBlob(`/api/projects/${id}/legalization/mtd-oficial`),
+  },
   catalogs: {
     list: () => get('/api/catalogs'),
     listDeleted: () => get('/api/catalogs?deleted=true'),
