@@ -402,7 +402,10 @@ export default function Wizard() {
                 <div className="sun-empty__icon"><Icon name="file-text" size={26} /></div>
                 <div className="sun-empty__title">Listo para la memoria técnica</div>
                 <div className="sun-empty__desc">Completa los datos del cliente y la instalación; verás el documento crecer en vivo.</div>
-                <div className="sun-empty__actions"><Btn variant="primary" icon="arrow-right" onClick={goToMemoria}>Ir a la memoria</Btn></div>
+                <div className="sun-empty__actions">
+                  <Btn variant="primary" icon="arrow-right" onClick={goToMemoria}>Ir a la memoria</Btn>
+                  {id && <Btn variant="secondary" icon="clipboard" onClick={() => nav(`/app/legalizacion/${id}`)}>Legalización</Btn>}
+                </div>
               </div>
             )}
 
