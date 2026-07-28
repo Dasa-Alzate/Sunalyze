@@ -1,10 +1,14 @@
 
 from .fronius import FroniusScraper
 from .autosolar import AutoSolarScraper
+from .cec import CECScraper
+from .cec_battery import CECBatteryScraper
 
 SCRAPERS = {
     'fronius': FroniusScraper(),
     'autosolar': AutoSolarScraper(),
+    'cec': CECScraper(),
+    'cec-baterias': CECBatteryScraper(),
 }
 
 
