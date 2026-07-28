@@ -1,21 +1,19 @@
 
 import logging
 import re
-import time
 import unicodedata
 
 import lxml.html
-import requests
 
-from .base import NormalizedProduct, to_float_eu, power_from_name
+from .base import NormalizedProduct, to_float_eu
 from .brands import deduce_brand
+from .http import plain_get
+from .scraper import BrandScraper
 
 logger = logging.getLogger(__name__)
 
-_UA = 'SunalyzeBot/0.1 (+catalog-sync; contact: ops@sunalyze.es)'
 _BASE = 'https://autosolar.es'
-_PAUSE = 0.3
-_MAX_PAGES = 40
+_MAX_PAGES = 200
 
 SEED = [
     {'kind': 'panel', 'url': _BASE + '/paneles-solares'},
@@ -37,6 +35,27 @@ def _num(value):
 def _watts_from_title(title):
     m = re.search(r'(\d+(?:[.,]\d+)?)\s*W\b', title or '', re.IGNORECASE)
     return to_float_eu(m.group(1)) if m else None
+
+
+def _watts(value):
+    m = re.search(r'[0-9][0-9.,]*', value or '')
+    if not m:
+        return None
+    raw = m.group(0)
+    if re.fullmatch(r'\d{1,3}(\.\d{3})+', raw):
+        raw = raw.replace('.', '')
+    return to_float_eu(raw)
+
+
+def _kw(value):
+    watts = _watts(value)
+    return round(watts / 1000, 3) if watts is not None else None
+
+
+def _range_max(value):
+    numbers = [to_float_eu(n) for n in re.findall(r'[0-9][0-9.,]*', value or '')]
+    numbers = [n for n in numbers if n is not None]
+    return max(numbers) if numbers else None
 
 
 def _spec_pairs(doc):
@@ -83,46 +102,38 @@ def _wire_type(title):
     return 'PV'
 
 
-class AutoSolarScraper:
+class AutoSolarScraper(BrandScraper):
     brand = 'AutoSolar'
     requires_product_brand = True
-    max_products = 60
 
     def discover(self):
         refs = []
+        seen = set()
         for seed in SEED:
             url = seed['url']
             pages = 0
             while url and pages < _MAX_PAGES:
                 try:
-                    resp = requests.get(url, headers={'User-Agent': _UA}, timeout=20)
-                    resp.raise_for_status()
+                    raw = plain_get(url)
                 except Exception:
                     logger.exception('Fallo al listar %s', url)
                     break
-                doc = lxml.html.fromstring(resp.text)
+                doc = lxml.html.fromstring(raw)
                 doc.make_links_absolute(_BASE)
-                anchors = doc.xpath('//a[.//div[contains(@class, "product-frame")]]')
-                for a in anchors:
+                for a in doc.xpath('//a[.//div[contains(@class, "product-frame")]]'):
                     href = a.get('href')
-                    if not href:
+                    if not href or href in seen:
                         continue
-                    refs.append({'external_id': href.split('autosolar.es/')[-1],
+                    seen.add(href)
+                    refs.append({'external_id': href.split('autosolar.es/')[-1][:120],
                                  'url': href, 'kind': seed['kind'],
                                  'nombre': (a.get('title') or '').strip()})
-                    if self.max_products and len(refs) >= self.max_products:
-                        return refs
                 nxt = doc.xpath('//link[@rel="next"]/@href') or doc.xpath('//a[@rel="next"]/@href')
                 url = nxt[0] if nxt else None
                 pages += 1
-                time.sleep(_PAUSE)
+            logger.info('AutoSolar: %s fichas acumuladas tras %s (%s páginas)',
+                        len(refs), seed['kind'], pages)
         return refs
-
-    def fetch(self, ref):
-        resp = requests.get(ref['url'], headers={'User-Agent': _UA}, timeout=20)
-        resp.raise_for_status()
-        time.sleep(_PAUSE)
-        return resp.text
 
     def parse(self, ref, raw):
         doc = lxml.html.fromstring(raw)
@@ -152,9 +163,13 @@ class AutoSolarScraper:
         if kind == 'inverter':
             fields = {
                 'nombre': title,
-                'power': power_from_name(title) or _num(_find(pairs, 'potencia', 'salida')),
-                'vmax': _num(_find(pairs, 'tension', 'maxima', 'entrada')
-                             or _find(pairs, 'voltaje', 'maximo', 'entrada')),
+                'power': _kw(_find(pairs, 'potencia', 'salida', 'continuada')
+                             or _find(pairs, 'potencia', 'nominal')
+                             or _find(pairs, 'potencia', 'salida')),
+                'power_max': _kw(_find(pairs, 'potencia', 'maxima')),
+                'vmax': _range_max(_find(pairs, 'rango', 'mpp')
+                                   or _find(pairs, 'tension', 'maxima', 'entrada')
+                                   or _find(pairs, 'voltaje', 'maximo', 'entrada')),
                 'y': _num(_find(pairs, 'eficiencia') or _find(pairs, 'rendimiento')),
             }
         else:
