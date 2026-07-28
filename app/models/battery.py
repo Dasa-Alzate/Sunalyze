@@ -13,7 +13,7 @@ class Battery(BaseModel, ProvenanceMixin):
     nombre = db.Column(db.String(100), nullable=False, unique=True)
     capacity_kwh = db.Column(db.Float, nullable=False)
     power_kw = db.Column(db.Float, nullable=False)
-    voltage = db.Column(db.Float, nullable=False)
+    voltage = db.Column(db.Float)
     usable_kwh = db.Column(db.Float)
     dod = db.Column(db.Float)
     technology = db.Column(db.String(50))

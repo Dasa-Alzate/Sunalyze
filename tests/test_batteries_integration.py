@@ -134,7 +134,7 @@ class BatteryProjectTest(_Base):
 
 class BatteryScraperTest(_Base):
     def test_vital_battery_defined(self):
-        self.assertEqual(VITAL['battery'], ('nombre', 'capacity_kwh', 'power_kw', 'voltage'))
+        self.assertEqual(VITAL['battery'], ('nombre', 'capacity_kwh', 'power_kw'))
 
     def _product(self, **fields):
         return NormalizedProduct(kind='battery', external_id='ext-1',
