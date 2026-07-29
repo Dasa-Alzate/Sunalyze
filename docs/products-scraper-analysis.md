@@ -133,6 +133,10 @@ uniforme (ENF) queda descartado por anti-bot/ToS.
 - Criterios **elásticos** con dos severidades: `block` (no sube, falso positivo/indeseado) y
   `review` (sube marcado `needs_review` + `review_notes`).
 
+> **Actualización 2026-07-27:** el discovery real, la caché condicional y el
+> análisis legal están en `docs/scrapers-estado-y-legalidad.md`. Lo de abajo es el
+> backlog tal como quedó al cerrar el POC.
+
 **Pendiente (no implementado, queda como backlog):**
 - Exponer los criterios en DB/admin editables en runtime (hoy viven en código).
 - Consola de revisión para `needs_review` (aprobar/lockear) — encaja en el portal de superadmin.
