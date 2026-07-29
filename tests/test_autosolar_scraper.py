@@ -6,6 +6,7 @@ from app import create_app
 from app.extensions import db
 from app.scrapers.brands import normalize_brand, deduce_brand
 from app.scrapers.base import NormalizedProduct
+from app.scrapers.scraper import BrandScraper
 
 FIX = os.path.join(os.path.dirname(__file__), 'fixtures', 'autosolar')
 
@@ -77,7 +78,8 @@ class AutoSolarParseTest(unittest.TestCase):
         ref = {'external_id': 'inv1', 'url': 'http://a/inv1', 'kind': 'inverter', 'nombre': ''}
         [p] = s.parse(ref, self._raw('inverter.html'))
         self.assertEqual(p.brand, 'Suntaic')
-        self.assertEqual(p.fields['power'], 6.0)
+        self.assertEqual(p.fields['power'], 6.5)
+        self.assertEqual(p.fields['power_max'], 10.0)
         self.assertNotIn('vmax', p.fields)
 
 
@@ -87,28 +89,23 @@ class AutoSolarDiscoverTest(unittest.TestCase):
             return fh.read()
 
     def test_discover_extracts_product_refs(self):
-        from unittest.mock import patch, MagicMock
+        from unittest.mock import patch
         from app.scrapers.autosolar import AutoSolarScraper
         s = AutoSolarScraper()
-        s.max_products = 5
         html = self._raw('category_panels.html')
 
-        def fake_get(url, **kwargs):
-            resp = MagicMock()
-            resp.text = html
-            resp.raise_for_status = lambda: None
-            return resp
+        def fake_get(url):
+            return '<html><body></body></html>' if 'page=' in url else html
 
-        with patch('app.scrapers.autosolar.requests.get', side_effect=fake_get), \
-             patch('app.scrapers.autosolar.time.sleep', lambda *_: None):
+        with patch('app.scrapers.autosolar.plain_get', side_effect=fake_get):
             refs = s.discover()
-        self.assertEqual(len(refs), 5)
+        self.assertEqual(len(refs), 21)
         self.assertTrue(all(r['kind'] == 'panel' for r in refs))
         self.assertTrue(all(r['url'].startswith('https://autosolar.es/') for r in refs))
         self.assertTrue(all(r['external_id'] for r in refs))
 
 
-class _FakeScraper:
+class _FakeScraper(BrandScraper):
     brand = 'AutoSolar'
     requires_product_brand = True
 
@@ -118,7 +115,7 @@ class _FakeScraper:
     def discover(self):
         return [{'external_id': 'r1', 'url': 'http://x'}]
 
-    def fetch(self, ref):
+    def fetch(self, ref, force=False):
         return ''
 
     def parse(self, ref, raw):
