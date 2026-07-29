@@ -81,22 +81,82 @@ def list_brands():
     click.echo('Marcas con scraper: ' + (', '.join(available()) or '(ninguna)'))
 
 
+def _provenance_models():
+    from app.models.panel import Panel
+    from app.models.inverter import Inverter
+    from app.models.battery import Battery
+    from app.models.wire import Wire
+    return (('paneles', Panel), ('inversores', Inverter),
+            ('baterias', Battery), ('cables', Wire))
+
+
+@scrape_cli.command('sources')
+def sources():
+    from collections import Counter
+    total = Counter()
+    for label, model in _provenance_models():
+        rows = model.query.all()
+        by_source = Counter(r.source for r in rows)
+        total.update(by_source)
+        gaps = sum(1 for r in rows
+                   if r.source.startswith('scraper:') and not (r.source_url and r.external_id))
+        verified = sum(1 for r in rows if r.verified_at is not None)
+        review = sum(1 for r in rows if r.needs_review)
+        click.echo(f"\n{label}: {len(rows)} filas · {verified} verificadas · "
+                   f"{review} a revisar · {gaps} sin procedencia completa")
+        for source, count in by_source.most_common():
+            click.echo(f"   {count:6}  {source}")
+    click.echo('\nTotal por fuente:')
+    for source, count in total.most_common():
+        click.echo(f"   {count:6}  {source}")
+
+
+@scrape_cli.command('purge-source')
+@click.argument('source')
+@click.option('--yes', is_flag=True, help='No pedir confirmación.')
+def purge_source(source, yes):
+    from app.extensions import db
+    targets = []
+    for label, model in _provenance_models():
+        count = model.query.filter_by(source=source).count()
+        if count:
+            targets.append((label, model, count))
+    if not targets:
+        click.echo(f'No hay filas con source={source!r}.')
+        return
+    for label, _, count in targets:
+        click.echo(f'   {count:6}  {label}')
+    if not yes and not click.confirm(f'¿Borrar todas las filas con source={source!r}?'):
+        raise click.Abort()
+    removed = 0
+    for _, model, _count in targets:
+        removed += model.query.filter_by(source=source).delete(synchronize_session=False)
+    db.session.commit()
+    click.echo(f'Borradas {removed} filas de {source!r}.')
+
+
 @scrape_cli.command('run')
 @click.argument('brand')
 @click.option('--dry-run', is_flag=True, help='No escribe; reporta qué haría.')
-def run(brand, dry_run):
+@click.option('--limit', type=int, default=None, help='Procesa como máximo N fichas (pruebas).')
+@click.option('--full', is_flag=True, help='Ignora la caché condicional y reprocesa todo.')
+@click.option('--quiet', is_flag=True, help='Solo el resumen, sin el detalle por equipo.')
+def run(brand, dry_run, limit, full, quiet):
     try:
-        report = ScraperService.run(brand, dry_run=dry_run)
+        report = ScraperService.run(brand, dry_run=dry_run, limit=limit, force=full)
     except ValueError as exc:
         raise click.ClickException(str(exc))
     click.echo(f"[{report['brand']}] dry_run={report['dry_run']}  "
+               f"descubiertos={report['discovered']} "
                f"creados={len(report['created'])} actualizados={len(report['updated'])} "
+               f"sin_cambios={report['unchanged']} "
                f"a_revisar={len(report['review'])} bloqueados={len(report['blocked'])} "
                f"omitidos={len(report['skipped'])} errores={len(report['errors'])}")
+    if quiet:
+        return
     for d in report['created'] + report['updated']:
-        falta = ', '.join(d.get('parcial_sin') or []) or 'completo'
         marca = ' ⚑ revisión' if d.get('needs_review') else ''
-        click.echo(f"   ✓ {d.get('nombre')}  [{d['id']}]  (sin: {falta}){marca}")
+        click.echo(f"   ✓ {d.get('nombre')}  [{d['id']}]{marca}")
     for r in report['review']:
         click.echo(f"   ⚑ {r['id']}: {r['reason']}")
     for b in report['blocked']:
