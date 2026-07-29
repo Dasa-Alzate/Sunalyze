@@ -104,8 +104,16 @@ export function Terms() {
           <li>Respetar las licencias del equipamiento y de los contenidos de terceros.</li>
         </ul>
       </Section>
+      <Section heading="Base de datos de equipos: titularidad y reserva de derechos">
+        <p>El catálogo de equipos de Sunalyze —módulos fotovoltaicos, inversores, baterías y conductores, con sus parámetros eléctricos, térmicos y dimensionales— constituye una base de datos elaborada por Sunalyze mediante una inversión sustancial en la <strong>obtención, verificación y presentación</strong> de su contenido: selección de fuentes, normalización de unidades y convenciones decimales, validación por rangos, trazabilidad de procedencia y revisión técnica de cada registro.</p>
+        <p>Sunalyze se reserva los derechos que le corresponden como fabricante de dicha base de datos conforme a los <strong>artículos 133 a 137 del Texto Refundido de la Ley de Propiedad Intelectual</strong> (Real Decreto Legislativo 1/1996) y a la Directiva 96/9/CE. En particular, queda prohibida sin autorización escrita la extracción o reutilización de la totalidad o de una parte sustancial de su contenido, así como la extracción o reutilización repetida y sistemática de partes no sustanciales que suponga actos contrarios a una explotación normal de la base de datos.</p>
+        <p>Esta reserva se formula igualmente a los efectos del <strong>artículo 4 de la Directiva (UE) 2019/790</strong> y del artículo 67 TRLPI: no se autoriza la minería de textos y datos sobre el contenido de la plataforma, ni su uso para el entrenamiento de modelos de inteligencia artificial. La reserva se expresa además en forma legible por máquina en <a href="/robots.txt">/robots.txt</a>.</p>
+        <p>Lo anterior se entiende sin perjuicio de que los datos técnicos individuales son hechos no susceptibles de apropiación, y de los derechos que correspondan a los fabricantes de los equipos sobre sus propias marcas, documentación y contenidos. Cada registro conserva la referencia a su fuente de origen.</p>
+        <p>Los datos que cada organización introduce o modifica en sus propios catálogos siguen siendo de su titularidad y son exportables en cualquier momento.</p>
+      </Section>
       <Section heading="Responsabilidad">
         <p>El servicio se presta "tal cual". Sunalyze no se responsabiliza de las decisiones técnicas o económicas adoptadas a partir de los resultados, que deben ser revisados por un profesional. La responsabilidad se limita en la medida que permita la ley aplicable.</p>
+        <p>Los parámetros del catálogo de equipos proceden de fuentes públicas y de fabricantes; los registros marcados como pendientes de revisión pueden contener datos incompletos. Corresponde al técnico competente verificar contra la ficha del fabricante los valores que alimenten un cálculo de dimensionado.</p>
       </Section>
       <Section heading="Cambios y ley aplicable">
         <p>Podemos actualizar estas condiciones; los cambios relevantes se notificarán en la plataforma. Estas condiciones se rigen por la legislación española. Para cualquier consulta escribe a <a href="mailto:legal@sunalyze.es">legal@sunalyze.es</a>.</p>

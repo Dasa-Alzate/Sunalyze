@@ -1,0 +1,45 @@
+# ============================================================
+# robots.txt — sunalyze.es
+# Política por finalidad, no por permisividad:
+#   descubrimiento y recomendación SÍ · extracción del catálogo NO
+# ============================================================
+
+User-agent: *
+
+# --- Público: queremos que se indexe ---
+Allow: /$
+Allow: /legal/
+
+# --- Aplicación y API: datos de clientes y catálogo propio ---
+Disallow: /app/
+Disallow: /api/
+Disallow: /superadmin
+Disallow: /imprimir/
+
+# --- Rutas con token en la query: nunca deben acabar en un índice ---
+Disallow: /reset-password
+Disallow: /invitacion
+Disallow: /verificar
+
+# --- Superficie de autenticación: sin valor de indexación ---
+Disallow: /login
+Disallow: /signup
+Disallow: /recuperar
+
+# --- Rastreadores sin caso de uso legítimo aquí ---
+User-agent: Bytespider
+Disallow: /
+
+User-agent: PetalBot
+Disallow: /
+
+# --- Preferencias de uso del contenido (Content Signals) ---
+# ai-train=no  → el catálogo de equipos es una base de datos propia
+#                (arts. 133-137 TRLPI); no autorizamos su uso para
+#                entrenar modelos ni su extracción sistemática.
+# search=yes   → sí a la indexación para buscadores.
+# ai-input=yes → sí a citarnos al responder preguntas.
+Content-Signal: ai-train=no, search=yes, ai-input=yes
+
+# Reserva de derechos en el sentido del art. 4 de la Directiva (UE) 2019/790
+# y del art. 67 TRLPI. Condiciones: https://sunalyze.es/legal/terminos

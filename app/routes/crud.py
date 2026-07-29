@@ -272,6 +272,7 @@ def update_equipment(resource, item_id):
         row.is_locked = True
         row.source = 'manual'
         row.needs_review = False
+        row.mark_verified(current_user())
     AuditService.record(
         'equipment.update', actor=current_user(), org_id=org_id,
         entity_type=resource, entity_id=row.id,
