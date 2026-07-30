@@ -1,0 +1,283 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<title>Comparativa de tu factura eléctrica</title>
+<style>
+  @page { size: A4; margin: 13mm 13mm 11mm; }
+  * { box-sizing: border-box; }
+  body {
+    margin: 0;
+    font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif;
+    font-size: 9pt;
+    line-height: 1.45;
+    color: #242424;
+    -webkit-print-color-adjust: exact;
+  }
+  .sheet { max-width: 184mm; margin: 0 auto; }
+
+  .masthead {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    padding-bottom: 7pt;
+    border-bottom: 2.5pt solid #107c41;
+  }
+  .doc-kind {
+    display: inline-block;
+    margin-bottom: 4pt;
+    padding: 2pt 6pt;
+    border-radius: 3pt;
+    background: #e9f4ee;
+    color: #0c5a30;
+    font-size: 7.2pt;
+    font-weight: 700;
+    letter-spacing: 0.09em;
+    text-transform: uppercase;
+  }
+  h1 { margin: 0; font-size: 14.5pt; font-weight: 700; letter-spacing: -0.015em; }
+  .subtitle { margin-top: 2pt; font-size: 9pt; color: #616161; }
+  .issuer { text-align: right; font-size: 7.6pt; color: #616161; line-height: 1.5; }
+  .issuer strong { display: block; font-size: 9.4pt; color: #242424; }
+
+  .hero {
+    margin-top: 11pt;
+    display: flex;
+    border: 0.6pt solid #cdead9;
+    border-radius: 4pt;
+    overflow: hidden;
+  }
+  .hero > div { flex: 1; padding: 6.5pt 9pt; border-right: 0.6pt solid #e1dfdd; }
+  .hero > div:last-child { border-right: none; }
+  .hero .lead { background: #e9f4ee; flex: 1.25; }
+  .hero .k {
+    font-size: 6.9pt; color: #616161; text-transform: uppercase;
+    letter-spacing: 0.07em;
+  }
+  .hero .lead .k { color: #0c5a30; }
+  .hero .v { font-size: 17pt; font-weight: 700; letter-spacing: -0.02em; line-height: 1.15; }
+  .hero .lead .v { color: #0c5a30; }
+  .hero .sub { font-size: 7.4pt; color: #616161; margin-top: 1pt; }
+
+  .split { display: flex; gap: 11pt; margin-top: 10pt; align-items: flex-start; }
+  .split .left { flex: 1.08; }
+  .split .right { flex: 1; }
+
+  h2 {
+    margin: 0 0 5pt;
+    font-size: 7.9pt; font-weight: 700; letter-spacing: 0.09em;
+    text-transform: uppercase; color: #0c5a30;
+    border-bottom: 0.6pt solid #cdead9; padding-bottom: 2.5pt;
+  }
+  table { width: 100%; border-collapse: collapse; }
+  th {
+    font-size: 7pt; text-transform: uppercase; letter-spacing: 0.06em;
+    color: #616161; text-align: right; padding: 0 0 3pt; font-weight: 700;
+  }
+  th.k { text-align: left; }
+  td { padding: 2.5pt 0; border-bottom: 0.4pt solid #f3f2f1; }
+  td.k { color: #424242; }
+  td.n { text-align: right; font-weight: 600; white-space: nowrap; }
+  tr.total td {
+    border-top: 1pt solid #242424; border-bottom: none;
+    padding-top: 4pt; font-weight: 700;
+  }
+  tr.saving td { color: #0c5a30; }
+
+  .legend { display: flex; gap: 12pt; margin: 5pt 0 0; font-size: 7.6pt; color: #424242; }
+  .legend span { display: flex; align-items: center; gap: 4pt; }
+  .swatch { width: 9pt; height: 9pt; border-radius: 2pt; display: inline-block; }
+  .figure svg { width: 100%; height: auto; display: block; }
+
+  .monthly { margin-top: 11pt; }
+  table.grid { table-layout: fixed; }
+  table.grid th, table.grid td {
+    font-size: 7.1pt;
+    padding: 3pt 2pt;
+    text-align: right;
+  }
+  table.grid th.k, table.grid td.k {
+    text-align: left;
+    width: 33%;
+    font-weight: 500;
+    color: #424242;
+  }
+  table.grid th { color: #616161; letter-spacing: 0; }
+  table.grid td.n { font-weight: 500; color: #242424; }
+  table.grid tr:nth-child(even) td { background: #faf9f8; }
+  table.grid .year { font-weight: 700; border-left: 0.6pt solid #e1dfdd; }
+  table.grid tr.saving td { color: #0c5a30; font-weight: 600; }
+  table.grid tr.saving td.k { color: #0c5a30; }
+
+  .assumptions {
+    margin-top: 9pt; padding: 6pt 9pt;
+    background: #faf9f8; border-left: 2pt solid #d9920a; border-radius: 2pt;
+    font-size: 7.5pt; color: #424242;
+  }
+  .assumptions strong { color: #242424; }
+  .assumptions .cols { display: flex; gap: 14pt; }
+  .assumptions ul { flex: 1; margin: 3pt 0 0; padding-left: 11pt; }
+  .assumptions li { margin-bottom: 1pt; }
+  .disclaimer { margin-top: 7pt; font-size: 6.5pt; color: #8a8886; line-height: 1.4; }
+  .assumptions ul li { margin-bottom: 0.5pt; }
+</style>
+</head>
+<body>
+<div class="sheet">
+
+  <header class="masthead">
+    <div>
+      <span class="doc-kind">Comparativa de factura eléctrica</span>
+      <h1>Tu factura eléctrica, con y sin solar</h1>
+      <div class="subtitle">
+        {% if client %}{{ client }}{% endif %}
+        {%- if client and project_name %} · {% endif %}
+        {%- if project_name %}{{ project_name }}{% endif %}
+        {%- if installed_kwp %} · Instalación de {{ '%.2f'|format(installed_kwp) }} kWp{% endif %}
+      </div>
+    </div>
+    <div class="issuer">
+      <strong>{{ org_name or 'Sunalyze' }}</strong>
+      Estimación emitida
+      <br>{{ generated_at }}
+    </div>
+  </header>
+
+  <section class="hero">
+    <div class="lead">
+      <div class="k">Ahorro anual estimado</div>
+      <div class="v">{{ eur(totals.ahorro, 0) }}</div>
+      <div class="sub">{{ '%.0f'|format(totals.ahorro_pct) }} % menos que hoy ·
+        {{ eur(monthly_saving, 0) }} al mes</div>
+    </div>
+    <div>
+      <div class="k">Factura actual</div>
+      <div class="v">{{ eur(totals.coste_sin, 0) }}</div>
+      <div class="sub">al año, sin instalación</div>
+    </div>
+    <div>
+      <div class="k">Factura con solar</div>
+      <div class="v">{{ eur(totals.coste_con, 0) }}</div>
+      <div class="sub">al año, con autoconsumo</div>
+    </div>
+    <div>
+      <div class="k">A {{ lifetime_years }} años</div>
+      <div class="v">{{ eur(lifetime_saving, 0) }}</div>
+      <div class="sub">ahorro acumulado</div>
+    </div>
+  </section>
+
+  <div class="split">
+    <div class="left">
+      <h2>Balance energético anual</h2>
+      <table>
+        <tr><td class="k">Consumo de la vivienda</td>
+            <td class="n">{{ kwh(totals.consumo) }}</td></tr>
+        <tr><td class="k">Producción fotovoltaica</td>
+            <td class="n">{{ kwh(totals.produccion) }}</td></tr>
+        <tr><td class="k">Energía autoconsumida</td>
+            <td class="n">{{ kwh(totals.autoconsumo) }}</td></tr>
+        <tr><td class="k">Energía comprada a la red</td>
+            <td class="n">{{ kwh(totals.red) }}</td></tr>
+        <tr><td class="k">Excedente vertido a la red</td>
+            <td class="n">{{ kwh(totals.excedente) }}</td></tr>
+        <tr><td class="k">Cobertura del consumo</td>
+            <td class="n">{{ '%.0f'|format(totals.cobertura_pct) }} %</td></tr>
+      </table>
+
+      <h2 style="margin-top:11pt">Comparativa económica anual</h2>
+      <table>
+        <tr><td class="k">Coste sin instalación</td>
+            <td class="n">{{ eur(totals.coste_sin) }}</td></tr>
+        {% if totals.termino_fijo %}
+        <tr><td class="k">Término fijo de potencia</td>
+            <td class="n">{{ eur(totals.termino_fijo) }}</td></tr>
+        {% endif %}
+        <tr><td class="k">Energía comprada a la red</td>
+            <td class="n">{{ eur(totals.energia_red_eur) }}</td></tr>
+        <tr><td class="k">Compensación de excedentes aplicada</td>
+            <td class="n">− {{ eur(totals.compensacion_aplicada) }}</td></tr>
+        <tr><td class="k">Coste con instalación</td>
+            <td class="n">{{ eur(totals.coste_con) }}</td></tr>
+        <tr class="total saving"><td class="k">Ahorro anual</td>
+            <td class="n">{{ eur(totals.ahorro) }}</td></tr>
+      </table>
+      {% set perdida = totals.compensacion - totals.compensacion_aplicada %}
+      {% if perdida > 1 %}
+      <p style="font-size:7pt;color:#8a8886;margin:4pt 0 0">
+        Los excedentes generarían {{ eur(totals.compensacion) }} de compensación, pero
+        la normativa no permite que el saldo mensual baje de cero: se aprovechan
+        {{ eur(totals.compensacion_aplicada) }} y se pierden {{ eur(perdida) }}.
+        Una batería o desplazar consumo a horas de sol recupera parte de ese margen.</p>
+      {% endif %}
+    </div>
+
+    <div class="right">
+      <h2>Coste mes a mes</h2>
+      <div class="figure">{{ chart | safe }}</div>
+      <div class="legend">
+        <span><i class="swatch" style="background:{{ colors.without }}"></i>
+          Sin instalación</span>
+        <span><i class="swatch" style="background:{{ colors['with'] }}"></i>
+          Con instalación</span>
+      </div>
+    </div>
+  </div>
+
+  <section class="monthly">
+    <h2>Detalle mes a mes</h2>
+    <table class="grid">
+      <tr>
+        <th class="k">&nbsp;</th>
+        {% for m in months %}<th>{{ m.name }}</th>{% endfor %}
+        <th class="year">Año</th>
+      </tr>
+      {% set filas = [
+        ('Consumo (kWh)', 'consumo', 'consumo', false),
+        ('Producción FV (kWh)', 'produccion', 'produccion', false),
+        ('Autoconsumo (kWh)', 'autoconsumo', 'autoconsumo', false),
+        ('Excedente vertido (kWh)', 'excedente', 'excedente', false),
+        ('Factura sin FV (€)', 'coste_sin', 'coste_sin', false),
+        ('Factura con FV (€)', 'coste_con', 'coste_con', false),
+        ('Ahorro (€)', 'ahorro', 'ahorro', true) ] %}
+      {% for label, mkey, tkey, highlight in filas %}
+      <tr{% if highlight %} class="saving"{% endif %}>
+        <td class="k">{{ label }}</td>
+        {% for m in months %}
+        <td class="n">{{ '%.0f'|format(m[mkey]) }}</td>
+        {% endfor %}
+        <td class="n year">{{ '%.0f'|format(totals[tkey]) }}</td>
+      </tr>
+      {% endfor %}
+    </table>
+  </section>
+
+  <section class="assumptions">
+    <strong>Hipótesis de cálculo</strong>
+    <div class="cols">
+      <ul>
+        <li>Energía comprada: {{ '%.4f'|format(tariff) }} €/kWh · excedentes
+          compensados a {{ '%.4f'|format(surplus_price) }} €/kWh</li>
+        <li>Autoconsumo simultáneo: {{ '%.0f'|format(self_consumption_ratio) }} %
+          de la producción</li>
+      </ul>
+      <ul>
+        <li>Reparto mensual según perfil tipo de vivienda en España; la producción
+          anual proviene del cálculo del proyecto</li>
+        <li>Acumulado a {{ lifetime_years }} años con subida de tarifa del
+          {{ '%.1f'|format(escalation) }} % anual, sin descontar</li>
+      </ul>
+    </div>
+  </section>
+
+  <p class="disclaimer">
+    Estimación orientativa elaborada con los datos de consumo facilitados y la
+    producción calculada para esta instalación. No es una oferta ni una factura: los
+    importes reales dependen de la tarifa contratada, del perfil horario de consumo y
+    de la normativa de compensación vigente en cada momento. Documento generado por
+    {{ org_name or 'Sunalyze' }} el {{ generated_at }}.
+  </p>
+
+</div>
+</body>
+</html>

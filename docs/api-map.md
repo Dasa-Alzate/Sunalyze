@@ -1,6 +1,6 @@
 # API map
 
-Mapa autogenerado por `flask api-map`. Endpoints `/api`: 129.
+Mapa autogenerado por `flask api-map`. Endpoints `/api`: 131.
 
 No editar a mano: regenerar con `flask api-map`.
 
@@ -66,6 +66,8 @@ No editar a mano: regenerar con `flask api-map`.
 
 | Método(s) | Ruta | Endpoint | Resumen |
 | --- | --- | --- | --- |
+| GET | `/api/<any(panels,inverters,batteries):resource>/<int:item_id>/ficha` | `crud.equipment_sheet` |  |
+| GET | `/api/<any(panels,inverters,batteries):resource>/<int:item_id>/ficha.pdf` | `crud.equipment_sheet_pdf` |  |
 | GET | `/api/<any(panels,inverters,batteries,wires):resource>` | `crud.list_equipment` |  |
 | POST | `/api/<any(panels,inverters,batteries,wires):resource>` | `crud.create_equipment` |  |
 | DELETE | `/api/<any(panels,inverters,batteries,wires):resource>/<int:item_id>` | `crud.delete_equipment` |  |

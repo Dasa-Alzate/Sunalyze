@@ -64,6 +64,57 @@ def memoria_preview():
     return Response(html, mimetype='text/html')
 
 
+def _bill_kwargs():
+    from app.models.organization import Organization
+    raw = request.get_json(silent=True) or {}
+
+    def num(key, default=None):
+        try:
+            return float(raw[key])
+        except (KeyError, TypeError, ValueError):
+            return default
+
+    consumption = num('consumption_kwh')
+    production = num('production_kwh')
+    if not consumption or not production:
+        raise ValidationError('Indica consumption_kwh y production_kwh.')
+    org_id = current_org_id()
+    org = Organization.query.get(org_id) if org_id else None
+    return {
+        'consumption_kwh': consumption,
+        'production_kwh': production,
+        'tariff': num('tariff', 0.15),
+        'surplus_price': num('surplus_price', 0.06),
+        'self_consumption_ratio': num('self_consumption_ratio', 0.65),
+        'fixed_cost_year': num('fixed_cost_year', 0.0),
+        'escalation': num('tariff_escalation_pct', 0.025),
+        'lifetime_years': int(num('lifetime_years', 25)),
+        'installed_kwp': num('installed_kwp'),
+        'client': raw.get('client'),
+        'project_name': raw.get('project_name'),
+        'org_name': getattr(org, 'nombre', None),
+    }
+
+
+@bp.route('/imprimir/recibo-comparativo', methods=['POST'])
+@require_permission(Permission.EQUIPMENT_VIEW)
+def recibo_comparativo():
+    from app.services.energy_bill_service import EnergyBillService
+    return Response(EnergyBillService.render_html(**_bill_kwargs()), mimetype='text/html')
+
+
+@bp.route('/imprimir/recibo-comparativo.pdf', methods=['POST'])
+@require_permission(Permission.EQUIPMENT_VIEW)
+@limiter.limit(_pdf_ratelimit)
+def recibo_comparativo_pdf():
+    from weasyprint import HTML
+    from app.services.energy_bill_service import EnergyBillService
+    html = EnergyBillService.render_html(**_bill_kwargs())
+    pdf = HTML(string=html, base_url=request.url_root).write_pdf()
+    return Response(pdf, mimetype='application/pdf', headers={
+        'Content-Disposition': 'inline; filename="comparativa-factura.pdf"'})
+
+
 @bp.route('/imprimir/memoria-pdf', methods=['GET', 'POST'])
 @require_permission(Permission.MEMORIA_SIGN)
 @limiter.limit(_pdf_ratelimit)
