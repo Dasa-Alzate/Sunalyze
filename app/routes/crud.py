@@ -1,7 +1,8 @@
 
 import logging
 import os
-from flask import Blueprint, request, jsonify, send_from_directory
+import re
+from flask import Blueprint, request, jsonify, send_from_directory, Response
 from pydantic import ValidationError as PydanticValidationError
 
 from app.extensions import db
@@ -10,6 +11,7 @@ from app.models.inverter import Inverter
 from app.models.battery import Battery
 from app.models.wire import Wire
 from app.models.catalog import Catalog
+from app.models.organization import Organization
 from app.models.provenance import ProvenanceMixin
 from app.schemas.catalog import PanelSchema
 from app.security import current_org_id
@@ -359,3 +361,40 @@ def calculate_section():
 @require_permission(Permission.EQUIPMENT_VIEW)
 def get_datasheet(name):
     return send_from_directory(DATASHEETS_DIR, name, mimetype='application/pdf')
+
+
+def _sheet_context(resource, item_id):
+    from app.services.datasheet_service import DatasheetService
+    cfg = _cfg(resource)
+    org_id = current_org_id()
+    visible = set(CatalogService.visible_catalog_ids(org_id))
+    row = _visible_row(cfg, item_id, visible)
+    org = Organization.query.get(org_id) if org_id else None
+    return DatasheetService, row, getattr(org, 'nombre', None)
+
+
+@crud_bp.route('/api/<any(panels,inverters,batteries):resource>/<int:item_id>/ficha',
+               methods=['GET'])
+@require_permission(Permission.EQUIPMENT_VIEW)
+def equipment_sheet(resource, item_id):
+    service, row, org_name = _sheet_context(resource, item_id)
+    try:
+        return service.render_html(resource, row, org_name)
+    except ValueError as exc:
+        raise NotFound(str(exc))
+
+
+@crud_bp.route('/api/<any(panels,inverters,batteries):resource>/<int:item_id>/ficha.pdf',
+               methods=['GET'])
+@require_permission(Permission.EQUIPMENT_VIEW)
+def equipment_sheet_pdf(resource, item_id):
+    from weasyprint import HTML
+    service, row, org_name = _sheet_context(resource, item_id)
+    try:
+        html = service.render_html(resource, row, org_name)
+    except ValueError as exc:
+        raise NotFound(str(exc))
+    pdf = HTML(string=html, base_url=request.url_root).write_pdf()
+    slug = re.sub(r'[^a-zA-Z0-9]+', '-', getattr(row, 'nombre', 'ficha')).strip('-').lower()
+    return Response(pdf, mimetype='application/pdf', headers={
+        'Content-Disposition': f'inline; filename="ficha-{slug[:60]}.pdf"'})

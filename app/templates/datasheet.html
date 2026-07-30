@@ -1,0 +1,200 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<title>{{ full_name }} · Ficha técnica</title>
+<style>
+  @page { size: A4; margin: 14mm 14mm 12mm; }
+  * { box-sizing: border-box; }
+  body {
+    margin: 0;
+    font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif;
+    font-size: 9.2pt;
+    line-height: 1.45;
+    color: #242424;
+    -webkit-print-color-adjust: exact;
+  }
+  .sheet { max-width: 182mm; margin: 0 auto; }
+
+  .masthead {
+    display: flex;
+    align-items: flex-end;
+    justify-content: space-between;
+    border-bottom: 2.5pt solid #107c41;
+    padding-bottom: 7pt;
+  }
+  .brand { font-size: 20pt; font-weight: 700; letter-spacing: -0.01em; line-height: 1.05; }
+  .model { font-size: 13pt; font-weight: 400; color: #424242; margin-top: 1pt; }
+  .kind {
+    display: inline-block;
+    margin-bottom: 4pt;
+    padding: 2pt 6pt;
+    border-radius: 3pt;
+    background: #e9f4ee;
+    color: #0c5a30;
+    font-size: 7.4pt;
+    font-weight: 700;
+    letter-spacing: 0.09em;
+    text-transform: uppercase;
+  }
+  .issuer { text-align: right; font-size: 7.6pt; color: #616161; line-height: 1.5; }
+  .issuer strong { display: block; font-size: 9.4pt; color: #242424; }
+
+  .headline { display: flex; gap: 5pt; margin: 10pt 0 0; }
+  .tile {
+    flex: 1;
+    border: 0.6pt solid #e1dfdd;
+    border-top: 2pt solid #107c41;
+    border-radius: 3pt;
+    padding: 6pt 7pt 7pt;
+  }
+  .tile .k {
+    font-size: 6.9pt;
+    color: #616161;
+    text-transform: uppercase;
+    letter-spacing: 0.07em;
+    line-height: 1.3;
+    min-height: 18pt;
+  }
+  .tile .v { font-size: 14pt; font-weight: 700; letter-spacing: -0.01em; }
+
+  .columns { display: flex; gap: 10pt; margin-top: 11pt; align-items: flex-start; }
+  .col { flex: 1; }
+
+  h2 {
+    margin: 0 0 4pt;
+    font-size: 8pt;
+    font-weight: 700;
+    letter-spacing: 0.09em;
+    text-transform: uppercase;
+    color: #0c5a30;
+    border-bottom: 0.6pt solid #cdead9;
+    padding-bottom: 2.5pt;
+  }
+  table { width: 100%; border-collapse: collapse; margin-bottom: 11pt; }
+  td { padding: 3.1pt 0; border-bottom: 0.4pt solid #f3f2f1; vertical-align: top; }
+  td.k { color: #424242; padding-right: 8pt; }
+  td.v { text-align: right; font-weight: 600; white-space: nowrap; }
+  tr:last-child td { border-bottom: none; }
+
+  .figure { border: 0.6pt solid #e1dfdd; border-radius: 3pt; padding: 6pt; }
+  .figure svg { width: 100%; height: auto; display: block; }
+  .caption { margin-top: 4pt; font-size: 7.3pt; color: #616161; line-height: 1.4; }
+
+  .note {
+    margin-top: 2pt;
+    padding: 5pt 7pt;
+    border-left: 2pt solid #d9920a;
+    background: #fdf6e9;
+    font-size: 7.6pt;
+    color: #424242;
+  }
+  .review { border-left-color: #b9770a; }
+
+  .provenance {
+    margin-top: 12pt;
+    padding-top: 7pt;
+    border-top: 0.6pt solid #e1dfdd;
+    display: flex;
+    gap: 12pt;
+    font-size: 7.2pt;
+    color: #616161;
+  }
+  .provenance div { flex: 1; }
+  .provenance dt { font-weight: 700; color: #424242; margin-bottom: 1pt; }
+  .provenance dd { margin: 0 0 3pt; word-break: break-all; }
+  .disclaimer { margin-top: 8pt; font-size: 6.8pt; color: #8a8886; line-height: 1.45; }
+</style>
+</head>
+<body>
+<div class="sheet">
+
+  <header class="masthead">
+    <div>
+      <span class="kind">{{ kind_label }}</span>
+      <div class="brand">{{ brand }}</div>
+      <div class="model">{{ model }}</div>
+    </div>
+    <div class="issuer">
+      <strong>{{ org_name or 'Sunalyze' }}</strong>
+      Ficha técnica generada
+      <br>{{ generated_at }}
+    </div>
+  </header>
+
+  {% if headline %}
+  <section class="headline">
+    {% for label, value in headline %}
+    <div class="tile">
+      <div class="k">{{ label }}</div>
+      <div class="v">{{ value }}</div>
+    </div>
+    {% endfor %}
+  </section>
+  {% endif %}
+
+  <div class="columns">
+    <div class="col">
+      {% for title, rows in blocks %}
+        {% if rows %}
+        <h2>{{ title }}</h2>
+        <table>
+          {% for label, value in rows %}
+          <tr><td class="k">{{ label }}</td><td class="v">{{ value }}</td></tr>
+          {% endfor %}
+        </table>
+        {% endif %}
+      {% endfor %}
+    </div>
+
+    {% if chart %}
+    <div class="col">
+      <h2>Curva característica</h2>
+      <div class="figure">
+        {{ chart | safe }}
+        <p class="caption">{{ chart_caption }}</p>
+      </div>
+      {% if stc_note %}<p class="note">{{ stc_note }}</p>{% endif %}
+    </div>
+    {% endif %}
+  </div>
+
+  {% if not chart and stc_note %}<p class="note">{{ stc_note }}</p>{% endif %}
+
+  {% if needs_review and review_notes %}
+  <p class="note review"><strong>Pendiente de verificación técnica.</strong>
+    {{ review_notes }}</p>
+  {% endif %}
+
+  <section class="provenance">
+    <div>
+      <dt>Procedencia del dato</dt>
+      <dd>{{ source }}</dd>
+      {% if scraped_at %}<dd>Extraído el {{ scraped_at }}</dd>{% endif %}
+    </div>
+    <div>
+      <dt>Verificación</dt>
+      {% if verified_at %}
+        <dd>{{ verified_by or 'Equipo técnico' }}</dd>
+        <dd>{{ verified_at }}</dd>
+      {% else %}
+        <dd>Sin verificación manual registrada</dd>
+      {% endif %}
+    </div>
+    <div>
+      <dt>Fuente</dt>
+      {% if source_url %}<dd>{{ source_url }}</dd>{% else %}<dd>—</dd>{% endif %}
+    </div>
+  </section>
+
+  <p class="disclaimer">
+    Documento generado automáticamente a partir del catálogo de equipos de Sunalyze.
+    Los parámetros reproducen datos publicados por el fabricante o por listados
+    regulatorios públicos y se ofrecen como ayuda al dimensionado: no sustituyen a la
+    ficha oficial del fabricante ni constituyen una garantía de prestaciones.
+    La validación final corresponde al técnico competente.
+  </p>
+
+</div>
+</body>
+</html>
