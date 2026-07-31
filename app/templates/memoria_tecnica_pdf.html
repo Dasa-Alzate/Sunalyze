@@ -549,7 +549,9 @@
         <h5 class="underline" id="conexion-paneles">Conexión de los paneles</h5>
         <p>Para realizar la conexión de los módulos se tiene que tener en cuenta las características del inversor. Esta instalación está equipada con un inversor de {{ v(inverter_nominal_power) }}kW.</p>
         <p>Se realizan las conexiones serie/paralelo para cumplir con las especificaciones mínimas del inversor.</p>
-        <p>{{ v(mppt_inputs) }}</p>
+        {% if mppt_inputs %}
+        <p>El inversor dispone de {{ v(mppt_inputs) }} {{ 'entrada' if mppt_inputs|int == 1 else 'entradas' }} MPPT independientes, por lo que los módulos se agrupan en {{ v(mppt_inputs) }} {{ 'rama' if mppt_inputs|int == 1 else 'ramas' }} (strings){% if panels_per_string %} de {{ v(panels_per_string) }} módulos en serie cada una{% endif %}.</p>
+        {% endif %}
 
         <h5 class="underline" id="dimensionamiento-lineas">Dimensionamiento de las líneas</h5>
         <p>La instalación solar fotovoltaica se divide en varios tramos de conexión, entre los diferentes equipos y cajas de conexión que la componen.</p>

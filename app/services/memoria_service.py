@@ -388,6 +388,7 @@ class MemoriaService:
             'zero_inyection_model': defaults.inyeccion_cero_modelo,
             'metering_device_model': defaults.dispositivo_medida_modelo,
             'mppt_inputs': data.get('mppt_inputs'),
+            'panels_per_string': MemoriaService._panels_per_string(data),
             'panels_output_i_max_expected': data.get('panels_output_i_max_expected'),
             'panels_output_i_max_oversized': data.get('panels_output_i_max_oversized'),
             'inverter_output_i_max_expected': data.get('inverter_output_i_max_expected'),
@@ -517,6 +518,20 @@ class MemoriaService:
         except Exception:
             logger.exception('Error obteniendo el color de marca para la memoria')
             return {}
+
+    @staticmethod
+    def _panels_per_string(data):
+        def _i(key, default):
+            try:
+                return int(data.get(key) or default)
+            except (ValueError, TypeError):
+                return default
+
+        strings = max(1, _i('mppt_inputs', 1))
+        panels = _i('panels_number', 0)
+        if not panels:
+            return None
+        return max(1, round(panels / strings))
 
     @staticmethod
     def _build_solar_path(data, project=None):
