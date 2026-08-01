@@ -6,6 +6,7 @@ import { toast } from '@/services/toast'
 import {
   makeGrid, localConverter, cellFits, cellKey, parseKey,
   autoLayoutCells, fillBetweenCells, polygonAreaM2, centroid,
+  optimizeLayout, obstacleShadingScores, bearingBetween, sunVector, convexHull,
 } from './layoutEngine'
 import './panel-layout.css'
 
@@ -16,6 +17,9 @@ const CATASTRO_URL = 'https://ovc.catastro.meh.es/Cartografia/WMS/ServidorWMS.as
 
 const STYLE_ROOF = { color: '#38bdf8', weight: 2, dashArray: '6 4', fillColor: '#38bdf8', fillOpacity: 0.06 }
 const STYLE_EXCLUSION = { color: '#ef4444', weight: 1.5, dashArray: '4 3', fillColor: '#ef4444', fillOpacity: 0.18 }
+const STYLE_OBSTACLE = { color: '#d9920a', weight: 1.5, fillColor: '#d9920a', fillOpacity: 0.3 }
+const STYLE_SHADOW = { color: '#334155', weight: 0, fillColor: '#334155', fillOpacity: 0.18, interactive: false }
+const STYLE_MEASURE = { color: '#8b5cf6', weight: 2.5, dashArray: '8 5' }
 const STYLE_PANEL = { color: '#e2e8f0', weight: 1, fillColor: '#0f2c52', fillOpacity: 0.85 }
 const STYLE_PANEL_SELECTED = { color: '#f59e0b', weight: 2, fillColor: '#1d4ed8', fillOpacity: 0.9 }
 const STYLE_DRAFT = { color: '#38bdf8', weight: 2, dashArray: '4 4' }
@@ -33,6 +37,10 @@ export default function PanelLayout({ lat, lon, azimut, inclinacion, coplanar, b
   const [cells, setCells] = useState(() => (layout?.cells || []).map(([i, j]) => [i, j]))
   const [orientation, setOrientation] = useState(() => layout?.orientation || 'v')
   const [rowGapOverride, setRowGapOverride] = useState(() => layout?.row_gap_m ?? null)
+  const [rotation, setRotation] = useState(() => layout?.rotation ?? null)
+  const [phase, setPhase] = useState(() => layout?.phase || null)
+  const [obstacles, setObstacles] = useState(() => layout?.obstacles || [])
+  const [obstacleHeight, setObstacleHeight] = useState('2')
   const [origin, setOrigin] = useState(() => layout?.origin || null)
   const [selection, setSelection] = useState(() => new Set())
   const [mode, setMode] = useState('idle')
@@ -45,6 +53,7 @@ export default function PanelLayout({ lat, lon, azimut, inclinacion, coplanar, b
   const roofLayerRef = useRef(null)
   const vertexLayerRef = useRef(null)
   const exclusionLayerRef = useRef(null)
+  const obstacleLayerRef = useRef(null)
   const panelLayerRef = useRef(null)
   const panelIndexRef = useRef(new Map())
   const draftLayerRef = useRef(null)
@@ -66,6 +75,8 @@ export default function PanelLayout({ lat, lon, azimut, inclinacion, coplanar, b
     return makeGrid({
       origin,
       azimut: gridAzimut,
+      rotation: rotation ?? undefined,
+      phase: phase ?? undefined,
       orientation,
       panelWmm: panel.width,
       panelHmm: panel.height,
@@ -75,7 +86,7 @@ export default function PanelLayout({ lat, lon, azimut, inclinacion, coplanar, b
       rowGap: rowGapOverride,
       colGap: null,
     })
-  }, [origin, gridAzimut, orientation, panel?.width, panel?.height, beta, coplanar, lat, rowGapOverride])
+  }, [origin, gridAzimut, rotation, phase, orientation, panel?.width, panel?.height, beta, coplanar, lat, rowGapOverride])
 
   const geo = useMemo(() => {
     if (!origin) return null
@@ -84,10 +95,16 @@ export default function PanelLayout({ lat, lon, azimut, inclinacion, coplanar, b
       conv,
       roofLocal: roof.map(conv.toLocal),
       exclusionsLocal: exclusions.map((poly) => poly.map(conv.toLocal)),
+      obstaclesLocal: obstacles.map((o) => ({
+        poly: o.poly.map(conv.toLocal),
+        heightM: o.height_m,
+        baseElevationM: o.base_elevation_m ?? null,
+        transmittance: o.transmittance ?? 0,
+      })),
     }
-  }, [origin, roof, exclusions])
+  }, [origin, roof, exclusions, obstacles])
 
-  stateRef.current = { roof, exclusions, cells, selection, mode, grid, geo, origin }
+  stateRef.current = { roof, exclusions, obstacles, obstacleHeight, cells, selection, mode, grid, geo, origin }
 
   useEffect(() => {
     if (!readyRef.current) { readyRef.current = true; return }
@@ -96,8 +113,11 @@ export default function PanelLayout({ lat, lon, azimut, inclinacion, coplanar, b
     onChangeRef.current({
       roof,
       exclusions,
+      obstacles,
       cells,
       orientation,
+      rotation,
+      phase,
       origin,
       azimut: gridAzimut,
       beta,
@@ -106,7 +126,7 @@ export default function PanelLayout({ lat, lon, azimut, inclinacion, coplanar, b
       col_gap_m: null,
       panel: panel ? { w_mm: panel.width, h_mm: panel.height } : null,
     })
-  }, [roof, exclusions, cells, orientation, origin, rowGapOverride])
+  }, [roof, exclusions, obstacles, cells, orientation, rotation, phase, origin, rowGapOverride])
 
   function commitCells(next, nextSelection) {
     setCells(next)
@@ -141,11 +161,36 @@ export default function PanelLayout({ lat, lon, azimut, inclinacion, coplanar, b
         setSelection(new Set())
       } else if (m === 'draw-exclusion') {
         setExclusions((list) => [...list, draft.map((p) => [p[0], p[1]])])
+      } else if (m === 'draw-obstacle') {
+        const h = Math.max(0.1, Number(stateRef.current.obstacleHeight) || 2)
+        setObstacles((list) => [...list, { poly: draft.map((p) => [p[0], p[1]]), height_m: h }])
+        toast('info', `Obstáculo de ${h} m añadido`, 'Su sombra de invierno se muestra en gris y penaliza la colocación automática')
       }
     }
     draftRef.current = []
     draftLayerRef.current?.clearLayers()
     setMode('idle')
+  }
+
+  function handleMeasureClick(latlng) {
+    const pts = draftRef.current
+    pts.push([latlng.lat, latlng.lng])
+    if (pts.length < 3) {
+      redrawDraft()
+      return
+    }
+    const [a, b, c] = pts
+    const conv = localConverter(a)
+    const [bx, by] = conv.toLocal(b)
+    const [cx, cy] = conv.toLocal(c)
+    const lineBearing = bearingBetween(conv, a, b)
+    const side = bx * cy - by * cx
+    const rot = (Math.round((((lineBearing + (side < 0 ? 90 : -90)) % 360 + 360) % 360) / 5) * 5) % 360
+    setRotation(rot)
+    draftRef.current = []
+    draftLayerRef.current?.clearLayers()
+    setMode('idle')
+    toast('success', `Filas orientadas a ${rot % 360}°`, `Paralelas a la línea medida (${Math.round(lineBearing)}°), mirando hacia el lado marcado`)
   }
 
   function cancelDraft() {
@@ -160,7 +205,11 @@ export default function PanelLayout({ lat, lon, azimut, inclinacion, coplanar, b
     layer.clearLayers()
     const draft = draftRef.current
     if (!draft.length) return
-    const style = stateRef.current.mode === 'draw-exclusion' ? STYLE_EXCLUSION : STYLE_DRAFT
+    const m = stateRef.current.mode
+    const style = m === 'draw-exclusion' ? STYLE_EXCLUSION
+      : m === 'draw-obstacle' ? STYLE_OBSTACLE
+      : m === 'measure-azimut' ? STYLE_MEASURE
+      : STYLE_DRAFT
     const pts = cursor ? [...draft, cursor] : draft
     L.polyline(pts, style).addTo(layer)
     draft.forEach((p, idx) => {
@@ -225,25 +274,43 @@ export default function PanelLayout({ lat, lon, azimut, inclinacion, coplanar, b
   }
 
   function autoLayout() {
-    const { grid: g, geo: gg } = stateRef.current
-    if (!g || !gg || gg.roofLocal.length < 3) return
-    const fit = autoLayoutCells(g, gg.roofLocal, gg.exclusionsLocal)
+    const { geo: gg, origin: org } = stateRef.current
+    if (!org || !gg || gg.roofLocal.length < 3 || !panel?.width || !panel?.height) return
     const req = Number(requiredPanels) || 0
-    let placed = fit
-    if (req > 0 && fit.length > req) {
-      const mi = fit.reduce((s, [i]) => s + i, 0) / fit.length
-      const mj = fit.reduce((s, [, j]) => s + j, 0) / fit.length
-      placed = [...fit]
-        .sort((a, b) => ((a[0] - mi) ** 2 + (a[1] - mj) ** 2) - ((b[0] - mi) ** 2 + (b[1] - mj) ** 2))
-        .slice(0, req)
+    const best = optimizeLayout({
+      origin: org,
+      moduleAzimut: gridAzimut,
+      coplanar: !!coplanar,
+      panelWmm: panel.width,
+      panelHmm: panel.height,
+      beta,
+      lat: Number(lat) || 40,
+      rowGap: rowGapOverride,
+      colGap: null,
+      roofLocal: gg.roofLocal,
+      exclusionsLocal: gg.exclusionsLocal,
+      obstaclesLocal: gg.obstaclesLocal,
+      required: req,
+    })
+    if (!best) {
+      toast('warning', 'No cabe ningún panel', 'Revisa la cubierta y las exclusiones')
+      return
     }
-    commitCells(placed, new Set())
-    if (req > 0 && fit.length > req) {
-      toast('success', `${req} paneles colocados`, `Caben ${fit.length}; se dispusieron los ${req} que requiere el análisis`)
-    } else if (req > 0 && placed.length < req) {
-      toast('warning', `Solo caben ${placed.length} de ${req}`, 'Amplía la cubierta o cambia la orientación del panel')
+    setRotation(best.rotation)
+    setPhase(best.phase)
+    if (best.orientation !== orientation) setOrientation(best.orientation)
+    commitCells(best.cells, new Set())
+
+    const shaded = best.cells.filter(([i, j]) => (best.shadeScores.get(cellKey(i, j)) || 0) > 0.25).length
+    const bits = [`retícula a ${Math.round(best.rotation)}°`]
+    if (!coplanar && best.lossPct > 0.05) bits.push(`coste de orientación ${best.lossPct.toFixed(1)}%`)
+    if (shaded) bits.push(`${shaded} con sombra parcial de obstáculos`)
+    if (req > 0 && best.fit.length > req) {
+      toast('success', `${best.cells.length} paneles colocados`, `Caben ${best.fit.length}; ${bits.join(' · ')}`)
+    } else if (req > 0 && best.cells.length < req) {
+      toast('warning', `Solo caben ${best.cells.length} de ${req}`, 'Amplía la cubierta, aprieta las filas o cambia de panel')
     } else {
-      toast('success', `${placed.length} paneles colocados`)
+      toast('success', `${best.cells.length} paneles colocados`, bits.join(' · '))
     }
   }
 
@@ -306,12 +373,17 @@ export default function PanelLayout({ lat, lon, azimut, inclinacion, coplanar, b
     roofLayerRef.current = L.layerGroup().addTo(map)
     vertexLayerRef.current = L.layerGroup().addTo(map)
     exclusionLayerRef.current = L.layerGroup().addTo(map)
+    obstacleLayerRef.current = L.layerGroup().addTo(map)
     panelLayerRef.current = L.layerGroup().addTo(map)
     draftLayerRef.current = L.layerGroup().addTo(map)
 
     map.on('click', (e) => {
       const { mode: m, selection: sel } = stateRef.current
-      if (m === 'draw-roof' || m === 'draw-exclusion') {
+      if (m === 'measure-azimut') {
+        handleMeasureClick(e.latlng)
+        return
+      }
+      if (m === 'draw-roof' || m === 'draw-exclusion' || m === 'draw-obstacle') {
         const first = draftRef.current[0]
         if (first && draftRef.current.length >= 3) {
           const d = map.latLngToContainerPoint(e.latlng).distanceTo(map.latLngToContainerPoint(first))
@@ -330,13 +402,13 @@ export default function PanelLayout({ lat, lon, azimut, inclinacion, coplanar, b
 
     map.on('dblclick', () => {
       const { mode: m } = stateRef.current
-      if (m === 'draw-roof' || m === 'draw-exclusion') finishDraft()
+      if (m === 'draw-roof' || m === 'draw-exclusion' || m === 'draw-obstacle') finishDraft()
     })
 
     map.on('mousemove', (e) => {
       mouseLatLngRef.current = e.latlng
       const { mode: m, grid: g } = stateRef.current
-      if (m === 'draw-roof' || m === 'draw-exclusion') {
+      if (m === 'draw-roof' || m === 'draw-exclusion' || m === 'draw-obstacle' || m === 'measure-azimut') {
         if (draftRef.current.length) redrawDraft([e.latlng.lat, e.latlng.lng])
         return
       }
@@ -440,6 +512,35 @@ export default function PanelLayout({ lat, lon, azimut, inclinacion, coplanar, b
   }, [exclusions])
 
   useEffect(() => {
+    const layer = obstacleLayerRef.current
+    if (!layer || !origin) return
+    layer.clearLayers()
+    const conv = localConverter(origin)
+    const winterNoon = sunVector(Number(lat) || 40, -23.45, 0)
+    obstacles.forEach((o, idx) => {
+      if (winterNoon[2] > 0.02 && o.height_m > 0) {
+        const fx = -winterNoon[0] / winterNoon[2] * o.height_m
+        const fy = -winterNoon[1] / winterNoon[2] * o.height_m
+        const local = o.poly.map(conv.toLocal)
+        const swept = []
+        for (const [x, y] of local) {
+          swept.push([x, y])
+          swept.push([x + fx, y + fy])
+        }
+        const hull = convexHull(swept).map(conv.toLatLng)
+        L.polygon(hull, STYLE_SHADOW).addTo(layer)
+      }
+      L.polygon(o.poly, STYLE_OBSTACLE)
+        .bindTooltip(`Obstáculo · ${o.height_m} m`, { sticky: true })
+        .on('contextmenu', (e) => {
+          L.DomEvent.stop(e)
+          setObstacles((list) => list.filter((_, n) => n !== idx))
+        })
+        .addTo(layer)
+    })
+  }, [obstacles, origin, lat])
+
+  useEffect(() => {
     const layer = panelLayerRef.current
     if (!layer || !grid) return
     layer.clearLayers()
@@ -516,11 +617,42 @@ export default function PanelLayout({ lat, lon, azimut, inclinacion, coplanar, b
         </Btn>
         <Btn variant={mode === 'draw-exclusion' ? 'primary' : 'secondary'} icon="ban" disabled={roof.length < 3}
           onClick={() => (mode === 'draw-exclusion' ? cancelDraft() : setMode('draw-exclusion'))}>
+          Exclusión
+        </Btn>
+        <Btn variant={mode === 'draw-obstacle' ? 'primary' : 'secondary'} icon="mountain" disabled={roof.length < 3}
+          onClick={() => (mode === 'draw-obstacle' ? cancelDraft() : setMode('draw-obstacle'))}
+          title="Chimenea, árbol o edificio: proyecta sombra según su altura">
           Obstáculo
+        </Btn>
+        {mode === 'draw-obstacle' && (
+          <label className="pl-gap">
+            Altura
+            <input className="sun-input num" type="number" min="0.1" step="0.1" value={obstacleHeight}
+              onChange={(e) => setObstacleHeight(e.target.value)} />
+            m
+          </label>
+        )}
+        <Btn variant={mode === 'measure-azimut' ? 'primary' : 'secondary'} icon="ruler" disabled={roof.length < 3}
+          onClick={() => (mode === 'measure-azimut' ? cancelDraft() : setMode('measure-azimut'))}
+          title="Orienta las filas midiendo una línea del mapa: dos clics sobre la cumbrera o el alero y un tercero hacia donde miran las filas">
+          Medir orientación
         </Btn>
         <Btn variant="secondary" icon="sparkles" disabled={roof.length < 3 || drawing} onClick={autoLayout}>
           Auto-disposición
         </Btn>
+        {rotation != null && (
+          <label className="pl-gap" title="Rotación de las filas en pasos de 5°">
+            Filas
+            <input className="sun-input num" type="number" min="0" max="355" step="5"
+              value={Math.round(rotation)}
+              onChange={(e) => setRotation(((Number(e.target.value) || 0) % 360 + 360) % 360)} />
+            °
+            <button type="button" className="pl-seg__opt" title="Volver a la orientación automática"
+              onClick={() => { setRotation(null); setPhase(null) }}>
+              <Icon name="rotate-ccw" size={12} />
+            </button>
+          </label>
+        )}
         <Btn variant="secondary" icon="trash-2" disabled={selection.size === 0} onClick={deleteSelection}>
           Eliminar{selection.size > 1 ? ` (${selection.size})` : ''}
         </Btn>
@@ -559,8 +691,10 @@ export default function PanelLayout({ lat, lon, azimut, inclinacion, coplanar, b
       {drawing && (
         <div className="pl-drawhint">
           <Icon name="mouse-pointer-click" size={13} />
-          {mode === 'draw-roof' ? 'Marca los vértices de la cubierta con clics.' : 'Marca los vértices del obstáculo (chimeneas, claraboyas, sombras).'}
-          {' '}Cierra con doble clic, Enter o pulsando el primer vértice · Esc cancela
+          {mode === 'draw-roof' && 'Marca los vértices de la cubierta con clics. Cierra con doble clic, Enter o pulsando el primer vértice · Esc cancela'}
+          {mode === 'draw-exclusion' && 'Marca la zona donde no se puede colocar (claraboyas, registros). Cierra con doble clic · Esc cancela'}
+          {mode === 'draw-obstacle' && `Marca el contorno del obstáculo (${obstacleHeight || 2} m de alto): chimenea, árbol, edificio vecino. Puede estar fuera de la cubierta. Cierra con doble clic · Esc cancela`}
+          {mode === 'measure-azimut' && 'Clic 1 y 2 sobre una línea real del edificio (cumbrera, alero, peto) · clic 3 hacia el lado al que deben mirar las filas'}
         </div>
       )}
       {short && !drawing && (
