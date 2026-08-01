@@ -7,6 +7,7 @@ from app.models.inverter import Inverter
 from app.models.battery import Battery
 from app.errors import ValidationError, NotFound
 from app.gateways.pvgis_client import PvgisClient
+from app.services.capability import CapabilityContext
 
 logger = logging.getLogger(__name__)
 
@@ -17,6 +18,11 @@ OPERATION_TEMP_CELL = 50
 DEFAULT_ROUND_TRIP_EFFICIENCY = 0.90
 DEFAULT_DOD = 0.90
 DAYS_PER_YEAR = 365
+
+ASSUMED_PANEL_EFFICIENCY = 21.0
+ASSUMED_TCP = -0.35
+ASSUMED_T_NOCT = 45.0
+ASSUMED_INVERTER_Y = 97.0
 
 
 class AnalysisService:
@@ -30,33 +36,14 @@ class AnalysisService:
         if not panel or (visible_catalog_ids is not None and panel.catalog_id not in visible_catalog_ids):
             raise NotFound('Panel no encontrado')
 
+        ctx = CapabilityContext()
+
         inverter_id = data.get('inverter_id')
         inverter = None
         if inverter_id:
             inverter = Inverter.query.get(inverter_id)
             if not inverter or (visible_catalog_ids is not None and inverter.catalog_id not in visible_catalog_ids):
                 raise NotFound('Inversor no encontrado')
-            required_inverter_fields = {
-                'y': inverter.y, 'power': inverter.power, 'vmax': inverter.vmax,
-            }
-            missing_inv = [k for k, v in required_inverter_fields.items() if v is None]
-            if missing_inv:
-                raise ValidationError(
-                    f"El inversor '{inverter.nombre}' tiene campos incompletos en la base de datos: "
-                    f"{', '.join(missing_inv)}. Contacta al administrador."
-                )
-
-        required_panel_fields = {
-            'tcp': panel.tcp, 't_noct': panel.t_noct, 'power': panel.power,
-            'y': panel.y, 'width': panel.width, 'height': panel.height,
-            'tcv': panel.tcv, 'voc': panel.voc, 'isc': panel.isc,
-        }
-        missing = [k for k, v in required_panel_fields.items() if v is None]
-        if missing:
-            raise ValidationError(
-                f"El panel '{panel.nombre}' tiene campos incompletos en la base de datos: "
-                f"{', '.join(missing)}. Contacta al administrador."
-            )
 
         required_inputs = ['latitud', 'longitud', 'autoconsumo', 'necesidad']
         missing_inputs = [k for k in required_inputs if data.get(k) in (None, '')]
@@ -79,22 +66,58 @@ class AnalysisService:
             raise ValidationError("El campo 'autoconsumo' debe ser mayor que 0.")
         if necesidad <= 0:
             raise ValidationError("El campo 'necesidad' debe ser mayor que 0.")
-        if panel.width <= 0 or panel.height <= 0:
-            raise ValidationError(
-                f"El panel '{panel.nombre}' tiene dimensiones invalidas: "
-                "'width' y 'height' deben ser mayores que 0."
-            )
+        if (panel.width or panel.height) and not (panel.width and panel.height):
+            ctx.missing.append({
+                'entity': 'panel', 'entity_id': panel.id, 'entity_nombre': panel.nombre,
+                'field': 'width' if not panel.width else 'height',
+                'label': 'Dimensiones del módulo (incompletas)',
+                'unlocks': 'Área real del módulo para el conteo y la disposición',
+                'edit_url': f'/app/equipos?tab=panels&edit={panel.id}&field=width',
+            })
 
         coplanar = bool(data.get('coplanar'))
         start_year = int(data.get('start', 2020))
         end_year = int(data.get('end', 2023))
 
-        panel_temp_loss = panel.tcp
-        cell_noct = panel.t_noct
         power_placa = panel.power
-        y_placa = panel.y / 100
-        cell_area = (panel.width * panel.height) / 1000000
-        coeficiente_v_temp = panel.tcv
+        panel_temp_loss = ctx.value_or_assume(
+            panel, 'panel', 'tcp', ASSUMED_TCP,
+            'Sin coeficiente de temperatura de potencia se asume un valor típico de '
+            f'{ASSUMED_TCP} %/°C para estimar las pérdidas térmicas.',
+            unlocks='Pérdida por temperatura calculada con el dato real del módulo')
+        cell_noct = ctx.value_or_assume(
+            panel, 'panel', 't_noct', ASSUMED_T_NOCT,
+            f'Sin NOCT se asume {ASSUMED_T_NOCT:.0f} °C, el valor típico de módulo cristalino.',
+            unlocks='Temperatura de célula calculada con el dato real del módulo')
+
+        if panel.width and panel.height:
+            cell_area = (panel.width * panel.height) / 1000000
+            y_placa = (panel.y / 100 if panel.y
+                       else power_placa / (cell_area * 1000))
+            if not panel.y:
+                ctx.assumptions.append({
+                    'entity': 'panel', 'field': 'y', 'label': 'Eficiencia del módulo',
+                    'used': round(y_placa * 100, 2),
+                    'reason': 'Derivada de la potencia y el área en STC (identidad física).',
+                })
+        elif panel.y:
+            y_placa = panel.y / 100
+            cell_area = power_placa / (y_placa * 1000)
+            ctx.value(panel, 'panel', 'width',
+                      'Dimensiones reales para la disposición sobre cubierta; el área '
+                      'usada en el conteo se ha derivado de potencia y eficiencia')
+        else:
+            y_placa = ctx.value_or_assume(
+                panel, 'panel', 'y', ASSUMED_PANEL_EFFICIENCY,
+                f'Sin eficiencia ni dimensiones se asume un {ASSUMED_PANEL_EFFICIENCY:.0f} % '
+                'típico de módulo actual; el conteo de módulos es aproximado.',
+                unlocks='Conteo de módulos con el área real') / 100
+            cell_area = power_placa / (y_placa * 1000)
+
+        coeficiente_v_temp = ctx.value(
+            panel, 'panel', 'tcv',
+            'Número máximo de módulos en serie y verificación de la tensión máxima '
+            'del inversor en el día más frío')
         voc_cell = panel.voc
 
         sample_years = end_year - start_year + 1
@@ -128,7 +151,13 @@ class AnalysisService:
 
         temp_power_loss = 1 - ((25 - (cell_temp + OPERATION_TEMP_CELL) / 2) * panel_temp_loss / 100)
 
-        y_inversor = inverter.y / 100 if inverter else 0.97
+        if inverter:
+            y_inversor = ctx.value_or_assume(
+                inverter, 'inverter', 'y', ASSUMED_INVERTER_Y,
+                f'Sin eficiencia del inversor se asume un {ASSUMED_INVERTER_Y:.0f} % típico.',
+                unlocks='Rendimiento global calculado con la eficiencia real del inversor') / 100
+        else:
+            y_inversor = ASSUMED_INVERTER_Y / 100
 
         total_y = y_placa * y_inversor * WIRES_LOSS * DIRTY_LOSS * temp_power_loss * irradiance_factor_loss
 
@@ -142,24 +171,29 @@ class AnalysisService:
         total_field_power = math.ceil(cell_amount) * power_placa / 1000
 
         max_cell_amount = None
-        if inverter:
-            max_cell_amount = inverter.vmax / (
-                coeficiente_v_temp * (coldest_temp - 25) + voc_cell
-            )
-
-        vmax_coldest_day = panel.voc * (1 + (-1 * panel.tcv * (25 - coldest_temp) / 100))
-
+        vmax_coldest_day = None
+        coldest_day_v_max = None
+        panel_protection_v = None
         compatible_inverters = []
-        if not inverter:
-            show_all_inverters = bool(data.get('show_all_inverters'))
-            compatible_inverters = AnalysisService._find_compatible_inverters(
-                panel, total_field_power, coldest_temp, cell_amount,
-                show_all_inverters, visible_catalog_ids,
-            )
 
-        coldest_day_v_max = vmax_coldest_day * 1.05 * math.ceil(cell_amount)
-        panel_protection_v = coldest_day_v_max * 1.2
-        panel_protection_i = panel.isc * 1.25
+        if coeficiente_v_temp is not None:
+            if inverter:
+                max_cell_amount = inverter.vmax / (
+                    coeficiente_v_temp * (coldest_temp - 25) + voc_cell
+                )
+            vmax_coldest_day = panel.voc * (1 + (-1 * coeficiente_v_temp * (25 - coldest_temp) / 100))
+            coldest_day_v_max = vmax_coldest_day * 1.05 * math.ceil(cell_amount)
+            panel_protection_v = coldest_day_v_max * 1.2
+            if not inverter:
+                show_all_inverters = bool(data.get('show_all_inverters'))
+                compatible_inverters = AnalysisService._find_compatible_inverters(
+                    panel, total_field_power, coldest_temp, cell_amount,
+                    show_all_inverters, visible_catalog_ids,
+                )
+
+        isc = ctx.value(panel, 'panel', 'isc',
+                        'Corriente de diseño del campo y calibre de las protecciones CC')
+        panel_protection_i = isc * 1.25 if isc is not None else None
 
         altitude = None
         if isinstance(meta, dict):
@@ -172,6 +206,13 @@ class AnalysisService:
         monthly_irradiance = (df_total_irr.groupby(df_total_irr.index.month).sum() / (1000 * sample_years)).round(2).tolist()
         monthly_production = [round(val * total_field_power * performance_ratio, 2) for val in monthly_irradiance]
 
+        if coeficiente_v_temp is not None and isc is not None:
+            detail_level = 'completo'
+        elif coeficiente_v_temp is not None or isc is not None:
+            detail_level = 'parcial'
+        else:
+            detail_level = 'basico'
+
         result = {
             'total_field_power': total_field_power,
             'cache_info': f'Cache size: {PvgisClient.cache_size()}',
@@ -180,6 +221,7 @@ class AnalysisService:
             'annual_production': annual_production,
             'monthly_irradiance': monthly_irradiance,
             'monthly_production': monthly_production,
+            **ctx.report(detail_level),
         }
 
         if inverter:
