@@ -11,6 +11,7 @@ import { GeoMap } from '@/services/geo-map'
 import { useAuth } from '@/services/auth'
 import { emitSubview } from '@/services/assist'
 import { registerUnsavedGuard } from '@/shared/unsavedGuard'
+import DegradationCard from '@/shared/ui/DegradationCard'
 import CircuitDiagram from './CircuitDiagram'
 import PanelLayout from './PanelLayout'
 
@@ -405,6 +406,7 @@ export default function Wizard() {
                   </div>
                 ) : (
                   <>
+                    <DegradationCard missing={results.missing} assumptions={results.assumptions} />
                     <div className="sun-resultgrid">
                       {buildResultCards(results, panel).map((m) => (
                         <div key={m.label} className="sun-kpi" style={{ boxShadow: 'none' }}>
@@ -431,6 +433,18 @@ export default function Wizard() {
             {step === 3 && (
               <>
                 <div className="sun-divider">Disposición de paneles sobre la cubierta</div>
+                {panel && !(panel.width && panel.height) && (
+                  <DegradationCard missing={[{
+                    entity: 'panel',
+                    entity_id: panel.id,
+                    entity_nombre: panel.nombre,
+                    field: !panel.width ? 'width' : 'height',
+                    label: 'Dimensiones del módulo (alto y ancho)',
+                    unlocks: 'la retícula real sobre la cubierta, con el paso y la separación entre filas correctos',
+                    edit_url: `/app/equipos?tab=panels&edit=${panel.id}&field=width`,
+                  }]} />
+                )}
+                {panel && !(panel.width && panel.height) ? null : (
                 <PanelLayout
                   lat={form.latitud}
                   lon={form.longitud}
@@ -443,6 +457,7 @@ export default function Wizard() {
                   layout={layout}
                   onChange={patchLayout}
                 />
+                )}
               </>
             )}
 
