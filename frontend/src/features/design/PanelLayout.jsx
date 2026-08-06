@@ -7,7 +7,7 @@ import {
   makeGrid, localConverter, cellFits, cellKey, parseKey,
   autoLayoutCells, fillBetweenCells, polygonAreaM2, centroid,
   optimizeLayout, obstacleShadingScores, bearingBetween, sunVector, convexHull,
-  assignStrings,
+  assignStrings, annualShadeFactors,
 } from './layoutEngine'
 import './panel-layout.css'
 
@@ -29,12 +29,27 @@ const VERTEX_ICON = L.divIcon({ className: 'pl-vertex', iconSize: [11, 11], icon
 
 const STRING_COLORS = ['#2a78d6', '#eb6834', '#1baf7a', '#eda100', '#e87ba4', '#008300', '#4a3aa7', '#e34948']
 
+const HEAT_RAMP = ['#fde3cf', '#f5a15f', '#eb6834', '#b8420f', '#7a2e05']
+
+function heatColor(t) {
+  const pos = Math.max(0, Math.min(1, t)) * (HEAT_RAMP.length - 1)
+  const lo = Math.floor(pos)
+  const hi = Math.min(HEAT_RAMP.length - 1, lo + 1)
+  const f = pos - lo
+  const a = HEAT_RAMP[lo]
+  const b = HEAT_RAMP[hi]
+  const mix = (i) => Math.round(
+    parseInt(a.slice(i, i + 2), 16) * (1 - f) + parseInt(b.slice(i, i + 2), 16) * f
+  )
+  return `rgb(${mix(1)}, ${mix(3)}, ${mix(5)})`
+}
+
 function isTyping(e) {
   const el = e.target
   return el && (el.tagName === 'INPUT' || el.tagName === 'TEXTAREA' || el.tagName === 'SELECT' || el.isContentEditable)
 }
 
-export default function PanelLayout({ lat, lon, azimut, inclinacion, coplanar, betaOptimal, panel, requiredPanels, stringConfig, layout, onChange }) {
+export default function PanelLayout({ lat, lon, azimut, inclinacion, coplanar, betaOptimal, panel, requiredPanels, stringConfig, poaAnnual, layout, onChange }) {
   const [roof, setRoof] = useState(() => layout?.roof || [])
   const [exclusions, setExclusions] = useState(() => layout?.exclusions || [])
   const [cells, setCells] = useState(() => (layout?.cells || []).map(([i, j]) => [i, j]))
@@ -48,11 +63,13 @@ export default function PanelLayout({ lat, lon, azimut, inclinacion, coplanar, b
   const [selection, setSelection] = useState(() => new Set())
   const [mode, setMode] = useState('idle')
   const [showCatastro, setShowCatastro] = useState(false)
+  const [showHeatmap, setShowHeatmap] = useState(false)
   const [gapDraft, setGapDraft] = useState(() => (layout?.row_gap_m != null ? String(layout.row_gap_m) : ''))
 
   const mapEl = useRef(null)
   const mapRef = useRef(null)
   const catastroRef = useRef(null)
+  const heatLayerRef = useRef(null)
   const roofLayerRef = useRef(null)
   const vertexLayerRef = useRef(null)
   const exclusionLayerRef = useRef(null)
@@ -119,6 +136,24 @@ export default function PanelLayout({ lat, lon, azimut, inclinacion, coplanar, b
     stringGroups.forEach((keys, idx) => keys.forEach((k) => map.set(k, idx)))
     return map
   }, [stringGroups])
+
+  const heatData = useMemo(() => {
+    if (!showHeatmap || !grid || !geo || geo.roofLocal.length < 3) return null
+    const fit = autoLayoutCells(grid, geo.roofLocal, geo.exclusionsLocal)
+    if (!fit.length) return null
+    const factors = annualShadeFactors(grid, fit, geo.obstaclesLocal, Number(lat) || 40)
+    const poa = Number(poaAnnual) || null
+    let min = Infinity
+    let max = -Infinity
+    const values = fit.map(([i, j]) => {
+      const f = factors.get(cellKey(i, j)) || 0
+      const v = poa ? poa * (1 - f) : (1 - f) * 100
+      if (v < min) min = v
+      if (v > max) max = v
+      return { i, j, v }
+    })
+    return { values, min, max, unit: poa ? 'kWh/m²·año' : '% de sol anual' }
+  }, [showHeatmap, grid, geo, lat, poaAnnual])
 
   stateRef.current = { roof, exclusions, obstacles, obstacleHeight, cells, selection, mode, grid, geo, origin }
 
@@ -387,6 +422,7 @@ export default function PanelLayout({ lat, lon, azimut, inclinacion, coplanar, b
       layers: 'Catastro', format: 'image/png', transparent: true, version: '1.1.1',
       attribution: '&copy; D.G. Catastro',
     })
+    heatLayerRef.current = L.layerGroup().addTo(map)
     roofLayerRef.current = L.layerGroup().addTo(map)
     vertexLayerRef.current = L.layerGroup().addTo(map)
     exclusionLayerRef.current = L.layerGroup().addTo(map)
@@ -489,6 +525,18 @@ export default function PanelLayout({ lat, lon, azimut, inclinacion, coplanar, b
     if (showCatastro) catastroRef.current.addTo(map)
     else catastroRef.current.remove()
   }, [showCatastro])
+
+  useEffect(() => {
+    const layer = heatLayerRef.current
+    if (!layer) return
+    layer.clearLayers()
+    if (!heatData || !grid) return
+    const span = heatData.max - heatData.min
+    heatData.values.forEach(({ i, j, v }) => {
+      const t = span > 1e-9 ? (v - heatData.min) / span : 0.5
+      L.polygon(grid.cellPolygon(i, j), { weight: 0, fillColor: heatColor(t), fillOpacity: 0.7, interactive: false }).addTo(layer)
+    })
+  }, [heatData, grid])
 
   useEffect(() => {
     const layer = roofLayerRef.current
@@ -662,6 +710,11 @@ export default function PanelLayout({ lat, lon, azimut, inclinacion, coplanar, b
         <Btn variant="secondary" icon="sparkles" disabled={roof.length < 3 || drawing} onClick={autoLayout}>
           Auto-disposición
         </Btn>
+        <Btn variant={showHeatmap ? 'primary' : 'secondary'} icon="sun" disabled={roof.length < 3}
+          onClick={() => setShowHeatmap((v) => !v)}
+          title="Irradiancia anual estimada por celda, descontando la sombra de los obstáculos">
+          Mapa solar
+        </Btn>
         {rotation != null && (
           <label className="pl-gap" title="Rotación de las filas en pasos de 5°">
             Filas
@@ -728,6 +781,18 @@ export default function PanelLayout({ lat, lon, azimut, inclinacion, coplanar, b
           {mode === 'draw-exclusion' && 'Marca la zona donde no se puede colocar (claraboyas, registros). Cierra con doble clic · Esc cancela'}
           {mode === 'draw-obstacle' && `Marca el contorno del obstáculo (${obstacleHeight || 2} m de alto): chimenea, árbol, edificio vecino. Puede estar fuera de la cubierta. Cierra con doble clic · Esc cancela`}
           {mode === 'measure-azimut' && 'Clic 1 y 2 sobre una línea real del edificio (cumbrera, alero, peto) · clic 3 hacia el lado al que deben mirar las filas'}
+        </div>
+      )}
+      {showHeatmap && heatData && (
+        <div className="pl-drawhint">
+          <Icon name="sun" size={13} />
+          Irradiancia anual estimada
+          <span style={{
+            display: 'inline-block', width: 110, height: 10, borderRadius: 3,
+            background: `linear-gradient(90deg, ${HEAT_RAMP.join(',')})`,
+            margin: '0 6px', verticalAlign: 'middle',
+          }} />
+          {Math.round(heatData.min)} – {Math.round(heatData.max)} {heatData.unit}
         </div>
       )}
       {short && !drawing && (

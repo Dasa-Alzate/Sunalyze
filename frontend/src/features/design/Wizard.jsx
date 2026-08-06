@@ -456,6 +456,9 @@ export default function Wizard() {
                   panel={panel}
                   requiredPanels={panelesFrom(results, panel)}
                   stringConfig={results?.string_sizing?.recommended}
+                  poaAnnual={results?.optimal_irradiance != null
+                    ? results.optimal_irradiance * (results.irradiance_factor_loss ?? 1)
+                    : results?.annual_irradiance_kWh_m2}
                   layout={layout}
                   onChange={patchLayout}
                 />

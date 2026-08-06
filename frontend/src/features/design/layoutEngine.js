@@ -203,11 +203,32 @@ export function shadingWindow(latDeg) {
   return samples
 }
 
-export function obstacleShadingScores(grid, fitCells, obstaclesLocal, latDeg, planeElevationM = 0) {
+const MID_MONTH_DAYS = [15, 46, 74, 105, 135, 166, 196, 227, 258, 288, 319, 349]
+
+export function annualShadeSamples(latDeg) {
+  const suns = []
+  const weights = []
+  for (const day of MID_MONTH_DAYS) {
+    const decl = OBLIQUITY * Math.sin(((360 * (284 + day)) / 365) * (Math.PI / 180))
+    for (let omega = -75; omega <= 75 + 1e-9; omega += 15) {
+      const sun = sunVector(latDeg, decl, omega)
+      if (sun[2] > 0.05) {
+        suns.push(sun)
+        weights.push(sun[2])
+      }
+    }
+  }
+  return { suns, weights }
+}
+
+export function annualShadeFactors(grid, fitCells, obstaclesLocal, latDeg, planeElevationM = 0) {
+  const { suns, weights } = annualShadeSamples(latDeg)
+  return weightedShadeScores(grid, fitCells, obstaclesLocal, suns, weights, planeElevationM)
+}
+
+function weightedShadeScores(grid, fitCells, obstaclesLocal, samples, weights, planeElevationM = 0) {
   const scores = new Map()
-  if (!obstaclesLocal?.length || !fitCells.length) return scores
-  const samples = shadingWindow(latDeg)
-  if (!samples.length) return scores
+  if (!obstaclesLocal?.length || !fitCells.length || !samples.length) return scores
 
   const casters = obstaclesLocal
     .map((o) => ({
@@ -231,6 +252,7 @@ export function obstacleShadingScores(grid, fitCells, obstaclesLocal, latDeg, pl
     })
   )
 
+  const totalWeight = weights.reduce((s, w) => s + w, 0)
   for (const [i, j] of fitCells) {
     const c = grid.cellCenterLocal(i, j)
     let shaded = 0
@@ -240,12 +262,17 @@ export function obstacleShadingScores(grid, fitCells, obstaclesLocal, latDeg, pl
         const s = perObstacle[t]
         if (pointInPolygon(c, s.hull)) opacity = Math.max(opacity, s.opacity)
       }
-      shaded += opacity
+      shaded += opacity * weights[t]
     }
-    const score = shaded / samples.length
+    const score = shaded / totalWeight
     if (score > 0) scores.set(cellKey(i, j), score)
   }
   return scores
+}
+
+export function obstacleShadingScores(grid, fitCells, obstaclesLocal, latDeg, planeElevationM = 0) {
+  const samples = shadingWindow(latDeg)
+  return weightedShadeScores(grid, fitCells, obstaclesLocal, samples, samples.map(() => 1), planeElevationM)
 }
 
 export function convexHull(points) {
