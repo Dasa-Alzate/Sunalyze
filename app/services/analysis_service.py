@@ -204,6 +204,32 @@ class AnalysisService:
         performance_ratio = total_y / y_placa if y_placa > 0 else 0
         annual_production = round(total_field_power * optimal_irradiance * performance_ratio, 2)
 
+        annual_production_layout = None
+        layout_field_power = None
+        layout_summary = data.get('layout_summary') or {}
+        try:
+            placed = int(layout_summary.get('placed_panels') or 0)
+            shade_pct = min(100.0, max(0.0, float(layout_summary.get('shade_loss_pct') or 0)))
+            orientation_pct = min(100.0, max(0.0, float(layout_summary.get('orientation_loss_pct') or 0)))
+        except (TypeError, ValueError):
+            placed = 0
+            shade_pct = 0.0
+            orientation_pct = 0.0
+        if placed > 0:
+            layout_field_power = round(placed * power_placa / 1000, 3)
+            annual_production_layout = round(
+                layout_field_power * optimal_irradiance * performance_ratio
+                * (1 - shade_pct / 100) * (1 - orientation_pct / 100), 2)
+            ctx.assumptions.append({
+                'entity': 'layout',
+                'field': 'shade_loss_pct',
+                'label': 'Producción corregida por la disposición',
+                'used': shade_pct,
+                'reason': f'Con los {placed} módulos colocados sobre la cubierta, una pérdida anual '
+                          f'por sombras del {shade_pct} % y por orientación de filas del '
+                          f'{orientation_pct} %, calculadas geométricamente en la disposición.',
+            })
+
         df_total_irr = (df['poa_direct'] + df['poa_sky_diffuse'] + df['poa_ground_diffuse'])
         monthly_irradiance = (df_total_irr.groupby(df_total_irr.index.month).sum() / (1000 * sample_years)).round(2).tolist()
         monthly_production = [round(val * total_field_power * performance_ratio, 2) for val in monthly_irradiance]
@@ -221,6 +247,8 @@ class AnalysisService:
             'coldest_day_v_max': coldest_day_v_max,
             'altitude': altitude,
             'annual_production': annual_production,
+            'annual_production_layout': annual_production_layout,
+            'layout_field_power': layout_field_power,
             'monthly_irradiance': monthly_irradiance,
             'monthly_production': monthly_production,
             **ctx.report(detail_level),
@@ -273,7 +301,8 @@ class AnalysisService:
             except (TypeError, ValueError):
                 battery_quantity = 1
             result['battery'] = AnalysisService._battery_analysis(
-                battery, battery_quantity, necesidad, autoconsumo, annual_production,
+                battery, battery_quantity, necesidad, autoconsumo,
+                annual_production_layout or annual_production,
             )
 
         return result

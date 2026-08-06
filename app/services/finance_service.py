@@ -22,7 +22,7 @@ class FinanceService:
         if production_kwh_year is not None:
             return float(production_kwh_year)
         resultados = project.resultados or {}
-        annual = resultados.get('annual_production')
+        annual = resultados.get('annual_production_layout') or resultados.get('annual_production')
         if annual is None:
             raise ValidationError(
                 'No hay producción anual: ejecuta el análisis del proyecto o '

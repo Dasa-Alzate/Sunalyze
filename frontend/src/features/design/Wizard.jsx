@@ -134,7 +134,8 @@ export default function Wizard() {
   function pickWireAc(w) { setWireAcId(w.id); touch() }
   function pickWireGround(w) { setWireGroundId(w.id); touch() }
 
-  async function analyze() {
+  async function analyze(opts) {
+    const silent = Boolean(opts && opts.silent)
     if (!panelId) { toast('warning', 'Selecciona un panel', 'El panel es obligatorio para dimensionar'); setStep(1); return }
     if (!form.latitud || !form.longitud || !form.necesidad) {
       toast('warning', 'Faltan datos del lugar', 'Latitud, longitud y necesidad anual son obligatorias'); setStep(0); return
@@ -153,13 +154,14 @@ export default function Wizard() {
     if (inverterId) body.inverter_id = inverterId
     if (batteryId) { body.battery_id = batteryId; body.battery_quantity = Number(batteryQty) || 1 }
     if (form.coplanar) { body.inclinacion = Number(form.inclinacion); body.azimut = Number(form.azimut) }
+    if (layout?.summary?.placed_panels) body.layout_summary = layout.summary
     try {
       const res = await api.analyze(body)
       setResults(res)
       setStale(false)
       dirtyRef.current = true
       setDirty(true)
-      toast('success', 'Dimensionamiento calculado')
+      if (!silent) toast('success', 'Dimensionamiento calculado')
     } catch (e) {
       setAnalysisError(e.message)
       toast('error', 'No se pudo calcular', e.message)
@@ -235,6 +237,17 @@ export default function Wizard() {
     dirtyRef.current = true
     setDirty(true)
   }
+
+  const analyzeRef = useRef(null)
+  analyzeRef.current = analyze
+  const summaryKey = layout?.summary ? JSON.stringify(layout.summary) : null
+  const firstSummaryRef = useRef(true)
+  useEffect(() => {
+    if (firstSummaryRef.current) { firstSummaryRef.current = false; return undefined }
+    if (!results || analyzing) return undefined
+    const handle = setTimeout(() => { analyzeRef.current({ silent: true }) }, 1200)
+    return () => clearTimeout(handle)
+  }, [summaryKey])
 
   const stepValid = [
     Boolean(form.cliente.trim() && form.necesidad !== '' && form.latitud !== '' && form.longitud !== ''),
@@ -782,6 +795,9 @@ function buildSummary(results, panel, inverter, battery, stale, layout) {
     { label: 'Paneles', value: np != null ? np : '—', unit: 'ud', stale },
     { label: 'Producción anual', value: results.annual_production != null ? int(results.annual_production) : '—', unit: 'kWh', stale },
   ]
+  if (results.annual_production_layout != null) {
+    rows.push({ label: 'Con disposición', value: int(results.annual_production_layout), unit: 'kWh', stale })
+  }
   if (layout?.cells?.length) {
     rows.splice(7, 0, { label: 'Colocados en cubierta', value: layout.cells.length, unit: 'ud', stale: np != null && layout.cells.length < np })
   }
@@ -795,6 +811,16 @@ function buildResultCards(results, panel) {
     { label: 'Producción anual estimada', value: results.annual_production != null ? int(results.annual_production) : '—', unit: 'kWh' },
     { label: 'Paneles', value: np != null ? np : '—', unit: 'ud' },
   ]
+  if (results.annual_production_layout != null) {
+    const delta = results.annual_production
+      ? ((results.annual_production_layout - results.annual_production) / results.annual_production) * 100
+      : null
+    cards.splice(2, 0, {
+      label: 'Producción con la disposición',
+      value: int(results.annual_production_layout),
+      unit: delta != null ? `kWh · ${delta >= 0 ? '+' : ''}${num(delta, 1)}%` : 'kWh',
+    })
+  }
   if (results.cell_area != null) cards.push({ label: 'Superficie necesaria', value: dec(results.cell_area), unit: 'm²' })
   if (results.total_y != null && panel?.y) cards.push({ label: 'Rendimiento (PR)', value: num((Number(results.total_y) / (Number(panel.y) / 100)) * 100, 1), unit: '%' })
   if (results.max_cell_amount != null) cards.push({ label: 'Paneles máx. por cadena', value: Math.floor(Number(results.max_cell_amount)), unit: 'ud' })

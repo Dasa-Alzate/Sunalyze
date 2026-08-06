@@ -7,7 +7,7 @@ import {
   makeGrid, localConverter, cellFits, cellKey, parseKey,
   autoLayoutCells, fillBetweenCells, polygonAreaM2, centroid,
   optimizeLayout, obstacleShadingScores, bearingBetween, sunVector, convexHull,
-  assignStrings, annualShadeFactors,
+  assignStrings, annualShadeFactors, orientationLossPct,
 } from './layoutEngine'
 import './panel-layout.css'
 
@@ -137,6 +137,18 @@ export default function PanelLayout({ lat, lon, azimut, inclinacion, coplanar, b
     return map
   }, [stringGroups])
 
+  const layoutSummary = useMemo(() => {
+    if (!grid || !geo || geo.roofLocal.length < 3 || !cells.length) return null
+    const factors = annualShadeFactors(grid, cells, geo.obstaclesLocal, Number(lat) || 40)
+    const shade = cells.reduce((s, [i, j]) => s + (factors.get(cellKey(i, j)) || 0), 0) / cells.length
+    const orientation = coplanar || rotation == null ? 0 : orientationLossPct(rotation, gridAzimut)
+    return {
+      placed_panels: cells.length,
+      shade_loss_pct: Math.round(shade * 1000) / 10,
+      orientation_loss_pct: Math.round(orientation * 10) / 10,
+    }
+  }, [grid, geo, cells, lat, coplanar, rotation, gridAzimut])
+
   const heatData = useMemo(() => {
     if (!showHeatmap || !grid || !geo || geo.roofLocal.length < 3) return null
     const fit = autoLayoutCells(grid, geo.roofLocal, geo.exclusionsLocal)
@@ -177,8 +189,9 @@ export default function PanelLayout({ lat, lon, azimut, inclinacion, coplanar, b
       col_gap_m: null,
       panel: panel ? { w_mm: panel.width, h_mm: panel.height } : null,
       strings: stringGroups,
+      summary: layoutSummary,
     })
-  }, [roof, exclusions, obstacles, cells, orientation, rotation, phase, origin, rowGapOverride, stringGroups])
+  }, [roof, exclusions, obstacles, cells, orientation, rotation, phase, origin, rowGapOverride, stringGroups, layoutSummary])
 
   function commitCells(next, nextSelection) {
     setCells(next)

@@ -84,8 +84,9 @@ class MemoriaService:
 
         if res.get('altitude') is not None:
             bf['altitude'] = round(float(res['altitude']))
-        if res.get('annual_production') is not None:
-            bf['annual_production'] = round(float(res['annual_production']))
+        production = res.get('annual_production_layout') or res.get('annual_production')
+        if production is not None:
+            bf['annual_production'] = round(float(production))
         irr = res.get('annual_irradiance_kWh_m2') or res.get('optimal_irradiance')
         if irr is not None:
             bf['annual_irradiance'] = round(float(irr))
