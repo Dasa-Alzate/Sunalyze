@@ -223,7 +223,7 @@ class AnalysisService:
             ctx.assumptions.append({
                 'entity': 'layout',
                 'field': 'shade_loss_pct',
-                'label': 'Producción corregida por la disposición',
+                'label': 'Pérdida anual por sombras en la disposición (%)',
                 'used': shade_pct,
                 'reason': f'Con los {placed} módulos colocados sobre la cubierta, una pérdida anual '
                           f'por sombras del {shade_pct} % y por orientación de filas del '
