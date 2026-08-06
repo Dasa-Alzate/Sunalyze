@@ -44,7 +44,7 @@ function useDebounced(value, delay) {
   return debounced
 }
 
-export default function CircuitDiagram({ panel = null, inverter = null, hasBattery: hasBatteryProp = false }) {
+export default function CircuitDiagram({ panel = null, inverter = null, hasBattery: hasBatteryProp = false, stringConfig = null }) {
   const { t } = useTranslation('circuit')
 
   const [loading, setLoading] = useState(true)
@@ -80,8 +80,10 @@ export default function CircuitDiagram({ panel = null, inverter = null, hasBatte
       inverter_model: inverter?.nombre ?? f.inverter_model,
       inverter_power: inverter?.power != null ? String(inverter.power) : f.inverter_power,
       inverter_output_i: inverter?.I_max_output != null ? String(inverter.I_max_output) : f.inverter_output_i,
+      panels_per_string: stringConfig?.n_series != null ? String(stringConfig.n_series) : f.panels_per_string,
+      num_strings: stringConfig?.n_parallel != null ? String(stringConfig.n_parallel) : f.num_strings,
     }))
-  }, [panel, inverter, hasBatteryProp])
+  }, [panel, inverter, hasBatteryProp, stringConfig])
 
   function patch(p) { setForm((f) => ({ ...f, ...p })) }
 

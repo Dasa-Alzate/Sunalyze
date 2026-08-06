@@ -8,6 +8,7 @@ from app.models.battery import Battery
 from app.errors import ValidationError, NotFound
 from app.gateways.pvgis_client import PvgisClient
 from app.services.capability import CapabilityContext
+from app.services.string_sizing_service import StringSizingService
 
 logger = logging.getLogger(__name__)
 
@@ -141,6 +142,7 @@ class AnalysisService:
 
         cell_temp = filtered_df['temp_cell'].mean()
         coldest_temp = filtered_df['temp_air'].min()
+        hottest_temp = filtered_df['temp_air'].max()
 
         annual_irradiance = (df['poa_direct'] + df['poa_sky_diffuse'] + df['poa_ground_diffuse']).sum() / (1000 * sample_years)
 
@@ -248,7 +250,14 @@ class AnalysisService:
                     'power': inverter.power,
                     'vmax': inverter.vmax,
                     'y': inverter.y,
+                    'mppt_count': inverter.mppt_count,
                 },
+                'string_sizing': StringSizingService.evaluate(panel, inverter, {
+                    'coldest_temp': float(coldest_temp),
+                    'hottest_temp': float(hottest_temp),
+                    'noct': cell_noct,
+                    'required_panels': math.ceil(cell_amount),
+                }, ctx),
             })
         else:
             result['compatible_inverters'] = compatible_inverters

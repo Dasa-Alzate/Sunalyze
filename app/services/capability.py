@@ -4,6 +4,9 @@ FIELD_LABELS = {
     ('panel', 'tcp'): 'Coeficiente de temperatura de potencia (γ)',
     ('panel', 't_noct'): 'Temperatura nominal de operación (NOCT)',
     ('panel', 'isc'): 'Corriente de cortocircuito (Isc)',
+    ('panel', 'vmp'): 'Tensión en el punto de máxima potencia (Vmp)',
+    ('panel', 'imp'): 'Corriente en el punto de máxima potencia (Imp)',
+    ('panel', 'max_series_fuse_a'): 'Calibre máximo de fusible en serie',
     ('panel', 'y'): 'Eficiencia del módulo',
     ('panel', 'height'): 'Alto del módulo',
     ('panel', 'width'): 'Ancho del módulo',
@@ -11,6 +14,10 @@ FIELD_LABELS = {
     ('inverter', 'I_max_input'): 'Corriente máxima de entrada',
     ('inverter', 'I_max_output'): 'Corriente máxima de salida',
     ('inverter', 'power_max'): 'Potencia máxima aparente',
+    ('inverter', 'mppt_v_min'): 'Tensión mínima de seguimiento MPP',
+    ('inverter', 'mppt_v_max'): 'Tensión máxima de seguimiento MPP',
+    ('inverter', 'mppt_count'): 'Número de seguidores MPP',
+    ('inverter', 'isc_max_per_mppt'): 'Corriente de cortocircuito máxima por MPPT',
     ('battery', 'voltage'): 'Tensión nominal de la batería',
 }
 

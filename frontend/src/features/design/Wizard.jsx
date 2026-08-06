@@ -418,6 +418,7 @@ export default function Wizard() {
                     {!inverter && results.compatible_inverters && (
                       <CompatibleInverters list={results.compatible_inverters} onPick={(inv) => { pickInverter(inv); toast('info', 'Inversor seleccionado', 'Recalcula para el dimensionamiento completo') }} />
                     )}
+                    {results.string_sizing && <StringSizingCard sizing={results.string_sizing} />}
                     {results.battery && <BatteryResult battery={results.battery} />}
                     <div style={{ marginTop: 'var(--space-4)', display: 'flex', gap: 'var(--space-3)', alignItems: 'center' }}>
                       <Btn variant="secondary" icon="refresh-cw" data-busy={analyzing} disabled={analyzing} onClick={analyze}>{analyzing ? 'Recalculando…' : 'Recalcular'}</Btn>
@@ -454,6 +455,7 @@ export default function Wizard() {
                   betaOptimal={results?.beta_optimal}
                   panel={panel}
                   requiredPanels={panelesFrom(results, panel)}
+                  stringConfig={results?.string_sizing?.recommended}
                   layout={layout}
                   onChange={patchLayout}
                 />
@@ -472,7 +474,7 @@ export default function Wizard() {
               ) : (
                 <>
                   <div className="sun-divider">Diagrama unifilar</div>
-                  <CircuitDiagram panel={panel} inverter={inverter} hasBattery={!!battery} />
+                  <CircuitDiagram panel={panel} inverter={inverter} hasBattery={!!battery} stringConfig={results?.string_sizing?.recommended} />
                 </>
               )
             )}
@@ -641,6 +643,77 @@ function CompatibleInverters({ list, onPick }) {
             ))}
           </tbody>
         </table>
+      )}
+    </div>
+  )
+}
+
+const VERDICT_UI = {
+  ok: { icon: 'check', color: 'var(--state-valid)' },
+  aviso: { icon: 'alert-triangle', color: 'var(--state-warn)' },
+  fallo: { icon: 'x', color: 'var(--danger)' },
+}
+
+function StringSizingCard({ sizing }) {
+  const { series_range: range, recommended, checks } = sizing
+  if (sizing.detail_level === 'no_disponible') {
+    return (
+      <div style={{ marginTop: 'var(--space-5)' }}>
+        <div className="sun-divider">Cadenas (strings)</div>
+        <div className="sun-inline-note">
+          <Icon name="info" size={14} color="var(--info)" />
+          Faltan datos del panel o del inversor para dimensionar las cadenas — revisa la tarjeta de datos incompletos.
+        </div>
+      </div>
+    )
+  }
+  return (
+    <div style={{ marginTop: 'var(--space-5)' }}>
+      <div className="sun-divider">Cadenas (strings)</div>
+      <div style={{ display: 'flex', gap: 'var(--space-3)', flexWrap: 'wrap', marginBottom: 'var(--space-4)' }}>
+        {range.min != null && range.max != null && (
+          <span className="pl-chip pl-chip--ok">
+            <Icon name="link" size={13} /> Entre {range.min} y {range.max} módulos en serie
+          </span>
+        )}
+        {range.min == null && range.max != null && (
+          <span className="pl-chip"><Icon name="link" size={13} /> Máximo {range.max} módulos en serie</span>
+        )}
+        {recommended && (
+          <span className="pl-chip pl-chip--ok">
+            <Icon name="sparkles" size={13} />
+            Recomendado: {recommended.n_parallel} {recommended.n_parallel === 1 ? 'cadena' : 'cadenas'} × {recommended.n_series} módulos
+            {recommended.strings_per_mppt != null ? ` · ${recommended.strings_per_mppt}/MPPT` : ''}
+          </span>
+        )}
+        {!recommended && range.max != null && (
+          <span className="pl-chip pl-chip--warn"><Icon name="alert-triangle" size={13} /> Ninguna configuración cumple todos los límites</span>
+        )}
+      </div>
+      {checks.length > 0 && (
+        <table className="sun-table">
+          <thead><tr><th></th><th>Comprobación</th><th style={{ textAlign: 'right' }}>Valor</th><th style={{ textAlign: 'right' }}>Límite</th><th>Norma</th></tr></thead>
+          <tbody>
+            {checks.map((c) => {
+              const ui = VERDICT_UI[c.verdict] || VERDICT_UI.aviso
+              return (
+                <tr key={c.id} title={c.note}>
+                  <td><Icon name={ui.icon} size={15} color={ui.color} /></td>
+                  <td className="sun-table__name">{c.label}</td>
+                  <td className="num" style={{ textAlign: 'right' }}>{num(c.value, 1)} {c.unit}</td>
+                  <td className="num" style={{ textAlign: 'right' }}>{num(c.limit, 1)} {c.unit}</td>
+                  <td style={{ color: 'var(--text-muted)', fontSize: 'var(--text-sm)' }}>{c.source}</td>
+                </tr>
+              )
+            })}
+          </tbody>
+        </table>
+      )}
+      {range.computed_with?.t_cell_hot != null && (
+        <div className="sun-inline-note" style={{ marginTop: 'var(--space-3)' }}>
+          <Icon name="thermometer" size={14} color="var(--info)" />
+          Ventana calculada con T. mínima de {num(range.computed_with.t_min, 1)} °C y célula caliente a {num(range.computed_with.t_cell_hot, 0)} °C (histórico PVGIS del emplazamiento).
+        </div>
       )}
     </div>
   )

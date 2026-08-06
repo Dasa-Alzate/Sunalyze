@@ -17,6 +17,10 @@ class Inverter(BaseModel, ProvenanceMixin):
     power_max = db.Column(db.Float)
     I_max_input = db.Column(db.Float)
     I_max_output = db.Column(db.Float)
+    mppt_v_min = db.Column(db.Float)
+    mppt_v_max = db.Column(db.Float)
+    mppt_count = db.Column(db.Integer)
+    isc_max_per_mppt = db.Column(db.Float)
     precio_unitario = db.Column(db.Float)
     inflacion_pct = db.Column(db.Float)
     datasheet = db.Column(db.String(200))
@@ -33,6 +37,10 @@ class Inverter(BaseModel, ProvenanceMixin):
             'vmax': self.vmax,
             'I_max_input': self.I_max_input,
             'I_max_output': self.I_max_output,
+            'mppt_v_min': self.mppt_v_min,
+            'mppt_v_max': self.mppt_v_max,
+            'mppt_count': self.mppt_count,
+            'isc_max_per_mppt': self.isc_max_per_mppt,
             'precio_unitario': self.precio_unitario,
             'inflacion_pct': self.inflacion_pct,
             'datasheet': self.datasheet,

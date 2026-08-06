@@ -25,6 +25,11 @@ I_INPUT = ['Máxima corriente de entrada', 'Corriente máxima de entrada',
            'Máx. corriente de entrada de la serie fotovoltaica']
 I_OUTPUT = ['Corriente de salida de CA máxima', 'Corriente de salida CA (Ica nom)',
             'Máxima corriente de salida CA', 'Corriente máxima de salida']
+MPP_RANGE = ['Rango de tensión MPP', 'Rango de tensión Umpp', 'Rango Umpp']
+MPPT_COUNT = ['Número de seguidores MPP', 'Número de MPPT', 'Cantidad de seguidores MPP',
+              'Número de seguidores del punto de máxima potencia']
+ISC_MAX = ['Máxima corriente de cortocircuito', 'Corriente máxima de cortocircuito',
+           'Máx. corriente de cortocircuito']
 
 
 def _tail(url):
@@ -92,11 +97,18 @@ class FroniusScraper(BrandScraper):
         notes = []
 
         _, vmax = grab_range(text, VMAX_RANGE, 'V')
+        mppt_v_min, mppt_v_max = grab_range(text, MPP_RANGE, 'V')
+        if mppt_v_max is None:
+            mppt_v_max = grab(text, VMAX_MPP, 'V')
         if vmax is None:
-            vmax = grab(text, VMAX_MPP, 'V')
+            vmax = mppt_v_max
             if vmax is not None:
                 notes.append('vmax tomado de la tensión MPP máxima: la ficha no publica '
                              'Ucc máx., el valor es conservador')
+
+        mppt_count = grab(text, MPPT_COUNT, '')
+        if mppt_count is not None:
+            mppt_count = int(mppt_count) if 1 <= mppt_count <= 50 else None
 
         power = _kilo(text, POWER_KW)
         if power is None:
@@ -113,6 +125,10 @@ class FroniusScraper(BrandScraper):
             'y': grab(text, EFFICIENCY, '%'),
             'I_max_input': grab(text, I_INPUT, 'A'),
             'I_max_output': grab(text, I_OUTPUT, 'A'),
+            'mppt_v_min': mppt_v_min,
+            'mppt_v_max': mppt_v_max,
+            'mppt_count': mppt_count,
+            'isc_max_per_mppt': grab(text, ISC_MAX, 'A'),
         }
         fields = {k: v for k, v in fields.items() if v is not None}
         return [NormalizedProduct(kind=self.kind, external_id=ref['external_id'],

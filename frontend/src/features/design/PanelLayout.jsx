@@ -7,6 +7,7 @@ import {
   makeGrid, localConverter, cellFits, cellKey, parseKey,
   autoLayoutCells, fillBetweenCells, polygonAreaM2, centroid,
   optimizeLayout, obstacleShadingScores, bearingBetween, sunVector, convexHull,
+  assignStrings,
 } from './layoutEngine'
 import './panel-layout.css'
 
@@ -26,12 +27,14 @@ const STYLE_DRAFT = { color: '#38bdf8', weight: 2, dashArray: '4 4' }
 
 const VERTEX_ICON = L.divIcon({ className: 'pl-vertex', iconSize: [11, 11], iconAnchor: [5.5, 5.5] })
 
+const STRING_COLORS = ['#2a78d6', '#eb6834', '#1baf7a', '#eda100', '#e87ba4', '#008300', '#4a3aa7', '#e34948']
+
 function isTyping(e) {
   const el = e.target
   return el && (el.tagName === 'INPUT' || el.tagName === 'TEXTAREA' || el.tagName === 'SELECT' || el.isContentEditable)
 }
 
-export default function PanelLayout({ lat, lon, azimut, inclinacion, coplanar, betaOptimal, panel, requiredPanels, layout, onChange }) {
+export default function PanelLayout({ lat, lon, azimut, inclinacion, coplanar, betaOptimal, panel, requiredPanels, stringConfig, layout, onChange }) {
   const [roof, setRoof] = useState(() => layout?.roof || [])
   const [exclusions, setExclusions] = useState(() => layout?.exclusions || [])
   const [cells, setCells] = useState(() => (layout?.cells || []).map(([i, j]) => [i, j]))
@@ -104,6 +107,19 @@ export default function PanelLayout({ lat, lon, azimut, inclinacion, coplanar, b
     }
   }, [origin, roof, exclusions, obstacles])
 
+  const stringGroups = useMemo(() => {
+    const n = Number(stringConfig?.n_parallel) || 0
+    if (!n || n < 2 || !cells.length) return null
+    return assignStrings(cells, n)
+  }, [cells, stringConfig?.n_parallel])
+
+  const stringIndex = useMemo(() => {
+    if (!stringGroups) return null
+    const map = new Map()
+    stringGroups.forEach((keys, idx) => keys.forEach((k) => map.set(k, idx)))
+    return map
+  }, [stringGroups])
+
   stateRef.current = { roof, exclusions, obstacles, obstacleHeight, cells, selection, mode, grid, geo, origin }
 
   useEffect(() => {
@@ -125,8 +141,9 @@ export default function PanelLayout({ lat, lon, azimut, inclinacion, coplanar, b
       row_gap_m: rowGapOverride,
       col_gap_m: null,
       panel: panel ? { w_mm: panel.width, h_mm: panel.height } : null,
+      strings: stringGroups,
     })
-  }, [roof, exclusions, obstacles, cells, orientation, rotation, phase, origin, rowGapOverride])
+  }, [roof, exclusions, obstacles, cells, orientation, rotation, phase, origin, rowGapOverride, stringGroups])
 
   function commitCells(next, nextSelection) {
     setCells(next)
@@ -548,13 +565,18 @@ export default function PanelLayout({ lat, lon, azimut, inclinacion, coplanar, b
     cells.forEach(([i, j]) => {
       const key = cellKey(i, j)
       const selected = selection.has(key)
-      const poly = L.polygon(grid.cellPolygon(i, j), selected ? STYLE_PANEL_SELECTED : STYLE_PANEL)
+      const sIdx = stringIndex?.get(key)
+      const style = selected ? STYLE_PANEL_SELECTED
+        : sIdx != null ? { ...STYLE_PANEL, fillColor: STRING_COLORS[sIdx % STRING_COLORS.length] }
+        : STYLE_PANEL
+      const poly = L.polygon(grid.cellPolygon(i, j), style)
+      if (sIdx != null) poly.bindTooltip(`Cadena ${sIdx + 1}`, { sticky: true })
       poly.on('click', (e) => { L.DomEvent.stop(e); onPanelClick(key, e) })
       poly.on('mousedown', (e) => beginPanelDrag(key, e))
       poly.addTo(layer)
       panelIndexRef.current.set(key, poly)
     })
-  }, [cells, selection, grid])
+  }, [cells, selection, grid, stringIndex])
 
   useEffect(() => {
     function onKey(e) {
@@ -686,6 +708,17 @@ export default function PanelLayout({ lat, lon, azimut, inclinacion, coplanar, b
           </span>
         )}
         {roofArea != null && <span className="pl-chip">{Math.round(roofArea)} m²</span>}
+        {stringGroups && (
+          <span className="pl-chip">
+            {stringGroups.map((keys, idx) => (
+              <span key={idx} style={{ display: 'inline-flex', alignItems: 'center', gap: 3, marginRight: idx < stringGroups.length - 1 ? 6 : 0 }}>
+                <span style={{ width: 9, height: 9, borderRadius: 2, background: STRING_COLORS[idx % STRING_COLORS.length], display: 'inline-block' }} />
+                {keys.length}
+              </span>
+            ))}
+            cadenas
+          </span>
+        )}
       </div>
 
       {drawing && (

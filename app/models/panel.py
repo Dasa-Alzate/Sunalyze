@@ -19,6 +19,7 @@ class Panel(BaseModel, ProvenanceMixin):
     tcp = db.Column(db.Float)
     tcv = db.Column(db.Float)
     isc = db.Column(db.Float)
+    max_series_fuse_a = db.Column(db.Float)
     t_noct = db.Column(db.Float)
     height = db.Column(db.Integer)
     width = db.Column(db.Integer)
@@ -39,6 +40,7 @@ class Panel(BaseModel, ProvenanceMixin):
             'vmp': self.vmp,
             'imp': self.imp,
             'isc': self.isc,
+            'max_series_fuse_a': self.max_series_fuse_a,
             'power': self.power,
             't_noct': self.t_noct,
             'height': self.height,
