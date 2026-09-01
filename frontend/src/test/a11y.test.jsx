@@ -1,5 +1,6 @@
 import { describe, it, expect } from 'vitest'
 import { render } from '@testing-library/react'
+import { MemoryRouter } from 'react-router-dom'
 import { axe } from 'vitest-axe'
 import {
   Btn,
@@ -75,7 +76,9 @@ describe('design-system primitives have no axe violations', () => {
 describe('composed views have no axe violations', () => {
   it('Topbar landmark with heading', async () => {
     await expectNoViolations(
-      <Topbar title="Proyectos" crumb="Inicio" actions={<Btn>Nuevo</Btn>} />,
+      <MemoryRouter>
+        <Topbar title="Proyectos" crumb="Inicio" actions={<Btn>Nuevo</Btn>} />
+      </MemoryRouter>,
     )
   })
 

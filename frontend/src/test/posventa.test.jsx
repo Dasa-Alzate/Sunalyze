@@ -1,5 +1,6 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest'
 import { render, screen, waitFor } from '@testing-library/react'
+import { MemoryRouter } from 'react-router-dom'
 import { axe } from 'vitest-axe'
 
 const installations = [
@@ -62,7 +63,7 @@ beforeEach(async () => {
 
 describe('posventa frontend', () => {
   it('InstallationsWorkspace lists installations with status badges and no axe violations', async () => {
-    const { container } = render(<InstallationsWorkspace />)
+    const { container } = render(<MemoryRouter><InstallationsWorkspace /></MemoryRouter>)
     await screen.findByText('ACME Solar')
     expect(screen.getByText('Beta Energía')).toBeInTheDocument()
     expect(screen.getByText('Operativa')).toBeInTheDocument()
