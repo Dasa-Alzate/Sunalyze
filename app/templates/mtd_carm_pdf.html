@@ -1,0 +1,138 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<style>
+  @page { size: A4; margin: 1.6cm 1.4cm; }
+  body { font-family: Helvetica, Arial, sans-serif; font-size: 10pt; color: #111; }
+  header { border-bottom: 2px solid #111; padding-bottom: 6px; margin-bottom: 14px; }
+  h1 { font-size: 13pt; margin: 0 0 2px; text-transform: uppercase; }
+  .subtitle { font-size: 8.5pt; color: #444; }
+  h2 { font-size: 10.5pt; background: #eee; padding: 4px 6px; margin: 16px 0 6px; text-transform: uppercase; }
+  table { width: 100%; border-collapse: collapse; margin-bottom: 8px; }
+  td { border: 1px solid #999; padding: 5px 7px; vertical-align: bottom; }
+  .lbl { font-size: 7.5pt; color: #555; text-transform: uppercase; display: block; }
+  .val { min-height: 12px; display: block; font-size: 10pt; }
+  .firma { margin-top: 26px; }
+  .firma-box { border: 1px solid #999; height: 90px; margin-top: 6px; }
+  .nota { font-size: 8pt; color: #555; margin-top: 18px; border-top: 1px solid #ccc; padding-top: 6px; }
+</style>
+</head>
+<body>
+{% macro campo(label, value) -%}
+  <span class="lbl">{{ label }}</span><span class="val">{{ value if value is not none else '' }}</span>
+{%- endmacro %}
+<header>
+  <h1>Memoria técnica de diseño — Instalaciones eléctricas de baja tensión</h1>
+  <div class="subtitle">
+    Estructurada según el modelo IEBT de la Región de Murcia (junio 2021) para el
+    procedimiento 0019 — Registro de instalaciones eléctricas de baja tensión (CARM).
+    Instalación de generación fotovoltaica para autoconsumo (REBT RD 842/2002, ITC-BT-40; RD 244/2019).
+  </div>
+</header>
+
+<h2>1. Titular de la instalación</h2>
+<table>
+  <tr>
+    <td colspan="2">{{ campo('Nombre y apellidos o razón social', project.cliente) }}</td>
+    <td>{{ campo('NIF / NIE', none) }}</td>
+  </tr>
+  <tr>
+    <td colspan="2">{{ campo('Domicilio', project.direccion) }}</td>
+    <td>{{ campo('Teléfono', none) }}</td>
+  </tr>
+  <tr>
+    <td>{{ campo('Localidad', project.localidad) }}</td>
+    <td>{{ campo('Provincia', provincia) }}</td>
+    <td>{{ campo('Código postal', none) }}</td>
+  </tr>
+</table>
+
+<h2>2. Emplazamiento de la instalación</h2>
+<table>
+  <tr>
+    <td colspan="2">{{ campo('Emplazamiento', project.direccion) }}</td>
+    <td>{{ campo('Localidad', project.localidad) }}</td>
+  </tr>
+  <tr>
+    <td colspan="2">{{ campo('Referencia catastral', project.referencia_catastral) }}</td>
+    <td>{{ campo('Uso al que se destina', 'Generación fotovoltaica para autoconsumo') }}</td>
+  </tr>
+</table>
+
+<h2>3. Suministro y contrato eléctrico</h2>
+<table>
+  <tr>
+    <td>{{ campo('CUPS', project.cups) }}</td>
+    <td>{{ campo('Empresa distribuidora / comercializadora', project.compania) }}</td>
+  </tr>
+  <tr>
+    <td>{{ campo('Potencia contratada (kW)', project.potencia_contratada) }}</td>
+    <td>{{ campo('Tipo de suministro', project.tipo_voltaje) }}</td>
+  </tr>
+</table>
+
+<h2>4. Características de la instalación generadora</h2>
+<table>
+  <tr>
+    <td>{{ campo('Potencia pico instalada (kWp)', project.kwp) }}</td>
+    <td>{{ campo('Número de módulos', project.n_paneles) }}</td>
+    <td>{{ campo('Potencia nominal del inversor (kW)', inverter.power if inverter else none) }}</td>
+  </tr>
+  <tr>
+    <td>{{ campo('Módulo fotovoltaico (marca y modelo)', panel.nombre if panel else none) }}</td>
+    <td colspan="2">{{ campo('Inversor (marca y modelo)', inverter.nombre if inverter else none) }}</td>
+  </tr>
+  <tr>
+    <td colspan="2">{{ campo('Sistema de acumulación (marca y modelo)', battery.nombre if battery else none) }}</td>
+    <td>{{ campo('Nº de baterías', project.battery_quantity if battery else none) }}</td>
+  </tr>
+  <tr>
+    <td>{{ campo('Inclinación (º)', project.inclinacion) }}</td>
+    <td>{{ campo('Azimut (º)', project.azimut) }}</td>
+    <td>{{ campo('Disposición', 'Coplanar' if project.coplanar else 'Con estructura inclinada') }}</td>
+  </tr>
+</table>
+
+<h2>5. Características técnicas y protecciones</h2>
+<table>
+  <tr>
+    <td>{{ campo('Protecciones en corriente continua', none) }}</td>
+    <td>{{ campo('Protecciones en corriente alterna', none) }}</td>
+  </tr>
+  <tr>
+    <td>{{ campo('Puesta a tierra — descripción', none) }}</td>
+    <td>{{ campo('Resistencia de tierra (Ω)', none) }}</td>
+  </tr>
+</table>
+<p class="subtitle">
+  El detalle de secciones, protecciones y cálculos justificativos figura en la memoria
+  técnica completa y en el esquema unifilar que acompañan a este modelo.
+</p>
+
+<h2>6. Empresa instaladora habilitada y redactor</h2>
+<table>
+  <tr>
+    <td colspan="2">{{ campo('Empresa instaladora habilitada', none) }}</td>
+    <td>{{ campo('Nº de registro / habilitación', none) }}</td>
+  </tr>
+  <tr>
+    <td colspan="2">{{ campo('Instalador habilitado en baja tensión (redactor de la MTD)', none) }}</td>
+    <td>{{ campo('NIF', none) }}</td>
+  </tr>
+</table>
+
+<div class="firma">
+  <span class="lbl">Fecha y firma del redactor de la memoria técnica de diseño</span>
+  <p>En {{ project.localidad or '' }}, a {{ fecha }}</p>
+  <div class="firma-box"></div>
+</div>
+
+<p class="nota">
+  Documento preparado con Sunalyze siguiendo la estructura del modelo oficial IEBT de la
+  CARM. El modelo original en Word está disponible en la sede electrónica de la CARM
+  (procedimiento 0019). La declaración responsable de inscripción ratifica al redactor de
+  esta memoria; la presentación telemática y la firma corresponden al instalador habilitado.
+</p>
+</body>
+</html>

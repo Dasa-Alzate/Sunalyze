@@ -1,8 +1,8 @@
 
-from flask import Blueprint, request, jsonify
+from flask import Blueprint, request, jsonify, Response
 
 from app.models.project import Project
-from app.schemas.legalization import TransitionSchema, SignMemoriaSchema
+from app.schemas.legalization import TransitionSchema, SignMemoriaSchema, ExpedienteSchema
 from app.services.legalization_service import LegalizationService
 from app.security import current_user, current_org_id
 from app.authz import require_permission, Permission
@@ -35,6 +35,43 @@ def transition(project_id):
     data = TransitionSchema(**(request.get_json(silent=True) or {}))
     LegalizationService.transition(project, current_user(), data.to_estado, data.note)
     return jsonify(LegalizationService.state_summary(project))
+
+
+@legalization_bp.route('/api/projects/<int:project_id>/legalization/expediente', methods=['POST'])
+@require_permission(Permission.PROJECT_LEGALIZE)
+def set_expediente(project_id):
+    project = _owned_or_404(project_id)
+    data = ExpedienteSchema(**(request.get_json(silent=True) or {}))
+    LegalizationService.set_expediente(project, current_user(), data.numero, data.fecha, data.note)
+    return jsonify(LegalizationService.state_summary(project))
+
+
+@legalization_bp.route('/api/projects/<int:project_id>/legalization/guia', methods=['GET'])
+@require_permission(Permission.PROJECT_VIEW)
+def guia(project_id):
+    project = _owned_or_404(project_id)
+    ccaa = request.args.get('ccaa') or project.ccaa
+    return jsonify(LegalizationService.guide(ccaa))
+
+
+@legalization_bp.route('/api/projects/<int:project_id>/legalization/presentacion', methods=['GET'])
+@require_permission(Permission.PROJECT_VIEW)
+def presentacion(project_id):
+    project = _owned_or_404(project_id)
+    return jsonify(LegalizationService.presentation(project))
+
+
+@legalization_bp.route('/api/projects/<int:project_id>/legalization/mtd-oficial', methods=['GET'])
+@require_permission(Permission.MEMORIA_SIGN)
+def mtd_oficial(project_id):
+    project = _owned_or_404(project_id)
+    from app.services.official_form_service import OfficialFormService
+    pdf_bytes, filename = OfficialFormService.generate(project)
+    return Response(
+        pdf_bytes,
+        mimetype='application/pdf',
+        headers={'Content-Disposition': f'attachment; filename="{filename}"'},
+    )
 
 
 @legalization_bp.route('/api/projects/<int:project_id>/memoria/sign', methods=['POST'])

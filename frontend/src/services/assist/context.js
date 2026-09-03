@@ -5,6 +5,7 @@ const ROUTES = [
   { match: /^\/app\/equipos/, view: 'equipos' },
   { match: /^\/app\/equipo\b/, view: 'equipo' },
   { match: /^\/app\/memoria/, view: 'memoria' },
+  { match: /^\/app\/legalizacion/, view: 'legalizacion' },
   { match: /^\/app\/modulos/, view: 'modulos' },
   { match: /^\/app\/plantillas/, view: 'plantillas' },
   { match: /^\/app\/finanzas/, view: 'finanzas' },
