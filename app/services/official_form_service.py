@@ -45,10 +45,25 @@ class OfficialFormService:
         return OfficialFormService._render_carm(project), f'mtd-modelo-carm-{project.id}.pdf'
 
     @staticmethod
+    def _wire_desc(wire):
+        if wire is None:
+            return None
+        nombre = wire.nombre or ''
+        material = wire.material or ''
+        partes = [p for p in (nombre, material) if p]
+        return f"{' '.join(partes)} {_fmt(wire.seccion)} mm²".strip()
+
+    @staticmethod
     def _gva_values(project):
         today = date.today()
         provincia = legalization_catalog.provincia_hint(project.ccaa)
         inverter_kw = project.inverter.power if project.inverter else None
+        cables = []
+        if project.wire_dc:
+            cables.append(f'CC: {OfficialFormService._wire_desc(project.wire_dc)}')
+        if project.wire_ac:
+            cables.append(f'CA: {OfficialFormService._wire_desc(project.wire_ac)}')
+        ground = OfficialFormService._wire_desc(project.wire_ground)
         values = {
             'A_TIT_NOM': project.cliente,
             'A_TIT_DOM': project.direccion,
@@ -61,6 +76,10 @@ class OfficialFormService:
             'B_P_Inversor': inverter_kw,
             'B_P_Instalada': project.kwp,
             'B_N_Modulos': project.n_paneles,
+            'C_EMPL': project.direccion,
+            'C_CABL': '; '.join(cables) if cables else None,
+            'C_COND': ground,
+            'C_PRTE': f'Línea de enlace: {ground}' if ground else None,
             'FI_LLOC': project.localidad,
             'FI_DIA': today.day,
             'FI_MES': _MESES[today.month - 1],
