@@ -5,12 +5,7 @@ import { api } from '@/api/client'
 import { toast } from '@/services/toast'
 import { useAuth } from '@/services/auth'
 import { estadoMeta } from '@/shared/estados'
-
-const CCAA_OPTIONS = [
-  { value: '', label: 'Sin asignar' },
-  { value: 'comunitat valenciana', label: 'Comunitat Valenciana' },
-  { value: 'murcia', label: 'Región de Murcia' },
-]
+import { CCAA_OPTIONS, ccaaLabel, detectCcaa } from './ccaa'
 
 const TRANSITION_LABELS = {
   borrador: 'Volver a borrador',
@@ -65,10 +60,24 @@ export default function LegalizationPanel() {
       setSummary(sum)
       setExpediente({ numero: sum.expediente_numero || '', fecha: sum.expediente_fecha || '' })
       await loadCcaaData(Number(id), proj.ccaa)
+      if (!proj.ccaa && proj.latitud != null && proj.longitud != null) autoDetectCcaa(proj)
     } catch (e) {
       setError(e.message)
     } finally {
       setLoading(false)
+    }
+  }
+
+  async function autoDetectCcaa(proj) {
+    const ccaa = await detectCcaa(proj.latitud, proj.longitud)
+    if (!ccaa) return
+    try {
+      const updated = await api.projects.update(Number(id), { ccaa })
+      setProject(updated)
+      await loadCcaaData(Number(id), updated.ccaa)
+      toast('info', 'Comunidad autónoma detectada', ccaaLabel(ccaa))
+    } catch {
+      return
     }
   }
 
@@ -197,6 +206,12 @@ export default function LegalizationPanel() {
               <p style={{ fontSize: 'var(--text-sm)', color: 'var(--text-muted)' }}>
                 Asigna la comunidad autónoma para ver la guía de tramitación, el asistente de
                 presentación y el modelo oficial de MTD.
+              </p>
+            )}
+            {project?.ccaa && !guia && (
+              <p style={{ fontSize: 'var(--text-sm)', color: 'var(--text-muted)' }}>
+                Todavía no hay guía de tramitación ni modelo oficial para {ccaaLabel(project.ccaa)}.
+                Puedes registrar el expediente y gestionar el estado igualmente.
               </p>
             )}
             {guia && (
