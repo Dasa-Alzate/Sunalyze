@@ -22,7 +22,8 @@ _VITAL_NUM = {'panel': ('power', 'voc', 'vmp', 'imp'), 'inverter': ('power', 'vm
 _TOL = 0.005
 _BATCH = 100
 
-_PRIORITY = {'scraper:fronius': 30, 'scraper:cec': 20, 'scraper:cec-baterias': 20}
+_PRIORITY = {'scraper:fronius': 30, 'scraper:cec': 20, 'scraper:cec-baterias': 20,
+             'scraper:cec-inversores': 20}
 _BUNDLE = re.compile(r'\b(pack|pallet|palet|rollo|lote|kit|conjunto|unidades)\b',
                      re.IGNORECASE)
 _DEFAULT_SCRAPER_PRIORITY = 10
