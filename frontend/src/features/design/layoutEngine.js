@@ -332,6 +332,83 @@ export function selectBest(fitCells, required, shadeScores) {
   return picked
 }
 
+export function normalizeLayout(layout) {
+  if (!layout) return { zones: [], exclusions: [], obstacles: [] }
+  const exclusions = (layout.exclusions || []).map((e) => (Array.isArray(e) ? { poly: e } : e))
+  const obstacles = layout.obstacles || []
+  if (Array.isArray(layout.zones)) {
+    return {
+      zones: layout.zones.map((z, idx) => ({
+        id: z.id || `z${idx + 1}`,
+        name: z.name || `Zona ${idx + 1}`,
+        roof: z.roof || [],
+        origin: z.origin || (z.roof?.length >= 3 ? centroid(z.roof) : null),
+        plane: {
+          azimut: z.plane?.azimut ?? 180,
+          tilt: z.plane?.tilt ?? null,
+          coplanar: !!z.plane?.coplanar,
+        },
+        rows: {
+          rotation: z.rows?.rotation ?? null,
+          orientation: z.rows?.orientation || 'v',
+          gap_m: z.rows?.gap_m ?? null,
+          phase: z.rows?.phase || null,
+        },
+        cells: (z.cells || []).map(([i, j]) => [i, j]),
+      })),
+      exclusions,
+      obstacles,
+    }
+  }
+  if (!(layout.roof || []).length && !(layout.cells || []).length) return { zones: [], exclusions, obstacles }
+  return {
+    zones: [{
+      id: 'z1',
+      name: 'Zona 1',
+      roof: layout.roof || [],
+      origin: layout.origin || (layout.roof?.length >= 3 ? centroid(layout.roof) : null),
+      plane: {
+        azimut: layout.azimut ?? 180,
+        tilt: layout.coplanar ? (layout.beta ?? null) : null,
+        coplanar: !!layout.coplanar,
+      },
+      rows: {
+        rotation: layout.rotation ?? null,
+        orientation: layout.orientation || 'v',
+        gap_m: layout.row_gap_m ?? null,
+        phase: layout.phase || null,
+      },
+      cells: (layout.cells || []).map(([i, j]) => [i, j]),
+    }],
+    exclusions,
+    obstacles,
+  }
+}
+
+export function allocateStrings(zoneCellCounts, totalStrings) {
+  const n = Math.max(0, Math.floor(totalStrings) || 0)
+  const counts = zoneCellCounts.map((c) => Math.max(0, c || 0))
+  const totalCells = counts.reduce((s, c) => s + c, 0)
+  const alloc = counts.map(() => 0)
+  if (!n || !totalCells) return alloc
+  const nonEmpty = counts.map((c, k) => [c, k]).filter(([c]) => c > 0).sort((a, b) => b[0] - a[0])
+  for (let x = 0; x < Math.min(n, nonEmpty.length); x++) alloc[nonEmpty[x][1]] = 1
+  let used = alloc.reduce((s, a) => s + a, 0)
+  while (used < n) {
+    let best = -1
+    let bestRatio = -Infinity
+    for (let k = 0; k < counts.length; k++) {
+      if (!counts[k] || !alloc[k]) continue
+      const ratio = counts[k] / (alloc[k] + 1)
+      if (ratio > bestRatio) { bestRatio = ratio; best = k }
+    }
+    if (best < 0) break
+    alloc[best] += 1
+    used += 1
+  }
+  return alloc
+}
+
 export function assignStrings(cells, stringCount) {
   const n = Math.max(1, Math.floor(stringCount) || 1)
   const ordered = [...cells].sort((a, b) => (a[1] - b[1]) || (a[0] - b[0]))

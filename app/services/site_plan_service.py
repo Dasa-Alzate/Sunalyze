@@ -38,6 +38,8 @@ TARGET_PX = 1400
 STYLE_ROOF = 'fill="#38bdf8" fill-opacity="0.10" stroke="#0284c7" stroke-width="6" stroke-dasharray="16 9"'
 STYLE_EXCLUSION = 'fill="#ef4444" fill-opacity="0.22" stroke="#dc2626" stroke-width="4" stroke-dasharray="9 6"'
 STYLE_PANEL = 'fill="#0f2c52" fill-opacity="0.9" stroke="#e2e8f0" stroke-width="2"'
+STYLE_OBSTACLE = 'fill="#d9920a" fill-opacity="0.30" stroke="#b45309" stroke-width="4"'
+STYLE_SHADOW = 'fill="#334155" fill-opacity="0.20"'
 
 
 def _converter(origin_lat, origin_lng):
@@ -50,6 +52,99 @@ def _converter(origin_lat, origin_lng):
         return (origin_lat + y / M_PER_DEG_LAT, origin_lng + x / kx)
 
     return to_local, to_latlng
+
+
+def _sun_vector(lat_deg, decl_deg, hour_angle_deg):
+    phi = math.radians(lat_deg)
+    dec = math.radians(decl_deg)
+    omega = math.radians(hour_angle_deg)
+    return (
+        -math.cos(dec) * math.sin(omega),
+        math.cos(phi) * math.sin(dec) - math.sin(phi) * math.cos(dec) * math.cos(omega),
+        math.sin(phi) * math.sin(dec) + math.cos(phi) * math.cos(dec) * math.cos(omega),
+    )
+
+
+def _convex_hull(points):
+    pts = sorted(set((round(x, 4), round(y, 4)) for x, y in points))
+    if len(pts) <= 2:
+        return pts
+
+    def cross(o, a, b):
+        return (a[0] - o[0]) * (b[1] - o[1]) - (a[1] - o[1]) * (b[0] - o[0])
+
+    lower = []
+    for p in pts:
+        while len(lower) >= 2 and cross(lower[-2], lower[-1], p) <= 0:
+            lower.pop()
+        lower.append(p)
+    upper = []
+    for p in reversed(pts):
+        while len(upper) >= 2 and cross(upper[-2], upper[-1], p) <= 0:
+            upper.pop()
+        upper.append(p)
+    return lower[:-1] + upper[:-1]
+
+
+def _normalize_zones(layout):
+    layout = layout or {}
+    exclusions = []
+    for e in layout.get('exclusions') or []:
+        poly = e if isinstance(e, list) else (e or {}).get('poly')
+        if poly and len(poly) >= 3:
+            exclusions.append(poly)
+    obstacles = [o for o in (layout.get('obstacles') or []) if isinstance(o, dict) and o.get('poly')]
+
+    raw_zones = layout.get('zones')
+    if not isinstance(raw_zones, list):
+        if not (layout.get('roof') or layout.get('cells')):
+            return [], exclusions, obstacles
+        raw_zones = [{
+            'name': 'Zona 1',
+            'roof': layout.get('roof') or [],
+            'origin': layout.get('origin'),
+            'plane': {
+                'azimut': layout.get('azimut'),
+                'tilt': layout.get('beta') if layout.get('coplanar') else None,
+                'coplanar': bool(layout.get('coplanar')),
+            },
+            'rows': {
+                'rotation': layout.get('rotation'),
+                'orientation': layout.get('orientation'),
+                'gap_m': layout.get('row_gap_m'),
+                'phase': layout.get('phase'),
+            },
+            'col_gap_m': layout.get('col_gap_m'),
+            'cells': layout.get('cells') or [],
+        }]
+
+    zones = []
+    for idx, raw in enumerate(raw_zones):
+        raw = raw or {}
+        roof = raw.get('roof') or []
+        origin = raw.get('origin')
+        if not origin and len(roof) >= 3:
+            origin = (
+                sum(float(p[0]) for p in roof) / len(roof),
+                sum(float(p[1]) for p in roof) / len(roof),
+            )
+        plane = raw.get('plane') or {}
+        rows = raw.get('rows') or {}
+        zones.append({
+            'name': raw.get('name') or f'Zona {idx + 1}',
+            'roof': roof,
+            'origin': origin,
+            'azimut': plane.get('azimut') if plane.get('azimut') is not None else 180,
+            'tilt': plane.get('tilt'),
+            'coplanar': bool(plane.get('coplanar')),
+            'rotation': rows.get('rotation'),
+            'orientation': rows.get('orientation') or 'v',
+            'gap_m': rows.get('gap_m'),
+            'phase': rows.get('phase'),
+            'col_gap_m': raw.get('col_gap_m'),
+            'cells': raw.get('cells') or [],
+        })
+    return zones, exclusions, obstacles
 
 
 class SitePlanService:
@@ -135,10 +230,12 @@ class SitePlanService:
 
     @classmethod
     def location_plan_svg(cls, lat, lng, layout=None):
-        roof = (layout or {}).get('roof') or []
-        if len(roof) >= 3:
-            center_lat = sum(float(p[0]) for p in roof) / len(roof)
-            center_lng = sum(float(p[1]) for p in roof) / len(roof)
+        zones, _, _ = _normalize_zones(layout)
+        roofs = [z['roof'] for z in zones if len(z['roof']) >= 3]
+        all_pts = [p for roof in roofs for p in roof]
+        if all_pts:
+            center_lat = sum(float(p[0]) for p in all_pts) / len(all_pts)
+            center_lng = sum(float(p[1]) for p in all_pts) / len(all_pts)
         else:
             center_lat, center_lng = float(lat), float(lng)
 
@@ -159,12 +256,13 @@ class SitePlanService:
         c = size / 2
         m_per_px = (2 * LOCATION_HALF_EXTENT_M) / size
 
-        if len(roof) >= 3:
+        for roof in roofs:
             pts = []
             for p in roof:
                 x_m, y_m = to_local(float(p[0]), float(p[1]))
                 pts.append(f'{c + x_m / m_per_px:.1f},{c - y_m / m_per_px:.1f}')
             parts.append(f'<polygon points="{" ".join(pts)}" {STYLE_ROOF}/>')
+        if roofs:
             parts.append(f'<text x="{c}" y="{c - 34}" text-anchor="middle" font-family="monospace"'
                          f' font-size="20" fill="#ffffff" stroke="#131316" stroke-width="0.6"'
                          f' paint-order="stroke">Campo fotovoltaico</text>')
@@ -223,38 +321,51 @@ class SitePlanService:
         return f'<svg xmlns="http://www.w3.org/2000/svg" width="{width}" height="{height}" viewBox="0 0 {width} {height}">{body}</svg>'
 
     @staticmethod
-    def _grid_geometry(layout):
-        panel = layout.get('panel') or {}
-        w_mm = float(panel.get('w_mm') or 0)
-        h_mm = float(panel.get('h_mm') or 0)
+    def layout_has_cells(layout):
+        zones, _, _ = _normalize_zones(layout)
+        return any(z['cells'] for z in zones)
+
+    @staticmethod
+    def _grid_geometry(zone, panel):
+        w_mm = float((panel or {}).get('w_mm') or 0)
+        h_mm = float((panel or {}).get('h_mm') or 0)
         if w_mm <= 0 or h_mm <= 0:
             return None
-        orientation = layout.get('orientation') or 'v'
+        orientation = zone['orientation']
         w = (h_mm if orientation == 'h' else w_mm) / 1000
         length = (w_mm if orientation == 'h' else h_mm) / 1000
-        coplanar = bool(layout.get('coplanar'))
-        beta = float(layout.get('beta') or 0)
+        lat = abs(float(zone['origin'][0])) if zone.get('origin') else 40.0
+        if zone['coplanar']:
+            beta = float(zone['tilt'] or 0)
+        else:
+            beta = lat * 0.69 + 3.7
         depth = length * math.cos(math.radians(beta))
-        row_gap = layout.get('row_gap_m')
+        row_gap = zone.get('gap_m')
         if row_gap is None:
-            if coplanar:
+            if zone['coplanar']:
                 row_gap = 0.02
             else:
-                origin = layout.get('origin') or (40.0, 0.0)
-                limit = 61 - min(abs(float(origin[0])), 60)
+                limit = 61 - min(lat, 60)
                 row_gap = max(0.02, length * math.sin(math.radians(beta)) / math.tan(math.radians(limit)))
-        col_gap = layout.get('col_gap_m')
+        col_gap = zone.get('col_gap_m')
         if col_gap is None:
             col_gap = 0.02
         pitch_x = w + float(col_gap)
         pitch_y = depth + float(row_gap)
-        phi = math.radians(float(layout.get('azimut') if layout.get('azimut') is not None else 180))
+        rotation = zone.get('rotation')
+        phi_deg = rotation if rotation is not None else (zone['azimut'] if zone['coplanar'] else 180)
+        phi = math.radians(float(phi_deg))
         d = (math.sin(phi), math.cos(phi))
         r = (-d[1], d[0])
+        phase = zone.get('phase') or (0.0, 0.0)
+        phase_u = float(phase[0] or 0)
+        phase_v = float(phase[1] or 0)
 
         def cell_corners(i, j):
-            cx = i * pitch_x * r[0] + j * pitch_y * d[0]
-            cy = i * pitch_x * r[1] + j * pitch_y * d[1]
+            u = i * pitch_x + phase_u
+            v = j * pitch_y + phase_v
+            cx = u * r[0] + v * d[0]
+            cy = u * r[1] + v * d[1]
             hw = w / 2
             hd = depth / 2
             return [
@@ -268,25 +379,62 @@ class SitePlanService:
 
     @classmethod
     def layout_plan_svg(cls, layout):
-        origin = layout.get('origin')
-        roof = layout.get('roof') or []
-        cells = layout.get('cells') or []
-        if not origin or len(roof) < 3 or not cells:
-            return None
-        cell_corners = cls._grid_geometry(layout)
-        if cell_corners is None:
+        zones, exclusions, obstacles = _normalize_zones(layout)
+        panel = (layout or {}).get('panel')
+        drawable = [z for z in zones if z['origin'] and len(z['roof']) >= 3]
+        if not drawable or not any(z['cells'] for z in drawable):
             return None
 
-        to_local, to_latlng = _converter(float(origin[0]), float(origin[1]))
-        roof_local = [to_local(float(p[0]), float(p[1])) for p in roof]
+        origin0 = drawable[0]['origin']
+        to_local, to_latlng = _converter(float(origin0[0]), float(origin0[1]))
+
+        roofs_local = []
+        panels_local = []
+        for z in drawable:
+            _, z_to_latlng = _converter(float(z['origin'][0]), float(z['origin'][1]))
+            roofs_local.append([to_local(float(p[0]), float(p[1])) for p in z['roof']])
+            cell_corners = cls._grid_geometry(z, panel)
+            if cell_corners is None:
+                continue
+            for i, j in z['cells']:
+                corners_ll = [z_to_latlng(x, y) for x, y in cell_corners(int(i), int(j))]
+                panels_local.append([to_local(la, ln) for la, ln in corners_ll])
+        if not panels_local:
+            return None
+
         exclusions_local = [
             [to_local(float(p[0]), float(p[1])) for p in poly]
-            for poly in (layout.get('exclusions') or [])
+            for poly in exclusions
         ]
-        panels_local = [cell_corners(int(i), int(j)) for i, j in cells]
 
-        xs = [p[0] for p in roof_local] + [c[0] for corners in panels_local for c in corners]
-        ys = [p[1] for p in roof_local] + [c[1] for corners in panels_local for c in corners]
+        sun = _sun_vector(float(origin0[0]), -23.45, 0)
+        shadows_local = []
+        obstacles_local = []
+        for o in obstacles:
+            poly = o.get('poly') or []
+            if len(poly) < 3:
+                continue
+            obstacles_local.append([to_local(float(p[0]), float(p[1])) for p in poly])
+            try:
+                height = float(o.get('height_m') or 0)
+            except (TypeError, ValueError):
+                height = 0.0
+            if height > 0 and sun[2] > 0.02:
+                c_lat = sum(float(p[0]) for p in poly) / len(poly)
+                c_lng = sum(float(p[1]) for p in poly) / len(poly)
+                o_to_local, o_to_latlng = _converter(c_lat, c_lng)
+                fx = -sun[0] / sun[2] * height
+                fy = -sun[1] / sun[2] * height
+                swept = []
+                for p in poly:
+                    x, y = o_to_local(float(p[0]), float(p[1]))
+                    swept.append((x, y))
+                    swept.append((x + fx, y + fy))
+                hull_ll = [o_to_latlng(x, y) for x, y in _convex_hull(swept)]
+                shadows_local.append([to_local(la, ln) for la, ln in hull_ll])
+
+        xs = [p[0] for poly in roofs_local for p in poly] + [c[0] for corners in panels_local for c in corners]
+        ys = [p[1] for poly in roofs_local for p in poly] + [c[1] for corners in panels_local for c in corners]
         x_min = min(xs) - LAYOUT_MARGIN_M
         x_max = max(xs) + LAYOUT_MARGIN_M
         y_min = min(ys) - LAYOUT_MARGIN_M
@@ -318,9 +466,14 @@ class SitePlanService:
                 f' fill="#666666">Ortofoto no disponible — plano esquemático</text>'
             )
 
-        parts.append(f'<polygon points="{points_attr(roof_local)}" {STYLE_ROOF}/>')
+        for poly in shadows_local:
+            parts.append(f'<polygon points="{points_attr(poly)}" {STYLE_SHADOW}/>')
+        for poly in roofs_local:
+            parts.append(f'<polygon points="{points_attr(poly)}" {STYLE_ROOF}/>')
         for poly in exclusions_local:
             parts.append(f'<polygon points="{points_attr(poly)}" {STYLE_EXCLUSION}/>')
+        for poly in obstacles_local:
+            parts.append(f'<polygon points="{points_attr(poly)}" {STYLE_OBSTACLE}/>')
         for corners in panels_local:
             parts.append(f'<polygon points="{points_attr(corners)}" {STYLE_PANEL}/>')
 

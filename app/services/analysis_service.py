@@ -207,28 +207,77 @@ class AnalysisService:
         annual_production_layout = None
         layout_field_power = None
         layout_summary = data.get('layout_summary') or {}
-        try:
-            placed = int(layout_summary.get('placed_panels') or 0)
-            shade_pct = min(100.0, max(0.0, float(layout_summary.get('shade_loss_pct') or 0)))
-            orientation_pct = min(100.0, max(0.0, float(layout_summary.get('orientation_loss_pct') or 0)))
-        except (TypeError, ValueError):
-            placed = 0
-            shade_pct = 0.0
-            orientation_pct = 0.0
-        if placed > 0:
-            layout_field_power = round(placed * power_placa / 1000, 3)
-            annual_production_layout = round(
-                layout_field_power * optimal_irradiance * performance_ratio
-                * (1 - shade_pct / 100) * (1 - orientation_pct / 100), 2)
+        pr_neutral = performance_ratio / irradiance_factor_loss if irradiance_factor_loss > 0 else 0
+        zone_entries = []
+        raw_zones = layout_summary.get('zones')
+        if isinstance(raw_zones, list):
+            for raw in raw_zones:
+                if not isinstance(raw, dict):
+                    continue
+                try:
+                    placed_z = int(raw.get('placed_panels') or 0)
+                    shade_z = min(100.0, max(0.0, float(raw.get('shade_loss_pct') or 0)))
+                    beta_z = float(raw['tilt']) if raw.get('tilt') is not None else beta_optimal
+                    gamma_z = float(raw['azimut']) - 180 if raw.get('azimut') is not None else 0.0
+                except (TypeError, ValueError, KeyError):
+                    continue
+                if placed_z <= 0:
+                    continue
+                factor_z = 1 - 1.2 * 0.0001 * (beta_z - beta_optimal) ** 2
+                if beta_z > 15:
+                    factor_z -= 3.5 * 0.00001 * gamma_z ** 2
+                factor_z = max(0.0, factor_z)
+                production_z = (placed_z * power_placa / 1000 * optimal_irradiance
+                                * pr_neutral * factor_z * (1 - shade_z / 100))
+                zone_entries.append({
+                    'zone': raw.get('zone'),
+                    'placed_panels': placed_z,
+                    'shade_loss_pct': shade_z,
+                    'tilt': round(beta_z, 1),
+                    'azimut': round(gamma_z + 180),
+                    'production_kwh': round(production_z, 2),
+                })
+        if zone_entries:
+            placed_total = sum(z['placed_panels'] for z in zone_entries)
+            layout_field_power = round(placed_total * power_placa / 1000, 3)
+            annual_production_layout = round(sum(z['production_kwh'] for z in zone_entries), 2)
+            shade_avg = sum(z['shade_loss_pct'] * z['placed_panels'] for z in zone_entries) / placed_total
+            detail = '; '.join(
+                f"{z['zone'] or 'zona'}: {z['placed_panels']} módulos, β {z['tilt']}°, "
+                f"γ {z['azimut']}°, sombras {z['shade_loss_pct']:.1f} %"
+                for z in zone_entries)
             ctx.assumptions.append({
                 'entity': 'layout',
                 'field': 'shade_loss_pct',
                 'label': 'Pérdida anual por sombras en la disposición (%)',
-                'used': shade_pct,
-                'reason': f'Con los {placed} módulos colocados sobre la cubierta, una pérdida anual '
-                          f'por sombras del {shade_pct} % y por orientación de filas del '
-                          f'{orientation_pct} %, calculadas geométricamente en la disposición.',
+                'used': round(shade_avg, 2),
+                'reason': f'Producción realimentada zona a zona, cada una con su inclinación y '
+                          f'azimut ({detail}); las sombras se calculan geométricamente en la '
+                          'disposición.',
             })
+        else:
+            try:
+                placed = int(layout_summary.get('placed_panels') or 0)
+                shade_pct = min(100.0, max(0.0, float(layout_summary.get('shade_loss_pct') or 0)))
+                orientation_pct = min(100.0, max(0.0, float(layout_summary.get('orientation_loss_pct') or 0)))
+            except (TypeError, ValueError):
+                placed = 0
+                shade_pct = 0.0
+                orientation_pct = 0.0
+            if placed > 0:
+                layout_field_power = round(placed * power_placa / 1000, 3)
+                annual_production_layout = round(
+                    layout_field_power * optimal_irradiance * performance_ratio
+                    * (1 - shade_pct / 100) * (1 - orientation_pct / 100), 2)
+                ctx.assumptions.append({
+                    'entity': 'layout',
+                    'field': 'shade_loss_pct',
+                    'label': 'Pérdida anual por sombras en la disposición (%)',
+                    'used': shade_pct,
+                    'reason': f'Con los {placed} módulos colocados sobre la cubierta, una pérdida anual '
+                              f'por sombras del {shade_pct} % y por orientación de filas del '
+                              f'{orientation_pct} %, calculadas geométricamente en la disposición.',
+                })
 
         df_total_irr = (df['poa_direct'] + df['poa_sky_diffuse'] + df['poa_ground_diffuse'])
         monthly_irradiance = (df_total_irr.groupby(df_total_irr.index.month).sum() / (1000 * sample_years)).round(2).tolist()

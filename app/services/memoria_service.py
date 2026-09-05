@@ -172,7 +172,7 @@ class MemoriaService:
                     result['svg_plano_ubicacion'] = _sheet(inner, 'PLANO DE UBICACIÓN Y EMPLAZAMIENTO')
 
             inner = None
-            if layout and layout.get('cells'):
+            if layout and SitePlanService.layout_has_cells(layout):
                 inner = SitePlanService.layout_plan_svg(layout)
             if inner is None:
                 res = (project.resultados if project else None) or {}
@@ -182,7 +182,11 @@ class MemoriaService:
                     n_paneles = 0
                 panel = Panel.query.get(project.panel_id) if project and project.panel_id else None
                 if n_paneles and panel and panel.width and panel.height:
-                    orient = (layout or {}).get('orientation') or 'v'
+                    zones = (layout or {}).get('zones')
+                    if isinstance(zones, list) and zones:
+                        orient = ((zones[0] or {}).get('rows') or {}).get('orientation') or 'v'
+                    else:
+                        orient = (layout or {}).get('orientation') or 'v'
                     inner = SitePlanService.schematic_layout_svg(n_paneles, panel.width, panel.height, orient)
             if inner:
                 result['svg_plano_disposicion'] = _sheet(inner, 'PLANO DE DISPOSICIÓN DE PANELES')
