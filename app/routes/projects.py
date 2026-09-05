@@ -24,7 +24,7 @@ _EDITABLE_FIELDS = [
     'battery_id', 'battery_quantity',
     'wire_dc_id', 'wire_ac_id', 'wire_ground_id',
     'referencia_catastral', 'cups', 'compania',
-    'potencia_contratada', 'tipo_voltaje',
+    'potencia_contratada', 'tipo_voltaje', 'ccaa',
 ]
 
 

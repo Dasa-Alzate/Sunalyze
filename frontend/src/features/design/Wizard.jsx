@@ -11,6 +11,7 @@ import { GeoMap } from '@/services/geo-map'
 import { useAuth } from '@/services/auth'
 import { emitSubview } from '@/services/assist'
 import { registerUnsavedGuard } from '@/shared/unsavedGuard'
+import { isMac } from '@/services/actions'
 import DegradationCard from '@/shared/ui/DegradationCard'
 import CircuitDiagram from './CircuitDiagram'
 import PanelLayout from './PanelLayout'
@@ -57,6 +58,8 @@ export default function Wizard() {
   const [wireGroundId, setWireGroundId] = useState(null)
 
   const [step, setStep] = useState(0)
+  const [errors, setErrors] = useState({})
+  const [shake, setShake] = useState(0)
 
   useEffect(() => { emitSubview('diseno', STEP_KEYS[step]) }, [step])
   const [results, setResults] = useState(null)
@@ -126,19 +129,97 @@ export default function Wizard() {
     save: async () => Boolean(await saveRef.current({ silent: true })),
   }), [])
 
-  function patch(p) { setForm((f) => ({ ...f, ...p })); touch() }
-  function pickPanel(p) { setPanelId(p.id); touch() }
+  function patch(p) {
+    setForm((f) => ({ ...f, ...p }))
+    setErrors((e) => {
+      const next = { ...e }
+      Object.keys(p).forEach((k) => delete next[k])
+      return next
+    })
+    touch()
+  }
+  function pickPanel(p) {
+    setPanelId(p.id)
+    setErrors((e) => { const next = { ...e }; delete next.panel; return next })
+    touch()
+  }
   function pickInverter(i) { setInverterId(i.id); touch() }
   function pickBattery(b) { setBatteryId(b.id); touch() }
   function pickWireDc(w) { setWireDcId(w.id); touch() }
   function pickWireAc(w) { setWireAcId(w.id); touch() }
   function pickWireGround(w) { setWireGroundId(w.id); touch() }
 
+  function numberError(raw, { min, max, positive, rangeMsg } = {}) {
+    if (raw === '' || raw == null) return 'Campo obligatorio'
+    const n = Number(raw)
+    if (!Number.isFinite(n)) return 'Debe ser un número'
+    if (positive && n <= 0) return 'Debe ser mayor que 0'
+    if ((min != null && n < min) || (max != null && n > max)) return rangeMsg
+    return null
+  }
+
+  function validateStep(i) {
+    const errs = {}
+    if (i === 0) {
+      if (!form.cliente.trim()) errs.cliente = 'Campo obligatorio'
+      const necesidad = numberError(form.necesidad, { positive: true })
+      if (necesidad) errs.necesidad = necesidad
+      const latitud = numberError(form.latitud, { min: -90, max: 90, rangeMsg: 'Fuera de rango (−90 a 90)' })
+      if (latitud) errs.latitud = latitud
+      const longitud = numberError(form.longitud, { min: -180, max: 180, rangeMsg: 'Fuera de rango (−180 a 180)' })
+      if (longitud) errs.longitud = longitud
+      if (form.coplanar) {
+        const inclinacion = numberError(form.inclinacion, { min: 0, max: 90, rangeMsg: 'Fuera de rango (0 a 90)' })
+        if (inclinacion) errs.inclinacion = inclinacion
+        const azimut = numberError(form.azimut, { min: 0, max: 360, rangeMsg: 'Fuera de rango (0 a 360)' })
+        if (azimut) errs.azimut = azimut
+      }
+    }
+    if (i === 1 && !panelId) errs.panel = 'Selecciona un panel — es obligatorio para dimensionar'
+    return errs
+  }
+
+  function tryAdvance(from) {
+    const errs = validateStep(from)
+    if (Object.keys(errs).length) {
+      setErrors(errs)
+      setShake((s) => s + 1)
+      return false
+    }
+    return true
+  }
+
+  function goToStep(target) {
+    for (let i = step; i < target; i++) {
+      if (!tryAdvance(i)) { setStep(i); return }
+    }
+    setStep(target)
+  }
+
+  useEffect(() => {
+    function onKey(e) {
+      if (e.code !== 'ArrowRight' && e.code !== 'ArrowLeft') return
+      const mod = isMac() ? e.metaKey : e.ctrlKey
+      if (!mod || !e.shiftKey) return
+      const tag = e.target?.tagName
+      if (tag === 'INPUT' || tag === 'TEXTAREA' || tag === 'SELECT' || e.target?.isContentEditable) return
+      e.preventDefault()
+      if (e.code === 'ArrowLeft') setStep((s) => Math.max(0, s - 1))
+      else goToStep(Math.min(STEPS.length - 1, step + 1))
+    }
+    window.addEventListener('keydown', onKey)
+    return () => window.removeEventListener('keydown', onKey)
+  })
+
   async function analyze(opts) {
     const silent = Boolean(opts && opts.silent)
-    if (!panelId) { toast('warning', 'Selecciona un panel', 'El panel es obligatorio para dimensionar'); setStep(1); return }
-    if (!form.latitud || !form.longitud || !form.necesidad) {
-      toast('warning', 'Faltan datos del lugar', 'Latitud, longitud y necesidad anual son obligatorias'); setStep(0); return
+    for (const i of [0, 1]) {
+      if (Object.keys(validateStep(i)).length === 0) continue
+      if (silent) return
+      tryAdvance(i)
+      setStep(i)
+      toast('warning', 'Faltan datos', i === 0 ? 'Revisa los campos marcados en «Datos del lugar»' : 'El panel es obligatorio para dimensionar')
+      return
     }
     setAnalyzing(true)
     setAnalysisError(null)
@@ -171,7 +252,13 @@ export default function Wizard() {
   }
 
   async function save({ estado, silent } = {}) {
-    if (!form.cliente.trim()) { toast('warning', 'Pon un nombre de cliente', 'Identifica el proyecto en el paso «Datos del lugar»'); setStep(0); return null }
+    if (!form.cliente.trim()) {
+      setErrors((e) => ({ ...e, cliente: 'Campo obligatorio' }))
+      setShake((s) => s + 1)
+      setStep(0)
+      toast('warning', 'Pon un nombre de cliente', 'Identifica el proyecto en el paso «Datos del lugar»')
+      return null
+    }
     setSaving(true)
     const body = {
       cliente: form.cliente.trim(),
@@ -304,7 +391,7 @@ export default function Wizard() {
                   className={`sun-step sun-step--${st}${locked ? ' sun-step--locked' : ''}`}
                   disabled={locked}
                   title={locked ? 'Completa los pasos anteriores para continuar' : undefined}
-                  onClick={() => setStep(i)}
+                  onClick={() => (i > step ? goToStep(i) : setStep(i))}
                 >
                   <span className="sun-step__marker">
                     {locked ? <Icon name="lock" size={13} /> : st === 'done' ? <Icon name="check" size={15} /> : st === 'stale' ? <Icon name="alert-triangle" size={15} /> : (i + 1)}
@@ -323,18 +410,18 @@ export default function Wizard() {
               <>
                 <div className="sun-divider">Cliente</div>
                 <div className="sun-wizard__formgrid">
-                  <Field label="Cliente / proyecto" required value={form.cliente} onChange={(e) => patch({ cliente: e.target.value })} placeholder="Ej: J. García" />
+                  <Field key={`cliente-${shake}`} label="Cliente / proyecto" required error={errors.cliente} value={form.cliente} onChange={(e) => patch({ cliente: e.target.value })} placeholder="Ej: J. García" />
                   <Field label="Localidad" value={form.localidad} onChange={(e) => patch({ localidad: e.target.value })} placeholder="Alicante" />
                 </div>
                 <Field label="Dirección" value={form.direccion} onChange={(e) => patch({ direccion: e.target.value })} placeholder="C/ Mayor 4, 2ºA" />
 
                 <div className="sun-divider">Emplazamiento y consumo</div>
                 <div className="sun-wizard__formgrid">
-                  <Field label="Necesidad anual" numeric type="number" step="any" value={form.necesidad} onChange={(e) => patch({ necesidad: e.target.value })} hint="kWh/año" required />
+                  <Field key={`necesidad-${shake}`} label="Necesidad anual" numeric type="number" step="any" error={errors.necesidad} value={form.necesidad} onChange={(e) => patch({ necesidad: e.target.value })} hint="kWh/año" required />
                   <SelectField label="Autoconsumo" value={form.autoconsumo} onChange={(e) => patch({ autoconsumo: e.target.value })}
                     options={[{ value: 70, label: '70 %' }, { value: 80, label: '80 %' }, { value: 90, label: '90 %' }, { value: 100, label: '100 %' }]} />
-                  <Field label="Latitud" numeric type="number" step="any" value={form.latitud} onChange={(e) => patch({ latitud: e.target.value })} placeholder="38.352" required />
-                  <Field label="Longitud" numeric type="number" step="any" value={form.longitud} onChange={(e) => patch({ longitud: e.target.value })} placeholder="-0.493" required />
+                  <Field key={`latitud-${shake}`} label="Latitud" numeric type="number" step="any" error={errors.latitud} value={form.latitud} onChange={(e) => patch({ latitud: e.target.value })} placeholder="38.352" required />
+                  <Field key={`longitud-${shake}`} label="Longitud" numeric type="number" step="any" error={errors.longitud} value={form.longitud} onChange={(e) => patch({ longitud: e.target.value })} placeholder="-0.493" required />
                 </div>
                 {flag('geo_map') && (
                   <div style={{ marginTop: 'var(--space-4)' }}>
@@ -352,8 +439,8 @@ export default function Wizard() {
                 </label>
                 {form.coplanar && (
                   <div className="sun-wizard__formgrid sun-reveal" style={{ marginTop: 'var(--space-4)' }}>
-                    <Field label="Inclinación (°)" numeric type="number" step="any" value={form.inclinacion} onChange={(e) => patch({ inclinacion: e.target.value })} />
-                    <Field label="Azimut (°)" numeric type="number" step="any" value={form.azimut} onChange={(e) => patch({ azimut: e.target.value })} hint="180 = sur" />
+                    <Field key={`inclinacion-${shake}`} label="Inclinación (°)" numeric type="number" step="any" required error={errors.inclinacion} value={form.inclinacion} onChange={(e) => patch({ inclinacion: e.target.value })} />
+                    <Field key={`azimut-${shake}`} label="Azimut (°)" numeric type="number" step="any" required error={errors.azimut} value={form.azimut} onChange={(e) => patch({ azimut: e.target.value })} hint="180 = sur" />
                   </div>
                 )}
               </>
@@ -362,9 +449,10 @@ export default function Wizard() {
             {step === 1 && (
               <>
                 <div className="sun-divider">Selección de equipos</div>
-                <div className="sun-field" style={{ marginBottom: 'var(--space-4)' }}>
+                <div className="sun-field" style={{ marginBottom: 'var(--space-4)' }} key={`panel-${shake}`}>
                   <span className="sun-field__label" id="ss-panel">Panel solar <span className="req">*</span></span>
-                  <SearchSelect labelId="ss-panel" placeholder="Buscar panel (nombre, potencia…)" options={panels} value={panel} onPick={pickPanel} meta={panelMeta} />
+                  <SearchSelect labelId="ss-panel" placeholder="Buscar panel (nombre, potencia…)" options={panels} value={panel} onPick={pickPanel} meta={panelMeta} error={errors.panel} />
+                  {errors.panel && <span className="sun-field__error"><Icon name="alert-circle" size={13} />{errors.panel}</span>}
                 </div>
                 <div className="sun-field">
                   <span className="sun-field__label" id="ss-inverter">
@@ -500,16 +588,19 @@ export default function Wizard() {
                 <div className="sun-empty__icon"><Icon name="file-text" size={26} /></div>
                 <div className="sun-empty__title">Listo para la memoria técnica</div>
                 <div className="sun-empty__desc">Completa los datos del cliente y la instalación; verás el documento crecer en vivo.</div>
-                <div className="sun-empty__actions"><Btn variant="primary" icon="arrow-right" onClick={goToMemoria}>Ir a la memoria</Btn></div>
+                <div className="sun-empty__actions">
+                  <Btn variant="primary" icon="arrow-right" onClick={goToMemoria}>Ir a la memoria</Btn>
+                  {id && <Btn variant="secondary" icon="clipboard" onClick={() => nav(`/app/legalizacion/${id}`)}>Legalización</Btn>}
+                </div>
               </div>
             )}
 
             <div className="sun-wizard__nav">
               <Btn variant="secondary" icon="arrow-left" disabled={step === 0} onClick={() => setStep(Math.max(0, step - 1))}>Atrás</Btn>
               {step === 1 ? (
-                <Btn variant="primary" iconRight="arrow-right" data-busy={analyzing} disabled={analyzing || !stepValid[1]} onClick={() => { setStep(2); if (!results || stale) analyze() }}>{analyzing ? 'Calculando…' : 'Calcular y continuar'}</Btn>
+                <Btn variant="primary" iconRight="arrow-right" data-busy={analyzing} disabled={analyzing || !stepValid[1]} onClick={() => { if (!tryAdvance(1)) return; setStep(2); if (!results || stale) analyze() }}>{analyzing ? 'Calculando…' : 'Calcular y continuar'}</Btn>
               ) : (
-                <Btn variant="primary" iconRight="arrow-right" disabled={!stepValid[step]} onClick={() => (step < STEPS.length - 1 ? setStep(step + 1) : goToMemoria())}>{step < STEPS.length - 1 ? 'Continuar' : 'Generar memoria'}</Btn>
+                <Btn variant="primary" iconRight="arrow-right" disabled={!stepValid[step]} onClick={() => { if (!tryAdvance(step)) return; if (step < STEPS.length - 1) setStep(step + 1); else goToMemoria() }}>{step < STEPS.length - 1 ? 'Continuar' : 'Generar memoria'}</Btn>
               )}
             </div>
           </div>
@@ -552,7 +643,7 @@ function wireMeta(w) {
   return `${dec(w.seccion)} mm² · ${dec(w.corriente)} A${w.material ? ` · ${w.material}` : ''}${w.tipo ? ` · ${w.tipo}` : ''}`
 }
 
-function SearchSelect({ placeholder, options, value, onPick, meta, clearable, onClear, labelId }) {
+function SearchSelect({ placeholder, options, value, onPick, meta, clearable, onClear, labelId, error }) {
   const [open, setOpen] = useState(false)
   const [q, setQ] = useState('')
   const [active, setActive] = useState(0)
@@ -591,7 +682,7 @@ function SearchSelect({ placeholder, options, value, onPick, meta, clearable, on
   }
 
   return (
-    <div className="sun-search" ref={rootRef}>
+    <div className={`sun-search${error ? ' sun-search--error' : ''}`} ref={rootRef}>
       <div className="sun-search__control">
         <Icon name="search" size={16} />
         <input
@@ -601,6 +692,7 @@ function SearchSelect({ placeholder, options, value, onPick, meta, clearable, on
           aria-controls={listId}
           aria-labelledby={labelId}
           aria-activedescendant={open && list.length ? `${listId}-opt-${active}` : undefined}
+          aria-invalid={error ? 'true' : undefined}
           placeholder={value ? value.nombre : placeholder}
           value={q}
           onFocus={() => setOpen(true)}

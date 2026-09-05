@@ -10,6 +10,7 @@ import ProjectList from '@/features/projects/ProjectList'
 import Wizard from '@/features/design/Wizard'
 import EquipmentLibrary from '@/features/equipment/EquipmentLibrary'
 import MemoriaPreview from '@/features/memoria/MemoriaPreview'
+import LegalizationPanel from '@/features/legalization/LegalizationPanel'
 import Team from '@/features/team/Team'
 import AcceptInvitation from '@/features/team/AcceptInvitation'
 import Configuracion from '@/features/settings/Configuracion'
@@ -49,6 +50,7 @@ export const router = createBrowserRouter([
           { path: 'equipo', element: <Team /> },
           { path: 'memoria', element: <MemoriaPreview /> },
           { path: 'memoria/:id', element: <MemoriaPreview /> },
+          { path: 'legalizacion/:id', element: <LegalizationPanel /> },
           { path: 'modulos', element: <Marketplace /> },
           { path: 'plantillas', element: <RequireFlag flag="templates"><TemplatesGallery /></RequireFlag> },
           { path: 'plantillas/:id', element: <RequireFlag flag="templates"><TemplateBuilder /></RequireFlag> },

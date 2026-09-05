@@ -46,6 +46,10 @@ class Project(BaseModel, SoftDeleteMixin):
 
     budget_iva_pct = db.Column(db.Float, nullable=False, default=21)
 
+    ccaa = db.Column(db.String(40))
+    expediente_numero = db.Column(db.String(60))
+    expediente_fecha = db.Column(db.Date)
+
     _resultados = db.Column('resultados', db.Text)
     _layout = db.Column('layout', db.Text)
 
@@ -175,6 +179,9 @@ class Project(BaseModel, SoftDeleteMixin):
             'compania': self.compania,
             'potencia_contratada': self.potencia_contratada,
             'tipo_voltaje': self.tipo_voltaje,
+            'ccaa': self.ccaa,
+            'expediente_numero': self.expediente_numero,
+            'expediente_fecha': self.expediente_fecha.isoformat() if self.expediente_fecha else None,
             'resultados': self.resultados,
             'layout': self.layout,
             'kwp': self.kwp,

@@ -75,7 +75,7 @@ export function CommandProvider({ children }) {
       const action = findActionForEvent(event, mac)
       if (!action) return
       const usesMod = Boolean(action.shortcut.mod)
-      if (!usesMod && isTypingTarget(event.target)) return
+      if ((!usesMod || action.skipWhenTyping) && isTypingTarget(event.target)) return
       event.preventDefault()
       action.run(ctx)
     }

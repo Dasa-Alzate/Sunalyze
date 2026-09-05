@@ -25,11 +25,14 @@ export function CommandPalette({ onClose, onRun, mac }) {
   }, [])
 
   useEffect(() => {
-    function onKey(e) {
-      if (e.key === 'Escape') onClose()
+    function onDocKeyDown(e) {
+      if (e.key === 'Escape') {
+        e.preventDefault()
+        onClose()
+      }
     }
-    document.addEventListener('keydown', onKey)
-    return () => document.removeEventListener('keydown', onKey)
+    document.addEventListener('keydown', onDocKeyDown)
+    return () => document.removeEventListener('keydown', onDocKeyDown)
   }, [onClose])
 
   useEffect(() => {
