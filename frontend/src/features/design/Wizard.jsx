@@ -562,6 +562,7 @@ export default function Wizard() {
                     : results?.annual_irradiance_kWh_m2}
                   layout={layout}
                   onChange={patchLayout}
+                  onChangePanel={() => setStep(1)}
                 />
                 )}
               </>

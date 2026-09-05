@@ -424,6 +424,28 @@ export function assignStrings(cells, stringCount) {
   return groups
 }
 
+export function rowShadeLossPct(panelLengthM, betaDeg, gapM, latDeg, rotationDeg) {
+  const beta = ((betaDeg || 0) * Math.PI) / 180
+  const h = panelLengthM * Math.sin(beta)
+  const depth = panelLengthM * Math.cos(beta)
+  if (h <= 0.01 || depth <= 0.01) return 0
+  const phi = (((rotationDeg ?? 180) * Math.PI) / 180)
+  const d = [Math.sin(phi), Math.cos(phi)]
+  const { suns, weights } = annualShadeSamples(latDeg)
+  let shaded = 0
+  let total = 0
+  for (let t = 0; t < suns.length; t++) {
+    const sun = suns[t]
+    total += weights[t]
+    const fx = (-sun[0] / sun[2]) * h
+    const fy = (-sun[1] / sun[2]) * h
+    const reach = Math.abs(fx * d[0] + fy * d[1])
+    if (reach <= gapM) continue
+    shaded += Math.min(1, (reach - gapM) / depth) * weights[t]
+  }
+  return total > 0 ? (shaded / total) * 100 : 0
+}
+
 export function orientationLossPct(rowRotationDeg, moduleAzimutDeg) {
   const delta = ((rowRotationDeg - moduleAzimutDeg + 540) % 360) - 180
   return 3.5 * 0.00001 * delta * delta * 100

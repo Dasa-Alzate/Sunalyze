@@ -28,6 +28,15 @@
 .pl-zonebar__plane { display: inline-flex; align-items: center; gap: var(--space-3); margin-left: auto; font-size: var(--text-xs); color: var(--text-muted); }
 .pl-zonebar__plane .sun-input.num { width: 64px; height: 30px; font-size: var(--text-sm); }
 
+.pl-deficit { border: 1px solid color-mix(in srgb, var(--state-warn) 45%, var(--border)); border-radius: var(--radius-md); background: color-mix(in srgb, var(--state-warn) 6%, var(--surface-card)); }
+.pl-deficit__head { display: flex; align-items: center; gap: var(--space-2); padding: var(--space-2) var(--space-3); border-bottom: 1px solid color-mix(in srgb, var(--state-warn) 25%, var(--border)); color: var(--text-strong); font-size: var(--text-sm); }
+.pl-deficit__x { display: inline-flex; border: 0; background: transparent; color: var(--text-subtle); cursor: pointer; }
+.pl-deficit__opts { display: flex; flex-direction: column; }
+.pl-deficit__opt { display: flex; align-items: center; justify-content: space-between; gap: var(--space-4); padding: var(--space-2) var(--space-3); }
+.pl-deficit__opt + .pl-deficit__opt { border-top: 1px dashed var(--border); }
+.pl-deficit__opt strong { font-size: var(--text-sm); color: var(--text-strong); }
+.pl-deficit__opt p { margin: 2px 0 0; font-size: var(--text-xs); color: var(--text-muted); }
+
 .pl-frame { border: 1px solid var(--border); border-radius: var(--radius-md); overflow: hidden; position: relative; }
 .pl-canvas { height: 520px; width: 100%; }
 .pl-frame--drawing .pl-canvas,

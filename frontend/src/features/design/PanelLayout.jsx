@@ -8,6 +8,7 @@ import {
   autoLayoutCells, fillBetweenCells, polygonAreaM2, centroid,
   optimizeLayout, bearingBetween, sunVector, convexHull,
   assignStrings, allocateStrings, annualShadeFactors, orientationLossPct, normalizeLayout,
+  idaeRowGap, rowShadeLossPct,
 } from './layoutEngine'
 import './panel-layout.css'
 
@@ -50,7 +51,7 @@ function isTyping(e) {
   return el && (el.tagName === 'INPUT' || el.tagName === 'TEXTAREA' || el.tagName === 'SELECT' || el.isContentEditable)
 }
 
-export default function PanelLayout({ lat, lon, azimut, inclinacion, coplanar, betaOptimal, panel, requiredPanels, stringConfig, poaAnnual, layout, onChange }) {
+export default function PanelLayout({ lat, lon, azimut, inclinacion, coplanar, betaOptimal, panel, requiredPanels, stringConfig, poaAnnual, layout, onChange, onChangePanel }) {
   const [initial] = useState(() => normalizeLayout(layout))
   const [zones, setZones] = useState(initial.zones)
   const [activeZoneId, setActiveZoneId] = useState(initial.zones[0]?.id || null)
@@ -67,6 +68,7 @@ export default function PanelLayout({ lat, lon, azimut, inclinacion, coplanar, b
   })
   const [editingZoneId, setEditingZoneId] = useState(null)
   const [zoneNameDraft, setZoneNameDraft] = useState('')
+  const [deficit, setDeficit] = useState(null)
 
   const mapEl = useRef(null)
   const mapRef = useRef(null)
@@ -236,6 +238,7 @@ export default function PanelLayout({ lat, lon, azimut, inclinacion, coplanar, b
   function commitCells(zoneId, next, nextSelection) {
     patchZone(zoneId, { cells: next })
     if (nextSelection) setSelection(nextSelection)
+    setDeficit(null)
   }
 
   function addZone(roofPts) {
@@ -278,6 +281,7 @@ export default function PanelLayout({ lat, lon, azimut, inclinacion, coplanar, b
     if (s.activeZoneId === id) return
     setActiveZoneId(id)
     setSelection(new Set())
+    setDeficit(null)
     const g = s.zones.find((z) => z.id === id)?.rows?.gap_m
     setGapDraft(g != null ? String(g) : '')
   }
@@ -461,12 +465,100 @@ export default function PanelLayout({ lat, lon, azimut, inclinacion, coplanar, b
     if (!ctx.coplanarZ && best.lossPct > 0.05) bits.push(`coste de orientación ${best.lossPct.toFixed(1)}%`)
     if (shaded) bits.push(`${shaded} con sombra parcial de obstáculos`)
     if (req > 0 && best.fit.length > req) {
+      setDeficit(null)
       toast('success', `${best.cells.length} paneles colocados`, `Caben ${best.fit.length}; ${bits.join(' · ')}`)
     } else if (req > 0 && best.cells.length < req) {
-      toast('warning', `Solo caben ${best.cells.length} de ${req}`, 'Amplía la cubierta, añade otra zona, aprieta las filas o cambia de panel')
+      setDeficit(buildDeficit(ctx, req, best))
     } else {
+      setDeficit(null)
       toast('success', `${best.cells.length} paneles colocados`, bits.join(' · '))
     }
+  }
+
+  function buildDeficit(ctx, req, best) {
+    const latN = Number(lat) || 40
+    const base = {
+      origin: ctx.zone.origin,
+      moduleAzimut: ctx.azimutZ,
+      coplanar: ctx.coplanarZ,
+      panelWmm: panel.width,
+      panelHmm: panel.height,
+      beta: ctx.betaZ,
+      lat: latN,
+      colGap: null,
+      roofLocal: ctx.roofLocal,
+      exclusionsLocal: ctx.exclusionsLocal,
+      obstaclesLocal: ctx.obstaclesLocal,
+      required: req,
+    }
+    const out = { zoneId: ctx.zone.id, req, placed: best.cells.length }
+
+    if (!ctx.coplanarZ) {
+      const lengthM = (best.orientation === 'h' ? panel.width : panel.height) / 1000
+      const currentGap = ctx.zone.rows?.gap_m ?? Math.max(0.02, idaeRowGap(lengthM, ctx.betaZ, latN))
+      const tightGap = Math.round(Math.max(0.02, currentGap / 2) * 100) / 100
+      if (tightGap < currentGap - 0.01) {
+        const tight = optimizeLayout({ ...base, rowGap: tightGap, orientationChoices: [best.orientation] })
+        if (tight && tight.cells.length > best.cells.length) {
+          const extraLoss = Math.max(0, rowShadeLossPct(lengthM, ctx.betaZ, tightGap, latN, tight.rotation)
+            - rowShadeLossPct(lengthM, ctx.betaZ, currentGap, latN, best.rotation))
+          out.tighten = {
+            gain: tight.cells.length - best.cells.length,
+            lossPct: Math.round(extraLoss * 10) / 10,
+            gap: tightGap,
+            variant: tight,
+          }
+        }
+      }
+    }
+
+    const other = best.orientation === 'v' ? 'h' : 'v'
+    const flipped = optimizeLayout({ ...base, rowGap: ctx.zone.rows?.gap_m ?? null, orientationChoices: [other] })
+    if (flipped && flipped.cells.length > best.cells.length) {
+      out.reorient = { orientation: other, count: flipped.cells.length, variant: flipped }
+    }
+
+    if (Number(panel?.power) > 0 && best.fit.length > 0) {
+      const minW = Math.ceil((Number(panel.power) * req) / best.fit.length / 5) * 5
+      if (minW > Number(panel.power)) out.repower = { minW, nowW: Number(panel.power), fits: best.fit.length }
+    }
+    return out
+  }
+
+  function openDeficitOptions() {
+    const ctx = activeCtx()
+    if (!ctx || !panel?.width || !panel?.height) return
+    const s = stateRef.current
+    const placedElsewhere = s.zones.reduce((sum, z) => (z.id === ctx.zone.id ? sum : sum + z.cells.length), 0)
+    const req = Math.max(0, (Number(requiredPanels) || 0) - placedElsewhere)
+    if (!req) return
+    const fit = autoLayoutCells(ctx.grid, ctx.roofLocal, ctx.exclusionsLocal)
+    setDeficit(buildDeficit(ctx, req, {
+      cells: ctx.zone.cells,
+      fit,
+      orientation: ctx.zone.rows?.orientation || 'v',
+      rotation: ctx.grid.rotation,
+    }))
+  }
+
+  function applyVariant(zoneId, variant, gapM) {
+    setZones((zs) => zs.map((z) => (z.id === zoneId
+      ? {
+        ...z,
+        rows: {
+          ...z.rows,
+          rotation: variant.rotation,
+          phase: variant.phase,
+          orientation: variant.orientation,
+          ...(gapM != null ? { gap_m: gapM } : {}),
+        },
+        cells: variant.cells,
+      }
+      : z)))
+    if (gapM != null) setGapDraft(String(gapM))
+    setSelection(new Set())
+    setDeficit(null)
+    toast('success', `${variant.cells.length} paneles colocados`)
   }
 
   function fillTo(targetLatLng) {
@@ -1042,9 +1134,65 @@ export default function PanelLayout({ lat, lon, azimut, inclinacion, coplanar, b
           {Math.round(heatData.min)} – {Math.round(heatData.max)} {heatData.unit}
         </div>
       )}
-      {short && !drawing && (
+      {deficit && (
+        <div className="pl-deficit">
+          <div className="pl-deficit__head">
+            <Icon name="alert-triangle" size={15} />
+            <strong>Solo caben {deficit.placed} de los {deficit.req} módulos en esta zona</strong>
+            <span className="pl-spacer" />
+            <button type="button" className="pl-deficit__x" onClick={() => setDeficit(null)} title="Cerrar">
+              <Icon name="x" size={13} />
+            </button>
+          </div>
+          <div className="pl-deficit__opts">
+            <div className="pl-deficit__opt">
+              <div>
+                <strong>Añadir otra zona</strong>
+                <p>Dibuja otra agua de la cubierta con su propio azimut e inclinación; la producción se calcula zona a zona.</p>
+              </div>
+              <Btn variant="secondary" icon="layers" onClick={() => { setDeficit(null); setMode('draw-zone') }}>Dibujar zona</Btn>
+            </div>
+            {deficit.tighten && (
+              <div className="pl-deficit__opt">
+                <div>
+                  <strong>Apretar las filas</strong>
+                  <p>+{deficit.tighten.gain} módulos con separación de {deficit.tighten.gap} m · sombra entre filas estimada −{deficit.tighten.lossPct.toFixed(1)} % anual</p>
+                </div>
+                <Btn variant="secondary" onClick={() => applyVariant(deficit.zoneId, deficit.tighten.variant, deficit.tighten.gap)}>Aplicar</Btn>
+              </div>
+            )}
+            {deficit.reorient && (
+              <div className="pl-deficit__opt">
+                <div>
+                  <strong>Girar los módulos a {deficit.reorient.orientation === 'h' ? 'paisaje' : 'vertical'}</strong>
+                  <p>Con la otra rotación caben {deficit.reorient.count} módulos en esta zona.</p>
+                </div>
+                <Btn variant="secondary" onClick={() => applyVariant(deficit.zoneId, deficit.reorient.variant)}>Aplicar</Btn>
+              </div>
+            )}
+            {deficit.repower && (
+              <div className="pl-deficit__opt">
+                <div>
+                  <strong>Módulo más potente</strong>
+                  <p>Con módulos de ≥ {deficit.repower.minW} W (ahora {deficit.repower.nowW} W) los {deficit.repower.fits} que caben cubrirían la potencia del análisis. Cambiar el panel vuelve a Equipos y recalcula el análisis.</p>
+                </div>
+                <Btn variant="secondary" icon="package" onClick={() => { setDeficit(null); onChangePanel?.() }} disabled={!onChangePanel}>Cambiar panel</Btn>
+              </div>
+            )}
+            <div className="pl-deficit__opt">
+              <div>
+                <strong>Aceptar menos potencia</strong>
+                <p>Continuar con los {placed} módulos colocados: la producción anual y la memoria se recalculan con la disposición real.</p>
+              </div>
+              <Btn variant="ghost" onClick={() => setDeficit(null)}>Aceptar</Btn>
+            </div>
+          </div>
+        </div>
+      )}
+      {short && !drawing && !deficit && (
         <div className="sun-inline-note" style={{ marginBottom: 'var(--space-2)' }}>
-          <Icon name="alert-triangle" size={14} /> Caben {placed} de los {required} paneles que requiere el análisis. Añade otra zona, amplía la cubierta o revisa el diseño.
+          <Icon name="alert-triangle" size={14} /> Caben {placed} de los {required} paneles que requiere el análisis.
+          <Btn variant="ghost" onClick={openDeficitOptions}>Ver opciones</Btn>
         </div>
       )}
 
