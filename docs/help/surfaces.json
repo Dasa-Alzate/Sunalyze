@@ -1,0 +1,15 @@
+{
+  "resumen": [],
+  "proyectos": [],
+  "diseno": ["lugar", "equipos", "analisis", "disposicion", "diagrama", "memoria"],
+  "equipos": ["panels", "inverters", "batteries", "wires", "marketplace"],
+  "memoria": [],
+  "modulos": [],
+  "plantillas": [],
+  "finanzas": [],
+  "legalizacion": [],
+  "posventa": [],
+  "actividad": [],
+  "papelera": [],
+  "configuracion": ["marca", "presupuesto", "flags"]
+}

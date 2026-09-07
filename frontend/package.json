@@ -9,9 +9,14 @@
     "build": "vite build",
     "preview": "vite preview",
     "lint": "eslint src",
-    "test": "vitest run"
+    "test": "vitest run",
+    "help:build": "node scripts/help/build.mjs",
+    "help:check": "node scripts/help/build.mjs --strict",
+    "help:stamp": "node scripts/help/stamp.mjs",
+    "help:shots": "node scripts/help/shots.mjs"
   },
   "dependencies": {
+    "flexsearch": "^0.8.212",
     "i18next": "^23.16.8",
     "leaflet": "^1.9.4",
     "lucide-react": "^0.544.0",
@@ -29,7 +34,9 @@
     "eslint-plugin-jsx-a11y": "^6.10.2",
     "eslint-plugin-react": "^7.37.5",
     "globals": "^15.15.0",
+    "gray-matter": "^4.0.3",
     "jsdom": "^25.0.1",
+    "marked": "^18.0.11",
     "vite": "^5.4.11",
     "vitest": "^2.1.8",
     "vitest-axe": "^0.1.0"
