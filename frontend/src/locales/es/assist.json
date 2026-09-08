@@ -27,6 +27,7 @@
       "lugar": "Datos del lugar",
       "equipos": "Equipos",
       "analisis": "Análisis",
+      "disposicion": "Disposición",
       "diagrama": "Diagrama",
       "memoria": "Memoria"
     },
@@ -45,5 +46,17 @@
     "discard": "Salir sin guardar",
     "cancel": "Cancelar"
   },
-  "fixIn": "Resolver en {{view}}"
+  "fixIn": "Resolver en {{view}}",
+  "helpSearch": "Buscar en la ayuda…",
+  "helpNoResults": "Sin resultados. Prueba con otras palabras.",
+  "helpNoArticle": "Aún no hay artículo para esta pantalla. Usa el buscador.",
+  "helpBackResults": "Volver a los resultados",
+  "helpBackContext": "Volver a la ayuda de esta pantalla",
+  "helpFallback": "Traducción pendiente: se muestra la versión en español actualizada.",
+  "helpTabs": {
+    "concepto": "Concepto",
+    "criterio": "Criterio",
+    "flujo": "Flujo",
+    "tutorial": "Tutorial"
+  }
 }
