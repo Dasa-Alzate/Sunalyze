@@ -105,7 +105,7 @@ export function buildHelp({ log = () => {} } = {}) {
         search: searchText(parsed.tabs),
       }
       if (locale !== BASE_LOCALE) {
-        article.sourceHash = parsed.meta.source_hash || null
+        article.sourceHash = parsed.meta.source_hash ? String(parsed.meta.source_hash) : null
       }
       articles.push(article)
     }
