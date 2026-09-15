@@ -73,9 +73,36 @@ incidencias) y escenario financiero; uno **en revisión**; y uno en **borrador**
 Solo para entornos locales: el comando se niega a correr en producción salvo
 que se fuerce con `ALLOW_SEED_DEMO=1`.
 
-## Instalación nativa (sin Docker)
+## Arranque en un comando (cualquier sistema)
 
-Para trabajar en el código con recarga en caliente. Requisitos:
+Lo único que necesitas instalado es **Python 3.12+**. Ni base de datos, ni Node, ni Docker:
+
+```bash
+python scripts/setup.py
+```
+
+El script crea el entorno virtual, instala las dependencias, escribe el `.env` (SQLite por
+defecto, sin configurar nada), aplica las migraciones, siembra la cuenta de prueba y
+**comprueba que el login funciona** antes de darse por bueno. Funciona igual en Windows,
+macOS y Linux, y cuando algo falla te dice qué instalar en *tu* sistema.
+
+```bash
+python scripts/setup.py --check               # diagnostica sin tocar nada
+python scripts/setup.py --reset               # rehace la base de datos desde cero
+python scripts/setup.py --activate-catalogs   # hace visibles los equipos importados
+```
+
+Si algo no te cuadra —la app no arranca, el login falla, no ves equipos— `--check` es el
+primer sitio al que ir: te dice a qué base de datos está conectada la app de verdad, en qué
+migración está, si la cuenta de prueba existe y si hay catálogos desactivados.
+
+> **Sobre `FLASK_APP`**: el repo incluye un `.flaskenv`, así que no necesitas `export` ni
+> `set` en ninguna consola. Los comandos `flask ...` funcionan tal cual en bash, PowerShell
+> y CMD.
+
+## Instalación nativa paso a paso (sin el script)
+
+Si prefieres hacerlo a mano o entender qué hace el script. Requisitos:
 
 - **Python 3.12+**
 - **Node 18+** (para compilar la SPA)

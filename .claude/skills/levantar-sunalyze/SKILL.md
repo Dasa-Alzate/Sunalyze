@@ -5,8 +5,18 @@ description: Use when starting, running, deploying or smoke-testing the Sunalyze
 
 # Levantar Sunalyze
 
-Dos caminos. El de Docker es el que se parece a producción y el que hay que usar para
-verificar que algo "funciona de verdad"; el nativo es para iterar en el código.
+**Empieza siempre por aquí:**
+
+```bash
+python scripts/setup.py          # deja la app lista desde cero, en cualquier sistema
+python scripts/setup.py --check  # diagnostica cuando algo va mal
+```
+
+`--check` responde en un segundo las cuatro preguntas que más tiempo hacen perder: a qué
+base de datos está conectada la app **de verdad**, en qué migración está, si la cuenta de
+prueba existe y valida su contraseña, y si hay catálogos desactivados escondiendo equipos.
+
+Lo de abajo es el detalle de lo que hace, y los dos caminos manuales.
 
 ## Camino 1 — Stack completo con Docker (fiel a producción)
 
@@ -111,6 +121,37 @@ MySQL no se deshace sola:
 ```bash
 docker compose -p sunalyze --env-file .env.docker exec -T db \
   mysqldump -uroot -p"$MYSQL_ROOT_PASSWORD" --single-transaction sunalyze | gzip > backup.sql.gz
+```
+
+## Scrapers de catálogos
+
+No corren solos: no hay scheduler, ni cron, ni el entrypoint los lanza. Son manuales.
+
+```bash
+flask scrape list                                   # marcas registradas en ESTA rama
+flask scrape run <marca> --dry-run --limit 20       # prueba antes de la pasada entera
+flask scrape run <marca>
+```
+
+`flask scrape list` es la fuente de verdad: lee el `registry.py` de la rama en la que
+estás. Un "no hay scraper registrado para X" casi siempre significa que ese scraper vive
+en otra rama sin mergear.
+
+**Tras scrapear no verás ni un equipo nuevo, y no es un fallo.** `scrapers/service.py:146`
+crea los catálogos con `active=False`, y tanto `visible_catalog_ids()` como `marketplace()`
+filtran por `is_active`: los equipos quedan invisibles en las dos vistas a la vez. Hacen
+falta dos pasos, y el primero sin el segundo no sirve de nada:
+
+1. **Activar** el catálogo (portal de superadmin, o `python scripts/setup.py --activate-catalogs`).
+2. **Suscribir** a la organización. Los catálogos oficiales tienen `org_id = NULL`, así que
+   nunca son "propios": sin suscripción no se ven aunque estén activos.
+
+Verifica en la base, no en la interfaz:
+
+```sql
+SELECT c.nombre, c.is_active, COUNT(p.id)
+FROM catalogs c JOIN panels p ON p.catalog_id = c.id
+GROUP BY c.id ORDER BY 3 DESC;
 ```
 
 ## Despliegue en servidor
