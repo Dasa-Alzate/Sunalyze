@@ -112,10 +112,12 @@ cp .env.example .env        # Windows (cmd): copy .env.example .env — edita lo
 | `FLASK_ENV` | `development` o `production`. |
 | `SECRET_KEY` | Firma de sesiones. **Obligatoria en producción** (en dev se genera efímera). |
 | `DATABASE_URL` | **Obligatoria.** `mysql+pymysql://user:pass@host:3306/sunalyze` o `sqlite:///$PWD/dev.db`. |
-| `MFA_ENC_KEY` | Clave Fernet para cifrar el secreto TOTP en reposo (si se omite, se deriva de `SECRET_KEY`). |
+| `MFA_ENC_KEY` | Clave Fernet para cifrar el secreto TOTP en reposo. **Obligatoria en producción**: la app aborta al arrancar si falta (fail-fast, a propósito). Genera una con `python -c "from cryptography.fernet import Fernet; print(Fernet.generate_key().decode())"`. |
 | `SERVER_NAME`, `SUPERADMIN_SUBDOMAIN` | Sirven el portal de superadmin en subdominio (`admin.*`). Sin `SERVER_NAME`, el portal queda en `/superadmin`. |
 | `SUPERADMIN_IP_ALLOWLIST`, `SUPERADMIN_TRUST_PROXY` | Allowlist de IP del portal (IPs/CIDRs) y confianza en `X-Forwarded-For` tras proxy. |
 | `RATELIMIT_STORAGE_URI`, `CACHE_TYPE`, `CACHE_REDIS_URL` | Opcionales: backend Redis para rate-limit/cache compartidos entre workers (por defecto en memoria/proceso). |
+| `MAIL_BACKEND`, `MAIL_SMTP_*`, `MAIL_FROM` | Email transaccional. El default es `log` (solo escribe en el log): **sin `MAIL_BACKEND=smtp` y credenciales, el reset de contraseña, la verificación y las invitaciones no llegan a nadie**. |
+| `SENTRY_DSN`, `SENTRY_TRACES_SAMPLE_RATE` | Opcionales: reporte de errores. Sin DSN la integración queda dormida (cero overhead). |
 
 ## Base de datos (migraciones)
 
@@ -124,6 +126,14 @@ export FLASK_APP=run     # Windows PowerShell: $env:FLASK_APP = "run"
 flask db upgrade         # aplica todas las migraciones (Flask-Migrate/Alembic)
 flask seed demo          # cuenta de prueba + flags por defecto (opcional)
 ```
+
+> **Regla: el grafo de migraciones debe tener un único head.** Si tu rama tarda en
+> mergearse y `main` añade migraciones mientras tanto, la tuya sigue colgando del head
+> viejo y quedan dos puntas. Entonces `flask db upgrade` aborta con *"Multiple head
+> revisions are present"* — y como `docker/entrypoint.sh` migra al arrancar, el
+> contenedor muere antes de servir. Compruébalo con `flask db heads` (debe imprimir una
+> sola línea) y únelas con `flask db merge -m "merge heads" <rev-a> <rev-b>`. El CI
+> bloquea los PR que dejen más de un head.
 
 ## Ejecución
 
@@ -154,6 +164,7 @@ flask superadmin revoke|list
 flask scrape list                   # marcas con scraper
 flask scrape run <marca> [--dry-run]
 flask flags seed                    # sembrar las feature flags por defecto
+flask docs seed                     # sembrar el banco oficial de tipos de documento
 flask api-map                       # regenerar docs/api-map.md (índice de endpoints)
 ```
 
@@ -179,6 +190,19 @@ flask db upgrade && python -m unittest discover -s tests
 # Frontend
 cd frontend && npm run lint && npm test    # eslint (incl. jsx-a11y) + vitest (axe)
 ```
+
+## Integración continua
+
+[`.github/workflows/ci.yml`](.github/workflows/ci.yml) corre en cada push a `main` y en
+cada PR. Levanta un MySQL 8.4 limpio (el mismo motor que producción, porque hay DDL que
+SQLite tolera y MySQL rechaza) y valida el grafo de migraciones:
+
+1. `flask db heads` devuelve **exactamente un head**.
+2. `flask db upgrade` aplica todas las migraciones desde cero sin error.
+3. Tras el upgrade, la revisión de la base de datos coincide con el head.
+
+Los tres pasos reproducen lo que hace `docker/entrypoint.sh` al arrancar el contenedor,
+así que un CI en verde significa que el despliegue migrará.
 
 ## Estructura del proyecto
 

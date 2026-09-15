@@ -1,0 +1,81 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+jobs:
+  migraciones:
+    name: Grafo de migraciones
+    runs-on: ubuntu-latest
+
+    services:
+      db:
+        image: mysql:8.4
+        env:
+          MYSQL_ROOT_PASSWORD: ci
+          MYSQL_DATABASE: sunalyze_ci
+        ports:
+          - 3306:3306
+        options: >-
+          --health-cmd="mysqladmin ping -h 127.0.0.1 -uroot -pci"
+          --health-interval=5s
+          --health-timeout=5s
+          --health-retries=30
+
+    env:
+      FLASK_APP: run.py
+      FLASK_ENV: production
+      DATABASE_URL: mysql+pymysql://root:ci@127.0.0.1:3306/sunalyze_ci
+      SECRET_KEY: clave-efimera-solo-para-el-pipeline
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+          cache: pip
+
+      - name: Dependencias del sistema
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y --no-install-recommends \
+            build-essential pkg-config python3-dev default-libmysqlclient-dev \
+            libpango-1.0-0 libpangoft2-1.0-0
+
+      - name: Dependencias de Python
+        run: |
+          python -m pip install --upgrade pip
+          pip install -r requirements.txt
+
+      - name: Clave de cifrado MFA efímera
+        run: |
+          key=$(python -c 'from cryptography.fernet import Fernet; print(Fernet.generate_key().decode())')
+          echo "MFA_ENC_KEY=$key" >> "$GITHUB_ENV"
+
+      - name: Un único head de Alembic
+        run: |
+          heads=$(flask db heads 2>/dev/null | grep -E '\(head\)$' || true)
+          n=$(printf '%s\n' "$heads" | grep -c . || true)
+          if [ "$n" -ne 1 ]; then
+            echo "::error::El grafo de migraciones tiene $n heads; debe tener exactamente 1."
+            printf '%s\n' "$heads"
+            echo "Une las ramas con: flask db merge -m 'merge heads' <rev-a> <rev-b>"
+            exit 1
+          fi
+          echo "Head único: $heads"
+
+      - name: Upgrade completo sobre MySQL vacío
+        run: flask db upgrade
+
+      - name: La base de datos queda en el head
+        run: |
+          current=$(flask db current 2>/dev/null | grep -oE '^[0-9a-f]{12}' | head -1)
+          head=$(flask db heads 2>/dev/null | grep -oE '^[0-9a-f]{12}' | head -1)
+          if [ "$current" != "$head" ]; then
+            echo "::error::Tras el upgrade la BD está en '$current' pero el head es '$head'."
+            exit 1
+          fi
+          echo "BD en $current, que es el head."
