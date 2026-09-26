@@ -59,6 +59,69 @@
 }
 .sun-assist-tab--pulse { animation: sunAssistPulse 1.2s ease-in-out 3; color: var(--green-700); border-color: var(--green-500); }
 
+.sun-assist__search { display: flex; align-items: center; gap: var(--space-2); margin: var(--space-3) var(--space-5) 0; padding: var(--space-1) var(--space-3); border: 1px solid var(--border-strong); border-radius: var(--radius-pill); background: var(--surface-card); color: var(--text-subtle); }
+.sun-assist__search input { flex: 1; border: 0; outline: 0; background: transparent; font-family: var(--font-sans); font-size: var(--text-sm); color: var(--text-body); padding: var(--space-1) 0; }
+.sun-assist__search:focus-within { border-color: var(--green-500); }
+
+.hb-results { list-style: none; padding: 0; display: flex; flex-direction: column; gap: var(--space-1); }
+.hb-results button { display: flex; align-items: center; gap: var(--space-2); width: 100%; padding: var(--space-2) var(--space-3); border: 0; border-radius: var(--radius-sm); background: transparent; color: var(--text-body); font-family: var(--font-sans); font-size: var(--text-sm); text-align: left; cursor: pointer; }
+.hb-results button:hover { background: var(--hover-surface); color: var(--text-strong); }
+.hb-empty { font-size: var(--text-sm); color: var(--text-muted); }
+.hb-back { display: inline-flex; align-items: center; gap: 4px; margin-bottom: var(--space-3); padding: 2px 10px; border: 1px solid var(--border-strong); border-radius: var(--radius-pill); background: transparent; color: var(--text-muted); font-family: var(--font-sans); font-size: var(--text-2xs); font-weight: var(--fw-semibold); cursor: pointer; }
+.hb-back:hover { color: var(--text-strong); background: var(--hover-surface); }
+
+.hb-title { font-size: var(--text-md); font-weight: 700; color: var(--text-strong); margin-bottom: var(--space-3); }
+.hb-tabs { display: flex; gap: var(--space-1); margin-bottom: var(--space-4); border-bottom: 1px solid var(--border-subtle); }
+.hb-tab { padding: var(--space-1) var(--space-2) var(--space-2); border: 0; border-bottom: 2px solid transparent; background: transparent; color: var(--text-muted); font-family: var(--font-sans); font-size: var(--text-xs); font-weight: var(--fw-semibold); cursor: pointer; }
+.hb-tab:hover { color: var(--text-strong); }
+.hb-tab--active { color: var(--green-700); border-bottom-color: var(--green-500); }
+
+.hb-blocks { display: flex; flex-direction: column; gap: var(--space-3); }
+.hb-section { font-size: var(--text-sm); font-weight: 700; color: var(--text-strong); margin-top: var(--space-2); }
+.hb-prose { font-size: var(--text-sm); color: var(--text-body); line-height: 1.55; }
+.hb-prose p { margin: 0 0 var(--space-2); }
+.hb-prose p:last-child { margin-bottom: 0; }
+.hb-prose table { width: 100%; border-collapse: collapse; font-size: var(--text-xs); }
+.hb-prose th, .hb-prose td { padding: var(--space-1) var(--space-2); border: 1px solid var(--border-subtle); text-align: left; }
+.hb-prose th { background: var(--soft-chip); color: var(--text-strong); }
+.hb-prose code { font-size: var(--text-2xs); background: var(--soft-chip); padding: 1px 4px; border-radius: 3px; }
+
+.hb-cards { display: flex; flex-direction: column; gap: var(--space-2); }
+.hb-card { padding: var(--space-2) var(--space-3); border: 1px solid var(--border-subtle); border-radius: var(--radius-sm); font-size: var(--text-xs); color: var(--text-body); line-height: 1.5; }
+.hb-card strong { display: block; color: var(--text-strong); margin-bottom: 2px; }
+
+.hb-flow { list-style: none; padding: 0; display: flex; flex-direction: column; }
+.hb-flow li { position: relative; padding: 0 0 var(--space-3) var(--space-5); font-size: var(--text-xs); color: var(--text-body); line-height: 1.5; }
+.hb-flow li::before { content: ''; position: absolute; left: 7px; top: 4px; width: 8px; height: 8px; border-radius: 50%; background: var(--green-500); }
+.hb-flow li:not(:last-child)::after { content: ''; position: absolute; left: 10px; top: 14px; bottom: 2px; width: 2px; background: var(--border-subtle); }
+.hb-flow strong { color: var(--text-strong); }
+
+.hb-steps { list-style: decimal; padding-left: var(--space-5); display: flex; flex-direction: column; gap: var(--space-2); }
+.hb-steps li { font-size: var(--text-sm); color: var(--text-body); line-height: 1.5; }
+.hb-steps li > div { display: inline; }
+.hb-steps li > div > p { display: inline; margin: 0; }
+.hb-steps strong { color: var(--text-strong); }
+
+.hb-note { display: flex; align-items: flex-start; gap: var(--space-2); padding: var(--space-2) var(--space-3); border-radius: var(--radius-sm); font-size: var(--text-xs); line-height: 1.5; background: var(--soft-chip); color: var(--text-body); }
+.hb-note svg { flex-shrink: 0; margin-top: 2px; }
+.hb-note strong { display: block; margin-bottom: 2px; }
+.hb-note p { margin: 0; }
+.hb-note--info { background: color-mix(in srgb, var(--blue-500, #3b82f6) 10%, transparent); }
+.hb-note--success { background: color-mix(in srgb, var(--green-500) 12%, transparent); }
+.hb-note--warning { background: color-mix(in srgb, var(--amber-500) 14%, transparent); }
+.hb-note--danger { background: color-mix(in srgb, var(--red-500, #ef4444) 12%, transparent); }
+.hb-note--brand { background: var(--surface-brand-soft); }
+.hb-note--purple { background: color-mix(in srgb, purple 10%, transparent); }
+.hb-fallback { margin-bottom: var(--space-3); }
+
+.hb-norm { padding: var(--space-2) var(--space-3); border-left: 3px solid var(--green-500); border-radius: 0 var(--radius-sm) var(--radius-sm) 0; background: var(--soft-chip); font-size: var(--text-xs); color: var(--text-body); line-height: 1.5; }
+.hb-norm__code { display: inline-block; margin-bottom: var(--space-1); padding: 1px 8px; border-radius: var(--radius-pill); background: var(--surface-card); border: 1px solid var(--border-strong); font-size: var(--text-2xs); font-weight: var(--fw-semibold); color: var(--text-strong); }
+.hb-norm p { margin: 0; }
+
+.hb-shot { margin: 0; }
+.hb-shot img { width: 100%; border: 1px solid var(--border-subtle); border-radius: var(--radius-sm); }
+.hb-shot figcaption { margin-top: var(--space-1); font-size: var(--text-2xs); color: var(--text-subtle); }
+
 @media (prefers-reduced-motion: reduce) {
   .sun-assist, .sun-assist-tab { transition: none; }
 }

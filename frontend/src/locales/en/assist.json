@@ -27,6 +27,7 @@
       "lugar": "Site data",
       "equipos": "Equipment",
       "analisis": "Analysis",
+      "disposicion": "Layout",
       "diagrama": "Diagram",
       "memoria": "Report"
     },
@@ -45,5 +46,17 @@
     "discard": "Leave without saving",
     "cancel": "Cancel"
   },
-  "fixIn": "Fix it in {{view}}"
+  "fixIn": "Fix it in {{view}}",
+  "helpSearch": "Search the help…",
+  "helpNoResults": "No results. Try different words.",
+  "helpNoArticle": "No article for this screen yet. Use the search box.",
+  "helpBackResults": "Back to results",
+  "helpBackContext": "Back to this screen's help",
+  "helpFallback": "Translation pending: showing the up-to-date Spanish version.",
+  "helpTabs": {
+    "concepto": "Concept",
+    "criterio": "Criteria",
+    "flujo": "Flow",
+    "tutorial": "Tutorial"
+  }
 }
