@@ -31,6 +31,34 @@ def seed_demo():
     click.echo(f'Cuenta de prueba lista: {DEMO_EMAIL} / {DEMO_PASSWORD} (superadmin).')
 
 
+@seed_cli.command('perfiles')
+def seed_perfiles():
+    """Siembra los perfiles de consumo curados globales (idempotente)."""
+    from app.extensions import db
+    from app.models.consumption_profile import ConsumptionProfile
+    from app.services.consumption import CDM_VERSION, build_fractions
+    from app.services.consumption.curated import curated_profiles
+
+    created = 0
+    skipped = 0
+    for name, source in curated_profiles():
+        exists = ConsumptionProfile.with_deleted().filter_by(name=name, org_id=None).first()
+        if exists:
+            skipped += 1
+            continue
+        fractions, hint = build_fractions(source['kind'], source['payload'])
+        profile = ConsumptionProfile(
+            org_id=None, name=name, kind=source['kind'], origin='seed',
+            annual_kwh_hint=hint, cdm_version=CDM_VERSION,
+        )
+        profile.source = source['payload']
+        profile.fractions = fractions
+        db.session.add(profile)
+        created += 1
+    db.session.commit()
+    click.echo(f'Perfiles curados: {created} creados, {skipped} ya existían.')
+
+
 def _find(email):
     user = User.query.filter_by(email=email.strip().lower()).first()
     if not user:

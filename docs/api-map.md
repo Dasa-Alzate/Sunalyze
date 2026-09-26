@@ -1,6 +1,6 @@
 # API map
 
-Mapa autogenerado por `flask api-map`. Endpoints `/api`: 135.
+Mapa autogenerado por `flask api-map`. Endpoints `/api`: 141.
 
 No editar a mano: regenerar con `flask api-map`.
 
@@ -61,6 +61,17 @@ No editar a mano: regenerar con `flask api-map`.
 | --- | --- | --- | --- |
 | GET | `/api/circuit/<string:diagram_type>` | `circuit.get_diagram` |  |
 | GET | `/api/circuit/templates` | `circuit.get_templates` |  |
+
+## consumption_profiles
+
+| Método(s) | Ruta | Endpoint | Resumen |
+| --- | --- | --- | --- |
+| GET | `/api/consumption-profiles` | `consumption_profiles.list_profiles` |  |
+| POST | `/api/consumption-profiles` | `consumption_profiles.create_profile` |  |
+| DELETE | `/api/consumption-profiles/<int:profile_id>` | `consumption_profiles.delete_profile` |  |
+| GET | `/api/consumption-profiles/<int:profile_id>` | `consumption_profiles.get_profile` |  |
+| PATCH | `/api/consumption-profiles/<int:profile_id>` | `consumption_profiles.update_profile` |  |
+| POST | `/api/consumption-profiles/import` | `consumption_profiles.import_profile` |  |
 
 ## crud
 

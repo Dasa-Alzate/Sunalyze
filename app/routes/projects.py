@@ -10,6 +10,7 @@ from app.services.audit_service import AuditService
 from app.services.catalog_service import CatalogService
 from app.services.org_service import OrgService
 from app.models.battery import Battery
+from app.models.consumption_profile import ConsumptionProfile
 from app.schemas.project import ProjectCreateSchema, ProjectUpdateSchema
 
 logger = logging.getLogger(__name__)
@@ -25,7 +26,22 @@ _EDITABLE_FIELDS = [
     'wire_dc_id', 'wire_ac_id', 'wire_ground_id',
     'referencia_catastral', 'cups', 'compania',
     'potencia_contratada', 'tipo_voltaje', 'ccaa',
+    'consumption_profile_id',
 ]
+
+
+def _validate_consumption_profile(data, org_id):
+    if 'consumption_profile_id' not in data:
+        return
+    profile_id = data.get('consumption_profile_id')
+    if profile_id in (None, ''):
+        return
+    profile = ConsumptionProfile.active().filter(
+        ConsumptionProfile.id == profile_id,
+        db.or_(ConsumptionProfile.org_id == org_id, ConsumptionProfile.org_id.is_(None)),
+    ).first()
+    if profile is None:
+        raise NotFound('Perfil de consumo no encontrado', code='consumption_profile.not_found')
 
 
 def _validate_battery(data, org_id):
@@ -112,6 +128,7 @@ def create_project():
 
     clean = ProjectCreateSchema(**data).model_dump(exclude_unset=True)
     _validate_battery(clean, current_org_id())
+    _validate_consumption_profile(clean, current_org_id())
     project = Project(cliente=clean['cliente'], org_id=current_org_id())
     project.serial_seq = Project.next_serial_seq(current_org_id())
     _apply(project, clean)
@@ -137,6 +154,7 @@ def update_project(project_id):
         raise ValidationError(f"Estado invalido. Validos: {', '.join(ESTADOS)}", code='project.invalid_estado')
     clean = ProjectUpdateSchema(**data).model_dump(exclude_unset=True)
     _validate_battery(clean, current_org_id())
+    _validate_consumption_profile(clean, current_org_id())
     changed = sorted(
         f for f in _EDITABLE_FIELDS
         if f in clean and clean[f] != getattr(project, f)
