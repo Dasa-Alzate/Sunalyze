@@ -514,7 +514,7 @@ export default function Wizard() {
                       <CompatibleInverters list={results.compatible_inverters} onPick={(inv) => { pickInverter(inv); toast('info', 'Inversor seleccionado', 'Recalcula para el dimensionamiento completo') }} />
                     )}
                     {results.battery && <BatteryResult battery={results.battery} />}
-                    <EconomicsPanel projectId={projectId} profileId={form.consumption_profile_id} dirty={dirty} />
+                    <EconomicsPanel projectId={projectId} profileId={form.consumption_profile_id} onSave={() => save({ silent: true })} />
                     <div style={{ marginTop: 'var(--space-4)', display: 'flex', gap: 'var(--space-3)', alignItems: 'center' }}>
                       <Btn variant="secondary" icon="refresh-cw" data-busy={analyzing} disabled={analyzing} onClick={analyze}>{analyzing ? 'Recalculando…' : 'Recalcular'}</Btn>
                       <span style={{ display: 'flex', gap: 8, alignItems: 'center', fontSize: 'var(--text-sm)', color: 'var(--text-muted)' }}>

@@ -6,7 +6,7 @@ import './economics.css'
 
 const eur = (v) => `${v.toLocaleString('es-ES', { minimumFractionDigits: 2, maximumFractionDigits: 2 })} €`
 
-export function EconomicsPanel({ projectId, profileId, dirty }) {
+export function EconomicsPanel({ projectId, profileId, onSave }) {
   const [data, setData] = useState(null)
   const [scenarios, setScenarios] = useState(null)
   const [busy, setBusy] = useState(false)
@@ -15,6 +15,7 @@ export function EconomicsPanel({ projectId, profileId, dirty }) {
   async function compute() {
     setBusy(true)
     try {
+      if (onSave && await onSave() === null) { setBusy(false); return }
       setData(await api.economics.compute(projectId))
     } catch (err) {
       toast('error', 'No se pudo calcular el ahorro', err.data?.error || err.message)
@@ -26,6 +27,7 @@ export function EconomicsPanel({ projectId, profileId, dirty }) {
   async function compare() {
     setComparing(true)
     try {
+      if (onSave && await onSave() === null) { setComparing(false); return }
       setScenarios(await api.economics.scenarios(projectId))
     } catch (err) {
       toast('error', 'No se pudo comparar', err.data?.error || err.message)
@@ -69,9 +71,6 @@ export function EconomicsPanel({ projectId, profileId, dirty }) {
           )}
         </div>
       </div>
-      {dirty && data && (
-        <p className="eco-panel__stale"><Icon name="alert-triangle" size={13} /> Hay cambios sin guardar: el cálculo usa la última versión guardada del proyecto.</p>
-      )}
       {busy && !data && <Spinner label="Cruzando consumo y producción hora a hora…" />}
       {data && (
         <>

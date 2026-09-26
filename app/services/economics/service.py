@@ -4,9 +4,9 @@ La producción horaria se deriva de la forma de la irradiancia horaria de PVGIS
 (ya cacheada 30 días, convertida a hora local Europe/Madrid) escalada por la
 producción anual del análisis vigente del proyecto — así hereda las pérdidas ya
 validadas sin duplicar la física; la variación horaria de pérdidas térmicas se
-desprecia (asunción declarada). El aporte de la batería se valora como
-descarga × (precio del periodo − precio de excedente): el contrafactual de esa
-energía era venderse como excedente.
+desprecia (asunción declarada). El aporte de la batería es la
+diferencia real de factura anual entre el sistema con y sin ella (impuestos,
+término de potencia y hucha incluidos): una sola cifra, la que paga el cliente.
 """
 
 from app.errors import ValidationError
@@ -83,13 +83,6 @@ class EconomicsService:
         monthly_credit = [sim['exports'][m] * tariff['precio_excedente'] for m in range(12)]
         return annual_bill(tariff, monthly_cost, monthly_credit, potencia_kw)
 
-    @staticmethod
-    def _battery_value(sim, tariff):
-        return sum(
-            sim['discharge'][m][p] * max(0.0, price_of(tariff, p) - tariff['precio_excedente'])
-            for m in range(12) for p in PERIODS
-        )
-
     @classmethod
     def compute(cls, project, org_id, battery=None, quantity=1):
         consumption, production = cls._series(project)
@@ -121,7 +114,7 @@ class EconomicsService:
                 'nombre': battery.nombre,
                 'cantidad': max(1, int(quantity or 1)),
                 'factura': factura_bat,
-                'ahorro_bateria': round(cls._battery_value(sim_bat, tariff), 2),
+                'ahorro_bateria': round(factura_fv['total'] - factura_bat['total'], 2),
                 'descarga_anual_kwh': round(sim_bat['descarga_bateria'], 1),
                 'autoconsumo_total_pct': round(
                     (sim_bat['autoconsumo_directo'] + sim_bat['descarga_bateria'])
@@ -157,7 +150,7 @@ class EconomicsService:
         for battery in batteries:
             sim = simulate(consumption, production, cls._battery_params(battery, 1))
             factura = cls._bill(sim, tariff, potencia)['total']
-            valor = cls._battery_value(sim, tariff)
+            valor = factura_fv - factura
             payback = None
             if battery.precio_unitario and valor > 0:
                 payback = round(battery.precio_unitario / valor, 1)
