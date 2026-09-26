@@ -34,6 +34,8 @@ node_modules/
 
 # Frontend build (artefacto: se compila en local/deploy, no se versiona)
 frontend/dist/
+frontend/src/generated/
+frontend/public/help/
 
 # Documentación de trabajo interna (no versionada)
 documentation/

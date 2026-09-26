@@ -1,0 +1,22 @@
+{
+  "baseUrl": "http://localhost:5173",
+  "viewport": { "width": 1440, "height": 900 },
+  "timeout": 15000,
+  "login": {
+    "path": "/login",
+    "userEnv": "HELP_SHOTS_EMAIL",
+    "passEnv": "HELP_SHOTS_PASSWORD",
+    "expect": "/app"
+  },
+  "shots": [
+    {
+      "src": "diseno/disposicion.png",
+      "path": "/app/diseno/${HELP_SHOTS_PROJECT}",
+      "steps": [
+        { "waitFor": ".sun-stepper" },
+        { "click": ".sun-stepper button >> nth=3" },
+        { "pause": 1500 }
+      ]
+    }
+  ]
+}

@@ -308,12 +308,6 @@ export const api = {
   pendingWork: {
     get: () => get('/api/pending-work'),
   },
-  help: {
-    tutorial: ({ view, subview }) => {
-      const qs = new URLSearchParams({ view: view || '', subview: subview || '' }).toString()
-      return requestText(`/api/help/tutorial?${qs}`)
-    },
-  },
   circuit: {
     templates: () => get('/api/circuit/templates'),
     svgUrl: (template, params = {}) => {

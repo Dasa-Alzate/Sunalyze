@@ -1,24 +1,26 @@
-import { useEffect, useState } from 'react'
+import { useEffect, useMemo, useState } from 'react'
 import { useLocation, useNavigate } from 'react-router-dom'
 import { useTranslation } from 'react-i18next'
 import { Icon, IconBtn, Spinner, ConfirmDialog } from '@/shared/ui'
-import { api } from '@/api/client'
 import { getUnsavedGuard } from '@/shared/unsavedGuard'
 import { wireAssist, emitView, assistBus, getSnapshot } from './wiring'
 import { solutionFor } from './solutions'
+import { loadHelp, resolveLocale, effectiveArticles, articleForContext } from './content'
+import { createSearchAdapter } from './search'
+import { ArticleView } from './ArticleView'
 import './assist.css'
 
 const RECENT_ERROR_MS = 2 * 60 * 1000
 
 export function HelpAssist() {
-  const { t } = useTranslation('assist')
+  const { t, i18n } = useTranslation('assist')
   const location = useLocation()
   const navigate = useNavigate()
   const [open, setOpen] = useState(false)
   const [ctx, setCtx] = useState(() => getSnapshot().context)
-  const [html, setHtml] = useState(null)
-  const [loading, setLoading] = useState(false)
-  const [error, setError] = useState(null)
+  const [help, setHelp] = useState(null)
+  const [query, setQuery] = useState('')
+  const [picked, setPicked] = useState(null)
   const [pendingHref, setPendingHref] = useState(null)
   const [pulse, setPulse] = useState(false)
 
@@ -61,16 +63,25 @@ export function HelpAssist() {
   }, [])
 
   useEffect(() => {
-    if (!open) return undefined
+    if (!open || help) return undefined
     let alive = true
-    setLoading(true)
-    setError(null)
-    api.help.tutorial({ view: ctx.view, subview: ctx.subview })
-      .then((h) => { if (alive) setHtml(h) })
-      .catch((e) => { if (alive) setError(e.message) })
-      .finally(() => { if (alive) setLoading(false) })
+    loadHelp().then((data) => { if (alive) setHelp(data) })
     return () => { alive = false }
-  }, [open, ctx.view, ctx.subview])
+  }, [open, help])
+
+  useEffect(() => { setPicked(null); setQuery('') }, [ctx.view, ctx.subview])
+
+  const entries = useMemo(
+    () => (help ? effectiveArticles(help, resolveLocale(help, i18n.language)) : []),
+    [help, i18n.language],
+  )
+  const adapter = useMemo(() => (entries.length ? createSearchAdapter(entries) : null), [entries])
+  const results = useMemo(() => (adapter && query ? adapter.query(query) : []), [adapter, query])
+  const contextual = useMemo(
+    () => articleForContext(entries, ctx.view, ctx.subview),
+    [entries, ctx.view, ctx.subview],
+  )
+  const shown = picked || (query ? null : contextual)
 
   useEffect(() => {
     if (!open) return undefined
@@ -154,17 +165,47 @@ export function HelpAssist() {
             </span>
           </div>
         )}
-        <div className="sun-assist__body">
-          {loading ? (
+        <div className="sun-assist__search">
+          <Icon name="search" size={14} />
+          <input
+            type="search"
+            value={query}
+            placeholder={t('helpSearch')}
+            onChange={(e) => { setQuery(e.target.value); setPicked(null) }}
+          />
+        </div>
+        {/* eslint-disable-next-line jsx-a11y/no-static-element-interactions, jsx-a11y/click-events-have-key-events */}
+        <div className="sun-assist__body" onClick={onBodyClick}>
+          {!help ? (
             <Spinner label={t('loading')} />
-          ) : error ? (
-            <div className="sun-inline-note sun-inline-note--danger">
-              <Icon name="alert-circle" size={14} />{error}
-            </div>
-          ) : html ? (
-            /* eslint-disable-next-line jsx-a11y/no-static-element-interactions, jsx-a11y/click-events-have-key-events */
-            <div onClick={onBodyClick} dangerouslySetInnerHTML={{ __html: html }} />
-          ) : null}
+          ) : query && !picked ? (
+            results.length ? (
+              <ul className="hb-results">
+                {results.map((entry) => (
+                  <li key={entry.article.slug}>
+                    <button type="button" onClick={() => setPicked(entry)}>
+                      <Icon name="file-text" size={13} />
+                      {entry.article.title}
+                    </button>
+                  </li>
+                ))}
+              </ul>
+            ) : (
+              <p className="hb-empty">{t('helpNoResults')}</p>
+            )
+          ) : shown ? (
+            <>
+              {picked && (
+                <button type="button" className="hb-back" onClick={() => setPicked(null)}>
+                  <Icon name="arrow-left" size={12} />
+                  {query ? t('helpBackResults') : t('helpBackContext')}
+                </button>
+              )}
+              <ArticleView key={shown.article.slug} article={shown.article} fellBack={shown.fellBack} />
+            </>
+          ) : (
+            <p className="hb-empty">{t('helpNoArticle')}</p>
+          )}
         </div>
         <div className="sun-assist__foot">
           <Icon name="sparkles" size={13} />
