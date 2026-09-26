@@ -9,6 +9,7 @@ import { exportRows } from '@/services/export'
 import { toast } from '@/services/toast'
 import { GeoMap } from '@/services/geo-map'
 import { ConsumptionProfileSection } from '@/features/consumption/ConsumptionProfileSection'
+import { EconomicsPanel } from '@/features/economics/EconomicsPanel'
 import { useAuth } from '@/services/auth'
 import { emitSubview } from '@/services/assist'
 import { registerUnsavedGuard } from '@/shared/unsavedGuard'
@@ -513,6 +514,7 @@ export default function Wizard() {
                       <CompatibleInverters list={results.compatible_inverters} onPick={(inv) => { pickInverter(inv); toast('info', 'Inversor seleccionado', 'Recalcula para el dimensionamiento completo') }} />
                     )}
                     {results.battery && <BatteryResult battery={results.battery} />}
+                    <EconomicsPanel projectId={projectId} profileId={form.consumption_profile_id} dirty={dirty} />
                     <div style={{ marginTop: 'var(--space-4)', display: 'flex', gap: 'var(--space-3)', alignItems: 'center' }}>
                       <Btn variant="secondary" icon="refresh-cw" data-busy={analyzing} disabled={analyzing} onClick={analyze}>{analyzing ? 'Recalculando…' : 'Recalcular'}</Btn>
                       <span style={{ display: 'flex', gap: 8, alignItems: 'center', fontSize: 'var(--text-sm)', color: 'var(--text-muted)' }}>

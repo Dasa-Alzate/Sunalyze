@@ -5,7 +5,7 @@ from app.security import current_org_id
 from app.authz import require_permission, Permission
 from app.errors import ValidationError, NotFound
 from app.services.org_service import OrgService
-from app.schemas.org import OrgBrandingSchema, OrgBudgetProfileSchema
+from app.schemas.org import OrgTariffProfileSchema, OrgBrandingSchema, OrgBudgetProfileSchema
 
 org_bp = Blueprint('org', __name__)
 
@@ -45,6 +45,19 @@ def update_budget_profile():
             for line in fields['custom_lines']
         ]
     return jsonify(OrgService.update_budget_profile(current_org_id(), fields))
+
+
+@org_bp.route('/api/org/tariff-profile', methods=['GET'])
+@require_permission(Permission.ORG_MANAGE)
+def get_tariff_profile():
+    return jsonify(OrgService.get_tariff_profile(current_org_id()))
+
+
+@org_bp.route('/api/org/tariff-profile', methods=['PATCH'])
+@require_permission(Permission.ORG_MANAGE)
+def update_tariff_profile():
+    data = OrgTariffProfileSchema(**_body())
+    return jsonify(OrgService.update_tariff_profile(current_org_id(), data.model_dump(exclude_unset=True)))
 
 
 @org_bp.route('/api/org/branding/logo', methods=['POST'])

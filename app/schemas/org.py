@@ -67,3 +67,17 @@ class OrgBudgetProfileSchema(BaseModel):
     labor_per_panel: Optional[float] = Field(default=None, ge=0, le=1_000_000)
     equipment_inflation_pct: Optional[float] = Field(default=None, ge=0, le=100)
     custom_lines: Optional[List[BudgetItemSchema]] = Field(default=None, max_length=50)
+
+
+class OrgTariffProfileSchema(BaseModel):
+    model_config = {'extra': 'ignore'}
+    nombre: Optional[str] = Field(default=None, min_length=1, max_length=20)
+    precio_punta: Optional[float] = Field(default=None, ge=0, le=5)
+    precio_llano: Optional[float] = Field(default=None, ge=0, le=5)
+    precio_valle: Optional[float] = Field(default=None, ge=0, le=5)
+    precio_excedente: Optional[float] = Field(default=None, ge=0, le=5)
+    precio_potencia_p1_dia: Optional[float] = Field(default=None, ge=0, le=5)
+    precio_potencia_p2_dia: Optional[float] = Field(default=None, ge=0, le=5)
+    impuesto_electricidad: Optional[float] = Field(default=None, ge=0, le=1)
+    iva_pct: Optional[float] = Field(default=None, ge=0, le=100)
+    alquiler_contador_mes: Optional[float] = Field(default=None, ge=0, le=100)

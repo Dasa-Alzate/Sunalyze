@@ -5,10 +5,13 @@ import os
 
 from app.errors import ValidationError
 from app.extensions import db
-from app.models.organization import OrgBrandingProfile, OrgBudgetProfile
+from app.models.organization import OrgBrandingProfile, OrgBudgetProfile, OrgTariffProfile
 
 _BRANDING_ATTRS = ('logo_path', 'primary_color', 'footer_text', 'project_prefix')
 _BUDGET_ATTRS = ('labor_fixed', 'labor_per_panel', 'equipment_inflation_pct', 'custom_lines')
+_TARIFF_ATTRS = ('nombre', 'precio_punta', 'precio_llano', 'precio_valle', 'precio_excedente',
+                 'precio_potencia_p1_dia', 'precio_potencia_p2_dia', 'impuesto_electricidad',
+                 'iva_pct', 'alquiler_contador_mes')
 _LOGO_DIRNAME = 'cfiles'
 _MAX_LOGO_BYTES = 2 * 1024 * 1024
 _RASTER_EXT = {'png': 'png', 'jpeg': 'jpg', 'webp': 'webp'}
@@ -79,6 +82,26 @@ class OrgService:
             profile = OrgBudgetProfile(org_id=org_id)
             db.session.add(profile)
         for attr in _BUDGET_ATTRS:
+            if attr in fields:
+                setattr(profile, attr, fields[attr])
+        db.session.commit()
+        return profile.to_dict()
+
+    @staticmethod
+    def get_tariff_profile(org_id):
+        from app.services.economics.tariff import DEFAULT_TARIFF
+        profile = OrgTariffProfile.query.filter_by(org_id=org_id).first()
+        if profile is not None:
+            return profile.to_dict()
+        return dict(DEFAULT_TARIFF)
+
+    @staticmethod
+    def update_tariff_profile(org_id, fields):
+        profile = OrgTariffProfile.query.filter_by(org_id=org_id).first()
+        if profile is None:
+            profile = OrgTariffProfile(org_id=org_id)
+            db.session.add(profile)
+        for attr in _TARIFF_ATTRS:
             if attr in fields:
                 setattr(profile, attr, fields[attr])
         db.session.commit()

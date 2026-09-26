@@ -110,3 +110,45 @@ class OrgBudgetProfile(BaseModel):
 
     def __repr__(self):
         return f'<OrgBudgetProfile org{self.org_id}>'
+
+
+class OrgTariffProfile(BaseModel):
+
+    __tablename__ = 'org_tariff_profiles'
+    __table_args__ = (
+        db.UniqueConstraint('org_id', name='uq_org_tariff_org'),
+    )
+
+    org_id = db.Column(
+        db.Integer, db.ForeignKey('organizations.id', ondelete='CASCADE'),
+        nullable=False, index=True,
+    )
+    nombre = db.Column(db.String(20), nullable=False, default='2.0TD')
+    precio_punta = db.Column(db.Float, nullable=False, default=0.193)
+    precio_llano = db.Column(db.Float, nullable=False, default=0.135)
+    precio_valle = db.Column(db.Float, nullable=False, default=0.083)
+    precio_excedente = db.Column(db.Float, nullable=False, default=0.06)
+    precio_potencia_p1_dia = db.Column(db.Float, nullable=False, default=0.077)
+    precio_potencia_p2_dia = db.Column(db.Float, nullable=False, default=0.0077)
+    impuesto_electricidad = db.Column(db.Float, nullable=False, default=0.0511)
+    iva_pct = db.Column(db.Float, nullable=False, default=21.0)
+    alquiler_contador_mes = db.Column(db.Float, nullable=False, default=0.81)
+
+    organization = db.relationship('Organization')
+
+    def to_dict(self):
+        return {
+            'nombre': self.nombre,
+            'precio_punta': self.precio_punta,
+            'precio_llano': self.precio_llano,
+            'precio_valle': self.precio_valle,
+            'precio_excedente': self.precio_excedente,
+            'precio_potencia_p1_dia': self.precio_potencia_p1_dia,
+            'precio_potencia_p2_dia': self.precio_potencia_p2_dia,
+            'impuesto_electricidad': self.impuesto_electricidad,
+            'iva_pct': self.iva_pct,
+            'alquiler_contador_mes': self.alquiler_contador_mes,
+        }
+
+    def __repr__(self):
+        return f'<OrgTariffProfile org{self.org_id}>'

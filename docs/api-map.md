@@ -1,6 +1,6 @@
 # API map
 
-Mapa autogenerado por `flask api-map`. Endpoints `/api`: 140.
+Mapa autogenerado por `flask api-map`. Endpoints `/api`: 145.
 
 No editar a mano: regenerar con `flask api-map`.
 
@@ -71,6 +71,7 @@ No editar a mano: regenerar con `flask api-map`.
 | DELETE | `/api/consumption-profiles/<int:profile_id>` | `consumption_profiles.delete_profile` |  |
 | GET | `/api/consumption-profiles/<int:profile_id>` | `consumption_profiles.get_profile` |  |
 | PATCH | `/api/consumption-profiles/<int:profile_id>` | `consumption_profiles.update_profile` |  |
+| GET | `/api/consumption-profiles/<int:profile_id>/preview` | `consumption_profiles.preview_profile` |  |
 | POST | `/api/consumption-profiles/import` | `consumption_profiles.import_profile` |  |
 
 ## crud
@@ -88,6 +89,13 @@ No editar a mano: regenerar con `flask api-map`.
 | GET | `/api/datasheets/<path:name>` | `crud.get_datasheet` |  |
 | POST | `/api/wires/calculate-section` | `crud.calculate_section` |  |
 | GET | `/api/wires/search` | `crud.search_wires` |  |
+
+## economics
+
+| Método(s) | Ruta | Endpoint | Resumen |
+| --- | --- | --- | --- |
+| POST | `/api/projects/<int:project_id>/economics` | `economics.compute_economics` |  |
+| POST | `/api/projects/<int:project_id>/economics/scenarios` | `economics.economics_scenarios` |  |
 
 ## emails
 
@@ -176,6 +184,8 @@ No editar a mano: regenerar con `flask api-map`.
 | POST | `/api/org/branding/logo` | `org.upload_logo` |  |
 | GET | `/api/org/budget-profile` | `org.get_budget_profile` |  |
 | PATCH | `/api/org/budget-profile` | `org.update_budget_profile` |  |
+| GET | `/api/org/tariff-profile` | `org.get_tariff_profile` |  |
+| PATCH | `/api/org/tariff-profile` | `org.update_tariff_profile` |  |
 
 ## posventa
 

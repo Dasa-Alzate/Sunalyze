@@ -130,6 +130,10 @@ export const api = {
     remove: (id) => del(`/api/panels/${id}`),
     importFile: importFile('panels'),
   },
+  economics: {
+    compute: (projectId, body) => post(`/api/projects/${projectId}/economics`, body || {}),
+    scenarios: (projectId) => post(`/api/projects/${projectId}/economics/scenarios`, {}),
+  },
   consumptionProfiles: {
     list: () => get('/api/consumption-profiles'),
     preview: (id) => get(`/api/consumption-profiles/${id}/preview`),
