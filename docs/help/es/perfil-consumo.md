@@ -1,5 +1,7 @@
 ---
 title: Perfil de consumo del cliente
+routes:
+  - equipos/perfiles
 order: 33
 keywords: [perfil, consumo, curva, horaria, datadis, csv, bateria, autoconsumo, factura, valle, punta]
 ---

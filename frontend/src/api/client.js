@@ -130,6 +130,19 @@ export const api = {
     remove: (id) => del(`/api/panels/${id}`),
     importFile: importFile('panels'),
   },
+  consumptionProfiles: {
+    list: () => get('/api/consumption-profiles'),
+    preview: (id) => get(`/api/consumption-profiles/${id}/preview`),
+    create: (b) => post('/api/consumption-profiles', b),
+    update: (id, b) => patch(`/api/consumption-profiles/${id}`, b),
+    remove: (id) => del(`/api/consumption-profiles/${id}`),
+    importFile: (file, name) => {
+      const fd = new FormData()
+      fd.append('file', file)
+      if (name) fd.append('name', name)
+      return requestForm('/api/consumption-profiles/import', fd)
+    },
+  },
   inverters: {
     list: () => get('/api/inverters'),
     create: (b) => post('/api/inverters', b),

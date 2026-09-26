@@ -36,7 +36,8 @@
       "inverters": "Inverters",
       "batteries": "Batteries",
       "wires": "Wires",
-      "marketplace": "Marketplace"
+      "marketplace": "Marketplace",
+      "perfiles": "Consumption profiles"
     }
   },
   "unsaved": {

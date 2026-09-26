@@ -69,6 +69,28 @@ def get_profile(profile_id):
     return jsonify(profile.to_dict(include_source=True))
 
 
+@consumption_bp.route('/api/consumption-profiles/<int:profile_id>/preview', methods=['GET'])
+@require_permission(Permission.PROJECT_VIEW)
+def preview_profile(profile_id):
+    profile = _visible_profile_or_404(profile_id)
+    fractions = profile.fractions or []
+    hours = [0.0] * 24
+    for i, value in enumerate(fractions):
+        hours[i % 24] += value
+    winter = [sum(fractions[d * 24 + h] for d in range(31)) for h in range(24)]
+    summer = [sum(fractions[d * 24 + h] for d in range(181, 212)) for h in range(24)]
+    return jsonify({
+        'id': profile.id,
+        'name': profile.name,
+        'kind': profile.kind,
+        'origin': profile.origin,
+        'hours': hours,
+        'winter': winter,
+        'summer': summer,
+        'annual_kwh_hint': profile.annual_kwh_hint,
+    })
+
+
 @consumption_bp.route('/api/consumption-profiles', methods=['POST'])
 @require_permission(Permission.PROJECT_EDIT)
 def create_profile():

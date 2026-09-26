@@ -36,7 +36,8 @@
       "inverters": "Inversores",
       "batteries": "Baterías",
       "wires": "Cables",
-      "marketplace": "Marketplace"
+      "marketplace": "Marketplace",
+      "perfiles": "Perfiles de consumo"
     }
   },
   "unsaved": {

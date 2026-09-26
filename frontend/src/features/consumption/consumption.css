@@ -1,0 +1,23 @@
+.cp-section { margin-top: var(--space-4); }
+.cp-section__row { display: flex; align-items: flex-end; gap: var(--space-3); }
+.cp-section__row .sun-field { flex: 1; }
+.cp-section__preview { margin-top: var(--space-3); padding: var(--space-3); border: 1px solid var(--border-subtle); border-radius: var(--radius-sm); background: var(--soft-chip); max-width: 420px; }
+.cp-spark { width: 100%; max-width: 280px; display: block; }
+.cp-section__meta { display: flex; align-items: center; gap: var(--space-3); margin-top: var(--space-2); font-size: var(--text-xs); color: var(--text-muted); }
+.cp-section__legend { margin: var(--space-1) 0 0; font-size: var(--text-2xs); color: var(--text-subtle); }
+.cp-dot { display: inline-block; width: 8px; height: 8px; border-radius: 50%; vertical-align: baseline; }
+.cp-dot--year { background: var(--green-600); }
+.cp-dot--winter { background: var(--blue-500, #3b82f6); }
+.cp-dot--summer { background: var(--amber-500); }
+.cp-section__hint { margin: var(--space-2) 0 0; font-size: var(--text-xs); color: var(--text-subtle); }
+
+.cp-import { position: relative; z-index: 1; margin: 18vh auto 0; align-self: flex-start; width: 440px; max-width: 92vw; background: var(--surface-card); border-radius: var(--radius-lg); box-shadow: var(--shadow-overlay); padding: var(--space-6); }
+.cp-import h3 { display: flex; align-items: center; gap: var(--space-2); margin-bottom: var(--space-2); }
+.cp-import__hint { font-size: var(--text-xs); color: var(--text-muted); margin-bottom: var(--space-4); }
+.cp-import form { display: flex; flex-direction: column; gap: var(--space-3); }
+.cp-import__error { display: flex; align-items: flex-start; gap: 6px; margin: 0; padding: var(--space-2) var(--space-3); border-radius: var(--radius-sm); background: color-mix(in srgb, var(--red-500, #ef4444) 10%, transparent); color: var(--red-600, #dc2626); font-size: var(--text-xs); }
+.cp-import__actions { display: flex; justify-content: flex-end; gap: var(--space-2); margin-top: var(--space-2); }
+
+.cp-table-name { font-weight: var(--fw-semibold); color: var(--text-strong); }
+
+.cp-library__bar { display: flex; justify-content: flex-end; margin-bottom: var(--space-4); }

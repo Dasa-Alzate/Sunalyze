@@ -8,6 +8,7 @@ import { exportRows } from '@/services/export'
 import { toast } from '@/services/toast'
 import { useAuth } from '@/services/auth'
 import { emitSubview } from '@/services/assist'
+import { ProfilesView } from '@/features/consumption/ProfilesView'
 
 const SCHEMAS = {
   panels: {
@@ -115,10 +116,10 @@ export default function EquipmentLibrary() {
   const canSubscribe = can('catalog:subscribe')
   const [searchParams] = useSearchParams()
   const urlTab = searchParams.get('tab')
-  const [tab, setTab] = useState(() => ([...TAB_ORDER, 'marketplace'].includes(urlTab) ? urlTab : 'panels'))
+  const [tab, setTab] = useState(() => ([...TAB_ORDER, 'marketplace', 'perfiles'].includes(urlTab) ? urlTab : 'panels'))
 
   useEffect(() => {
-    if ([...TAB_ORDER, 'marketplace'].includes(urlTab)) setTab(urlTab)
+    if ([...TAB_ORDER, 'marketplace', 'perfiles'].includes(urlTab)) setTab(urlTab)
   }, [urlTab])
 
   useEffect(() => { emitSubview('equipos', tab) }, [tab])
@@ -133,8 +134,9 @@ export default function EquipmentLibrary() {
   const [filter, setFilter] = useState('todos')
 
   const isMarket = tab === 'marketplace'
-  const schema = isMarket ? null : SCHEMAS[tab]
-  const rows = isMarket ? null : data[tab]
+  const isProfiles = tab === 'perfiles'
+  const schema = isMarket || isProfiles ? null : SCHEMAS[tab]
+  const rows = isMarket || isProfiles ? null : data[tab]
   const ownCatalogs = (catalogs || []).filter((c) => c.own)
 
   function loadCatalogs() {
@@ -157,6 +159,7 @@ export default function EquipmentLibrary() {
 
   useEffect(loadCatalogs, [])
   useEffect(() => {
+    if (isProfiles) return
     if (isMarket) {
       if (market === null) loadMarket()
     } else if (data[tab] === null) {
@@ -314,7 +317,10 @@ export default function EquipmentLibrary() {
           <button className={`sun-tab${isMarket ? ' sun-tab--active' : ''}`} onClick={() => setTab('marketplace')}>
             <Icon name="store" size={16} />Marketplace
           </button>
-          {!isMarket && (
+          <button className={`sun-tab${isProfiles ? ' sun-tab--active' : ''}`} onClick={() => setTab('perfiles')}>
+            <Icon name="activity" size={16} />Perfiles
+          </button>
+          {!isMarket && !isProfiles && (
             <div style={{ marginLeft: 'auto', alignSelf: 'center', display: 'flex', gap: 'var(--space-3)' }}>
               {canEdit && <Btn variant="secondary" icon="upload" onClick={() => setImporting(true)}>Importar</Btn>}
               <ExportMenu onExport={exportCurrent} />
@@ -330,6 +336,8 @@ export default function EquipmentLibrary() {
 
         {error ? (
           <ErrorState message={error} onRetry={() => { setError(null); isMarket ? loadMarket() : loadEquipment() }} />
+        ) : isProfiles ? (
+          <ProfilesView canEdit={canEdit} />
         ) : isMarket ? (
           <MarketplaceView
             market={market}

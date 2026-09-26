@@ -8,6 +8,7 @@ import { relativo } from '@/shared/estados'
 import { exportRows } from '@/services/export'
 import { toast } from '@/services/toast'
 import { GeoMap } from '@/services/geo-map'
+import { ConsumptionProfileSection } from '@/features/consumption/ConsumptionProfileSection'
 import { useAuth } from '@/services/auth'
 import { emitSubview } from '@/services/assist'
 import { registerUnsavedGuard } from '@/shared/unsavedGuard'
@@ -29,7 +30,7 @@ const STEPS = [
 
 const EMPTY_FORM = {
   cliente: '', localidad: '', direccion: '',
-  necesidad: '', autoconsumo: 90,
+  necesidad: '', autoconsumo: 90, consumption_profile_id: null,
   latitud: '', longitud: '',
   coplanar: false, inclinacion: '', azimut: '',
 }
@@ -88,6 +89,7 @@ export default function Wizard() {
           setForm({
             cliente: proj.cliente || '', localidad: proj.localidad || '', direccion: proj.direccion || '',
             necesidad: proj.necesidad ?? '', autoconsumo: proj.autoconsumo ?? 90,
+            consumption_profile_id: proj.consumption_profile_id || null,
             latitud: proj.latitud ?? '', longitud: proj.longitud ?? '',
             coplanar: !!proj.coplanar, inclinacion: proj.inclinacion ?? '', azimut: proj.azimut ?? '',
           })
@@ -263,6 +265,7 @@ export default function Wizard() {
       direccion: form.direccion || null,
       necesidad: form.necesidad === '' ? null : Number(form.necesidad),
       autoconsumo: Number(form.autoconsumo),
+      consumption_profile_id: form.consumption_profile_id || null,
       latitud: form.latitud === '' ? null : Number(form.latitud),
       longitud: form.longitud === '' ? null : Number(form.longitud),
       coplanar: !!form.coplanar,
@@ -409,6 +412,10 @@ export default function Wizard() {
                   <Field key={`latitud-${shake}`} label="Latitud" numeric type="number" step="any" error={errors.latitud} value={form.latitud} onChange={(e) => patch({ latitud: e.target.value })} placeholder="38.352" required />
                   <Field key={`longitud-${shake}`} label="Longitud" numeric type="number" step="any" error={errors.longitud} value={form.longitud} onChange={(e) => patch({ longitud: e.target.value })} placeholder="-0.493" required />
                 </div>
+                <ConsumptionProfileSection
+                  value={form.consumption_profile_id}
+                  onChange={(pid) => patch({ consumption_profile_id: pid })}
+                />
                 {flag('geo_map') && (
                   <div style={{ marginTop: 'var(--space-4)' }}>
                     <GeoMap

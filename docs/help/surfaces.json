@@ -1,8 +1,22 @@
 {
   "resumen": [],
   "proyectos": [],
-  "diseno": ["lugar", "equipos", "analisis", "disposicion", "diagrama", "memoria"],
-  "equipos": ["panels", "inverters", "batteries", "wires", "marketplace"],
+  "diseno": [
+    "lugar",
+    "equipos",
+    "analisis",
+    "disposicion",
+    "diagrama",
+    "memoria"
+  ],
+  "equipos": [
+    "panels",
+    "inverters",
+    "batteries",
+    "wires",
+    "marketplace",
+    "perfiles"
+  ],
   "memoria": [],
   "modulos": [],
   "plantillas": [],
@@ -11,5 +25,9 @@
   "posventa": [],
   "actividad": [],
   "papelera": [],
-  "configuracion": ["marca", "presupuesto", "flags"]
+  "configuracion": [
+    "marca",
+    "presupuesto",
+    "flags"
+  ]
 }

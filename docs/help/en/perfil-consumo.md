@@ -1,6 +1,8 @@
 ---
 source_hash: f82144ec1b22
 title: Customer consumption profile
+routes:
+  - equipos/perfiles
 order: 33
 keywords: [profile, consumption, load curve, hourly, datadis, csv, battery, self-consumption, bill, off-peak, peak]
 ---
