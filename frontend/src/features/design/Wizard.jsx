@@ -502,7 +502,7 @@ export default function Wizard() {
                 ) : (
                   <>
                     <DegradationCard missing={results.missing} assumptions={results.assumptions} />
-                    <div className="sun-resultgrid">
+                    <div className="sun-resultgrid sun-resultgrid--compact">
                       {buildResultCards(results, panel).map((m) => (
                         <div key={m.label} className="sun-kpi" style={{ boxShadow: 'none' }}>
                           <span className="sun-metric__label">{m.label}</span>

@@ -133,6 +133,7 @@ export const api = {
   economics: {
     compute: (projectId, body) => post(`/api/projects/${projectId}/economics`, body || {}),
     scenarios: (projectId) => post(`/api/projects/${projectId}/economics/scenarios`, {}),
+    sweep: (projectId) => post(`/api/projects/${projectId}/economics/sweep`, {}),
   },
   consumptionProfiles: {
     list: () => get('/api/consumption-profiles'),

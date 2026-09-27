@@ -1,5 +1,5 @@
 ---
-source_hash: c612724fdd6b
+source_hash: 5e3fe342ca19
 title: Analysis and sizing
 routes:
   - diseno/analisis
@@ -56,3 +56,7 @@ If no inverter is fixed in **Equipment**, the analysis shows the **Compatible in
 :::callout{tone=warning}
 If the analysis fails with a network or PVGIS error, check that the coordinates are within the area covered by PVGIS (Europe, Africa and part of Asia). Out-of-range coordinates produce an immediate error.
 :::
+
+## Savings in euros
+
+If the project has a **consumption profile**, below the results you get the **Economic savings** block: bill before and after, computed real self-consumption and the decision charts (power sweep, profitability, monthly bill and typical day). Search this help for «Economic savings and decision charts» to read them well.

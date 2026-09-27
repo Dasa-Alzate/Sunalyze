@@ -35,6 +35,20 @@ def compute_economics(project_id):
     return jsonify(EconomicsService.compute(project, current_org_id(), battery, quantity))
 
 
+@economics_bp.route('/api/projects/<int:project_id>/economics/sweep', methods=['POST'])
+@require_permission(Permission.PROJECT_VIEW)
+def economics_sweep(project_id):
+    project = _owned_or_404(project_id)
+    visible = CatalogService.visible_catalog_ids(current_org_id())
+    batteries = (
+        Battery.query.filter(Battery.catalog_id.in_(visible))
+        .order_by(Battery.capacity_kwh)
+        .limit(20)
+        .all()
+    )
+    return jsonify(EconomicsService.sweep(project, current_org_id(), batteries))
+
+
 @economics_bp.route('/api/projects/<int:project_id>/economics/scenarios', methods=['POST'])
 @require_permission(Permission.PROJECT_VIEW)
 def economics_scenarios(project_id):

@@ -1,5 +1,5 @@
 ---
-source_hash: f82144ec1b22
+source_hash: 09327263645a
 title: Customer consumption profile
 routes:
   - equipos/perfiles
@@ -59,7 +59,7 @@ The profile is normalized to a canonical 365-day year starting on Monday, withou
 :::steps
 1. Ask the customer for their hourly curve on **Datadis** (datadis.es, with their ID and CUPS) or their utility's private area, and download the CSV.
 2. Upload the file in the **Consumption profile** section: hourly or quarter-hourly CSV is accepted, for a full year or a complete calendar month.
-3. Review the profile name (it defaults to the file name) and save it: it becomes available for this and future projects.
+3. Review the profile name (it defaults to the file name) and save it: it becomes available for this and future projects. Profiles are managed in the **Perfiles** tab of the **Equipos** library.
 :::
 
 :::callout{tone=warning}

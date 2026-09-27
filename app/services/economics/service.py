@@ -9,6 +9,8 @@ diferencia real de factura anual entre el sistema con y sin ella (impuestos,
 término de potencia y hucha incluidos): una sola cifra, la que paga el cliente.
 """
 
+import math
+
 from app.errors import ValidationError
 from app.gateways.pvgis_client import PvgisClient
 from app.models.consumption_profile import ConsumptionProfile
@@ -19,6 +21,9 @@ from app.services.org_service import OrgService
 
 PVGIS_START_YEAR = 2020
 PVGIS_END_YEAR = 2023
+KWP_FACTORS = (0.4, 0.6, 0.8, 1.0, 1.2, 1.4, 1.6)
+JANUARY = (0, 31)
+JULY = (181, 212)
 
 
 class EconomicsService:
@@ -75,6 +80,15 @@ class EconomicsService:
         }
 
     @staticmethod
+    def _day_type(series, start, end):
+        hours = [0.0] * 24
+        for d in range(start, end):
+            for h in range(24):
+                hours[h] += series[d * 24 + h]
+        days = end - start
+        return [round(v / days, 4) for v in hours]
+
+    @staticmethod
     def _bill(sim, tariff, potencia_kw):
         monthly_cost = [
             sum(sim['imports'][m][p] * price_of(tariff, p) for p in PERIODS)
@@ -104,6 +118,16 @@ class EconomicsService:
             'factura_fv': factura_fv,
             'ahorro_fv': round(factura_base['total'] - factura_fv['total'], 2),
             'autoconsumo_directo_pct': round(fv['autoconsumo_directo'] / fv['consumo_total'] * 100, 1),
+            'dia_tipo': {
+                'invierno': {
+                    'consumo': cls._day_type(consumption, *JANUARY),
+                    'produccion': cls._day_type(production, *JANUARY),
+                },
+                'verano': {
+                    'consumo': cls._day_type(consumption, *JULY),
+                    'produccion': cls._day_type(production, *JULY),
+                },
+            },
         }
 
         if battery is not None:
@@ -166,3 +190,65 @@ class EconomicsService:
             })
         rows.sort(key=lambda r: -r['ahorro_anual'])
         return {'factura_base': round(factura_base, 2), 'escenarios': rows}
+
+    @staticmethod
+    def _system_cost(kwp, panel, inverter, battery, budget):
+        if panel is None or not panel.precio_unitario or not panel.power:
+            return None
+        if battery is not None and not battery.precio_unitario:
+            return None
+        n_panels = math.ceil(kwp * 1000.0 / panel.power)
+        cost = n_panels * panel.precio_unitario
+        cost += budget.get('labor_fixed') or 0.0
+        cost += (budget.get('labor_per_panel') or 0.0) * n_panels
+        if inverter is not None and inverter.precio_unitario:
+            cost += inverter.precio_unitario
+        if battery is not None:
+            cost += battery.precio_unitario
+        return round(cost, 2)
+
+    @classmethod
+    def sweep(cls, project, org_id, batteries):
+        consumption, production = cls._series(project)
+        tariff = OrgService.get_tariff_profile(org_id)
+        budget = OrgService.get_budget_profile(org_id)
+        potencia = project.potencia_contratada or 4.6
+        base_kwp = (project.resultados or {}).get('total_field_power')
+        if not base_kwp:
+            raise ValidationError('El análisis guardado no tiene potencia de campo.', code='economics.no_field_power')
+
+        factura_base = cls._bill(simulate(consumption, [0.0] * HOURS_YEAR), tariff, potencia)['total']
+        kwp_points = [round(base_kwp * f, 2) for f in KWP_FACTORS]
+
+        pool = sorted(batteries, key=lambda b: (b.id != project.battery_id, not b.precio_unitario, b.capacity_kwh))
+        candidates = [None] + pool[:3]
+
+        series = []
+        sin_precio = []
+        for battery in candidates[:4]:
+            params = cls._battery_params(battery, 1) if battery else None
+            ahorros = []
+            costes = []
+            for f in KWP_FACTORS:
+                scaled = [v * f for v in production]
+                sim = simulate(consumption, scaled, params)
+                factura = cls._bill(sim, tariff, potencia)['total']
+                ahorros.append(round(factura_base - factura, 2))
+                costes.append(cls._system_cost(base_kwp * f, project.panel, project.inverter, battery, budget))
+            complete = all(c is not None for c in costes)
+            if not complete and battery is not None:
+                sin_precio.append(battery.nombre)
+            series.append({
+                'battery_id': battery.id if battery else None,
+                'nombre': battery.nombre if battery else 'Sin batería',
+                'capacity_kwh': battery.capacity_kwh if battery else 0.0,
+                'ahorros': ahorros,
+                'costes': costes if complete else None,
+            })
+
+        return {
+            'kwp': kwp_points,
+            'techo': round(factura_base, 2),
+            'series': series,
+            'sin_precio': sin_precio,
+        }

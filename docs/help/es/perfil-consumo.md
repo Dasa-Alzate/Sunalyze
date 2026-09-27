@@ -58,7 +58,7 @@ El perfil se normaliza a un año canónico de 365 días que empieza en lunes, si
 :::steps
 1. Pide al cliente su curva horaria en **Datadis** (datadis.es, con su DNI y CUPS) o en el área privada de su distribuidora, y descarga el CSV.
 2. Sube el archivo en la sección **Perfil de consumo**: se admite CSV horario o cuartohorario, de un año completo o de un mes natural.
-3. Revisa el nombre del perfil (por defecto toma el del archivo) y guárdalo: queda disponible para este y futuros proyectos.
+3. Revisa el nombre del perfil (por defecto toma el del archivo) y guárdalo: queda disponible para este y futuros proyectos. Los perfiles se gestionan en la pestaña **Perfiles** de la biblioteca de **Equipos**.
 :::
 
 :::callout{tone=warning}

@@ -52,6 +52,10 @@ Si no has fijado inversor en **Equipos**, el análisis muestra la tabla **Invers
 6. Pulsa **Continuar** para pasar a **Disposición**.
 :::
 
+## Ahorro en euros
+
+Si el proyecto tiene **perfil de consumo**, bajo los resultados aparece el bloque **Ahorro económico**: factura antes y después, autoconsumo real calculado y las gráficas de decisión (barrido de potencias, rentabilidad, factura mensual y día tipo). Busca «Ahorro económico y gráficas de decisión» en esta ayuda para leerlas bien.
+
 :::callout{tone=warning}
 Si el análisis falla con un error de red o de PVGIS, comprueba que las coordenadas están dentro del área cubierta por PVGIS (Europa, África y parte de Asia). Coordenadas fuera de rango producen un error inmediato.
 :::

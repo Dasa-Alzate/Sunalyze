@@ -96,3 +96,8 @@
 .sun-degradation__group li { margin-bottom: 2px; }
 .sun-degradation__group a { font-weight: 600; }
 .sun-degradation__group--assumed { color: var(--text-subtle); }
+
+.sun-resultgrid--compact { grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: var(--space-2) var(--space-3); }
+.sun-resultgrid--compact .sun-kpi { padding: var(--space-2) var(--space-3); border-radius: var(--radius-sm); gap: 2px; }
+.sun-resultgrid--compact .sun-metric__label { font-size: var(--text-2xs); }
+.sun-resultgrid--compact .sun-metric__value { font-size: var(--text-md); }

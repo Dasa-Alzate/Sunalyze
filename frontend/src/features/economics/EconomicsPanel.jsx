@@ -2,21 +2,50 @@ import { useState } from 'react'
 import { Badge, Btn, Icon, Spinner } from '@/shared/ui'
 import { api } from '@/api/client'
 import { toast } from '@/services/toast'
+import { SweepChart, ProfitChart, MonthlyBillChart, DayTypeChart } from './charts'
 import './economics.css'
 
 const eur = (v) => `${v.toLocaleString('es-ES', { minimumFractionDigits: 2, maximumFractionDigits: 2 })} €`
 
+const TABS = [
+  { key: 'barrido', label: 'Barrido', icon: 'trending-up' },
+  { key: 'rentabilidad', label: 'Rentabilidad', icon: 'scale' },
+  { key: 'factura', label: 'Factura mensual', icon: 'receipt' },
+  { key: 'diatipo', label: 'Día tipo', icon: 'sun' },
+]
+
 export function EconomicsPanel({ projectId, profileId, onSave }) {
   const [data, setData] = useState(null)
+  const [sweep, setSweep] = useState(null)
   const [scenarios, setScenarios] = useState(null)
   const [busy, setBusy] = useState(false)
-  const [comparing, setComparing] = useState(false)
+  const [tabBusy, setTabBusy] = useState(false)
+  const [tab, setTab] = useState('barrido')
+
+  async function loadSweep() {
+    setTabBusy(true)
+    try {
+      const [sw, sc] = await Promise.all([
+        api.economics.sweep(projectId),
+        api.economics.scenarios(projectId),
+      ])
+      setSweep(sw)
+      setScenarios(sc)
+    } catch (err) {
+      toast('error', 'No se pudo calcular el barrido', err.data?.error || err.message)
+    } finally {
+      setTabBusy(false)
+    }
+  }
 
   async function compute() {
     setBusy(true)
     try {
       if (onSave && await onSave() === null) { setBusy(false); return }
       setData(await api.economics.compute(projectId))
+      setSweep(null)
+      setScenarios(null)
+      loadSweep()
     } catch (err) {
       toast('error', 'No se pudo calcular el ahorro', err.data?.error || err.message)
     } finally {
@@ -24,16 +53,9 @@ export function EconomicsPanel({ projectId, profileId, onSave }) {
     }
   }
 
-  async function compare() {
-    setComparing(true)
-    try {
-      if (onSave && await onSave() === null) { setComparing(false); return }
-      setScenarios(await api.economics.scenarios(projectId))
-    } catch (err) {
-      toast('error', 'No se pudo comparar', err.data?.error || err.message)
-    } finally {
-      setComparing(false)
-    }
+  function openTab(next) {
+    setTab(next)
+    if ((next === 'barrido' || next === 'rentabilidad') && !sweep && !tabBusy) loadSweep()
   }
 
   if (!profileId) {
@@ -60,16 +82,9 @@ export function EconomicsPanel({ projectId, profileId, onSave }) {
     <div className="eco-panel">
       <div className="eco-panel__head">
         <h4><Icon name="piggy-bank" size={16} /> Ahorro económico ({data ? data.tarifa.nombre : '2.0TD'})</h4>
-        <div className="eco-panel__actions">
-          <Btn variant={data ? 'secondary' : 'primary'} icon="calculator" data-busy={busy} disabled={busy} onClick={compute}>
-            {busy ? 'Calculando…' : data ? 'Recalcular' : 'Calcular ahorro'}
-          </Btn>
-          {data && (
-            <Btn variant="secondary" icon="scale" data-busy={comparing} disabled={comparing} onClick={compare}>
-              {comparing ? 'Comparando…' : 'Comparar baterías'}
-            </Btn>
-          )}
-        </div>
+        <Btn variant={data ? 'secondary' : 'primary'} icon="calculator" data-busy={busy} disabled={busy} onClick={compute}>
+          {busy ? 'Calculando…' : data ? 'Recalcular' : 'Calcular ahorro'}
+        </Btn>
       </div>
       {busy && !data && <Spinner label="Cruzando consumo y producción hora a hora…" />}
       {data && (
@@ -107,41 +122,60 @@ export function EconomicsPanel({ projectId, profileId, onSave }) {
               (la compensación no supera la factura): margen para más batería o menos campo.
             </p>
           )}
+          <div className="eco-tabs" role="tablist">
+            {TABS.map((t) => (
+              <button key={t.key} type="button" role="tab" aria-selected={tab === t.key}
+                className={`eco-tab${tab === t.key ? ' eco-tab--active' : ''}`}
+                onClick={() => openTab(t.key)}>
+                <Icon name={t.icon} size={13} />{t.label}
+              </button>
+            ))}
+          </div>
+          <div className="eco-tabbody">
+            {(tab === 'barrido' || tab === 'rentabilidad') && tabBusy && <Spinner label="Simulando escenarios…" />}
+            {tab === 'barrido' && sweep && <SweepChart sweep={sweep} />}
+            {tab === 'rentabilidad' && sweep && (
+              <>
+                <ProfitChart sweep={sweep} />
+                {scenarios && (
+                  <table className="sun-table eco-scenarios__table">
+                    <thead>
+                      <tr>
+                        <th>Batería (con el campo actual)</th>
+                        <th style={{ textAlign: 'right' }}>kWh</th>
+                        <th style={{ textAlign: 'right' }}>Factura/año</th>
+                        <th style={{ textAlign: 'right' }}>Ahorro/año</th>
+                        <th style={{ textAlign: 'right' }}>Aporte batería</th>
+                        <th style={{ textAlign: 'right' }}>Payback batería</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {scenarios.escenarios.map((row, i) => (
+                        <tr key={row.battery_id ?? 'none'}>
+                          <td className="cp-table-name">
+                            {row.nombre}{' '}
+                            {i === 0 && row.battery_id !== null && <Badge tone="success">Mayor ahorro</Badge>}
+                          </td>
+                          <td style={{ textAlign: 'right' }}>{row.capacity_kwh || '—'}</td>
+                          <td style={{ textAlign: 'right' }}>{eur(row.factura_anual)}</td>
+                          <td style={{ textAlign: 'right' }}>{eur(row.ahorro_anual)}</td>
+                          <td style={{ textAlign: 'right' }}>{row.battery_id ? eur(row.ahorro_bateria) : '—'}</td>
+                          <td style={{ textAlign: 'right' }}>
+                            {row.payback_bateria_anios != null ? `${row.payback_bateria_anios.toLocaleString('es-ES')} años` : '—'}
+                          </td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                )}
+              </>
+            )}
+            {tab === 'factura' && (
+              <MonthlyBillChart antes={data.factura_base.meses} despues={facturaFinal.meses} />
+            )}
+            {tab === 'diatipo' && <DayTypeChart diaTipo={data.dia_tipo} />}
+          </div>
         </>
-      )}
-      {scenarios && (
-        <div className="eco-scenarios">
-          <h5>Comparativa de baterías (mismo campo FV)</h5>
-          <table className="sun-table">
-            <thead>
-              <tr>
-                <th>Batería</th>
-                <th style={{ textAlign: 'right' }}>kWh</th>
-                <th style={{ textAlign: 'right' }}>Factura/año</th>
-                <th style={{ textAlign: 'right' }}>Ahorro/año</th>
-                <th style={{ textAlign: 'right' }}>Aporte batería</th>
-                <th style={{ textAlign: 'right' }}>Payback batería</th>
-              </tr>
-            </thead>
-            <tbody>
-              {scenarios.escenarios.map((row, i) => (
-                <tr key={row.battery_id ?? 'none'}>
-                  <td className="cp-table-name">
-                    {row.nombre}{' '}
-                    {i === 0 && row.battery_id !== null && <Badge tone="success">Mayor ahorro</Badge>}
-                  </td>
-                  <td style={{ textAlign: 'right' }}>{row.capacity_kwh || '—'}</td>
-                  <td style={{ textAlign: 'right' }}>{eur(row.factura_anual)}</td>
-                  <td style={{ textAlign: 'right' }}>{eur(row.ahorro_anual)}</td>
-                  <td style={{ textAlign: 'right' }}>{row.battery_id ? eur(row.ahorro_bateria) : '—'}</td>
-                  <td style={{ textAlign: 'right' }}>
-                    {row.payback_bateria_anios != null ? `${row.payback_bateria_anios.toLocaleString('es-ES')} años` : '—'}
-                  </td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
-        </div>
       )}
     </div>
   )
