@@ -10,6 +10,7 @@ import { toast } from '@/services/toast'
 import { GeoMap } from '@/services/geo-map'
 import { ConsumptionProfileSection } from '@/features/consumption/ConsumptionProfileSection'
 import { EconomicsPanel } from '@/features/economics/EconomicsPanel'
+import { MonthlyEnergyFlowChart } from '@/features/economics/charts'
 import { useAuth } from '@/services/auth'
 import { emitSubview } from '@/services/assist'
 import { registerUnsavedGuard } from '@/shared/unsavedGuard'
@@ -18,20 +19,19 @@ import DegradationCard from '@/shared/ui/DegradationCard'
 import CircuitDiagram from './CircuitDiagram'
 import PanelLayout from './PanelLayout'
 
-const STEP_KEYS = ['lugar', 'equipos', 'analisis', 'disposicion', 'diagrama', 'memoria']
+const STEP_KEYS = ['lugar', 'analisis_cubierta', 'equipos', 'diagrama', 'memoria']
 
 const STEPS = [
   { title: 'Datos del lugar', icon: 'map-pin' },
+  { title: 'Análisis y cubierta', icon: 'layout-grid' },
   { title: 'Equipos', icon: 'package' },
-  { title: 'Análisis', icon: 'bar-chart-3' },
-  { title: 'Disposición', icon: 'layout-grid' },
   { title: 'Diagrama', icon: 'workflow' },
   { title: 'Memoria', icon: 'file-text' },
 ]
 
 const EMPTY_FORM = {
   cliente: '', localidad: '', direccion: '',
-  necesidad: '', autoconsumo: 90, consumption_profile_id: null,
+  necesidad: '', autoconsumo: 80, consumption_profile_id: null,
   latitud: '', longitud: '',
   coplanar: false, inclinacion: '', azimut: '',
 }
@@ -46,7 +46,6 @@ export default function Wizard() {
   const [panels, setPanels] = useState([])
   const [inverters, setInverters] = useState([])
   const [batteries, setBatteries] = useState([])
-  const [wires, setWires] = useState([])
 
   const [projectId, setProjectId] = useState(id ? Number(id) : null)
   const [serial, setSerial] = useState(null)
@@ -55,13 +54,12 @@ export default function Wizard() {
   const [inverterId, setInverterId] = useState(null)
   const [batteryId, setBatteryId] = useState(null)
   const [batteryQty, setBatteryQty] = useState(1)
-  const [wireDcId, setWireDcId] = useState(null)
-  const [wireAcId, setWireAcId] = useState(null)
-  const [wireGroundId, setWireGroundId] = useState(null)
 
   const [step, setStep] = useState(0)
   const [errors, setErrors] = useState({})
   const [shake, setShake] = useState(0)
+  const [showAdvancedOptions, setShowAdvancedOptions] = useState(false)
+  const advancedOptionsId = useId()
 
   useEffect(() => { emitSubview('diseno', STEP_KEYS[step]) }, [step])
   const [results, setResults] = useState(null)
@@ -76,20 +74,19 @@ export default function Wizard() {
     let alive = true
     setLoading(true)
     setLoadError(null)
-    Promise.all([api.panels.list(), api.inverters.list(), api.batteries.list(), api.wires.list().catch(() => []), id ? api.projects.get(Number(id)) : Promise.resolve(null)])
-      .then(([ps, invs, bats, ws, proj]) => {
+    Promise.all([api.panels.list(), api.inverters.list(), api.batteries.list(), id ? api.projects.get(Number(id)) : Promise.resolve(null)])
+      .then(([ps, invs, bats, proj]) => {
         if (!alive) return
         setPanels(ps)
         setInverters(invs)
         setBatteries(bats)
-        setWires(ws || [])
         if (proj) {
           setProjectId(proj.id)
           setSerial(proj.serial || null)
           setLastSaved(proj.updated_at || null)
           setForm({
             cliente: proj.cliente || '', localidad: proj.localidad || '', direccion: proj.direccion || '',
-            necesidad: proj.necesidad ?? '', autoconsumo: proj.autoconsumo ?? 90,
+            necesidad: proj.necesidad ?? '', autoconsumo: proj.autoconsumo ?? 80,
             consumption_profile_id: proj.consumption_profile_id || null,
             latitud: proj.latitud ?? '', longitud: proj.longitud ?? '',
             coplanar: !!proj.coplanar, inclinacion: proj.inclinacion ?? '', azimut: proj.azimut ?? '',
@@ -98,9 +95,6 @@ export default function Wizard() {
           setInverterId(proj.inverter_id || null)
           setBatteryId(proj.battery_id || null)
           setBatteryQty(proj.battery_quantity ?? 1)
-          setWireDcId(proj.wire_dc_id || null)
-          setWireAcId(proj.wire_ac_id || null)
-          setWireGroundId(proj.wire_ground_id || null)
           if (proj.resultados) setResults(proj.resultados)
           if (proj.layout) setLayout(proj.layout)
         }
@@ -113,14 +107,6 @@ export default function Wizard() {
   const panel = useMemo(() => panels.find((p) => p.id === panelId) || null, [panels, panelId])
   const inverter = useMemo(() => inverters.find((i) => i.id === inverterId) || null, [inverters, inverterId])
   const battery = useMemo(() => batteries.find((b) => b.id === batteryId) || null, [batteries, batteryId])
-  const wireOptions = useMemo(
-    () => wires.map((w) => ({ ...w, nombre: w.nombre || `${w.tipo || 'Cable'} ${w.seccion ?? '?'} mm² ${w.material || ''}`.trim() })),
-    [wires],
-  )
-  const wireDc = useMemo(() => wireOptions.find((w) => w.id === wireDcId) || null, [wireOptions, wireDcId])
-  const wireAc = useMemo(() => wireOptions.find((w) => w.id === wireAcId) || null, [wireOptions, wireAcId])
-  const wireGround = useMemo(() => wireOptions.find((w) => w.id === wireGroundId) || null, [wireOptions, wireGroundId])
-
   const dirtyRef = useRef(false)
   const saveRef = useRef(null)
   const [dirty, setDirty] = useState(false)
@@ -148,10 +134,6 @@ export default function Wizard() {
   }
   function pickInverter(i) { setInverterId(i.id); touch() }
   function pickBattery(b) { setBatteryId(b.id); touch() }
-  function pickWireDc(w) { setWireDcId(w.id); touch() }
-  function pickWireAc(w) { setWireAcId(w.id); touch() }
-  function pickWireGround(w) { setWireGroundId(w.id); touch() }
-
   function numberError(raw, { min, max, positive, rangeMsg } = {}) {
     if (raw === '' || raw == null) return 'Campo obligatorio'
     const n = Number(raw)
@@ -178,7 +160,8 @@ export default function Wizard() {
         if (azimut) errs.azimut = azimut
       }
     }
-    if (i === 1 && !panelId) errs.panel = 'Selecciona un panel — es obligatorio para dimensionar'
+    if (i === 1 && (layout?.roof?.length || 0) < 3) errs.layout = 'Dibuja la cubierta para comprobar el espacio disponible antes de elegir los equipos'
+    if (i === 2 && !panelId) errs.panel = 'Selecciona un panel para continuar con el dimensionamiento final'
     return errs
   }
 
@@ -193,6 +176,10 @@ export default function Wizard() {
   }
 
   function goToStep(target) {
+    if (step === 2 && target > step) {
+      continueFromEquipment()
+      return
+    }
     for (let i = step; i < target; i++) {
       if (!tryAdvance(i)) { setStep(i); return }
     }
@@ -215,24 +202,25 @@ export default function Wizard() {
   })
 
   async function analyze() {
-    for (const i of [0, 1]) {
+    for (const i of [0]) {
       if (!tryAdvance(i)) {
         setStep(i)
-        toast('warning', 'Faltan datos', i === 0 ? 'Revisa los campos marcados en «Datos del lugar»' : 'El panel es obligatorio para dimensionar')
-        return
+        toast('warning', 'Faltan datos', 'Revisa los campos marcados en «Datos del lugar»')
+        return false
       }
     }
     setAnalyzing(true)
     setAnalysisError(null)
     const body = {
-      panel_id: panelId,
       latitud: Number(form.latitud),
       longitud: Number(form.longitud),
       autoconsumo: Number(form.autoconsumo),
       necesidad: Number(form.necesidad),
+      consumption_profile_id: form.consumption_profile_id,
       coplanar: !!form.coplanar,
       show_all_inverters: showAll,
     }
+    if (panelId) body.panel_id = panelId
     if (inverterId) body.inverter_id = inverterId
     if (batteryId) { body.battery_id = batteryId; body.battery_quantity = Number(batteryQty) || 1 }
     if (form.coplanar) { body.inclinacion = Number(form.inclinacion); body.azimut = Number(form.azimut) }
@@ -243,12 +231,23 @@ export default function Wizard() {
       dirtyRef.current = true
       setDirty(true)
       toast('success', 'Dimensionamiento calculado')
+      return true
     } catch (e) {
       setAnalysisError(e.message)
       toast('error', 'No se pudo calcular', e.message)
+      return false
     } finally {
       setAnalyzing(false)
     }
+  }
+
+  async function continueFromEquipment() {
+    if (!tryAdvance(2)) return
+    if (stale || !results?.cable_sizing) {
+      await analyze()
+      return
+    }
+    setStep(3)
   }
 
   async function save({ estado, silent } = {}) {
@@ -276,9 +275,6 @@ export default function Wizard() {
       inverter_id: inverterId,
       battery_id: batteryId,
       battery_quantity: batteryId ? (Number(batteryQty) || 1) : null,
-      wire_dc_id: wireDcId,
-      wire_ac_id: wireAcId,
-      wire_ground_id: wireGroundId,
       resultados: results,
       layout,
     }
@@ -322,15 +318,15 @@ export default function Wizard() {
 
   function patchLayout(next) {
     setLayout(next)
+    if (next?.roof?.length) setErrors((e) => { const updated = { ...e }; delete updated.layout; return updated })
     dirtyRef.current = true
     setDirty(true)
   }
 
   const stepValid = [
     Boolean(form.cliente.trim() && form.necesidad !== '' && form.latitud !== '' && form.longitud !== ''),
+    Boolean(results && !stale && layout?.roof?.length >= 3),
     Boolean(panelId),
-    Boolean(results),
-    true,
     true,
     true,
   ]
@@ -339,7 +335,7 @@ export default function Wizard() {
 
   const stepState = (i) => {
     if (i === step) return 'active'
-    if (stale && i >= 2) return 'stale'
+    if (stale && i >= 1) return 'stale'
     if (i < step) return 'done'
     return 'pending'
   }
@@ -364,7 +360,7 @@ export default function Wizard() {
               {dirty ? 'Cambios sin guardar' : lastSaved ? `Guardado ${relativo(lastSaved)}` : ''}
             </span>
             <Btn variant="secondary" icon="save" data-busy={saving} disabled={saving} onClick={() => save()}>Guardar</Btn>
-            <Btn variant="secondary" icon="workflow" onClick={() => setStep(4)}>Diagrama unifilar</Btn>
+            <Btn variant="secondary" icon="workflow" onClick={() => goToStep(3)}>Diagrama unifilar</Btn>
             <Btn variant="primary" icon="file-text" onClick={goToMemoria}>Ir a la memoria</Btn>
           </>
         }
@@ -407,9 +403,28 @@ export default function Wizard() {
 
                 <div className="sun-divider">Emplazamiento y consumo</div>
                 <div className="sun-wizard__formgrid">
-                  <Field key={`necesidad-${shake}`} label="Necesidad anual" numeric type="number" step="any" error={errors.necesidad} value={form.necesidad} onChange={(e) => patch({ necesidad: e.target.value })} hint="kWh/año" required />
-                  <SelectField label="Autoconsumo" value={form.autoconsumo} onChange={(e) => patch({ autoconsumo: e.target.value })}
-                    options={[{ value: 70, label: '70 %' }, { value: 80, label: '80 %' }, { value: 90, label: '90 %' }, { value: 100, label: '100 %' }]} />
+                  <div className="sun-wizard__need-row">
+                    <div>
+                      <Field key={`necesidad-${shake}`} label="Necesidad anual" numeric type="number" step="any" error={errors.necesidad} value={form.necesidad} onChange={(e) => patch({ necesidad: e.target.value })} hint="kWh/año" required />
+                      {showAdvancedOptions && (
+                        <div id={advancedOptionsId} className="sun-reveal" style={{ marginTop: 'var(--space-3)' }}>
+                          <SelectField label="Autoconsumo" value={form.autoconsumo} onChange={(e) => patch({ autoconsumo: e.target.value })}
+                            options={[{ value: 70, label: '70 %' }, { value: 80, label: '80 %' }, { value: 90, label: '90 %' }, { value: 100, label: '100 %' }]} />
+                        </div>
+                      )}
+                    </div>
+                    <Btn
+                      variant="secondary"
+                      size="sm"
+                      icon="sliders-horizontal"
+                      type="button"
+                      aria-expanded={showAdvancedOptions}
+                      aria-controls={showAdvancedOptions ? advancedOptionsId : undefined}
+                      onClick={() => setShowAdvancedOptions((visible) => !visible)}
+                    >
+                      {showAdvancedOptions ? 'Ocultar opciones avanzadas' : 'Opciones avanzadas'}
+                    </Btn>
+                  </div>
                   <Field key={`latitud-${shake}`} label="Latitud" numeric type="number" step="any" error={errors.latitud} value={form.latitud} onChange={(e) => patch({ latitud: e.target.value })} placeholder="38.352" required />
                   <Field key={`longitud-${shake}`} label="Longitud" numeric type="number" step="any" error={errors.longitud} value={form.longitud} onChange={(e) => patch({ longitud: e.target.value })} placeholder="-0.493" required />
                 </div>
@@ -440,7 +455,7 @@ export default function Wizard() {
               </>
             )}
 
-            {step === 1 && (
+            {step === 2 && (
               <>
                 <div className="sun-divider">Selección de equipos</div>
                 <div className="sun-field" style={{ marginBottom: 'var(--space-4)' }} key={`panel-${shake}`}>
@@ -472,23 +487,11 @@ export default function Wizard() {
                   <span>Mostrar todos los inversores compatibles (desactivar filtro por potencia)</span>
                 </label>
 
-                <div className="sun-divider" style={{ marginTop: 'var(--space-6)' }}>Cableado <span style={{ color: 'var(--text-subtle)', fontWeight: 500, fontSize: 'var(--text-sm)' }}>· opcional — la sección alimenta la memoria técnica</span></div>
-                <div className="sun-field">
-                  <span className="sun-field__label" id="ss-wire-dc">Cable CC (serie fotovoltaica)</span>
-                  <SearchSelect labelId="ss-wire-dc" placeholder="Buscar cable CC…" options={wireOptions} value={wireDc} onPick={pickWireDc} meta={wireMeta} clearable onClear={() => { setWireDcId(null); touch() }} />
-                </div>
-                <div className="sun-field" style={{ marginTop: 'var(--space-4)' }}>
-                  <span className="sun-field__label" id="ss-wire-ac">Cable CA (salida del inversor)</span>
-                  <SearchSelect labelId="ss-wire-ac" placeholder="Buscar cable CA…" options={wireOptions} value={wireAc} onPick={pickWireAc} meta={wireMeta} clearable onClear={() => { setWireAcId(null); touch() }} />
-                </div>
-                <div className="sun-field" style={{ marginTop: 'var(--space-4)' }}>
-                  <span className="sun-field__label" id="ss-wire-ground">Cable de tierra</span>
-                  <SearchSelect labelId="ss-wire-ground" placeholder="Buscar cable de tierra…" options={wireOptions} value={wireGround} onPick={pickWireGround} meta={wireMeta} clearable onClear={() => { setWireGroundId(null); touch() }} />
-                </div>
+                <CableSizingSummary sizing={results?.cable_sizing} stale={stale} />
               </>
             )}
 
-            {step === 2 && (
+            {step === 1 && (
               <>
                 <div className="sun-divider">Resultados del dimensionamiento</div>
                 {analysisError && <div className="sun-inline-note sun-inline-note--danger" style={{ marginBottom: 'var(--space-4)' }}><Icon name="alert-triangle" size={14} />{analysisError}</div>}
@@ -496,7 +499,7 @@ export default function Wizard() {
                   <div className="sun-empty" style={{ border: 0, padding: 'var(--space-8) 0' }}>
                     <div className="sun-empty__icon"><Icon name="bar-chart-3" size={26} /></div>
                     <div className="sun-empty__title">Sin cálculo todavía</div>
-                    <div className="sun-empty__desc">Calcula el dimensionamiento con los datos del lugar y el panel seleccionado. Los datos de irradiancia provienen de PVGIS.</div>
+                    <div className="sun-empty__desc">Calcula potencia pico y superficie de módulos con la irradiancia del emplazamiento y los rendimientos habituales. Los datos solares provienen de PVGIS.</div>
                     <div className="sun-empty__actions"><Btn variant="primary" icon="play" data-busy={analyzing} disabled={analyzing} onClick={analyze}>{analyzing ? 'Calculando…' : 'Calcular dimensionamiento'}</Btn></div>
                   </div>
                 ) : (
@@ -510,7 +513,20 @@ export default function Wizard() {
                         </div>
                       ))}
                     </div>
-                    {!inverter && results.compatible_inverters && (
+                    {results.monthly_energy_flow && !stale ? (
+                      <div style={{ marginTop: 'var(--space-5)' }}>
+                        <div className="sun-divider">Balance energético mensual</div>
+                        <MonthlyEnergyFlowChart flow={results.monthly_energy_flow} />
+                      </div>
+                    ) : !form.consumption_profile_id ? (
+                      <div className="sun-inline-note" style={{ marginTop: 'var(--space-4)' }}>
+                        <Icon name="info" size={14} /> Para desglosar producción, batería y excedentes por mes, selecciona un perfil de consumo.
+                        <Btn variant="ghost" size="sm" icon="arrow-up" onClick={() => setStep(0)}>Elegir perfil</Btn>
+                      </div>
+                    ) : stale ? (
+                      <div className="sun-inline-note" style={{ marginTop: 'var(--space-4)' }}><Icon name="alert-triangle" size={14} /> Recalcula para actualizar el balance horario mensual.</div>
+                    ) : null}
+                    {!inverter && !results.assumed_panel && results.compatible_inverters && (
                       <CompatibleInverters list={results.compatible_inverters} onPick={(inv) => { pickInverter(inv); toast('info', 'Inversor seleccionado', 'Recalcula para el dimensionamiento completo') }} />
                     )}
                     {results.battery && <BatteryResult battery={results.battery} />}
@@ -523,47 +539,52 @@ export default function Wizard() {
                     </div>
                   </>
                 )}
+                {results && (
+                  <>
+                    {results.assumed_panel && (
+                      <div className="sun-inline-note" style={{ marginTop: 'var(--space-4)' }}>
+                        <Icon name="info" size={14} color="var(--info)" />
+                        Estimación preliminar con eficiencia del módulo del 21 %, temperatura típica de operación y rendimiento de inversor del 97 %. Se actualizará con los datos de los equipos seleccionados.
+                      </div>
+                    )}
+                    <div className="sun-divider" style={{ marginTop: 'var(--space-6)' }}>Disposición de paneles sobre la cubierta</div>
+                    {errors.layout && <div className="sun-inline-note sun-inline-note--danger" style={{ marginBottom: 'var(--space-3)' }}><Icon name="alert-triangle" size={14} />{errors.layout}</div>}
+                    {panel && !(panel.width && panel.height) && (
+                      <DegradationCard missing={[{
+                        entity: 'panel',
+                        entity_id: panel.id,
+                        entity_nombre: panel.nombre,
+                        field: !panel.width ? 'width' : 'height',
+                        label: 'Dimensiones del módulo (alto y ancho)',
+                        unlocks: 'la retícula real sobre la cubierta, con el paso y la separación entre filas correctos',
+                        edit_url: `/app/equipos?tab=panels&edit=${panel.id}&field=width`,
+                      }]} />
+                    )}
+                    <PanelLayout
+                      lat={form.latitud}
+                      lon={form.longitud}
+                      azimut={form.azimut}
+                      inclinacion={form.inclinacion}
+                      coplanar={form.coplanar}
+                      betaOptimal={results.beta_optimal}
+                      panel={panel}
+                      requiredPanels={panel ? panelesFrom(results, panel) : null}
+                      requiredAreaM2={results.cell_area}
+                      layout={layout}
+                      onChange={patchLayout}
+                    />
+                  </>
+                )}
               </>
             )}
 
             {step === 3 && (
-              <>
-                <div className="sun-divider">Disposición de paneles sobre la cubierta</div>
-                {panel && !(panel.width && panel.height) && (
-                  <DegradationCard missing={[{
-                    entity: 'panel',
-                    entity_id: panel.id,
-                    entity_nombre: panel.nombre,
-                    field: !panel.width ? 'width' : 'height',
-                    label: 'Dimensiones del módulo (alto y ancho)',
-                    unlocks: 'la retícula real sobre la cubierta, con el paso y la separación entre filas correctos',
-                    edit_url: `/app/equipos?tab=panels&edit=${panel.id}&field=width`,
-                  }]} />
-                )}
-                {panel && !(panel.width && panel.height) ? null : (
-                <PanelLayout
-                  lat={form.latitud}
-                  lon={form.longitud}
-                  azimut={form.azimut}
-                  inclinacion={form.inclinacion}
-                  coplanar={form.coplanar}
-                  betaOptimal={results?.beta_optimal}
-                  panel={panel}
-                  requiredPanels={panelesFrom(results, panel)}
-                  layout={layout}
-                  onChange={patchLayout}
-                />
-                )}
-              </>
-            )}
-
-            {step === 4 && (
               !results ? (
                 <div className="sun-empty" style={{ border: 0, padding: 'var(--space-8) 0' }}>
                   <div className="sun-empty__icon"><Icon name="workflow" size={26} /></div>
                   <div className="sun-empty__title">Calcula el dimensionamiento primero</div>
                   <div className="sun-empty__desc">El diagrama unifilar parte de los equipos y el cálculo del proyecto. Vuelve al análisis para dimensionar la instalación.</div>
-                  <div className="sun-empty__actions"><Btn variant="primary" icon="bar-chart-3" onClick={() => setStep(2)}>Ir al análisis</Btn></div>
+                  <div className="sun-empty__actions"><Btn variant="primary" icon="bar-chart-3" onClick={() => setStep(1)}>Ir al análisis</Btn></div>
                 </div>
               ) : (
                 <>
@@ -573,7 +594,7 @@ export default function Wizard() {
               )
             )}
 
-            {step === 5 && (
+            {step === 4 && (
               <div className="sun-empty" style={{ border: 0, padding: 'var(--space-8) 0' }}>
                 <div className="sun-empty__icon"><Icon name="file-text" size={26} /></div>
                 <div className="sun-empty__title">Listo para la memoria técnica</div>
@@ -588,7 +609,9 @@ export default function Wizard() {
             <div className="sun-wizard__nav">
               <Btn variant="secondary" icon="arrow-left" disabled={step === 0} onClick={() => setStep(Math.max(0, step - 1))}>Atrás</Btn>
               {step === 1 ? (
-                <Btn variant="primary" iconRight="arrow-right" data-busy={analyzing} disabled={analyzing || !stepValid[1]} onClick={() => { if (!tryAdvance(1)) return; setStep(2); if (!results || stale) analyze() }}>{analyzing ? 'Calculando…' : 'Calcular y continuar'}</Btn>
+                <Btn variant="primary" iconRight="arrow-right" data-busy={analyzing} disabled={analyzing || !stepValid[0]} onClick={() => { if (!tryAdvance(0)) return; if (!results || stale) analyze(); else if (tryAdvance(1)) setStep(2) }}>{analyzing ? 'Calculando…' : results && !stale ? 'Continuar a equipos' : 'Calcular estimación'}</Btn>
+              ) : step === 2 ? (
+                <Btn variant="primary" iconRight="arrow-right" data-busy={analyzing} disabled={analyzing || !stepValid[2]} onClick={continueFromEquipment}>{analyzing ? 'Calculando…' : stale || !results?.cable_sizing ? 'Calcular cableado' : 'Continuar'}</Btn>
               ) : (
                 <Btn variant="primary" iconRight="arrow-right" disabled={!stepValid[step]} onClick={() => { if (!tryAdvance(step)) return; if (step < STEPS.length - 1) setStep(step + 1); else goToMemoria() }}>{step < STEPS.length - 1 ? 'Continuar' : 'Generar memoria'}</Btn>
               )}
@@ -629,10 +652,6 @@ function inverterMeta(i) {
 function batteryMeta(b) {
   return `${dec(b.capacity_kwh)} kWh · ${dec(b.power_kw)} kW${b.technology ? ` · ${b.technology}` : ''}`
 }
-function wireMeta(w) {
-  return `${dec(w.seccion)} mm² · ${dec(w.corriente)} A${w.material ? ` · ${w.material}` : ''}${w.tipo ? ` · ${w.tipo}` : ''}`
-}
-
 function SearchSelect({ placeholder, options, value, onPick, meta, clearable, onClear, labelId, error }) {
   const [open, setOpen] = useState(false)
   const [q, setQ] = useState('')
@@ -774,7 +793,53 @@ function BatteryResult({ battery }) {
   )
 }
 
+function CableSizingSummary({ sizing, stale }) {
+  return (
+    <div style={{ marginTop: 'var(--space-6)' }}>
+      <div className="sun-divider">Cableado calculado</div>
+      {!sizing ? (
+        <div className="sun-inline-note">
+          <Icon name="info" size={14} /> Selecciona panel e inversor y calcula para obtener las secciones y longitudes máximas.
+        </div>
+      ) : (
+        <>
+          {stale && <div className="sun-inline-note" style={{ marginBottom: 'var(--space-3)' }}><Icon name="alert-triangle" size={14} /> Selección modificada; recalcula para actualizar el cableado.</div>}
+          <div className="sun-resultgrid sun-resultgrid--compact">
+            <CableRunCard title="Cable CC" run={sizing.dc} />
+            <CableRunCard title="Cable CA" run={sizing.ac} />
+            <div className="sun-kpi" style={{ boxShadow: 'none' }}>
+              <span className="sun-metric__label">Conductor de protección</span>
+              <span className="sun-metric__value">{sizing.ground_section_mm2 ?? '—'}<span className="unit">mm² Cu</span></span>
+              <span className="sun-metric__label">{sizing.ground_rule}</span>
+            </div>
+          </div>
+          <div className="sun-inline-note" style={{ marginTop: 'var(--space-3)' }}>
+            <Icon name="info" size={14} /> {sizing.standard}; método {sizing.installation_method}, {sizing.insulation}, dos conductores cargados y {sizing.ambient_temperature_assumption_c} °C ambiente. Corriente de cálculo = corriente nominal × {dec(sizing.dc.current_factor)}. Caída total {dec(sizing.voltage_drop_total_limit_pct)} %, repartida en {dec(sizing.voltage_drop_per_run_pct)} % por tramo. CC supone un string en serie; CA supone {sizing.ac_voltage_assumption}. Longitudes máximas unidireccionales; revisar radiación solar, agrupamiento y montaje real.
+          </div>
+        </>
+      )}
+    </div>
+  )
+}
+
+function CableRunCard({ title, run }) {
+  const missingCurrent = run.current_a == null
+  const missingLength = run.maximum_length_m == null
+  return (
+    <div className="sun-kpi" style={{ boxShadow: 'none' }}>
+      <span className="sun-metric__label">{title} · {missingCurrent ? 'corriente sin ficha' : `${dec(run.nominal_current_a)} × ${dec(run.current_factor)} = ${dec(run.current_a)} A`}</span>
+      <span className="sun-metric__value">{run.section_mm2 ?? '—'}<span className="unit">mm² Cu</span></span>
+      <span className="sun-metric__label">Admisible {run.ampacity_a != null ? `${dec(run.ampacity_a)} A` : '—'} · mínimo {run.minimum_section_mm2} mm²</span>
+      <span className="sun-metric__label">Longitud máxima {missingLength ? '—' : `${dec(run.maximum_length_m)} m`}</span>
+      {run.voltage_v != null && <span className="sun-metric__label">Tensión de cálculo {dec(run.voltage_v)} V</span>}
+      {run.sizing_status === 'missing_current' && <span className="sun-metric__label">Falta {title === 'Cable CC' ? 'Isc' : 'Imax_out'} en la ficha para dimensionar.</span>}
+      {run.sizing_status === 'exceeds_table' && <span className="sun-metric__label">Supera el rango de la tabla; requiere dimensionado específico.</span>}
+    </div>
+  )
+}
+
 function panelesFrom(results, panel) {
+  if (results?.assumed_panel) return null
   if (results?.cell_amount != null) return Math.ceil(Number(results.cell_amount))
   if (results?.total_field_power != null && panel?.power) return Math.round((Number(results.total_field_power) * 1000) / Number(panel.power))
   return null
@@ -803,7 +868,9 @@ function buildSummary(results, panel, inverter, battery, stale, layout) {
     { label: 'Irradiancia', value: irr != null ? int(irr) : '—', unit: 'kWh/m²', stale },
     { label: 'Ángulo óptimo', value: results.beta_optimal != null ? `${Math.round(results.beta_optimal)}°` : '—', stale },
     { label: 'Campo FV', value: results.total_field_power != null ? dec(results.total_field_power) : '—', unit: 'kWp', stale },
-    { label: 'Paneles', value: np != null ? np : '—', unit: 'ud', stale },
+    ...(results.assumed_panel
+      ? [{ label: 'Superficie de módulos', value: results.cell_area != null ? dec(results.cell_area) : '—', unit: 'm²', stale }]
+      : [{ label: 'Paneles', value: np != null ? np : '—', unit: 'ud', stale }]),
     { label: 'Producción anual', value: results.annual_production != null ? int(results.annual_production) : '—', unit: 'kWh', stale },
   ]
   if (layout?.cells?.length) {
@@ -817,8 +884,12 @@ function buildResultCards(results, panel) {
   const cards = [
     { label: 'Potencia pico de campo', value: results.total_field_power != null ? dec(results.total_field_power) : '—', unit: 'kWp' },
     { label: 'Producción anual estimada', value: results.annual_production != null ? int(results.annual_production) : '—', unit: 'kWh' },
-    { label: 'Paneles', value: np != null ? np : '—', unit: 'ud' },
   ]
+  if (results.assumed_panel) {
+    cards.push({ label: 'Superficie estimada de módulos', value: results.cell_area != null ? dec(results.cell_area) : '—', unit: 'm²' })
+  } else {
+    cards.push({ label: 'Paneles', value: np != null ? np : '—', unit: 'ud' })
+  }
   if (results.cell_area != null) cards.push({ label: 'Superficie necesaria', value: dec(results.cell_area), unit: 'm²' })
   if (results.total_y != null && panel?.y) cards.push({ label: 'Rendimiento (PR)', value: num((Number(results.total_y) / (Number(panel.y) / 100)) * 100, 1), unit: '%' })
   if (results.max_cell_amount != null) cards.push({ label: 'Paneles máx. por cadena', value: Math.floor(Number(results.max_cell_amount)), unit: 'ud' })

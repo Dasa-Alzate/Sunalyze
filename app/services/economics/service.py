@@ -29,8 +29,10 @@ JULY = (181, 212)
 class EconomicsService:
 
     @staticmethod
-    def production_shape(lat, lon):
-        df, _ = PvgisClient.get_hourly(lat, lon, PVGIS_START_YEAR, PVGIS_END_YEAR)
+    def production_shape(lat, lon, hourly_df=None):
+        if hourly_df is None:
+            hourly_df, _ = PvgisClient.get_hourly(lat, lon, PVGIS_START_YEAR, PVGIS_END_YEAR)
+        df = hourly_df
         poa = (df['poa_direct'] + df['poa_sky_diffuse'] + df['poa_ground_diffuse'])
         local = poa.tz_convert('Europe/Madrid')
         grouped = local.groupby([local.index.month, local.index.day, local.index.hour]).mean()
@@ -68,6 +70,38 @@ class EconomicsService:
         shape = EconomicsService.production_shape(project.latitud, project.longitud)
         production = [s * annual_production for s in shape]
         return consumption, production
+
+    @classmethod
+    def monthly_energy_flow(cls, consumption, production, battery=None, quantity=1):
+        battery_params = cls._battery_params(battery, quantity) if battery else None
+        sim = simulate(consumption, production, battery_params)
+        monthly = sim['hourly'].groupby('month').sum(numeric_only=True)
+        total_consumption = sim['consumo_total']
+        battery_discharge = sim['descarga_bateria']
+        self_consumption = sim['autoconsumo_directo'] + battery_discharge
+
+        def series(key):
+            return [round(float(monthly.at[month, key]), 2) for month in range(1, 13)]
+
+        return {
+            'has_battery': battery is not None,
+            'consumption': series('consumption_kwh'),
+            'production': series('production_kwh'),
+            'direct_self_consumption': series('direct_self_consumption_kwh'),
+            'battery_charge': series('battery_charge_kwh'),
+            'battery_discharge': series('battery_discharge_kwh'),
+            'grid_export': series('grid_export_kwh'),
+            'grid_import': series('grid_import_kwh'),
+            'annual_battery_charge_kwh': round(sim['carga_bateria'], 2),
+            'annual_battery_discharge_kwh': round(battery_discharge, 2),
+            'direct_self_consumption_kwh': round(sim['autoconsumo_directo'], 2),
+            'self_consumption_uplift_pct': round(
+                battery_discharge / total_consumption * 100, 1,
+            ) if total_consumption > 0 else 0.0,
+            'total_self_consumption_pct': round(
+                self_consumption / total_consumption * 100, 1,
+            ) if total_consumption > 0 else 0.0,
+        }
 
     @staticmethod
     def _battery_params(battery, quantity):

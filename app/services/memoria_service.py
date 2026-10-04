@@ -105,6 +105,7 @@ class MemoriaService:
             bf['panels_output_i_max_oversized'] = round(float(panel.isc) * 1.25, 2)
         if inverter and inverter.I_max_output is not None:
             bf['inverter_output_i_max_expected'] = round(float(inverter.I_max_output), 2)
+            bf['inverter_output_i_max_sizing'] = round(float(inverter.I_max_output) * 1.25, 2)
 
         input_v_type = (data.get('input_v_type') or '').lower()
         if input_v_type:
@@ -131,6 +132,27 @@ class MemoriaService:
                 bf['wire_ac_type'] = project.wire_ac.tipo
             if project.wire_ground:
                 bf['wire_ground_section'] = project.wire_ground.seccion
+
+        cable_sizing = res.get('cable_sizing') or {}
+        dc_run = cable_sizing.get('dc') or {}
+        ac_run = cable_sizing.get('ac') or {}
+        if dc_run.get('section_mm2') is not None:
+            bf.update({
+                'wire_dc_section': dc_run['section_mm2'],
+                'wire_dc_type': cable_sizing.get('installation_method'),
+                'wire_dc_model': f"{cable_sizing.get('insulation', 'XLPE')} Cu",
+            })
+        if dc_run.get('maximum_length_m') is not None:
+            bf['wire_dc_length'] = dc_run['maximum_length_m']
+        if ac_run.get('section_mm2') is not None:
+            bf.update({
+                'wire_ac_section': ac_run['section_mm2'],
+                'wire_ac_type': cable_sizing.get('installation_method'),
+                'wire_ac_model': f"{cable_sizing.get('insulation', 'XLPE')} Cu",
+                'wire_ground_section': cable_sizing.get('ground_section_mm2'),
+            })
+        if ac_run.get('maximum_length_m') is not None:
+            bf['wire_ac_length'] = ac_run['maximum_length_m']
         return bf
 
     @staticmethod
@@ -364,16 +386,17 @@ class MemoriaService:
             'wire_dc_length': data.get('wire_dc_length'),
             'wire_dc_section': data.get('wire_dc_section'),
             'wire_dc_type': data.get('wire_dc_type'),
-            'wire_dc_model': defaults.dc_modelo,
+            'wire_dc_model': data.get('wire_dc_model') or defaults.dc_modelo,
             'wire_ac_material': defaults.ac_material,
             'wire_ac_length': data.get('wire_ac_length'),
             'wire_ac_section': data.get('wire_ac_section'),
             'wire_ac_type': data.get('wire_ac_type'),
-            'wire_ac_model': defaults.ac_modelo,
+            'wire_ac_model': data.get('wire_ac_model') or defaults.ac_modelo,
             'wire_ground_material': defaults.tierra_material,
             'wire_ground_model': defaults.tierra_modelo,
             'wire_ground_length': data.get('wire_ground_length'),
             'wire_ground_section': data.get('wire_ground_section'),
+            'cable_sizing': data.get('cable_sizing') or ((project.resultados or {}).get('cable_sizing') if project else None),
             'protections_dc_thermal_v_max': data.get('protections_dc_thermal_v_max'),
             'protections_dc_thermal_model': defaults.dc_magnetotermico_modelo,
             'protections_dc_breaker_i': data.get('protections_dc_breaker_i'),

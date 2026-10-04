@@ -31,7 +31,7 @@ function isTyping(e) {
   return el && (el.tagName === 'INPUT' || el.tagName === 'TEXTAREA' || el.tagName === 'SELECT' || el.isContentEditable)
 }
 
-export default function PanelLayout({ lat, lon, azimut, inclinacion, coplanar, betaOptimal, panel, requiredPanels, layout, onChange }) {
+export default function PanelLayout({ lat, lon, azimut, inclinacion, coplanar, betaOptimal, panel, requiredPanels, requiredAreaM2, layout, onChange }) {
   const [roof, setRoof] = useState(() => layout?.roof || [])
   const [exclusions, setExclusions] = useState(() => layout?.exclusions || [])
   const [cells, setCells] = useState(() => (layout?.cells || []).map(([i, j]) => [i, j]))
@@ -69,6 +69,7 @@ export default function PanelLayout({ lat, lon, azimut, inclinacion, coplanar, b
 
   const beta = coplanar ? Number(inclinacion) || 0 : Number(betaOptimal) || 0
   const gridAzimut = coplanar ? (Number(azimut) || 180) : 180
+  const hasPanelGeometry = Boolean(panel?.width && panel?.height)
 
   const grid = useMemo(() => {
     if (!origin || !panel?.width || !panel?.height) return null
@@ -542,9 +543,10 @@ export default function PanelLayout({ lat, lon, azimut, inclinacion, coplanar, b
 
   useEffect(() => {
     const layer = panelLayerRef.current
-    if (!layer || !grid) return
+    if (!layer) return
     layer.clearLayers()
     panelIndexRef.current = new Map()
+    if (!grid) return
     cells.forEach(([i, j]) => {
       const key = cellKey(i, j)
       const selected = selection.has(key)
@@ -593,14 +595,6 @@ export default function PanelLayout({ lat, lon, azimut, inclinacion, coplanar, b
       </div>
     )
   }
-  if (!panel?.width || !panel?.height) {
-    return (
-      <div className="sun-inline-note">
-        <Icon name="package" size={14} /> El panel seleccionado no tiene dimensiones (ancho × alto). Complétalas en la biblioteca de equipos.
-      </div>
-    )
-  }
-
   const placed = cells.length
   const required = requiredPanels || 0
   const short = required > 0 && placed > 0 && placed < required
@@ -637,10 +631,10 @@ export default function PanelLayout({ lat, lon, azimut, inclinacion, coplanar, b
           title="Orienta las filas midiendo una línea del mapa: dos clics sobre la cumbrera o el alero y un tercero hacia donde miran las filas">
           Medir orientación
         </Btn>
-        <Btn variant="secondary" icon="sparkles" disabled={roof.length < 3 || drawing} onClick={autoLayout}>
+        {hasPanelGeometry && <Btn variant="secondary" icon="sparkles" disabled={roof.length < 3 || drawing} onClick={autoLayout}>
           Auto-disposición
-        </Btn>
-        {rotation != null && (
+        </Btn>}
+        {hasPanelGeometry && rotation != null && (
           <label className="pl-gap" title="Rotación de las filas en pasos de 5°">
             Filas
             <input className="sun-input num" type="number" min="0" max="355" step="5"
@@ -653,10 +647,10 @@ export default function PanelLayout({ lat, lon, azimut, inclinacion, coplanar, b
             </button>
           </label>
         )}
-        <Btn variant="secondary" icon="trash-2" disabled={selection.size === 0} onClick={deleteSelection}>
+        {hasPanelGeometry && <Btn variant="secondary" icon="trash-2" disabled={selection.size === 0} onClick={deleteSelection}>
           Eliminar{selection.size > 1 ? ` (${selection.size})` : ''}
-        </Btn>
-        <div className="pl-seg" role="group" aria-label="Orientación del panel">
+        </Btn>}
+        {hasPanelGeometry && <div className="pl-seg" role="group" aria-label="Orientación del panel">
           <button type="button" className={`pl-seg__opt${orientation === 'v' ? ' pl-seg__opt--on' : ''}`}
             onClick={() => setOrientation('v')} title="Panel en vertical (retrato)">
             <Icon name="rectangle-vertical" size={14} /> Vertical
@@ -665,8 +659,8 @@ export default function PanelLayout({ lat, lon, azimut, inclinacion, coplanar, b
             onClick={() => setOrientation('h')} title="Panel en horizontal (apaisado)">
             <Icon name="rectangle-horizontal" size={14} /> Horizontal
           </button>
-        </div>
-        {!coplanar && (
+        </div>}
+        {hasPanelGeometry && !coplanar && (
           <label className="pl-gap">
             Separación filas
             <input className="sun-input num" type="number" min="0" step="0.05" placeholder={grid ? grid.gapRow.toFixed(2) : 'auto'}
@@ -679,14 +673,26 @@ export default function PanelLayout({ lat, lon, azimut, inclinacion, coplanar, b
           </label>
         )}
         <span className="pl-spacer" />
-        {placed > 0 && (
+        {hasPanelGeometry && placed > 0 && (
           <span className={`pl-chip${short ? ' pl-chip--warn' : ' pl-chip--ok'}`}>
             <Icon name={short ? 'alert-triangle' : 'check'} size={13} />
             {placed}{required ? ` / ${required}` : ''} paneles{kwp != null ? ` · ${kwp.toLocaleString('es-ES', { maximumFractionDigits: 2 })} kWp` : ''}
           </span>
         )}
         {roofArea != null && <span className="pl-chip">{Math.round(roofArea)} m²</span>}
+        {!hasPanelGeometry && requiredAreaM2 > 0 && (
+          <span className="pl-chip">Módulos estimados: {Number(requiredAreaM2).toLocaleString('es-ES', { maximumFractionDigits: 1 })} m²</span>
+        )}
       </div>
+
+      {!hasPanelGeometry && roofArea != null && requiredAreaM2 > 0 && (
+        <div className={`sun-inline-note${roofArea < requiredAreaM2 ? ' sun-inline-note--danger' : ''}`} style={{ marginBottom: 'var(--space-3)' }}>
+          <Icon name={roofArea < requiredAreaM2 ? 'alert-triangle' : 'check'} size={14} />
+          {roofArea < requiredAreaM2
+            ? `La cubierta dibujada tiene ${roofArea.toLocaleString('es-ES', { maximumFractionDigits: 1 })} m² y la estimación necesita ${Number(requiredAreaM2).toLocaleString('es-ES', { maximumFractionDigits: 1 })} m² de módulos.`
+            : `La cubierta dibujada tiene ${roofArea.toLocaleString('es-ES', { maximumFractionDigits: 1 })} m² frente a ${Number(requiredAreaM2).toLocaleString('es-ES', { maximumFractionDigits: 1 })} m² estimados de módulos. La superficie útil será menor por separaciones y obstáculos.`}
+        </div>
+      )}
 
       {drawing && (
         <div className="pl-drawhint">
@@ -714,8 +720,10 @@ export default function PanelLayout({ lat, lon, azimut, inclinacion, coplanar, b
           <span>Parcela catastral</span>
         </label>
         <span className="pl-hints__keys">
-          <kbd>clic</kbd> seleccionar · <kbd>⇧ clic</kbd> multiselección · <kbd>⇧ clic</kbd> en hueco = rellenar hasta ahí ·
-          <kbd>⌘C</kbd>/<kbd>⌘V</kbd> copiar y pegar · <kbd>⌘A</kbd> todos · <kbd>Supr</kbd> eliminar · arrastra para mover · clic derecho quita un obstáculo
+          {hasPanelGeometry ? (
+            <><kbd>clic</kbd> seleccionar · <kbd>⇧ clic</kbd> multiselección · <kbd>⇧ clic</kbd> en hueco = rellenar hasta ahí ·
+              <kbd>⌘C</kbd>/<kbd>⌘V</kbd> copiar y pegar · <kbd>⌘A</kbd> todos · <kbd>Supr</kbd> eliminar · arrastra para mover · clic derecho quita un obstáculo</>
+          ) : 'Dibuja el contorno de la cubierta para comparar su superficie con la estimada para los módulos.'}
         </span>
       </div>
     </div>

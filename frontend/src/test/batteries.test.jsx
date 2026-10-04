@@ -47,6 +47,13 @@ vi.mock('@/api/client', () => ({ api, csrfToken: () => 'tok', setApiErrorHandler
 vi.mock('@/services/toast', () => ({ toast: () => {} }))
 vi.mock('@/services/export', () => ({ exportRows: () => {} }))
 vi.mock('@/services/geo-map', () => ({ GeoMap: () => null }))
+vi.mock('@/features/design/PanelLayout', () => ({
+  default: ({ onChange }) => (
+    <button type="button" data-testid="panel-layout" onClick={() => onChange({ roof: [[1, 1], [1, 2], [2, 2]], cells: [[0, 0]] })}>
+      Simular cubierta
+    </button>
+  ),
+}))
 vi.mock('@/services/auth', () => ({
   useAuth: () => ({ can: () => true, flag: () => false }),
 }))
@@ -106,6 +113,69 @@ function renderWizard() {
   )
 }
 
+function renderNewWizard() {
+  return render(
+    <MemoryRouter initialEntries={['/app/diseno']}>
+      <Routes>
+        <Route path="/app/diseno" element={<Wizard />} />
+      </Routes>
+    </MemoryRouter>,
+  )
+}
+
+describe('Wizard · opciones de autoconsumo', () => {
+  it('usa 80 % por defecto y oculta el selector hasta abrir opciones avanzadas', async () => {
+    renderNewWizard()
+    await waitFor(() => expect(api.panels.list).toHaveBeenCalled())
+
+    expect(screen.queryByLabelText('Autoconsumo')).not.toBeInTheDocument()
+    fireEvent.click(screen.getByRole('button', { name: 'Opciones avanzadas' }))
+    expect(screen.getByLabelText('Autoconsumo')).toHaveValue('80')
+
+    fireEvent.change(screen.getByLabelText('Autoconsumo'), { target: { value: '70' } })
+    expect(screen.getByLabelText('Autoconsumo')).toHaveValue('70')
+  })
+
+  it('conserva el porcentaje guardado en proyectos existentes', async () => {
+    renderWizard()
+    await waitFor(() => expect(api.projects.get).toHaveBeenCalled())
+
+    fireEvent.click(screen.getByRole('button', { name: 'Opciones avanzadas' }))
+    expect(screen.getByLabelText('Autoconsumo')).toHaveValue('90')
+  })
+})
+
+describe('Wizard · estimación preliminar', () => {
+  it('calcula sin panel y presenta la cubierta antes de la selección de equipos', async () => {
+    api.analyze.mockResolvedValueOnce({
+      ...analysis,
+      assumed_panel: true,
+      cell_amount: null,
+      cell_area: 25,
+      total_field_power: 5.25,
+    })
+    renderNewWizard()
+    await waitFor(() => expect(api.panels.list).toHaveBeenCalled())
+
+    fireEvent.change(screen.getByLabelText('Cliente / proyecto'), { target: { value: 'Proyecto de prueba' } })
+    fireEvent.change(screen.getByLabelText('Necesidad anual'), { target: { value: '5000' } })
+    fireEvent.change(screen.getByLabelText('Latitud'), { target: { value: '38.3' } })
+    fireEvent.change(screen.getByLabelText('Longitud'), { target: { value: '-0.49' } })
+    fireEvent.click(screen.getByRole('button', { name: 'Continuar' }))
+
+    fireEvent.click(screen.getByRole('button', { name: 'Calcular estimación' }))
+    await waitFor(() => expect(api.analyze).toHaveBeenCalled())
+    expect(api.analyze.mock.calls[0][0]).not.toHaveProperty('panel_id')
+    await waitFor(() => expect(screen.getByTestId('panel-layout')).toBeInTheDocument())
+    expect(screen.getByText('Superficie estimada de módulos')).toBeInTheDocument()
+    expect(screen.getByRole('button', { name: /Equipos/ })).toBeDisabled()
+
+    fireEvent.click(screen.getByTestId('panel-layout'))
+    fireEvent.click(screen.getByRole('button', { name: /Equipos/ }))
+    expect(screen.getByText('Selección de equipos')).toBeInTheDocument()
+  })
+})
+
 describe('Wizard · batería', () => {
   it('precarga la batería del proyecto y la cantidad', async () => {
     renderWizard()
@@ -141,5 +211,32 @@ describe('Wizard · batería', () => {
     const body = api.projects.update.mock.calls[0][1]
     expect(body.battery_id).toBe(1)
     expect(body.battery_quantity).toBe(2)
+  })
+})
+
+describe('Wizard · dimensionado automático de cables', () => {
+  it('reemplaza los selectores por secciones y longitudes calculadas', async () => {
+    api.analyze.mockResolvedValueOnce({
+      ...analysis,
+      cable_sizing: {
+        standard: 'ITC-BT-19 / C.52-1 bis', installation_method: 'B1',
+        insulation: 'XLPE 90 °C', voltage_drop_total_limit_pct: 1.5,
+        voltage_drop_per_run_pct: 0.75,
+        dc: { nominal_current_a: 14, current_a: 17.5, current_factor: 1.25, minimum_section_mm2: 4, section_mm2: 4, ampacity_a: 31, voltage_v: 400, maximum_length_m: 15.24 },
+        ac: { nominal_current_a: 24, current_a: 30, current_factor: 1.25, minimum_section_mm2: 6, section_mm2: 6, ampacity_a: 44, voltage_v: 230, maximum_length_m: 7.67 },
+        ground_section_mm2: 6, ground_rule: 'Misma sección que el conductor de fase CA',
+      },
+    })
+    renderWizard()
+    await waitFor(() => expect(api.projects.get).toHaveBeenCalled())
+    fireEvent.click(screen.getByRole('button', { name: /Equipos/ }))
+
+    expect(screen.queryByPlaceholderText('Buscar cable CC…')).not.toBeInTheDocument()
+    expect(screen.queryByPlaceholderText('Buscar cable CA…')).not.toBeInTheDocument()
+    fireEvent.click(screen.getByRole('button', { name: 'Calcular cableado' }))
+
+    await waitFor(() => expect(screen.getByText('Longitud máxima 15,24 m')).toBeInTheDocument())
+    expect(screen.getByText('Cable CA · 24 A')).toBeInTheDocument()
+    expect(screen.getByText(/dos conductores cargados/)).toBeInTheDocument()
   })
 })

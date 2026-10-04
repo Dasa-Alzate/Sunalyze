@@ -15,6 +15,8 @@ from app.models.inverter import Inverter
 from app.models.battery import Battery
 from app.services.catalog_service import CatalogService
 from app.services.analysis_service import AnalysisService
+from app.services.economics.service import EconomicsService
+from app.services.economics.simulator import simulate
 from app.services.template_engine.catalog import variable_catalog, whitelist
 from app.services.template_engine import render_version
 from app.services.circuit import CircuitService, DCConfig, ACConfig, SystemConfig
@@ -257,6 +259,52 @@ class BatteryAnalysisTest(_Base):
         self.assertGreaterEqual(out['recommended_capacity_kwh'], 0.0)
         self.assertIn('horaria', out['method_note'])
 
+    def test_hourly_battery_dataframe_covers_year_and_balances_pv(self):
+        consumption = [0.5] * 8760
+        production = [1.0 if hour % 24 in range(6, 18) else 0.0 for hour in range(8760)]
+        battery = {
+            'capacity_kwh': 4.0,
+            'power_kw': 1.0,
+            'dod': 90.0,
+            'round_trip_efficiency': 100.0,
+        }
+
+        result = simulate(consumption, production, battery)
+        hourly = result['hourly']
+
+        self.assertEqual(len(hourly), 8760)
+        self.assertEqual(hourly['timestamp'].iloc[0].isoformat(), '2018-01-01T00:00:00')
+        self.assertAlmostEqual(
+            float((hourly['direct_self_consumption_kwh']
+                   + hourly['battery_charge_kwh']
+                   + hourly['grid_export_kwh']).sum()),
+            float(hourly['production_kwh'].sum()),
+        )
+        self.assertGreater(float(hourly['battery_charge_kwh'].sum()), 0)
+        self.assertGreater(float(hourly['battery_discharge_kwh'].sum()), 0)
+
+    def test_monthly_energy_flow_aggregates_hourly_production_into_stack(self):
+        consumption = [0.5] * 8760
+        production = [1.0 if hour % 24 in range(6, 18) else 0.0 for hour in range(8760)]
+        battery = {
+            'capacity_kwh': 4.0,
+            'power_kw': 1.0,
+            'dod': 90.0,
+            'round_trip_efficiency': 90.0,
+        }
+
+        flow = EconomicsService.monthly_energy_flow(consumption, production, battery)
+
+        self.assertTrue(flow['has_battery'])
+        self.assertEqual(len(flow['consumption']), 12)
+        for month in range(12):
+            stacked_production = (
+                flow['direct_self_consumption'][month]
+                + flow['battery_charge'][month]
+                + flow['grid_export'][month]
+            )
+            self.assertAlmostEqual(stacked_production, flow['production'][month], places=1)
+
     def _seed_equipment(self):
         panel = Panel(nombre='LR5-410', power=410.0, voc=37.2, vmp=31.0, imp=13.2,
                       isc=14.0, y=21.0, width=1722, height=1134, tcp=0.34, tcv=0.25,
@@ -288,6 +336,28 @@ class BatteryAnalysisTest(_Base):
             self.assertEqual(with_bat['battery']['battery_id'], battery.id)
             self.assertEqual(with_bat['battery']['quantity'], 2)
             self.assertEqual(with_bat['total_field_power'], without['total_field_power'])
+
+    def test_calculate_without_panel_uses_reference_module(self):
+        data = {
+            'latitud': 40.0, 'longitud': -3.0,
+            'autoconsumo': 80, 'necesidad': 5000,
+        }
+        with patch('app.services.analysis_service.PvgisClient.get_hourly',
+                   return_value=_fake_pvgis_df()):
+            result = AnalysisService.calculate(data, visible_catalog_ids=[self.catalog.id])
+
+        self.assertTrue(result['assumed_panel'])
+        self.assertIsNone(result['cell_amount'])
+        self.assertGreater(result['cell_area'], 0)
+        self.assertGreater(result['annual_production'], 0)
+        self.assertAlmostEqual(
+            result['total_field_power'], result['cell_area'] * 0.21, places=6,
+        )
+        self.assertTrue(any(
+            item['field'] == 'y' and item['used'] == 21.0
+            for item in result['assumptions']
+        ))
+        self.assertNotIn('compatible_inverters', result)
 
 
 class BatteryCatalogVarsTest(_Base):
