@@ -125,6 +125,10 @@ export function AppLayout() {
   const { t } = useTranslation('nav')
   const mainRef = useRef(null)
   const announcement = useRouteFocus(mainRef)
+  useEffect(() => {
+    document.documentElement.classList.add('sun-ui-compact')
+    return () => document.documentElement.classList.remove('sun-ui-compact')
+  }, [])
   return (
     <div className="sun-app">
       <a className="sun-skip-link" href="#main">{t('skipToContent')}</a>
