@@ -510,7 +510,7 @@
             <li>Protección DC contra sobrecargas atmosféricas para positivo, negativo y tierra ({{ v(protections_dc_surge_model) }})</li>
             <li>Bornas de tierra DC.</li>
             <li>Magnetotérmico AC {{ v(protections_ac_thermal_i) }}A ({{ v(protections_ac_thermal_model) }}).</li>
-            <li>Diferencial AC {{ v(protections_ac_diff_i) }}A, sensibilidad {{ v(protections_ac_thermal_i) }}mA ({{ v(protections_ac_diff_model) }}).</li>
+            <li>Diferencial AC {{ v(protections_ac_diff_i) }}A, tipo A, sensibilidad 30 mA ({{ v(protections_ac_diff_model) }}).</li>
             <li>Protector de sobretensión transitoria en fase y neutro ({{ v(protections_ac_transitory_surge_model) }}).</li>
             <li>Borna de tierra AC.</li>
         </ul>
@@ -605,7 +605,7 @@
         <h4 id="tramo-ca">Tramo de CA</h4>
 
         <h5 class="underline">Diferencial:</h5>
-        <p>Proporciona protección a las personas contra descargas eléctricas, tanto por contactos directos como indirectos, y también protección a la instalación ya que detecta fugas a tierra midiendo la corriente que circula por los conductores. El diferencial será de {{ v(protections_ac_diff_i, '40') }}A y sensibilidad {{ v(protections_ac_thermal_i, '30') }}mA.</p>
+        <p>Proporciona protección a las personas contra descargas eléctricas, tanto por contactos directos como indirectos, y también protección a la instalación ya que detecta fugas a tierra midiendo la corriente que circula por los conductores. El diferencial será de {{ v(protections_ac_diff_i, '40') }}A, de tipo A y sensibilidad 30 mA.</p>
 
         <h5 class="underline">Interruptor automático - Magnetotérmico</h5>
         <p>El interruptor automático se coloca en la línea que sale del inversor, permitiendo desconectar la instalación fotovoltaica. Para el cálculo de la intensidad de corte de este interruptor será necesario calcular la corriente máxima admisible por el conductor y la intensidad nominal de funcionamiento que tiene el inversor.</p>
