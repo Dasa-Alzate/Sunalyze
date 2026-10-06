@@ -163,17 +163,15 @@ class AnalysisService:
 
         df, meta = PvgisClient.get_hourly(lat, lon, start_year, end_year)
 
-        filtered_df = df[df[['poa_direct', 'poa_sky_diffuse', 'poa_ground_diffuse']].sum(axis=1) > 100]
+        filtered_df = df[df['poa_global'] > 100]
 
         filtered_df = filtered_df.copy()
-        filtered_df['temp_cell'] = filtered_df['temp_air'] + (
-            filtered_df['poa_direct'] + filtered_df['poa_sky_diffuse'] + filtered_df['poa_ground_diffuse']
-        ) * ((cell_noct - 20) / 800)
+        filtered_df['temp_cell'] = filtered_df['temp_air'] + filtered_df['poa_global'] * ((cell_noct - 20) / 800)
 
         cell_temp = filtered_df['temp_cell'].mean()
         coldest_temp = filtered_df['temp_air'].min()
 
-        annual_irradiance = (df['poa_direct'] + df['poa_sky_diffuse'] + df['poa_ground_diffuse']).sum() / (1000 * sample_years)
+        annual_irradiance = df['poa_global'].sum() / (1000 * sample_years)
 
         if inclinacion > 15:
             irradiance_factor_loss = 1 - (1.2 * 0.0001 * (inclinacion - beta_optimal) ** 2 + 3.5 * 0.00001 * azimut ** 2)
@@ -211,11 +209,9 @@ class AnalysisService:
         compatible_inverters = []
 
         if coeficiente_v_temp is not None:
-            if inverter:
-                max_cell_amount = inverter.vmax / (
-                    coeficiente_v_temp * (coldest_temp - 25) + voc_cell
-                )
             vmax_coldest_day = panel.voc * (1 + (-1 * coeficiente_v_temp * (25 - coldest_temp) / 100))
+            if inverter:
+                max_cell_amount = inverter.vmax / vmax_coldest_day
             coldest_day_v_max = vmax_coldest_day * 1.05 * math.ceil(cell_amount)
             panel_protection_v = coldest_day_v_max * 1.2
             if not inverter:
@@ -237,7 +233,7 @@ class AnalysisService:
         performance_ratio = total_y / y_placa if y_placa > 0 else 0
         annual_production = round(total_field_power * optimal_irradiance * performance_ratio, 2)
 
-        df_total_irr = (df['poa_direct'] + df['poa_sky_diffuse'] + df['poa_ground_diffuse'])
+        df_total_irr = df['poa_global']
         monthly_irradiance = (df_total_irr.groupby(df_total_irr.index.month).sum() / (1000 * sample_years)).round(2).tolist()
         monthly_production = [round(val * total_field_power * performance_ratio, 2) for val in monthly_irradiance]
 

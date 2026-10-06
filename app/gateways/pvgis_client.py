@@ -8,7 +8,7 @@ from app.extensions import cache
 logger = logging.getLogger(__name__)
 
 CACHE_TTL_SECONDS = 60 * 60 * 24 * 30
-_KEY_PREFIX = 'pvgis:hourly:'
+_KEY_PREFIX = 'pvgis:hourly:v2:'
 
 
 class PvgisClient:
@@ -36,7 +36,7 @@ class PvgisClient:
             raddatabase='PVGIS-SARAH3',
             surface_tilt=0,
             surface_azimuth=180,
-            components=True,
+            components=False,
             usehorizon=True,
             outputformat='json',
         )
