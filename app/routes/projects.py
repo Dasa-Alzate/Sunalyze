@@ -11,6 +11,7 @@ from app.services.catalog_service import CatalogService
 from app.services.org_service import OrgService
 from app.models.battery import Battery
 from app.models.consumption_profile import ConsumptionProfile
+from app.models.electricity_plan import ElectricityPlan
 from app.schemas.project import ProjectCreateSchema, ProjectUpdateSchema
 
 logger = logging.getLogger(__name__)
@@ -26,7 +27,7 @@ _EDITABLE_FIELDS = [
     'wire_dc_id', 'wire_ac_id', 'wire_ground_id',
     'referencia_catastral', 'cups', 'compania',
     'potencia_contratada', 'tipo_voltaje', 'ccaa',
-    'consumption_profile_id',
+    'consumption_profile_id', 'electricity_plan_id',
 ]
 
 
@@ -42,6 +43,13 @@ def _validate_consumption_profile(data, org_id):
     ).first()
     if profile is None:
         raise NotFound('Perfil de consumo no encontrado', code='consumption_profile.not_found')
+
+
+def _validate_electricity_plan(data, org_id):
+    if data.get('electricity_plan_id') in (None, ''):
+        return
+    if ElectricityPlan.visible(data['electricity_plan_id'], org_id) is None:
+        raise NotFound('Plan eléctrico no encontrado', code='electricity_plan.not_found')
 
 
 def _validate_battery(data, org_id):
@@ -129,6 +137,7 @@ def create_project():
     clean = ProjectCreateSchema(**data).model_dump(exclude_unset=True)
     _validate_battery(clean, current_org_id())
     _validate_consumption_profile(clean, current_org_id())
+    _validate_electricity_plan(clean, current_org_id())
     project = Project(cliente=clean['cliente'], org_id=current_org_id())
     project.serial_seq = Project.next_serial_seq(current_org_id())
     _apply(project, clean)
@@ -155,6 +164,7 @@ def update_project(project_id):
     clean = ProjectUpdateSchema(**data).model_dump(exclude_unset=True)
     _validate_battery(clean, current_org_id())
     _validate_consumption_profile(clean, current_org_id())
+    _validate_electricity_plan(clean, current_org_id())
     changed = sorted(
         f for f in _EDITABLE_FIELDS
         if f in clean and clean[f] != getattr(project, f)

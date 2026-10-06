@@ -56,6 +56,7 @@ def create_app(config_overrides=None):
     from app.routes.workspace import workspace_bp
     from app.routes.budget import budget_bp
     from app.routes.consumption_profiles import consumption_bp
+    from app.routes.electricity_plans import electricity_plans_bp
     from app.routes.economics import economics_bp
 
     app.register_blueprint(health_bp)
@@ -80,6 +81,7 @@ def create_app(config_overrides=None):
     app.register_blueprint(workspace_bp)
     app.register_blueprint(budget_bp)
     app.register_blueprint(consumption_bp)
+    app.register_blueprint(electricity_plans_bp)
     app.register_blueprint(economics_bp)
 
     from app.errors import register_error_handlers

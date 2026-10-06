@@ -1,6 +1,6 @@
 # API map
 
-Mapa autogenerado por `flask api-map`. Endpoints `/api`: 146.
+Mapa autogenerado por `flask api-map`. Endpoints `/api`: 150.
 
 No editar a mano: regenerar con `flask api-map`.
 
@@ -97,6 +97,15 @@ No editar a mano: regenerar con `flask api-map`.
 | POST | `/api/projects/<int:project_id>/economics` | `economics.compute_economics` |  |
 | POST | `/api/projects/<int:project_id>/economics/scenarios` | `economics.economics_scenarios` |  |
 | POST | `/api/projects/<int:project_id>/economics/sweep` | `economics.economics_sweep` |  |
+
+## electricity_plans
+
+| Método(s) | Ruta | Endpoint | Resumen |
+| --- | --- | --- | --- |
+| GET | `/api/electricity-plans` | `electricity_plans.list_plans` |  |
+| POST | `/api/electricity-plans` | `electricity_plans.create_plan` |  |
+| DELETE | `/api/electricity-plans/<int:plan_id>` | `electricity_plans.delete_plan` |  |
+| PATCH | `/api/electricity-plans/<int:plan_id>` | `electricity_plans.update_plan` |  |
 
 ## emails
 

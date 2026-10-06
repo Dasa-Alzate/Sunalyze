@@ -14,6 +14,7 @@ import math
 from app.errors import ValidationError
 from app.gateways.pvgis_client import PvgisClient
 from app.models.consumption_profile import ConsumptionProfile
+from app.models.electricity_plan import ElectricityPlan
 from app.services.consumption.expanders import HOURS_YEAR
 from app.services.economics.simulator import simulate
 from app.services.economics.tariff import PERIODS, annual_bill, price_of
@@ -22,8 +23,8 @@ from app.services.org_service import OrgService
 PVGIS_START_YEAR = 2020
 PVGIS_END_YEAR = 2023
 KWP_FACTORS = (0.4, 0.6, 0.8, 1.0, 1.2, 1.4, 1.6)
-JANUARY = (0, 31)
-JULY = (181, 212)
+WINTER_SOLSTICE = (354, 355)
+SUMMER_SOLSTICE = (171, 172)
 
 
 class EconomicsService:
@@ -103,6 +104,13 @@ class EconomicsService:
         }
 
     @staticmethod
+    def _tariff(project, org_id):
+        plan = ElectricityPlan.visible(project.electricity_plan_id, org_id) if project.electricity_plan_id else None
+        if plan is not None:
+            return plan.tariff()
+        return OrgService.get_tariff_profile(org_id)
+
+    @staticmethod
     def _battery_params(battery, quantity):
         q = max(1, int(quantity or 1))
         return {
@@ -133,7 +141,7 @@ class EconomicsService:
     @classmethod
     def compute(cls, project, org_id, battery=None, quantity=1):
         consumption, production = cls._series(project)
-        tariff = OrgService.get_tariff_profile(org_id)
+        tariff = cls._tariff(project, org_id)
         potencia = project.potencia_contratada or 4.6
         zeros = [0.0] * HOURS_YEAR
 
@@ -153,12 +161,12 @@ class EconomicsService:
             'autoconsumo_directo_pct': round(fv['autoconsumo_directo'] / fv['consumo_total'] * 100, 1),
             'dia_tipo': {
                 'invierno': {
-                    'consumo': cls._day_type(consumption, *JANUARY),
-                    'produccion': cls._day_type(production, *JANUARY),
+                    'consumo': cls._day_type(consumption, *WINTER_SOLSTICE),
+                    'produccion': cls._day_type(production, *WINTER_SOLSTICE),
                 },
                 'verano': {
-                    'consumo': cls._day_type(consumption, *JULY),
-                    'produccion': cls._day_type(production, *JULY),
+                    'consumo': cls._day_type(consumption, *SUMMER_SOLSTICE),
+                    'produccion': cls._day_type(production, *SUMMER_SOLSTICE),
                 },
             },
         }
@@ -186,7 +194,7 @@ class EconomicsService:
     @classmethod
     def scenarios(cls, project, org_id, batteries):
         consumption, production = cls._series(project)
-        tariff = OrgService.get_tariff_profile(org_id)
+        tariff = cls._tariff(project, org_id)
         potencia = project.potencia_contratada or 4.6
 
         base = simulate(consumption, [0.0] * HOURS_YEAR)
@@ -243,7 +251,7 @@ class EconomicsService:
     @classmethod
     def sweep(cls, project, org_id, batteries):
         consumption, production = cls._series(project)
-        tariff = OrgService.get_tariff_profile(org_id)
+        tariff = cls._tariff(project, org_id)
         budget = OrgService.get_budget_profile(org_id)
         potencia = project.potencia_contratada or 4.6
         base_kwp = (project.resultados or {}).get('total_field_power')

@@ -30,6 +30,7 @@ class Project(BaseModel, SoftDeleteMixin):
     azimut = db.Column(db.Float)
 
     consumption_profile_id = db.Column(db.Integer, db.ForeignKey('consumption_profiles.id'), index=True)
+    electricity_plan_id = db.Column(db.Integer, db.ForeignKey('electricity_plans.id'), index=True)
     panel_id = db.Column(db.Integer, db.ForeignKey('panels.id'))
     inverter_id = db.Column(db.Integer, db.ForeignKey('inverters.id'))
     battery_id = db.Column(db.Integer, db.ForeignKey('batteries.id'))
@@ -163,6 +164,7 @@ class Project(BaseModel, SoftDeleteMixin):
             'inclinacion': self.inclinacion,
             'azimut': self.azimut,
             'consumption_profile_id': self.consumption_profile_id,
+            'electricity_plan_id': self.electricity_plan_id,
             'panel_id': self.panel_id,
             'inverter_id': self.inverter_id,
             'battery_id': self.battery_id,
