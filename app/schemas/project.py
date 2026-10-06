@@ -17,9 +17,10 @@ class ProjectUpdateSchema(BaseModel):
     autoconsumo: Optional[float] = Field(default=None, ge=0, le=1000000000)
     coplanar: Optional[bool] = None
     inclinacion: Optional[float] = Field(default=None, ge=0, le=90)
-    azimut: Optional[float] = Field(default=None, ge=-180, le=180)
+    azimut: Optional[float] = Field(default=None, ge=-180, le=360)
 
     consumption_profile_id: Optional[int] = Field(default=None, gt=0)
+    electricity_plan_id: Optional[int] = Field(default=None, gt=0)
     panel_id: Optional[int] = Field(default=None, gt=0)
     inverter_id: Optional[int] = Field(default=None, gt=0)
     battery_id: Optional[int] = Field(default=None, gt=0)

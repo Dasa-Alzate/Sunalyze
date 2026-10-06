@@ -20,7 +20,7 @@ class MemoriaFormSchema(BaseModel):
 
     panels_surface: Optional[float] = Field(default=None, ge=0, le=1000000)
     panels_inclination: Optional[float] = Field(default=None, ge=0, le=90)
-    panels_azimut: Optional[float] = Field(default=None, ge=-180, le=180)
+    panels_azimut: Optional[float] = Field(default=None, ge=-180, le=360)
     panel_temp_min_limit: Optional[float] = Field(default=None, ge=-100, le=200)
     panel_temp_max_limit: Optional[float] = Field(default=None, ge=-100, le=200)
 
