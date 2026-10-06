@@ -8,6 +8,8 @@ La eficiencia de ida y vuelta se reparte a partes iguales entre carga y descarga
 
 import math
 
+import pandas as pd
+
 from app.services.consumption.expanders import DAYS_PER_MONTH, HOURS_YEAR
 from app.services.economics.tariff import PERIODS, period_of
 
@@ -30,31 +32,39 @@ def simulate(consumption, production, battery=None):
     rte = (battery.get('round_trip_efficiency') or 90.0) / 100.0 if battery else 1.0
     ef = math.sqrt(rte)
     soc_min = cap * (1.0 - dod)
-    soc = cap * 0.5 if battery else 0.0
+    soc = max(soc_min, cap * 0.5) if battery else 0.0
 
     imports = [{p: 0.0 for p in PERIODS} for _ in range(12)]
     discharge = [{p: 0.0 for p in PERIODS} for _ in range(12)]
     exports = [0.0] * 12
+    direct_by_month = [0.0] * 12
+    charge_by_month = [0.0] * 12
     direct = 0.0
     charged = 0.0
+    hourly_rows = []
 
     for h in range(HOURS_YEAR):
         day = h // 24 + 1
         month = _MONTH_OF_DAY[day - 1]
-        period = period_of(day, h % 24)
+        hour = h % 24
+        period = period_of(day, hour)
         cons = consumption[h]
         prod = production[h]
 
         auto = min(cons, prod)
         direct += auto
+        direct_by_month[month] += auto
         surplus = prod - auto
         deficit = cons - auto
+        charge = 0.0
+        out = 0.0
 
         if cap > 0.0 and surplus > 0.0:
             room = (cap - soc) / ef
             charge = min(surplus, power, room)
             soc += charge * ef
             charged += charge
+            charge_by_month[month] += charge
             surplus -= charge
         elif cap > 0.0 and deficit > 0.0:
             available = (soc - soc_min) * ef
@@ -65,11 +75,25 @@ def simulate(consumption, production, battery=None):
 
         exports[month] += surplus
         imports[month][period] += deficit
+        hourly_rows.append((
+            h, month + 1, day, hour, cons, prod, auto, charge, out,
+            max(0.0, surplus), max(0.0, deficit), soc,
+        ))
+
+    hourly = pd.DataFrame(hourly_rows, columns=(
+        'hour_index', 'month', 'day', 'hour', 'consumption_kwh', 'production_kwh',
+        'direct_self_consumption_kwh', 'battery_charge_kwh', 'battery_discharge_kwh',
+        'grid_export_kwh', 'grid_import_kwh', 'soc_kwh',
+    ))
+    hourly.insert(0, 'timestamp', pd.date_range('2018-01-01', periods=HOURS_YEAR, freq='h'))
 
     return {
+        'hourly': hourly,
         'imports': imports,
         'discharge': discharge,
         'exports': exports,
+        'autoconsumo_directo_mensual': direct_by_month,
+        'carga_bateria_mensual': charge_by_month,
         'autoconsumo_directo': direct,
         'carga_bateria': charged,
         'descarga_bateria': sum(d[p] for d in discharge for p in PERIODS),

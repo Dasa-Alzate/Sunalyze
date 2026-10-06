@@ -14,7 +14,7 @@ El paso **Equipos** vincula los equipos del catálogo al proyecto concreto. Lo q
 - **Panel solar** — obligatorio. Define la potencia, tensiones y dimensiones de cada módulo.
 - **Inversor** — opcional en este paso; puedes dejarlo vacío y el análisis te ofrecerá una lista de compatibles.
 - **Batería** — opcional. Si la incluyes, el análisis calcula banco, autonomía y aporte anual.
-- **Cableado** — opcional. Sección y material de los cables CC, CA y de tierra; alimenta la memoria técnica.
+- **Cableado** — automático. Secciones mínimas CC/CA según corriente y tabla B1, con longitud máxima estimada por caída de tensión; la memoria técnica usa esos resultados.
 :::
 
 ## Buscador de equipos
@@ -45,12 +45,12 @@ Cuando seleccionas batería, aparece el campo **Cantidad de baterías**. El aná
 1. Haz clic en el buscador **Panel solar** y escribe el modelo o la potencia; selecciona el módulo de la lista.
 2. Si ya sabes qué inversor usas, búscalo en **Inversor**; si no, déjalo vacío.
 3. Si el proyecto incluye almacenamiento, busca la batería en **Batería** y ajusta la **Cantidad de baterías**.
-4. En la sección **Cableado**, selecciona la sección para **Cable CC (serie fotovoltaica)**, **Cable CA (salida del inversor)** y **Cable de tierra** si la memoria técnica los requiere.
-5. Pulsa **Calcular y continuar** — el wizard lanza el dimensionamiento y avanza al paso **Análisis**.
+4. Revisa el **Cableado calculado**. Se dimensiona con XLPE, cobre, dos conductores cargados, método B1, 1,25 × Isc en CC y 1,25 × Imax_out en CA; los límites de longitud reservan el 0,75 % de caída para cada tramo.
+5. Pulsa **Calcular cableado** para actualizar los resultados y después **Continuar**.
 :::
 
 :::tip{tone=success}
-Para borrar la selección de inversor, batería o cable pulsa la × que aparece a la derecha del buscador cuando hay algo elegido.
+Para borrar la selección de inversor o batería pulsa la × que aparece a la derecha del buscador cuando hay algo elegido.
 :::
 
 :::callout{tone=info}

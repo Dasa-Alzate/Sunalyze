@@ -563,27 +563,21 @@
         <div class="image-container">
             <p>[Tabla de corrientes admisibles C.52-1 bis]</p>
         </div>
-        <p>La sección del cable utilizada para CC será de {{ v(wire_dc_section) }}mm², utilizando la tabla C.52-1 bis y considerando el modelo de instalación B1 (conductores aislados en un conducto sobre pared o encastrada) obtenemos las intensidades máximas que el cable podrá soportar.</p>
-        <p>La sección del cable utilizada para CA será de {{ v(wire_ac_section) }}mm², utilizando la misma tabla C.52-1 bis, para obtener las intensidades máximas que el cable puede soportar.</p>
-        <p>Para los tramos de CC la intensidad máxima que se pueden generar por los paneles fotovoltaicos es de {{ v(panels_output_i_max_expected) }}A, aplicando un factor de seguridad de 1.25 y multiplicado por el número de paralelos obtenemos una intensidad de {{ v(panels_output_i_max_oversized) }}A. Por tanto se obtendrá que la intensidad máxima que circulará por el cable no supera la intensidad admisible.</p>
-        <p>Para los tramos de CA la intensidad máxima que se dará en el inversor es de {{ v(inverter_output_i_max_expected) }}A. Por tanto observamos que no se superará la intensidad admisible.</p>
-        <p>A parte de la intensidad del sistema no supere la admisible del cable, se ha de comprobar que la caída de tensión no supere el 1,5%. Para poder comprobarlo se analizará la distancia máxima que se podrá llegar antes que supere la caída máxima de tensión.</p>
-        <p>Para los cálculos de los tramos de CC y CA se utilizará la siguiente fórmula:</p>
-        <p class="formula">S = 2 &middot; L &middot; I / (&mu; &middot; C)</p>
-        <p>S = Sección del cable conductor (mm²)</p>
-        <p>L = Longitud del conductor (m)</p>
-        <p>I = Intensidad (A)</p>
-        <p>U = Caída de tensión (V) que como máximo podrán tener los conductores. Según el Manual de condiciones Técnicas del IDAE, como máximo será del 1,5%.</p>
-        <p>C = Conductividad del elemento. Para el cobre es de 48 m/Ohm·mm².</p>
-        <p>En el caso de la instalación interior (ya se ha producido la conversión de corriente continua a corriente alterna) se utilizan conductores de 450V/750V. Los conductores estarán conducidos por tubo y serán de cobre con recubrimiento de PVC.</p>
+        <p>Las secciones se calculan automáticamente para conductores de cobre XLPE, 90 °C, dos conductores cargados y método B1, seleccionando la menor sección normalizada cuya intensidad admisible cubre la corriente de diseño. Para CC se usa Isc × 1,25 y un mínimo de 4 mm²; para CA se usa Imax_out × 1,25 y un mínimo de 6 mm².</p>
+        <p>La sección calculada para CC es {{ v(wire_dc_section) }} mm², con intensidad admisible de {{ v(cable_sizing.dc.ampacity_a if cable_sizing else none) }} A. La sección calculada para CA es {{ v(wire_ac_section) }} mm², con intensidad admisible de {{ v(cable_sizing.ac.ampacity_a if cable_sizing else none) }} A.</p>
+        <p>En CC: Isc = {{ v(panels_output_i_max_expected) }} A; corriente de diseño Isc × 1,25 = {{ v(panels_output_i_max_oversized) }} A. En CA: Imax_out = {{ v(inverter_output_i_max_expected) }} A; corriente de diseño Imax_out × 1,25 = {{ v(inverter_output_i_max_sizing) }} A. No se multiplica por el número de strings en paralelo.</p>
+        <p>El límite total de caída de tensión de generación es 1,5 %. Para este dimensionado se reparte por igual entre CC y CA: 0,75 % por tramo. La longitud mostrada es el máximo unidireccional calculado, no una medición del tendido ejecutado.</p>
+        <p class="formula">L<sub>máx</sub> = (U &middot; 0,0075 &middot; S) / (2 &middot; I &middot; 0,0225)</p>
+        <p>U = tensión nominal de cálculo (V); S = sección (mm²); I = corriente de diseño (A); 0,0225 Ω·mm²/m = resistividad de cobre adoptada para el cálculo.</p>
+        <p>Longitud máxima CC: {{ v(wire_dc_length) }} m, con tensión estimada de {{ v(cable_sizing.dc.voltage_v if cable_sizing else none) }} V. Longitud máxima CA: {{ v(wire_ac_length) }} m, con tensión de cálculo de 230 V.</p>
+        <p>La selección presupone el método B1 y no aplica factores adicionales por temperatura distinta de la de referencia, agrupamiento o condiciones particulares de montaje; deben verificarse en la instalación ejecutada.</p>
+        <p>Para los tramos dimensionados se adopta cable de cobre con aislamiento XLPE de 90 °C, instalado por el método B1 indicado para el cálculo de intensidad admisible.</p>
 
-        <h5>Cálculo sección mínima para el tramo de CC:</h5>
-        <p>La intensidad del sistema es la del panel multiplicada por el número de paralelos utilizados.</p>
-        <p>I = {{ v(panels_output_i_max_expected) }} &times; 1 = {{ v(panels_output_i_max_expected) }}A</p>
+        <h5>Dimensionado del tramo de CC:</h5>
+        <p>La sección se determina con Isc × 1,25 = {{ v(panels_output_i_max_oversized) }} A, respetando el mínimo indicado de 4 mm².</p>
 
-        <h5>Cálculo longitud máxima para el tramo de AC:</h5>
-        <p>La intensidad máxima en la salida del inversor según la ficha técnica del inversor es de {{ v(inverter_output_i_max_expected) }}A.</p>
-        <p>El voltaje de salida del inversor es de 230V.</p>
+        <h5>Dimensionado del tramo de CA:</h5>
+        <p>La sección se determina con Imax_out × 1,25 = {{ v(inverter_output_i_max_sizing) }} A, respetando el mínimo indicado de 6 mm².</p>
     </section>
 
     {# ===== DIMENSIONES TUBOS ===== #}

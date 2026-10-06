@@ -1,12 +1,13 @@
 
-import math
 import logging
+import math
 
-from app.models.panel import Panel
-from app.models.inverter import Inverter
-from app.models.battery import Battery
-from app.errors import ValidationError, NotFound
+from app.errors import NotFound, ValidationError
 from app.gateways.pvgis_client import PvgisClient
+from app.models.battery import Battery
+from app.models.inverter import Inverter
+from app.models.panel import Panel
+from app.services.cable_sizing_service import size_installation
 from app.services.capability import CapabilityContext
 
 logger = logging.getLogger(__name__)
@@ -28,13 +29,17 @@ ASSUMED_INVERTER_Y = 97.0
 class AnalysisService:
 
     @staticmethod
-    def calculate(data, visible_catalog_ids=None):
-        if not data or data.get('panel_id') in (None, ''):
-            raise ValidationError("El campo 'panel_id' es requerido.")
+    def calculate(data, visible_catalog_ids=None, org_id=None):
+        if not data:
+            raise ValidationError('Cuerpo JSON requerido.')
 
-        panel = Panel.query.get(data['panel_id'])
-        if not panel or (visible_catalog_ids is not None and panel.catalog_id not in visible_catalog_ids):
-            raise NotFound('Panel no encontrado')
+        panel_id = data.get('panel_id')
+        assumed_panel = panel_id in (None, '')
+        panel = None
+        if not assumed_panel:
+            panel = Panel.query.get(panel_id)
+            if not panel or (visible_catalog_ids is not None and panel.catalog_id not in visible_catalog_ids):
+                raise NotFound('Panel no encontrado')
 
         ctx = CapabilityContext()
 
@@ -66,7 +71,7 @@ class AnalysisService:
             raise ValidationError("El campo 'autoconsumo' debe ser mayor que 0.")
         if necesidad <= 0:
             raise ValidationError("El campo 'necesidad' debe ser mayor que 0.")
-        if (panel.width or panel.height) and not (panel.width and panel.height):
+        if panel and (panel.width or panel.height) and not (panel.width and panel.height):
             ctx.missing.append({
                 'entity': 'panel', 'entity_id': panel.id, 'entity_nombre': panel.nombre,
                 'field': 'width' if not panel.width else 'height',
@@ -79,18 +84,44 @@ class AnalysisService:
         start_year = int(data.get('start', 2020))
         end_year = int(data.get('end', 2023))
 
-        power_placa = panel.power
-        panel_temp_loss = ctx.value_or_assume(
+        power_placa = panel.power if panel else None
+        panel_temp_loss = (ASSUMED_TCP if assumed_panel else ctx.value_or_assume(
             panel, 'panel', 'tcp', ASSUMED_TCP,
             'Sin coeficiente de temperatura de potencia se asume un valor típico de '
             f'{ASSUMED_TCP} %/°C para estimar las pérdidas térmicas.',
-            unlocks='Pérdida por temperatura calculada con el dato real del módulo')
-        cell_noct = ctx.value_or_assume(
+            unlocks='Pérdida por temperatura calculada con el dato real del módulo'))
+        cell_noct = (ASSUMED_T_NOCT if assumed_panel else ctx.value_or_assume(
             panel, 'panel', 't_noct', ASSUMED_T_NOCT,
             f'Sin NOCT se asume {ASSUMED_T_NOCT:.0f} °C, el valor típico de módulo cristalino.',
-            unlocks='Temperatura de célula calculada con el dato real del módulo')
+            unlocks='Temperatura de célula calculada con el dato real del módulo'))
 
-        if panel.width and panel.height:
+        if assumed_panel:
+            y_placa = ASSUMED_PANEL_EFFICIENCY / 100
+            cell_area = None
+            ctx.assumptions.extend([
+                {
+                    'entity': 'panel', 'field': 'y', 'label': 'Eficiencia del módulo',
+                    'used': ASSUMED_PANEL_EFFICIENCY,
+                    'reason': 'Valor típico usado para estimar potencia pico y superficie sin seleccionar equipo.',
+                },
+                {
+                    'entity': 'panel', 'field': 'tcp', 'label': 'Coeficiente de temperatura de potencia',
+                    'used': ASSUMED_TCP,
+                    'reason': 'Valor típico usado para estimar las pérdidas térmicas.',
+                },
+                {
+                    'entity': 'panel', 'field': 't_noct', 'label': 'Temperatura nominal de operación (NOCT)',
+                    'used': ASSUMED_T_NOCT,
+                    'reason': 'Valor típico usado para estimar la temperatura de célula.',
+                },
+            ])
+            if not inverter:
+                ctx.assumptions.append({
+                    'entity': 'inverter', 'field': 'y', 'label': 'Eficiencia del inversor',
+                    'used': ASSUMED_INVERTER_Y,
+                    'reason': 'Valor típico usado mientras no se seleccione inversor.',
+                })
+        elif panel.width and panel.height:
             cell_area = (panel.width * panel.height) / 1000000
             y_placa = (panel.y / 100 if panel.y
                        else power_placa / (cell_area * 1000))
@@ -114,11 +145,11 @@ class AnalysisService:
                 unlocks='Conteo de módulos con el área real') / 100
             cell_area = power_placa / (y_placa * 1000)
 
-        coeficiente_v_temp = ctx.value(
+        coeficiente_v_temp = None if assumed_panel else ctx.value(
             panel, 'panel', 'tcv',
             'Número máximo de módulos en serie y verificación de la tensión máxima '
             'del inversor en el día más frío')
-        voc_cell = panel.voc
+        voc_cell = panel.voc if panel else None
 
         sample_years = end_year - start_year + 1
         beta_optimal = abs(lat) * 0.69 + 3.7
@@ -165,8 +196,11 @@ class AnalysisService:
         optimal_irradiance = annual_irradiance / (1 - 4.46 * 0.0001 * beta_optimal - 1.19 * 0.0001 * (beta_optimal) ** 2)
 
         optimal_cell_area = sec_net_energy * 1000 / optimal_irradiance
-        cell_amount = optimal_cell_area / cell_area
-        total_field_power = math.ceil(cell_amount) * power_placa / 1000
+        cell_amount = optimal_cell_area / cell_area if cell_area else None
+        total_field_power = (
+            optimal_cell_area * y_placa if assumed_panel
+            else math.ceil(cell_amount) * power_placa / 1000
+        )
 
         max_cell_amount = None
         vmax_coldest_day = None
@@ -187,8 +221,9 @@ class AnalysisService:
                     show_all_inverters, visible_catalog_ids,
                 )
 
-        isc = ctx.value(panel, 'panel', 'isc',
-                        'Corriente de diseño del campo y calibre de las protecciones CC')
+        isc = None if assumed_panel else ctx.value(
+            panel, 'panel', 'isc',
+            'Corriente de diseño del campo y calibre de las protecciones CC')
         panel_protection_i = isc * 1.25 if isc is not None else None
 
         altitude = None
@@ -211,6 +246,21 @@ class AnalysisService:
 
         result = {
             'total_field_power': total_field_power,
+            'assumed_panel': assumed_panel,
+            'annual_irradiance_kWh_m2': round(annual_irradiance, 2),
+            'beta_optimal': beta_optimal,
+            'irradiance_factor_loss': irradiance_factor_loss,
+            'temp_power_loss': temp_power_loss,
+            'cell_temp': cell_temp,
+            'cell_area': optimal_cell_area,
+            'total_y': total_y,
+            'sec_energy': sec_energy,
+            'sec_net_energy': sec_net_energy,
+            'optimal_irradiance': optimal_irradiance,
+            'cell_amount': cell_amount,
+            'max_cell_amount': max_cell_amount,
+            'panel_protection_v': panel_protection_v,
+            'panel_protection_i': panel_protection_i,
             'cache_info': f'Cache size: {PvgisClient.cache_size()}',
             'coldest_day_v_max': coldest_day_v_max,
             'altitude': altitude,
@@ -223,20 +273,6 @@ class AnalysisService:
         if inverter:
             result.update({
                 'coldest_temperature': coldest_temp,
-                'annual_irradiance_kWh_m2': round(annual_irradiance, 2),
-                'beta_optimal': beta_optimal,
-                'irradiance_factor_loss': irradiance_factor_loss,
-                'temp_power_loss': temp_power_loss,
-                'cell_temp': cell_temp,
-                'cell_area': optimal_cell_area,
-                'total_y': total_y,
-                'sec_energy': sec_energy,
-                'sec_net_energy': sec_net_energy,
-                'optimal_irradiance': optimal_irradiance,
-                'cell_amount': cell_amount,
-                'max_cell_amount': max_cell_amount,
-                'panel_protection_v': panel_protection_v,
-                'panel_protection_i': panel_protection_i,
                 'meta': meta,
                 'selected_inverter': {
                     'id': inverter.id,
@@ -246,9 +282,16 @@ class AnalysisService:
                     'y': inverter.y,
                 },
             })
-        else:
+        elif not assumed_panel:
             result['compatible_inverters'] = compatible_inverters
 
+        if panel:
+            result['cable_sizing'] = size_installation(
+                panel, inverter, cell_amount, max_cell_amount,
+            )
+
+        battery = None
+        battery_quantity = 1
         battery_id = data.get('battery_id')
         if battery_id not in (None, ''):
             battery = Battery.query.get(battery_id)
@@ -262,6 +305,37 @@ class AnalysisService:
             result['battery'] = AnalysisService._battery_analysis(
                 battery, battery_quantity, necesidad, autoconsumo, annual_production,
             )
+
+        profile_id = data.get('consumption_profile_id')
+        if profile_id not in (None, ''):
+            from app.models.consumption_profile import ConsumptionProfile
+            from app.services.economics.service import EconomicsService
+
+            profile = ConsumptionProfile.active().filter_by(id=profile_id).first()
+            if not profile or (org_id is not None and profile.org_id not in (None, org_id)):
+                raise NotFound('Perfil de consumo no encontrado')
+            fractions = profile.fractions or []
+            if len(fractions) != 8760:
+                raise ValidationError('El perfil de consumo no está materializado en 8760 horas.')
+
+            consumption = [float(fraction) * necesidad for fraction in fractions]
+            production_shape = EconomicsService.production_shape(lat, lon, hourly_df=df)
+            hourly_production = [fraction * annual_production for fraction in production_shape]
+            monthly_flow = EconomicsService.monthly_energy_flow(
+                consumption, hourly_production, battery, battery_quantity,
+            )
+            result['monthly_energy_flow'] = monthly_flow
+            if battery is not None and result.get('battery'):
+                result['battery'].update({
+                    'annual_battery_contribution_kwh': monthly_flow['annual_battery_discharge_kwh'],
+                    'self_consumption_uplift_pct': monthly_flow['self_consumption_uplift_pct'],
+                    'estimated_self_consumption_pct': monthly_flow['total_self_consumption_pct'],
+                    'method': 'hourly_profile_v1',
+                    'method_note': (
+                        'Aporte y autoconsumo calculados con simulación horaria anual; '
+                        'la capacidad recomendada se mantiene como estimación diaria.'
+                    ),
+                })
 
         return result
 

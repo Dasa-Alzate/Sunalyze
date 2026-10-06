@@ -8,8 +8,10 @@ un perfil curado global visible para todas las organizaciones.
 
 import json
 
+from sqlalchemy.dialects import mysql
+
 from app import db
-from .database import BaseModel, SoftDeleteMixin
+from app.models.database import BaseModel, SoftDeleteMixin
 
 
 class ConsumptionProfile(BaseModel, SoftDeleteMixin):
@@ -21,8 +23,8 @@ class ConsumptionProfile(BaseModel, SoftDeleteMixin):
     origin = db.Column(db.String(10), nullable=False, default='ui')
     annual_kwh_hint = db.Column(db.Float)
     cdm_version = db.Column(db.Integer, nullable=False, default=1)
-    _source = db.Column('source', db.Text)
-    _fractions = db.Column('fractions', db.Text)
+    _source = db.Column('source', db.Text().with_variant(mysql.LONGTEXT(), 'mysql'), nullable=True)
+    _fractions = db.Column('fractions', db.Text().with_variant(mysql.LONGTEXT(), 'mysql'), nullable=True)
 
     @property
     def source(self):

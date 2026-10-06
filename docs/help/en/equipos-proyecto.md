@@ -15,7 +15,7 @@ The **Equipment** step links catalogue items to the specific project. What you c
 - **Solar panel** — mandatory. Defines the power, voltages and dimensions of each module.
 - **Inverter** — optional at this step; leave it blank and the analysis will offer a list of compatible models.
 - **Battery** — optional. If included, the analysis calculates the bank, autonomy and annual contribution.
-- **Wiring** — optional. Cross-section and material of DC, AC and earth cables; feeds the technical report.
+- **Wiring** — automatic. Minimum DC/AC cross-sections by current and B1 table, plus estimated maximum length by voltage drop; the technical report uses these results.
 :::
 
 ## Equipment search
@@ -46,12 +46,12 @@ When you select a battery, the **Cantidad de baterías** field appears. The anal
 1. Click the **Panel solar** search box and type the model or power; select the module from the list.
 2. If you already know which inverter to use, search for it in **Inversor**; otherwise leave it blank.
 3. If the project includes storage, search for the battery in **Batería** and set the **Cantidad de baterías**.
-4. In the **Cableado** section, select the cross-section for **Cable CC (serie fotovoltaica)**, **Cable CA (salida del inversor)** and **Cable de tierra** if the technical report requires them.
-5. Click **Calcular y continuar** — the wizard launches the sizing and moves to the **Analysis** step.
+4. Review **Cableado calculado**. Sizing assumes XLPE, copper, two loaded conductors, method B1, 1.25 × Isc on DC and 1.25 × Imax_out on AC; the length limits reserve 0.75% voltage drop for each run.
+5. Click **Calcular cableado** to update the results, then **Continuar**.
 :::
 
 :::tip{tone=success}
-To clear the inverter, battery or cable selection, click the × that appears on the right of the search box when something is selected.
+To clear the inverter or battery selection, click the × that appears on the right of the search box when something is selected.
 :::
 
 :::callout{tone=info}

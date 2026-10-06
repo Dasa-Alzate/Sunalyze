@@ -31,7 +31,7 @@ def panel_analysis():
     if data is None:
         raise ValidationError('Cuerpo JSON requerido.', code='request.body_required')
     visible = CatalogService.visible_catalog_ids(current_org_id())
-    result = AnalysisService.calculate(data, visible)
+    result = AnalysisService.calculate(data, visible, current_org_id())
     return jsonify(result)
 
 

@@ -238,3 +238,77 @@ export function DayTypeChart({ diaTipo }) {
     </div>
   )
 }
+
+const FLOW_MONTHS = ['Ene', 'Feb', 'Mar', 'Abr', 'May', 'Jun', 'Jul', 'Ago', 'Sep', 'Oct', 'Nov', 'Dic']
+
+export function MonthlyEnergyFlowChart({ flow }) {
+  const W = 760
+  const H = 320
+  const M = { top: 18, right: 14, bottom: 42, left: 54 }
+  const plotWidth = W - M.left - M.right
+  const baseline = H - M.bottom
+  const productionTotal = flow.production
+  const maxY = Math.max(1, ...flow.consumption, ...productionTotal) * 1.08
+  const y = (value) => baseline - (value / maxY) * (baseline - M.top)
+  const groupWidth = plotWidth / FLOW_MONTHS.length
+  const barWidth = Math.min(19, groupWidth * 0.33)
+  const colors = {
+    consumption: 'var(--red-500)',
+    direct: 'var(--green-500)',
+    battery: 'var(--blue-500)',
+    export: 'var(--amber-500)',
+  }
+
+  return (
+    <div>
+      <div className="eco-legend" aria-label="Leyenda de energía mensual">
+        <span className="eco-legend__item"><span className="eco-legend__dot" style={{ background: colors.consumption }} />Consumo</span>
+        <span className="eco-legend__item"><span className="eco-legend__dot" style={{ background: colors.direct }} />Autoconsumo directo</span>
+        {flow.has_battery && <span className="eco-legend__item"><span className="eco-legend__dot" style={{ background: colors.battery }} />Carga de batería</span>}
+        <span className="eco-legend__item"><span className="eco-legend__dot" style={{ background: colors.export }} />Excedentes a red</span>
+      </div>
+      <svg viewBox={`0 0 ${W} ${H}`} className="eco-chart" role="img" aria-label="Consumo mensual y producción solar apilada">
+        {yTicks(maxY).map((tick) => (
+          <g key={tick}>
+            <line x1={M.left} x2={W - M.right} y1={y(tick)} y2={y(tick)} stroke={GRID} strokeWidth="1" />
+            <text x={M.left - 7} y={y(tick) + 3} textAnchor="end" fontSize="10" fill={INK_SOFT}>{Math.round(tick).toLocaleString('es-ES')}</text>
+          </g>
+        ))}
+        {FLOW_MONTHS.map((month, i) => {
+          const center = M.left + groupWidth * (i + 0.5)
+          const consumption = flow.consumption[i] || 0
+          const direct = flow.direct_self_consumption[i] || 0
+          const charge = flow.battery_charge[i] || 0
+          const exportEnergy = flow.grid_export[i] || 0
+          const discharge = flow.battery_discharge[i] || 0
+          let stacked = 0
+          const segments = [
+            { key: 'direct', label: 'Autoconsumo directo', value: direct, color: colors.direct },
+            ...(flow.has_battery ? [{ key: 'charge', label: 'Carga de batería', value: charge, color: colors.battery }] : []),
+            { key: 'export', label: 'Excedentes a red', value: exportEnergy, color: colors.export },
+          ]
+          return (
+            <g key={month}>
+              <title>{`${month}: consumo ${consumption.toLocaleString('es-ES', { maximumFractionDigits: 1 })} kWh; producción FV ${productionTotal[i].toLocaleString('es-ES', { maximumFractionDigits: 1 })} kWh; descarga de batería ${discharge.toLocaleString('es-ES', { maximumFractionDigits: 1 })} kWh`}</title>
+              <rect x={center - barWidth - 1} y={y(consumption)} width={barWidth} height={Math.max(0, baseline - y(consumption))} fill={colors.consumption} />
+              {segments.map((segment) => {
+                const segmentTop = stacked + segment.value
+                const rect = (
+                  <rect key={segment.key} x={center + 1} y={y(segmentTop)} width={barWidth}
+                    height={Math.max(0, y(stacked) - y(segmentTop))} fill={segment.color}>
+                    <title>{`${month} · ${segment.label}: ${segment.value.toLocaleString('es-ES', { maximumFractionDigits: 1 })} kWh`}</title>
+                  </rect>
+                )
+                stacked = segmentTop
+                return rect
+              })}
+              <text x={center} y={H - M.bottom + 16} textAnchor="middle" fontSize="10" fill={INK_SOFT}>{month}</text>
+            </g>
+          )
+        })}
+        <text x="14" y={(M.top + baseline) / 2} textAnchor="middle" fontSize="10" fill={INK} transform={`rotate(-90 14 ${(M.top + baseline) / 2})`}>kWh / mes</text>
+      </svg>
+      {flow.has_battery && <p className="eco-panel__note">La pila muestra energía FV destinada a consumo directo, carga de batería y excedentes. La descarga mensual puede incluir energía almacenada en meses anteriores; consúltala en el detalle de cada mes.</p>}
+    </div>
+  )
+}
