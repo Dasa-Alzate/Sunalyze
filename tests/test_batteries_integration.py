@@ -1,3 +1,4 @@
+from types import SimpleNamespace
 
 import unittest
 from unittest.mock import patch
@@ -284,12 +285,9 @@ class BatteryAnalysisTest(_Base):
     def test_monthly_energy_flow_aggregates_hourly_production_into_stack(self):
         consumption = [0.5] * 8760
         production = [1.0 if hour % 24 in range(6, 18) else 0.0 for hour in range(8760)]
-        battery = {
-            'capacity_kwh': 4.0,
-            'power_kw': 1.0,
-            'dod': 90.0,
-            'round_trip_efficiency': 90.0,
-        }
+        battery = SimpleNamespace(
+            capacity_kwh=4.0, power_kw=1.0, dod=90.0, round_trip_efficiency=90.0,
+        )
 
         flow = EconomicsService.monthly_energy_flow(consumption, production, battery)
 

@@ -16,6 +16,7 @@ const project = {
   latitud: 38.3, longitud: -0.49, coplanar: false,
   panel_id: 11, inverter_id: 21, battery_id: 1, battery_quantity: 2, battery_nombre: 'BYD HVS 5.1',
   resultados: null,
+  layout: { roof: [[1, 1], [1, 2], [2, 2]], cells: [] },
 }
 
 const analysis = {
@@ -157,10 +158,10 @@ describe('Wizard · estimación preliminar', () => {
     renderNewWizard()
     await waitFor(() => expect(api.panels.list).toHaveBeenCalled())
 
-    fireEvent.change(screen.getByLabelText('Cliente / proyecto'), { target: { value: 'Proyecto de prueba' } })
-    fireEvent.change(screen.getByLabelText('Necesidad anual'), { target: { value: '5000' } })
-    fireEvent.change(screen.getByLabelText('Latitud'), { target: { value: '38.3' } })
-    fireEvent.change(screen.getByLabelText('Longitud'), { target: { value: '-0.49' } })
+    fireEvent.change(screen.getByLabelText(/^Cliente \/ proyecto/), { target: { value: 'Proyecto de prueba' } })
+    fireEvent.change(screen.getByLabelText(/^Necesidad anual/), { target: { value: '5000' } })
+    fireEvent.change(screen.getByLabelText(/^Latitud/), { target: { value: '38.3' } })
+    fireEvent.change(screen.getByLabelText(/^Longitud/), { target: { value: '-0.49' } })
     fireEvent.click(screen.getByRole('button', { name: 'Continuar' }))
 
     fireEvent.click(screen.getByRole('button', { name: 'Calcular estimación' }))
@@ -236,7 +237,7 @@ describe('Wizard · dimensionado automático de cables', () => {
     fireEvent.click(screen.getByRole('button', { name: 'Calcular cableado' }))
 
     await waitFor(() => expect(screen.getByText('Longitud máxima 15,24 m')).toBeInTheDocument())
-    expect(screen.getByText('Cable CA · 24 A')).toBeInTheDocument()
+    expect(screen.getByText(/^Cable CA · 24 × 1,25 = 30 A/)).toBeInTheDocument()
     expect(screen.getByText(/dos conductores cargados/)).toBeInTheDocument()
   })
 })

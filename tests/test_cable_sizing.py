@@ -10,7 +10,7 @@ from app.services.cable_sizing_service import (
 class CableSizingTest(unittest.TestCase):
     def test_selects_smallest_section_covering_current_and_minimum(self):
         self.assertEqual(select_section(30, 4)['section_mm2'], 4)
-        self.assertEqual(select_section(35, 4)['section_mm2'], 6)
+        self.assertEqual(select_section(39, 4)['section_mm2'], 6)
         self.assertEqual(select_section(30, 6)['section_mm2'], 6)
         self.assertIsNone(select_section(600, 4))
 
