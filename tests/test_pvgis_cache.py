@@ -19,9 +19,7 @@ def _fake_pvgis_df():
     n = len(idx)
     df = pd.DataFrame(
         {
-            'poa_direct': [400.0] * n,
-            'poa_sky_diffuse': [100.0] * n,
-            'poa_ground_diffuse': [20.0] * n,
+            'poa_global': [520.0] * n,
             'temp_air': [20.0] * n,
         },
         index=idx,
