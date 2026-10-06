@@ -1,8 +1,8 @@
 ---
-source_hash: 5e3fe342ca19
+source_hash: c22d04d5d8b1
 title: Analysis and sizing
 routes:
-  - diseno/analisis
+  - diseno/analisis_cubierta
 order: 32
 keywords: [analysis, sizing, production, self-consumption, pvgis, irradiance, power, panels]
 ---
@@ -59,4 +59,4 @@ If the analysis fails with a network or PVGIS error, check that the coordinates 
 
 ## Savings in euros
 
-If the project has a **consumption profile**, below the results you get the **Economic savings** block: bill before and after, computed real self-consumption and the decision charts (power sweep, profitability, monthly bill and typical day). Search this help for «Economic savings and decision charts» to read them well.
+If the project has a **consumption profile**, below the results you get the **monthly energy balance**. The bill, savings and battery selection live in the **Análisis económico** step; search this help for «Economic analysis and battery selection».

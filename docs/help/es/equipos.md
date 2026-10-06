@@ -7,6 +7,7 @@ routes:
   - equipos/batteries
   - equipos/wires
   - equipos/marketplace
+  - equipos/planes
 order: 50
 keywords: [equipos, paneles, inversores, baterias, cables, catalogo, marketplace, importar]
 ---
@@ -23,6 +24,7 @@ La Biblioteca de equipos centraliza todos los equipos disponibles en tu workspac
 - **Baterías** — acumuladores con capacidad nominal, capacidad útil, potencia, voltaje y tecnología.
 - **Cables** — secciones con tipo, material (Cu/Al), sección en mm², corriente máxima y número de conductores.
 - **Marketplace** — catálogos oficiales y de terceros que puedes añadir o quitar de tu biblioteca con un clic.
+- **Planes eléctricos** — planes de las comercializadoras con precios de energía por periodo, excedentes, potencia, impuestos y alquiler de contador; cada proyecto elige el suyo en el análisis económico.
 :::
 
 ## Catálogos propios y del Marketplace

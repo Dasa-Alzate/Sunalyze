@@ -1,5 +1,5 @@
 ---
-source_hash: 8a3dfa04612a
+source_hash: 40e549152cb7
 title: Equipment library
 routes:
   - equipos
@@ -8,6 +8,7 @@ routes:
   - equipos/batteries
   - equipos/wires
   - equipos/marketplace
+  - equipos/planes
 order: 50
 keywords: [equipment, panels, inverters, batteries, cables, catalog, marketplace, import]
 ---
@@ -24,6 +25,7 @@ The Equipment library centralises all equipment available in your workspace: sol
 - **Batteries** — accumulators with nominal capacity, usable capacity, power, voltage and technology.
 - **Cables** — sections with type, material (Cu/Al), cross-section in mm², maximum current and number of conductors.
 - **Marketplace** — official and third-party catalogs you can add or remove from your library with one click.
+- **Planes eléctricos** — retailer electricity plans with energy prices per period, surplus, capacity, taxes and meter rental; each project picks its own in the economic analysis.
 :::
 
 ## Own catalogs and the Marketplace

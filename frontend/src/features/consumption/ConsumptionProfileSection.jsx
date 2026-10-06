@@ -57,7 +57,11 @@ export function ConsumptionProfileSection({ value, onChange }) {
         <SelectField
           label="Perfil de consumo"
           value={value ?? ''}
-          onChange={(e) => onChange(e.target.value === '' ? null : Number(e.target.value))}
+          onChange={(e) => {
+            if (e.target.value === '') { onChange(null, null); return }
+            const pid = Number(e.target.value)
+            onChange(pid, (profiles || []).find((p) => p.id === pid) || null)
+          }}
         >
           <option value="">Sin perfil (solo dimensionado energético)</option>
           {own.length > 0 && (
@@ -80,7 +84,7 @@ export function ConsumptionProfileSection({ value, onChange }) {
             <Badge tone={originBadge(selected).tone}>{originBadge(selected).label}</Badge>
             <span>{KIND_LABELS[selected.kind] || selected.kind}</span>
             {preview.annual_kwh_hint != null && (
-              <span>muestra de {Math.round(preview.annual_kwh_hint).toLocaleString('es-ES')} kWh/año</span>
+              <span>{selected.is_global ? 'muestra de ' : ''}{Math.round(preview.annual_kwh_hint).toLocaleString('es-ES')} kWh/año</span>
             )}
           </div>
           <p className="cp-section__legend">
@@ -98,7 +102,7 @@ export function ConsumptionProfileSection({ value, onChange }) {
       {importing && (
         <ImportProfileModal
           onClose={() => setImporting(false)}
-          onImported={(profile) => { setImporting(false); load().then(() => onChange(profile.id)) }}
+          onImported={(profile) => { setImporting(false); load().then(() => onChange(profile.id, profile)) }}
         />
       )}
     </div>

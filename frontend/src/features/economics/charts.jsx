@@ -78,29 +78,27 @@ export function SweepChart({ sweep }) {
   )
 }
 
-export function ProfitChart({ sweep }) {
-  const series = sweep.series.filter((s) => s.costes)
-  if (!series.length) {
+export function PaybackChart({ scenarios }) {
+  const rows = scenarios.escenarios.filter((r) => r.battery_id !== null && r.payback_bateria_anios != null)
+  const sinPrecio = scenarios.escenarios.filter((r) => r.battery_id !== null && r.payback_bateria_anios == null)
+  if (!rows.length) {
     return (
       <p className="eco-panel__note">
-        No hay precios completos para estimar la inversión: pon <strong>precio unitario</strong> al panel
-        {sweep.sin_precio.length > 0 && <> y a {sweep.sin_precio.join(', ')}</>} en la biblioteca de equipos.
+        No hay baterías con precio y aporte positivo para estimar el payback: pon <strong>precio unitario</strong> a las baterías en la biblioteca de equipos.
       </p>
     )
   }
   const W = 580
-  const H = 300
-  const M = { top: 16, right: 40, bottom: 36, left: 56 }
-  const maxX = Math.max(...series.flatMap((s) => s.costes)) * 1.08
-  const maxY = Math.max(...series.flatMap((s) => s.ahorros)) * 1.15
+  const H = 280
+  const M = { top: 16, right: 24, bottom: 36, left: 56 }
+  const maxX = Math.max(...rows.map((r) => r.payback_bateria_anios)) * 1.15
+  const maxY = Math.max(...rows.map((r) => r.ahorro_anual)) * 1.15
   const x = (v) => M.left + (v / maxX) * (W - M.left - M.right)
   const y = (v) => H - M.bottom - (v / maxY) * (H - M.top - M.bottom)
-  const colorOf = (s) => SERIES_COLORS[sweep.series.indexOf(s)]
 
   return (
     <div>
-      <Legend items={sweep.series.map((s) => s.nombre)} />
-      <svg viewBox={`0 0 ${W} ${H}`} className="eco-chart" role="img" aria-label="Ahorro anual frente a inversión inicial, por batería">
+      <svg viewBox={`0 0 ${W} ${H}`} className="eco-chart" role="img" aria-label="Ahorro anual frente a años de payback de cada batería">
         {yTicks(maxY).map((t) => (
           <g key={t}>
             <line x1={M.left} x2={W - M.right} y1={y(t)} y2={y(t)} stroke={GRID} strokeWidth="1" />
@@ -108,42 +106,21 @@ export function ProfitChart({ sweep }) {
           </g>
         ))}
         {yTicks(maxX).map((t) => (
-          <text key={t} x={x(t)} y={H - M.bottom + 16} textAnchor="middle" fontSize="10" fill={INK_SOFT}>{eur0(t)}</text>
+          <text key={t} x={x(t)} y={H - M.bottom + 16} textAnchor="middle" fontSize="10" fill={INK_SOFT}>{t.toFixed(1)}</text>
         ))}
-        {[3, 5, 8].map((anios) => {
-          const yEdge = maxX / anios
-          const clippedY = Math.min(yEdge, maxY)
-          const xEnd = clippedY * anios
-          return (
-            <g key={anios}>
-              <line x1={x(0)} y1={y(0)} x2={x(xEnd)} y2={y(clippedY)} stroke={GRID} strokeWidth="1" strokeDasharray="3 4" />
-              <text x={x(xEnd) - 4} y={y(clippedY) + 12} textAnchor="end" fontSize="9" fill={INK_SOFT}>{anios} años</text>
-            </g>
-          )
-        })}
-        <text x={(M.left + W - M.right) / 2} y={H - 4} textAnchor="middle" fontSize="10" fill={INK}>Inversión inicial estimada (€, equipos + mano de obra)</text>
-        {series.map((s) => (
-          <g key={s.nombre}>
-            <polyline
-              points={s.costes.map((c, i) => `${x(c)},${y(s.ahorros[i])}`).join(' ')}
-              fill="none" stroke={colorOf(s)} strokeWidth="2" strokeLinejoin="round"
-            />
-            {s.costes.map((c, i) => (
-              <circle key={i} cx={x(c)} cy={y(s.ahorros[i])} r="4" fill={colorOf(s)} stroke="var(--surface-card)" strokeWidth="2">
-                <title>{`${s.nombre} · ${sweep.kwp[i]} kWp · inversión ${eur0(c)} → ${eur0(s.ahorros[i])}/año (payback ${(c / s.ahorros[i]).toFixed(1)} años)`}</title>
-              </circle>
-            ))}
-            {[0, s.costes.length - 1].map((i) => (
-              <text key={i} x={x(s.costes[i])} y={y(s.ahorros[i]) - 8} textAnchor="middle" fontSize="9" fill={INK}>
-                {sweep.kwp[i]} kWp
-              </text>
-            ))}
+        <text x={(M.left + W - M.right) / 2} y={H - 4} textAnchor="middle" fontSize="10" fill={INK}>Payback de la batería (años)</text>
+        {rows.map((r, i) => (
+          <g key={r.battery_id}>
+            <circle cx={x(r.payback_bateria_anios)} cy={y(r.ahorro_anual)} r="6" fill={SERIES_COLORS[i % SERIES_COLORS.length]} stroke="var(--surface-card)" strokeWidth="2">
+              <title>{`${r.nombre} · payback ${r.payback_bateria_anios.toLocaleString('es-ES')} años → ${eur0(r.ahorro_anual)}/año`}</title>
+            </circle>
+            <text x={x(r.payback_bateria_anios)} y={y(r.ahorro_anual) - 10} textAnchor="middle" fontSize="9" fill={INK}>
+              {r.nombre.length > 18 ? `${r.nombre.slice(0, 17)}…` : r.nombre}
+            </text>
           </g>
         ))}
       </svg>
-      {sweep.sin_precio.length > 0 && (
-        <p className="eco-panel__note">Fuera de la gráfica por falta de precio: {sweep.sin_precio.join(', ')}.</p>
-      )}
+      <p className="eco-panel__note">Arriba a la izquierda: más ahorro y antes amortizada.{sinPrecio.length > 0 && ` Sin precio: ${sinPrecio.map((r) => r.nombre).join(', ')}.`}</p>
     </div>
   )
 }
@@ -192,6 +169,42 @@ export function MonthlyBillChart({ antes, despues }) {
   )
 }
 
+const MESES_LARGOS = ['Enero', 'Febrero', 'Marzo', 'Abril', 'Mayo', 'Junio', 'Julio', 'Agosto', 'Septiembre', 'Octubre', 'Noviembre', 'Diciembre']
+const eur2 = (v) => `${v.toLocaleString('es-ES', { minimumFractionDigits: 2, maximumFractionDigits: 2 })} €`
+
+export function MonthlyBillTable({ antes, despues, totalAntes, totalDespues }) {
+  return (
+    <table className="sun-table eco-billtable">
+      <thead>
+        <tr>
+          <th>Mes</th>
+          <th style={{ textAlign: 'right' }}>Sin placas</th>
+          <th style={{ textAlign: 'right' }}>Con el sistema</th>
+          <th style={{ textAlign: 'right' }}>Ahorro</th>
+        </tr>
+      </thead>
+      <tbody>
+        {antes.map((m, i) => (
+          <tr key={MESES_LARGOS[i]}>
+            <td>{MESES_LARGOS[i]}</td>
+            <td style={{ textAlign: 'right' }}>{eur2(m.factura_neta)}</td>
+            <td style={{ textAlign: 'right' }}>{eur2(despues[i].factura_neta)}</td>
+            <td style={{ textAlign: 'right' }}>{eur2(m.factura_neta - despues[i].factura_neta)}</td>
+          </tr>
+        ))}
+      </tbody>
+      <tfoot>
+        <tr>
+          <th>Total anual</th>
+          <th style={{ textAlign: 'right' }}>{eur2(totalAntes)}</th>
+          <th style={{ textAlign: 'right' }}>{eur2(totalDespues)}</th>
+          <th style={{ textAlign: 'right' }}>{eur2(totalAntes - totalDespues)}</th>
+        </tr>
+      </tfoot>
+    </table>
+  )
+}
+
 function DayPanel({ title, data, maxY }) {
   const W = 280
   const H = 200
@@ -203,7 +216,7 @@ function DayPanel({ title, data, maxY }) {
   return (
     <div className="eco-daypanel">
       <span className="eco-daypanel__title">{title}</span>
-      <svg viewBox={`0 0 ${W} ${H}`} className="eco-chart" role="img" aria-label={`Consumo y producción de un día tipo de ${title.toLowerCase()}`}>
+      <svg viewBox={`0 0 ${W} ${H}`} className="eco-chart" role="img" aria-label={`Consumo y producción del ${title.toLowerCase()}`}>
         {yTicks(maxY).slice(1, 4).map((t) => (
           <line key={t} x1={M.left} x2={W - M.right} y1={y(t)} y2={y(t)} stroke={GRID} strokeWidth="1" />
         ))}
@@ -231,8 +244,8 @@ export function DayTypeChart({ diaTipo }) {
         <span className="eco-legend__item"><span className="eco-legend__dot" style={{ background: 'var(--amber-500)' }} />Producción solar (kWh/h)</span>
       </div>
       <div className="eco-daytype">
-        <DayPanel title="Invierno" data={diaTipo.invierno} maxY={maxY} />
-        <DayPanel title="Verano" data={diaTipo.verano} maxY={maxY} />
+        <DayPanel title="Solsticio de invierno (21 dic)" data={diaTipo.invierno} maxY={maxY} />
+        <DayPanel title="Solsticio de verano (21 jun)" data={diaTipo.verano} maxY={maxY} />
       </div>
       <p className="eco-panel__note">El hueco entre la curva azul y la mancha ámbar es lo que la batería puede desplazar.</p>
     </div>

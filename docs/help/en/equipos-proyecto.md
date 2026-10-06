@@ -1,5 +1,5 @@
 ---
-source_hash: 00e3701eadda
+source_hash: 0a9a7a12b62c
 title: Project equipment
 routes:
   - diseno/equipos

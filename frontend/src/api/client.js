@@ -135,6 +135,12 @@ export const api = {
     scenarios: (projectId) => post(`/api/projects/${projectId}/economics/scenarios`, {}),
     sweep: (projectId) => post(`/api/projects/${projectId}/economics/sweep`, {}),
   },
+  electricityPlans: {
+    list: () => get('/api/electricity-plans'),
+    create: (b) => post('/api/electricity-plans', b),
+    update: (id, b) => patch(`/api/electricity-plans/${id}`, b),
+    remove: (id) => del(`/api/electricity-plans/${id}`),
+  },
   consumptionProfiles: {
     list: () => get('/api/consumption-profiles'),
     preview: (id) => get(`/api/consumption-profiles/${id}/preview`),

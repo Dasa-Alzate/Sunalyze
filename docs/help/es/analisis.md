@@ -1,7 +1,7 @@
 ---
 title: Análisis y dimensionamiento
 routes:
-  - diseno/analisis
+  - diseno/analisis_cubierta
 order: 32
 keywords: [analisis, dimensionamiento, produccion, autoconsumo, pvgis, irradiancia, potencia, paneles]
 ---
@@ -54,7 +54,7 @@ Si no has fijado inversor en **Equipos**, el análisis muestra la tabla **Invers
 
 ## Ahorro en euros
 
-Si el proyecto tiene **perfil de consumo**, bajo los resultados aparece el bloque **Ahorro económico**: factura antes y después, autoconsumo real calculado y las gráficas de decisión (barrido de potencias, rentabilidad, factura mensual y día tipo). Busca «Ahorro económico y gráficas de decisión» en esta ayuda para leerlas bien.
+Si el proyecto tiene **perfil de consumo**, bajo los resultados aparece el **balance energético mensual**. La factura, el ahorro y la selección de batería están en el paso **Análisis económico**; busca «Análisis económico y selección de batería» en esta ayuda.
 
 :::callout{tone=warning}
 Si el análisis falla con un error de red o de PVGIS, comprueba que las coordenadas están dentro del área cubierta por PVGIS (Europa, África y parte de Asia). Coordenadas fuera de rango producen un error inmediato.

@@ -27,3 +27,11 @@
 .eco-daypanel { flex: 1; min-width: 240px; }
 .eco-daypanel__title { display: block; font-size: var(--text-xs); font-weight: var(--fw-semibold); color: var(--text-strong); margin-bottom: 4px; }
 .eco-scenarios__table { margin-top: var(--space-4); }
+.eco-plan { display: flex; align-items: flex-end; gap: var(--space-4); flex-wrap: wrap; margin-top: var(--space-4); }
+.eco-plan .sun-field { min-width: 280px; flex: 1; max-width: 460px; }
+.eco-plan__hint { font-size: var(--text-xs); color: var(--text-muted); padding-bottom: var(--space-2); }
+.eco-section { margin-top: var(--space-5); }
+.eco-section h5 { font-size: var(--text-sm); font-weight: 700; color: var(--text-strong); margin-bottom: var(--space-2); }
+.eco-scenarios__name { font-weight: var(--fw-semibold); color: var(--text-strong); }
+.eco-billtable { margin-top: var(--space-4); max-width: 640px; }
+.eco-billtable tfoot th { border-top: 2px solid var(--border-subtle); color: var(--text-strong); }

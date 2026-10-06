@@ -19,19 +19,20 @@ import DegradationCard from '@/shared/ui/DegradationCard'
 import CircuitDiagram from './CircuitDiagram'
 import PanelLayout from './PanelLayout'
 
-const STEP_KEYS = ['lugar', 'analisis_cubierta', 'equipos', 'diagrama', 'memoria']
+const STEP_KEYS = ['lugar', 'analisis_cubierta', 'equipos', 'economico', 'diagrama', 'memoria']
 
 const STEPS = [
   { title: 'Datos del lugar', icon: 'map-pin' },
   { title: 'Análisis y cubierta', icon: 'layout-grid' },
   { title: 'Equipos', icon: 'package' },
+  { title: 'Análisis económico', icon: 'piggy-bank' },
   { title: 'Diagrama', icon: 'workflow' },
   { title: 'Memoria', icon: 'file-text' },
 ]
 
 const EMPTY_FORM = {
   cliente: '', localidad: '', direccion: '',
-  necesidad: '', autoconsumo: 80, consumption_profile_id: null,
+  necesidad: '', autoconsumo: 80, consumption_profile_id: null, electricity_plan_id: null,
   latitud: '', longitud: '',
   coplanar: false, inclinacion: '', azimut: '',
 }
@@ -88,6 +89,7 @@ export default function Wizard() {
             cliente: proj.cliente || '', localidad: proj.localidad || '', direccion: proj.direccion || '',
             necesidad: proj.necesidad ?? '', autoconsumo: proj.autoconsumo ?? 80,
             consumption_profile_id: proj.consumption_profile_id || null,
+            electricity_plan_id: proj.electricity_plan_id || null,
             latitud: proj.latitud ?? '', longitud: proj.longitud ?? '',
             coplanar: !!proj.coplanar, inclinacion: proj.inclinacion ?? '', azimut: proj.azimut ?? '',
           })
@@ -266,6 +268,7 @@ export default function Wizard() {
       necesidad: form.necesidad === '' ? null : Number(form.necesidad),
       autoconsumo: Number(form.autoconsumo),
       consumption_profile_id: form.consumption_profile_id || null,
+      electricity_plan_id: form.electricity_plan_id || null,
       latitud: form.latitud === '' ? null : Number(form.latitud),
       longitud: form.longitud === '' ? null : Number(form.longitud),
       coplanar: !!form.coplanar,
@@ -329,6 +332,7 @@ export default function Wizard() {
     Boolean(panelId),
     true,
     true,
+    true,
   ]
   const firstInvalid = stepValid.findIndex((v) => !v)
   const maxReachable = firstInvalid === -1 ? STEPS.length - 1 : firstInvalid
@@ -360,7 +364,7 @@ export default function Wizard() {
               {dirty ? 'Cambios sin guardar' : lastSaved ? `Guardado ${relativo(lastSaved)}` : ''}
             </span>
             <Btn variant="secondary" icon="save" data-busy={saving} disabled={saving} onClick={() => save()}>Guardar</Btn>
-            <Btn variant="secondary" icon="workflow" onClick={() => goToStep(3)}>Diagrama unifilar</Btn>
+            <Btn variant="secondary" icon="workflow" onClick={() => goToStep(4)}>Diagrama unifilar</Btn>
             <Btn variant="primary" icon="file-text" onClick={goToMemoria}>Ir a la memoria</Btn>
           </>
         }
@@ -430,7 +434,10 @@ export default function Wizard() {
                 </div>
                 <ConsumptionProfileSection
                   value={form.consumption_profile_id}
-                  onChange={(pid) => patch({ consumption_profile_id: pid })}
+                  onChange={(pid, profile) => {
+                    const fill = profile?.annual_kwh_hint != null && (!profile.is_global || form.necesidad === '')
+                    patch({ consumption_profile_id: pid, ...(fill ? { necesidad: Math.round(profile.annual_kwh_hint) } : {}) })
+                  }}
                 />
                 {flag('geo_map') && (
                   <div style={{ marginTop: 'var(--space-4)' }}>
@@ -488,6 +495,7 @@ export default function Wizard() {
                 </label>
 
                 <CableSizingSummary sizing={results?.cable_sizing} stale={stale} />
+                <MaterialsList results={results} panel={panel} inverter={inverter} battery={battery} batteryQty={batteryQty} layout={layout} stale={stale} />
               </>
             )}
 
@@ -530,7 +538,6 @@ export default function Wizard() {
                       <CompatibleInverters list={results.compatible_inverters} onPick={(inv) => { pickInverter(inv); toast('info', 'Inversor seleccionado', 'Recalcula para el dimensionamiento completo') }} />
                     )}
                     {results.battery && <BatteryResult battery={results.battery} />}
-                    <EconomicsPanel projectId={projectId} profileId={form.consumption_profile_id} onSave={() => save({ silent: true })} />
                     <div style={{ marginTop: 'var(--space-4)', display: 'flex', gap: 'var(--space-3)', alignItems: 'center' }}>
                       <Btn variant="secondary" icon="refresh-cw" data-busy={analyzing} disabled={analyzing} onClick={analyze}>{analyzing ? 'Recalculando…' : 'Recalcular'}</Btn>
                       <span style={{ display: 'flex', gap: 8, alignItems: 'center', fontSize: 'var(--text-sm)', color: 'var(--text-muted)' }}>
@@ -579,6 +586,19 @@ export default function Wizard() {
             )}
 
             {step === 3 && (
+              <>
+                <div className="sun-divider">Análisis económico</div>
+                <EconomicsPanel
+                  projectId={projectId}
+                  profileId={form.consumption_profile_id}
+                  planId={form.electricity_plan_id}
+                  onPlanChange={(planId) => { setForm((f) => ({ ...f, electricity_plan_id: planId })); dirtyRef.current = true; setDirty(true) }}
+                  onSave={() => save({ silent: true })}
+                />
+              </>
+            )}
+
+            {step === 4 && (
               !results ? (
                 <div className="sun-empty" style={{ border: 0, padding: 'var(--space-8) 0' }}>
                   <div className="sun-empty__icon"><Icon name="workflow" size={26} /></div>
@@ -594,7 +614,7 @@ export default function Wizard() {
               )
             )}
 
-            {step === 4 && (
+            {step === 5 && (
               <div className="sun-empty" style={{ border: 0, padding: 'var(--space-8) 0' }}>
                 <div className="sun-empty__icon"><Icon name="file-text" size={26} /></div>
                 <div className="sun-empty__title">Listo para la memoria técnica</div>
@@ -769,7 +789,6 @@ function BatteryResult({ battery }) {
   const cards = [
     { label: 'Banco útil', value: dec(battery.bank_usable_kwh), unit: 'kWh' },
     { label: 'Banco nominal', value: dec(battery.bank_capacity_kwh), unit: 'kWh' },
-    { label: 'Útil recomendado', value: dec(battery.recommended_usable_kwh), unit: 'kWh' },
     { label: 'Autoconsumo estimado', value: dec(battery.estimated_self_consumption_pct), unit: '%' },
     { label: 'Aporte anual batería', value: int(battery.annual_battery_contribution_kwh), unit: 'kWh' },
   ]
@@ -789,6 +808,56 @@ function BatteryResult({ battery }) {
           <Icon name="info" size={14} color="var(--info)" />{battery.method_note}
         </div>
       )}
+    </div>
+  )
+}
+
+function MaterialsList({ results, panel, inverter, battery, batteryQty, layout, stale }) {
+  const placed = layout?.cells?.length || 0
+  const modules = placed || (panel ? panelesFrom(results, panel) : null)
+  const sizing = results?.cable_sizing
+  const cable = (run) => (run?.section_mm2 != null
+    ? `${dec(run.section_mm2)} mm² Cu ${sizing.insulation}${run.maximum_length_m != null ? ` · máx. ${dec(run.maximum_length_m)} m` : ''}`
+    : null)
+  const rows = [
+    {
+      item: 'Módulos fotovoltaicos',
+      spec: panel ? `${panel.nombre}${panel.power ? ` · ${dec(panel.power)} W` : ''}` : null,
+      qty: panel && modules ? `${modules} ud` : null,
+      note: placed ? 'según la disposición dibujada' : modules ? 'según el dimensionado' : null,
+    },
+    { item: 'Inversor', spec: inverter ? `${inverter.nombre}${inverter.power ? ` · ${dec(inverter.power)} kW` : ''}` : null, qty: inverter ? '1 ud' : null },
+    ...(battery ? [{ item: 'Batería', spec: `${battery.nombre} · ${dec(battery.capacity_kwh)} kWh`, qty: `${Number(batteryQty) || 1} ud` }] : []),
+    { item: 'Cable CC', spec: cable(sizing?.dc), qty: null },
+    { item: 'Cable CA', spec: cable(sizing?.ac), qty: null },
+    { item: 'Conductor de protección', spec: sizing?.ground_section_mm2 != null ? `${dec(sizing.ground_section_mm2)} mm² Cu` : null, qty: null },
+    { item: 'Interruptor diferencial CA', spec: 'Tipo A · 30 mA', qty: '1 ud' },
+  ]
+  return (
+    <div style={{ marginTop: 'var(--space-6)' }}>
+      <div className="sun-divider">Lista de materiales</div>
+      {stale && <div className="sun-inline-note" style={{ marginBottom: 'var(--space-3)' }}><Icon name="alert-triangle" size={14} /> Selección modificada; recalcula para actualizar cantidades y secciones.</div>}
+      <table className="sun-table">
+        <thead>
+          <tr>
+            <th>Elemento</th>
+            <th>Modelo / especificación</th>
+            <th style={{ textAlign: 'right' }}>Cantidad</th>
+          </tr>
+        </thead>
+        <tbody>
+          {rows.map((r) => (
+            <tr key={r.item}>
+              <td style={{ fontWeight: 600 }}>{r.item}</td>
+              <td>
+                {r.spec ?? <span style={{ color: 'var(--text-subtle)' }}>Pendiente de selección o cálculo</span>}
+                {r.note && <span style={{ color: 'var(--text-subtle)', fontSize: 'var(--text-xs)' }}> · {r.note}</span>}
+              </td>
+              <td style={{ textAlign: 'right' }}>{r.qty ?? '—'}</td>
+            </tr>
+          ))}
+        </tbody>
+      </table>
     </div>
   )
 }

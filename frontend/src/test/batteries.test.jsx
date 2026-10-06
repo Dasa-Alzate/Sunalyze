@@ -197,7 +197,7 @@ describe('Wizard · batería', () => {
   it('muestra el bloque de análisis de batería con aporte anual y autoconsumo', async () => {
     renderWizard()
     await waitFor(() => expect(api.projects.get).toHaveBeenCalled())
-    fireEvent.click(screen.getByRole('button', { name: /Análisis/ }))
+    fireEvent.click(screen.getByRole('button', { name: /Análisis y cubierta/ }))
     await waitFor(() => expect(screen.getByText(/Aporte anual batería/)).toBeInTheDocument())
     expect(screen.getByText(/Autoconsumo estimado/)).toBeInTheDocument()
     expect(screen.getByText(/no simulacion horaria/)).toBeInTheDocument()

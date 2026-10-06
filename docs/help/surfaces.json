@@ -3,9 +3,9 @@
   "proyectos": [],
   "diseno": [
     "lugar",
+    "analisis_cubierta",
     "equipos",
-    "analisis",
-    "disposicion",
+    "economico",
     "diagrama",
     "memoria"
   ],
@@ -15,7 +15,7 @@
     "batteries",
     "wires",
     "marketplace",
-    "perfiles"
+    "planes"
   ],
   "memoria": [],
   "modulos": [],

@@ -1,7 +1,5 @@
 ---
 title: Disposición de módulos
-routes:
-  - diseno/disposicion
 order: 40
 keywords: [disposicion, zonas, aguas, strings, sombras, heatmap, filas]
 ---
