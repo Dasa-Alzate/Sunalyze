@@ -32,8 +32,7 @@ class EconomicsService:
     def production_shape(lat, lon, hourly_df=None):
         if hourly_df is None:
             hourly_df, _ = PvgisClient.get_hourly(lat, lon, PVGIS_START_YEAR, PVGIS_END_YEAR)
-        df = hourly_df
-        poa = (df['poa_direct'] + df['poa_sky_diffuse'] + df['poa_ground_diffuse'])
+        poa = hourly_df['poa_global']
         local = poa.tz_convert('Europe/Madrid')
         grouped = local.groupby([local.index.month, local.index.day, local.index.hour]).mean()
         shape = [
