@@ -175,11 +175,9 @@ class AnalysisService:
         compatible_inverters = []
 
         if coeficiente_v_temp is not None:
-            if inverter:
-                max_cell_amount = inverter.vmax / (
-                    coeficiente_v_temp * (coldest_temp - 25) + voc_cell
-                )
             vmax_coldest_day = panel.voc * (1 + (-1 * coeficiente_v_temp * (25 - coldest_temp) / 100))
+            if inverter:
+                max_cell_amount = inverter.vmax / vmax_coldest_day
             coldest_day_v_max = vmax_coldest_day * 1.05 * math.ceil(cell_amount)
             panel_protection_v = coldest_day_v_max * 1.2
             if not inverter:
